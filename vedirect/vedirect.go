@@ -100,3 +100,16 @@ func (vd *Vedirect) SendVeCommand(cmd VeCommand, data []byte) (err error) {
 	_, err = vd.write([]byte(str))
 	return
 }
+
+func (vd *Vedirect) RecvSyncHex() (err error) {
+	b := make([]byte, 1)
+
+	for max := 1024; max > 0; max -= 1 {
+		n, err := vd.Read(b)
+		if b[0] == 0x58 {
+			return
+		}
+	}
+
+	return errors.New("no : found after 1024 tries")
+}
