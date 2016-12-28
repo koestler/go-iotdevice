@@ -14,11 +14,12 @@ type Vedirect struct {
 
 func Open(portName string) (*Vedirect, error) {
 	options := serial.OpenOptions{
-		PortName:        portName,
-		BaudRate:        19200,
-		DataBits:        8,
-		StopBits:        1,
-		MinimumReadSize: 4,
+		PortName:              portName,
+		BaudRate:              19200,
+		DataBits:              8,
+		StopBits:              1,
+		MinimumReadSize:       4,
+		InterCharacterTimeout: 500,
 	}
 
 	io, err := serial.Open(options)
@@ -38,6 +39,45 @@ func (vd *Vedirect) Read(b []byte) (n int, err error) {
 		log.Printf("vedirect.Read n=%v, b=%x = %+q\n", n, b, b)
 	}
 	return
+}
+
+func (vd *Vedirect) Recv(b []byte) (err error) {
+	nRequested := len(b)
+
+	for n := 0; n < nRequested; {
+		nRead, err := vd.Read(b[n:])
+		if err != nil {
+			return err
+		}
+		n += nRead
+	}
+	log.Printf("vedirect.Recv nRequested=%v, b=%x = %+q\n", nRequested, b, b)
+
+	return nil
+}
+
+func (vd *Vedirect) RecvSyncHex() (err error) {
+	b := make([]byte, 1)
+
+	log.Printf("vedirect.RecvSyncHex start\n")
+
+	for {
+		n, err := vd.Read(b)
+
+		if err == io.EOF {
+			// not answer yet -> wait
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if n == 1 && b[0] == ':' {
+			log.Printf("vedirect.RecvSyncHex synced\n")
+			return nil
+		}
+	}
 }
 
 func (vd *Vedirect) write(b []byte) (n int, err error) {
@@ -101,15 +141,10 @@ func (vd *Vedirect) SendVeCommand(cmd VeCommand, data []byte) (err error) {
 	return
 }
 
-func (vd *Vedirect) RecvSyncHex() (err error) {
-	b := make([]byte, 1)
+func (vd *Vedirect) SendVeCommandPing() (err error) {
+	vd.SendVeCommand(vedirect.VeCommandPing, []byte{})
+}
 
-	for max := 1024; max > 0; max -= 1 {
-		n, err := vd.Read(b)
-		if b[0] == 0x58 {
-			return
-		}
-	}
+func (vd *Vedirect) RecvVeResponse(cmd VeCommand, data []byte) (veResponseFlag VeResponseFlag, err error) {
 
-	return errors.New("no : found after 1024 tries")
 }

@@ -36,7 +36,6 @@ var veRegisterList = []veRegister{
 }
 
 func main() {
-
 	vd, err := vedirect.Open("/dev/ttyUSB0")
 	if err != nil {
 		log.Fatalf("main:cannot create vedirect")
@@ -47,18 +46,23 @@ func main() {
 	// send restart
 	vd.SendVeCommand(vedirect.VeCommandRestart, []byte{})
 
-	inp := make([]byte, 10)
-	for {
-		time.Sleep(500 * time.Millisecond)
-
-		// send a ping
-		vd.SendVeCommand(vedirect.VeCommandPing, []byte{})
-		vd.Read(inp)
-	}
+	// ping every 100ms
+	go func(vd *vedirect.Vedirect) {
+		for {
+			time.Sleep(100 * time.Millisecond)
+		}
+	}(vd)
 
 	// read for a while...
 	for {
-		time.Sleep(500 * time.Millisecond)
+		//log.Println("Sleep 500ms")
+		//time.Sleep(500 * time.Millisecond)
+
+		vd.RecvSyncHex()
+
+		ans := make([]byte, 7)
+		vd.Recv(ans)
+
 	}
 }
 
