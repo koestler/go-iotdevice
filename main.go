@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/koestler/go-ve-sensor/bmv"
+	"github.com/koestler/go-ve-sensor/http"
 	"github.com/koestler/go-ve-sensor/vedirect"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -18,7 +18,26 @@ func main() {
 	}
 	defer vd.Close()
 
+	// setup routes
+	var routes = http.Routes{
+		http.Route{
+			"Index",
+			"GET",
+			"/",
+			Index,
+		},
+	}
+
 	// start bmv reader
+	routes = append(routes,
+		http.Route{
+			"bmv",
+			"GET",
+			"/bmv/",
+			HttpHandleBmv,
+		},
+	)
+
 	go func() {
 		numericValues := make([]bmv.NumericValue, len(bmv.RegisterList))
 		for {
@@ -39,8 +58,11 @@ func main() {
 	}()
 
 	// start http server
-	go func() {
-		router := NewHttpRouter()
+	go func(routes http.Routes) {
+		bind := os.Getenv("BIND")
+		if len(bind) < 1 {
+			bind = "127.0.0.1"
+		}
 
 		port, err := strconv.Atoi(os.Getenv("PORT"))
 		if err != nil {
@@ -49,14 +71,8 @@ func main() {
 			return
 		}
 
-		bind := os.Getenv("BIND")
-		if len(bind) < 1 {
-			bind = "127.0.0.1"
-		}
-
-		log.Printf("[go-ve-sensor] listening on port %v", port)
-		log.Fatal(http.ListenAndServe(bind+":"+strconv.Itoa(port), router))
-	}()
+		http.Run(bind, port, routes)
+	}(routes)
 
 	select {}
 }
