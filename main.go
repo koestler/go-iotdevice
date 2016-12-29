@@ -15,34 +15,21 @@ func main() {
 	}
 	defer vd.Close()
 
-	// send restart
-	vd.SendVeCommand(vedirect.VeCommandRestart, []byte{})
-
-	// ping every 100ms
-	go func(vd *vedirect.Vedirect) {
-		for {
-			time.Sleep(100 * time.Millisecond)
-		}
-	}(vd)
-
-	// read for a while...
+	// start bmv reader
+	numericValues := make([]bmv.NumericValue, len(bmv.RegisterList))
 	for {
-		//log.Println("Sleep 500ms")
-		//time.Sleep(500 * time.Millisecond)
+		if err := vd.VeCommandPing(); err != nil {
+			log.Printf("main: VeCommandPing failed: %v", err)
+		}
 
-		/*
-			if err := vd.VeCommandPing(); err != nil {
-				log.Printf("main: VeCommandPing failed: %v", err)
-			}
-		*/
-
-		for _, reg := range bmv.BmvRegisterList {
-			if _, err := reg.RecvNumeric(vd); err != nil {
-				log.Printf("main: bmv.BmvGetRegister failed: %v", err)
+		for i, reg := range bmv.RegisterList {
+			if numericValue, err := reg.RecvNumeric(vd); err != nil {
+				log.Printf("main: bmv.RecvNumeric failed: %v", err)
+			} else {
+				numericValues[i] = numericValue
 			}
 		}
 
-		log.Printf("\n\n\n")
-
+		time.Sleep(200 * time.Millisecond)
 	}
 }

@@ -1,12 +1,11 @@
 package bmv
 
 import (
-	//"github.com/koestler/go-ve-sensor/bmv"
 	"github.com/koestler/go-ve-sensor/vedirect"
 	"log"
 )
 
-type bmvRegister struct {
+type Register struct {
 	Name    string
 	Address uint16
 	Factor  float64
@@ -14,38 +13,37 @@ type bmvRegister struct {
 	Signed  bool
 }
 
-type bmvNumericValue struct {
+type NumericValue struct {
 	Name  string
 	Value float64
 	Unit  string
 }
 
-var BmvRegisterList = []bmvRegister{
-	bmvRegister{
+var RegisterList = []Register{
+	Register{
 		Name:    "BatteryCapacity",
 		Address: 0x1000,
 		Factor:  1,
 		Unit:    "Ah",
 		Signed:  false,
 	},
-	bmvRegister{
+	Register{
 		Name:    "MainVoltage",
 		Address: 0xED8D,
 		Factor:  0.01,
 		Unit:    "V",
 		Signed:  false,
 	},
-	/*
-		bmvRegister{
-			Name:    "MainCurrent",
-			Address: 0xED8F,
-			Factor:  0.1,
-			Unit:    "A",
-		},
-	*/
+	Register{
+		Name:    "MainCurrent",
+		Address: 0xED8F,
+		Factor:  0.1,
+		Unit:    "A",
+		Signed:  true,
+	},
 }
 
-func (reg bmvRegister) RecvNumeric(vd *vedirect.Vedirect) (result bmvNumericValue, err error) {
+func (reg Register) RecvNumeric(vd *vedirect.Vedirect) (result NumericValue, err error) {
 	log.Printf("bmv.BmvGetResgiter begin\n")
 
 	var value float64
@@ -65,7 +63,7 @@ func (reg bmvRegister) RecvNumeric(vd *vedirect.Vedirect) (result bmvNumericValu
 		return
 	}
 
-	result = bmvNumericValue{
+	result = NumericValue{
 		Name:  reg.Name,
 		Value: value * reg.Factor,
 		Unit:  reg.Unit,
