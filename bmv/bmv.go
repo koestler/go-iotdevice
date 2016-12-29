@@ -11,6 +11,7 @@ type bmvRegister struct {
 	Address uint16
 	Factor  float64
 	Unit    string
+	Signed  bool
 }
 
 type bmvNumericValue struct {
@@ -25,12 +26,14 @@ var BmvRegisterList = []bmvRegister{
 		Address: 0x1000,
 		Factor:  1,
 		Unit:    "Ah",
+		Signed:  false,
 	},
 	bmvRegister{
 		Name:    "MainVoltage",
 		Address: 0xED8D,
 		Factor:  0.01,
 		Unit:    "V",
+		Signed:  false,
 	},
 	/*
 		bmvRegister{
@@ -45,7 +48,17 @@ var BmvRegisterList = []bmvRegister{
 func (reg bmvRegister) RecvNumeric(vd *vedirect.Vedirect) (result bmvNumericValue, err error) {
 	log.Printf("bmv.BmvGetResgiter begin\n")
 
-	value, err := vd.VeCommandGetUint(reg.Address)
+	var value float64
+
+	if reg.Signed {
+		var intValue int64
+		intValue, err = vd.VeCommandGetInt(reg.Address)
+		value = float64(intValue)
+	} else {
+		var intValue uint64
+		intValue, err = vd.VeCommandGetUint(reg.Address)
+		value = float64(intValue)
+	}
 
 	if err != nil {
 		log.Printf("bmv.BmvGetResgite failed: %v", err)
@@ -54,7 +67,7 @@ func (reg bmvRegister) RecvNumeric(vd *vedirect.Vedirect) (result bmvNumericValu
 
 	result = bmvNumericValue{
 		Name:  reg.Name,
-		Value: float64(value) * reg.Factor,
+		Value: value * reg.Factor,
 		Unit:  reg.Unit,
 	}
 

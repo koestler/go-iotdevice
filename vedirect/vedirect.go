@@ -288,6 +288,16 @@ func littleEndianBytesToUint(bytes []byte) (res uint64) {
 	return
 }
 
+func littleEndianBytesToInt(bytes []byte) (res int64) {
+	for i, b := range bytes {
+		res |= int64(b) << uint(i*8)
+		if i >= 7 {
+			break
+		}
+	}
+	return
+}
+
 func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 
 	var rawValues []byte
@@ -320,16 +330,26 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 	return
 }
 
-func (vd *Vedirect) VeCommandGetUint(address uint16) (value uint, err error) {
+func (vd *Vedirect) VeCommandGetUint(address uint16) (value uint64, err error) {
 
 	rawValue, err := vd.VeCommandGet(address)
 	if err != nil {
 		return
 	}
 
-	value = uint(littleEndianBytesToUint(rawValue))
+	value = littleEndianBytesToUint(rawValue)
 
-	log.Printf("vedirect.VeComandGetUint rawValue=%X, value=%v", rawValue, value)
+	return
+}
+
+func (vd *Vedirect) VeCommandGetInt(address uint16) (value int64, err error) {
+
+	rawValue, err := vd.VeCommandGet(address)
+	if err != nil {
+		return
+	}
+
+	value = littleEndianBytesToInt(rawValue)
 
 	return
 }
