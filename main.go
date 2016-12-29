@@ -37,7 +37,7 @@ func main() {
 		*/
 
 		for _, reg := range bmv.BmvRegisterList {
-			if _, err := reg.RecvInt(vd); err != nil {
+			if _, err := reg.RecvNumeric(vd); err != nil {
 				log.Printf("main: bmv.BmvGetRegister failed: %v", err)
 			}
 		}

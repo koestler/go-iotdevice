@@ -13,10 +13,10 @@ type bmvRegister struct {
 	Unit    string
 }
 
-type bmvIntValue struct {
+type bmvNumericValue struct {
 	Name  string
+	Value float64
 	Unit  string
-	Value int64
 }
 
 var BmvRegisterList = []bmvRegister{
@@ -26,13 +26,13 @@ var BmvRegisterList = []bmvRegister{
 		Factor:  1,
 		Unit:    "Ah",
 	},
+	bmvRegister{
+		Name:    "MainVoltage",
+		Address: 0xED8D,
+		Factor:  0.01,
+		Unit:    "V",
+	},
 	/*
-		bmvRegister{
-			Name:    "MainVoltage",
-			Address: 0xED8D,
-			Factor:  0.01,
-			Unit:    "V",
-		},
 		bmvRegister{
 			Name:    "MainCurrent",
 			Address: 0xED8F,
@@ -42,22 +42,22 @@ var BmvRegisterList = []bmvRegister{
 	*/
 }
 
-func (reg bmvRegister) RecvInt(vd *vedirect.Vedirect) (value bmvIntValue, err error) {
+func (reg bmvRegister) RecvNumeric(vd *vedirect.Vedirect) (result bmvNumericValue, err error) {
 	log.Printf("bmv.BmvGetResgiter begin\n")
 
-	_, err = vd.VeCommandGet(reg.Address)
+	value, err := vd.VeCommandGetUint(reg.Address)
 
 	if err != nil {
 		log.Printf("bmv.BmvGetResgite failed: %v", err)
 		return
 	}
 
-	value = bmvIntValue{
+	result = bmvNumericValue{
 		Name:  reg.Name,
+		Value: float64(value) * reg.Factor,
 		Unit:  reg.Unit,
-		Value: 42,
 	}
 
-	log.Printf("bmv.BmvGetResgiter end, value=%v\n", value)
+	log.Printf("bmv.BmvGetResgiter end, result=%v\n", result)
 	return
 }

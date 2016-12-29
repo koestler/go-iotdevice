@@ -1,6 +1,7 @@
 package vedirect
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/jacobsa/go-serial/serial"
@@ -196,7 +197,7 @@ func (vd *Vedirect) VeCommandPing() (err error) {
 	return nil
 }
 
-func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
+func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte, err error) {
 	log.Printf("vedirect.VeCommandGet address=%X begin\n", address)
 
 	id := []byte{byte(address), byte(address >> 8)}
@@ -204,7 +205,7 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 
 	//vd.RecvFlush()
 
-	err = vd.SendVeCommand(VeCommandGet, param)
+	err = vd.SendVeCommand(command, param)
 	if err != nil {
 		return
 	}
@@ -221,7 +222,7 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 		return
 	}
 
-	// check command
+	// extract and check command
 	var responseCommand VeCommand
 	if s, err := strconv.ParseUint(string(responseData[0]), 16, 8); err != nil {
 		err = errors.New(fmt.Sprintf("cannot parse responseCommand, s=%v, err=%v", s, err))
@@ -237,16 +238,68 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 		return nil, err
 	}
 
-	// check address
-	var responseAddress uint16
-	if s, err := strconv.ParseUint(string(responseData[1:5]), 16, 16); err != nil {
-		err = errors.New(fmt.Sprintf("cannot parse responseAddress, s=%v, err=%v", s, err))
+	// extract data
+	hexData := responseData[1:]
+	if len(hexData)%2 != 0 {
+		err = errors.New(fmt.Sprintf("received an odd number of hex bytes, len(hexData)=%v", len(hexData)))
 		log.Printf("vedirect.VeCommandGet end, error: %v", err)
 		return nil, err
-	} else {
-		responseAddress = uint16(((s & 0x00FF) << 8) | ((s & 0xFF00) >> 8))
 	}
 
+	numbBytes := len(hexData) / 2
+	binData := make([]byte, numbBytes)
+
+	if n, err := hex.Decode(binData, hexData); err != nil || n != numbBytes {
+		err = errors.New(fmt.Sprintf("hex to bin conversion failed: n=%v, err=%v", n, err))
+		log.Printf("vedirect.VeCommandGet end, error: %v", err)
+		return nil, err
+	}
+
+	// extract and check checksum
+	values = binData[:len(binData)-1]
+	responseChecksum := binData[len(binData)-1]
+
+	checksum := computeChecksum(responseCommand, values)
+	if checksum != responseChecksum {
+		err = errors.New(fmt.Sprintf("checksum != responseChecksum, checksum=%X, responseChecksum=%X", checksum, responseChecksum))
+		log.Printf("vedirect.VeCommandGet end, error: %v", err)
+		return nil, err
+	}
+
+	log.Printf("vedirect.VeCommandGet end values=%v\n", values)
+
+	return
+}
+
+func reverseBytes(b []byte) {
+	for i := len(b)/2 - 1; i >= 0; i-- {
+		opp := len(b) - 1 - i
+		b[i], b[opp] = b[opp], b[i]
+	}
+}
+
+func littleEndianBytesToUint(bytes []byte) (res uint64) {
+	for i, b := range bytes {
+		res |= uint64(b) << uint(i*8)
+		if i >= 7 {
+			break
+		}
+	}
+	return
+}
+
+func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
+
+	var rawValues []byte
+	rawValues, err = vd.VeCommand(VeCommandGet, address)
+	if err != nil {
+		return
+	}
+
+	log.Printf("vedirect.VeCommandGet begin rawValues=%X\n", rawValues)
+
+	// check address
+	responseAddress := uint16(littleEndianBytesToUint(rawValues[0:2]))
 	if address != responseAddress {
 		err = errors.New(fmt.Sprintf("address != responseAddress, address=%v, responseAddress=%v", address, responseAddress))
 		log.Printf("vedirect.VeCommandGet end, error: %v", err)
@@ -254,42 +307,29 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 	}
 
 	// check flag
-	var responseFlag VeResponseFlag
-	if s, err := strconv.ParseUint(string(responseData[6:7]), 16, 8); err != nil {
-		err = errors.New(fmt.Sprintf("cannot parse responseFlag, s=%v, err=%v", s, err))
-		log.Printf("vedirect.VeCommandGet end, error: %v", err)
-		return nil, err
-	} else {
-		responseFlag = VeResponseFlag(s)
-	}
-
+	responseFlag := VeResponseFlag(littleEndianBytesToUint(rawValues[2:3]))
 	if VeResponseFlagOk != responseFlag {
 		err = errors.New(fmt.Sprintf("VeResponseFlagOk != responseFlag, responseFlag=%v", responseFlag))
 		log.Printf("vedirect.VeCommandGet end, error: %v", err)
 		return nil, err
 	}
 
-	// get value
-	value = responseData[7 : len(responseData)-2]
+	// extract value
+	value = rawValues[3:]
 
-	// check checksum
-	var responseChecksum byte
-	if s, err := strconv.ParseUint(string(responseData[len(responseData)-2:]), 16, 8); err != nil {
-		err = errors.New(fmt.Sprintf("cannot parse responseChecksum, s=%v, err=%v", s, err))
-		log.Printf("vedirect.VeCommandGet end, error: %v", err)
-		return nil, err
-	} else {
-		responseChecksum = byte(s)
+	return
+}
+
+func (vd *Vedirect) VeCommandGetUint(address uint16) (value uint, err error) {
+
+	rawValue, err := vd.VeCommandGet(address)
+	if err != nil {
+		return
 	}
 
-	checksum := computeChecksum(responseCommand, responseData[1:len(responseData)-2])
-	if checksum != responseChecksum {
-		err = errors.New(fmt.Sprintf("checksum != responseChecksum, checksum=%X, responseChecksum=%X", checksum, responseChecksum))
-		log.Printf("vedirect.VeCommandGet end, error: %v", err)
-		return nil, err
-	}
+	value = uint(littleEndianBytesToUint(rawValue))
 
-	log.Printf("vedirect.VeCommandGet end, value: %x = %s \n", value, value)
+	log.Printf("vedirect.VeComandGetUint rawValue=%X, value=%v", rawValue, value)
 
 	return
 }
