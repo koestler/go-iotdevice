@@ -1,39 +1,11 @@
 package main
 
 import (
-	"errors"
+	"github.com/koestler/go-ve-sensor/bmv"
 	"github.com/koestler/go-ve-sensor/vedirect"
 	"log"
 	"time"
 )
-
-type veRegister struct {
-	Name    string
-	Address uint16
-	Factor  float64
-	Unit    string
-}
-
-type veValue struct {
-	Name  string
-	Unit  string
-	Value int
-}
-
-var veRegisterList = []veRegister{
-	veRegister{
-		Name:    "MainVoltage",
-		Address: 0xED8D,
-		Factor:  0.01,
-		Unit:    "V",
-	},
-	veRegister{
-		Name:    "MainCurrent",
-		Address: 0xED8F,
-		Factor:  0.1,
-		Unit:    "A",
-	},
-}
 
 func main() {
 	vd, err := vedirect.Open("/dev/ttyUSB0")
@@ -58,16 +30,19 @@ func main() {
 		//log.Println("Sleep 500ms")
 		//time.Sleep(500 * time.Millisecond)
 
-		err := vd.VeCommandPing()
-		if err != nil {
-			log.Printf("main: VeCommandPing failed: %v", err)
+		/*
+			if err := vd.VeCommandPing(); err != nil {
+				log.Printf("main: VeCommandPing failed: %v", err)
+			}
+		*/
+
+		for _, reg := range bmv.BmvRegisterList {
+			if _, err := reg.RecvInt(vd); err != nil {
+				log.Printf("main: bmv.BmvGetRegister failed: %v", err)
+			}
 		}
+
+		log.Printf("\n\n\n")
+
 	}
-}
-
-func veGet(register veRegister) (value veValue, err error) {
-
-	err = errors.New("No implemented yet")
-
-	return
 }
