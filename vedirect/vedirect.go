@@ -56,19 +56,18 @@ func (vd *Vedirect) Recv(b []byte) (err error) {
 	return nil
 }
 
-func (vd *Vedirect) RecvUntil(needle byte, buffer []byte) (err error) {
+func (vd *Vedirect) RecvUntil(needle byte, maxLength int) (data []byte, err error) {
 	log.Printf("vedirect.RecvUntil start, needle=%v\n", needle)
-
-	buffer = buffer[0:0] // make slice empty
 
 	b := make([]byte, 1)
 
-	i := 0
-	for {
+	data = make([]byte, 0, 32)
+
+	for i := 0; i <= maxLength; i += 1 {
 		n, err := vd.Read(b)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if err == io.EOF || n < 1 {
@@ -78,21 +77,15 @@ func (vd *Vedirect) RecvUntil(needle byte, buffer []byte) (err error) {
 
 		if n == 1 && b[0] == needle {
 			log.Printf("vedirect.RecvUntil %v found\n", needle)
-			return nil
+			return data, nil
 		}
 
-		i += 1
-
-		log.Printf("vedirect.RecvUntil i=%v, cap=%v\n", i, cap(buffer))
-
-		if i >= cap(buffer) {
-			return errors.New(
-				fmt.Sprintf("vedirect.RecvUntil gave up after reaching cap(buffer)=%v\n", cap(buffer)),
-			)
-		}
-
-		buffer = append(buffer, b[0])
+		data = append(data, b[0])
 	}
+
+	return nil, errors.New(
+		fmt.Sprintf("vedirect.RecvUntil gave up after reaching maxLength=%v\n", maxLength),
+	)
 }
 
 func (vd *Vedirect) write(b []byte) (n int, err error) {
@@ -178,13 +171,15 @@ func (vd *Vedirect) VeCommandPing() (err error) {
 }
 
 func (vd *Vedirect) RecvVeResponse(data []byte) (err error) {
-	trash := make([]byte, 0, 32)
-	err = vd.RecvUntil(':', trash)
+	_, err = vd.RecvUntil(':', 1024)
 	if err != nil {
 		return err
 	}
 
-	err = vd.RecvUntil('\n', data)
+	data, err = vd.RecvUntil('\n', 7)
+	if err != nil {
+		return err
+	}
 
 	log.Printf("vedirect.RecvVeResponse len(data)=%v, data=%v = %+q\n", len(data), data, data)
 	return err
