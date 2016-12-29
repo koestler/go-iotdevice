@@ -56,27 +56,42 @@ func (vd *Vedirect) Recv(b []byte) (err error) {
 	return nil
 }
 
-func (vd *Vedirect) RecvSyncHex() (err error) {
+func (vd *Vedirect) RecvUntil(needle byte, buffer []byte) (err error) {
+	log.Printf("vedirect.RecvUntil start, needle=%v\n", needle)
+
+	buffer = buffer[0:0] // make slice empty
+
 	b := make([]byte, 1)
 
-	log.Printf("vedirect.RecvSyncHex start\n")
-
+	i := 0
 	for {
 		n, err := vd.Read(b)
-
-		if err == io.EOF {
-			// not answer yet -> wait
-			continue
-		}
 
 		if err != nil {
 			return err
 		}
 
-		if n == 1 && b[0] == ':' {
-			log.Printf("vedirect.RecvSyncHex synced\n")
+		if err == io.EOF || n < 1 {
+			// no answer yet -> wait
+			continue
+		}
+
+		if n == 1 && b[0] == needle {
+			log.Printf("vedirect.RecvUntil %v found\n", needle)
 			return nil
 		}
+
+		i += 1
+
+		log.Printf("vedirect.RecvUntil i=%v, cap=%v\n", i, cap(buffer))
+
+		if i >= cap(buffer) {
+			return errors.New(
+				fmt.Sprintf("vedirect.RecvUntil gave up after reaching cap(buffer)=%v\n", cap(buffer)),
+			)
+		}
+
+		buffer = append(buffer, b[0])
 	}
 }
 
@@ -128,6 +143,8 @@ const (
 
 func (vd *Vedirect) SendVeCommand(cmd VeCommand, data []byte) (err error) {
 
+	log.Printf("vedirect.SendVeCommand: cmd=%v\n", cmd)
+
 	// compute and add checksum
 	checksum := byte(0x55)
 	checksum -= byte(cmd)
@@ -141,10 +158,34 @@ func (vd *Vedirect) SendVeCommand(cmd VeCommand, data []byte) (err error) {
 	return
 }
 
-func (vd *Vedirect) SendVeCommandPing() (err error) {
-	vd.SendVeCommand(vedirect.VeCommandPing, []byte{})
+func (vd *Vedirect) VeCommandPing() (err error) {
+	log.Printf("vedirect.VeCommandPing begin\n")
+
+	err = vd.SendVeCommand(VeCommandPing, []byte{})
+	if err != nil {
+		return err
+	}
+
+	responseData := make([]byte, 0, 7)
+	err = vd.RecvVeResponse(responseData)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("vedirect.VeCommandPing end, responseData=%v\n", responseData)
+
+	return nil
 }
 
-func (vd *Vedirect) RecvVeResponse(cmd VeCommand, data []byte) (veResponseFlag VeResponseFlag, err error) {
+func (vd *Vedirect) RecvVeResponse(data []byte) (err error) {
+	trash := make([]byte, 0, 32)
+	err = vd.RecvUntil(':', trash)
+	if err != nil {
+		return err
+	}
 
+	err = vd.RecvUntil('\n', data)
+
+	log.Printf("vedirect.RecvVeResponse len(data)=%v, data=%v = %+q\n", len(data), data, data)
+	return err
 }

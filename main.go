@@ -58,11 +58,10 @@ func main() {
 		//log.Println("Sleep 500ms")
 		//time.Sleep(500 * time.Millisecond)
 
-		vd.RecvSyncHex()
-
-		ans := make([]byte, 7)
-		vd.Recv(ans)
-
+		err := vd.VeCommandPing()
+		if err != nil {
+			log.Printf("main: VeCommandPing failed: %v", err)
+		}
 	}
 }
 
