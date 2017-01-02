@@ -31,6 +31,7 @@ func main() {
 
 	// setup vedata (the database)
 	vedata.Run()
+	bmvDeviceId := vedata.CreateDevice("test0")
 
 	// start bmv reader
 	routes = append(routes,
@@ -51,10 +52,13 @@ func main() {
 			}
 
 			for regName, reg := range bmv.RegisterList700 {
+				log.Printf("main: bmv.RecvNumeric regName=%v", regName)
+
 				if numericValue, err := reg.RecvNumeric(vd); err != nil {
 					log.Printf("main: bmv.RecvNumeric failed: %v", err)
 				} else {
 					numericValues[regName] = numericValue
+					bmvDeviceId.WriteNumericValue(regName, numericValue)
 				}
 			}
 
