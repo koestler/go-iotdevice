@@ -1,4 +1,4 @@
-package http
+package vehttp
 
 import (
 	"github.com/gorilla/mux"

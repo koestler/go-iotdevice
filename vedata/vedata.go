@@ -1,6 +1,7 @@
 package vedata
 
 import (
+	"errors"
 	"github.com/koestler/go-ve-sensor/bmv"
 	"log"
 )
@@ -12,9 +13,15 @@ type Device struct {
 	NumericValues bmv.NumericValues
 }
 
-type readOp struct {
+type readDeviceOp struct {
 	deviceId DeviceId
-	response chan bmv.NumericValues
+	response chan bool
+	err      error
+	device   Device
+}
+
+type readDeviceIdsOp struct {
+	response chan []DeviceId
 }
 
 type writeOp struct {
@@ -23,19 +30,28 @@ type writeOp struct {
 	response      chan bool
 }
 
-var db map[DeviceId]Device
+type DbType map[DeviceId]Device
 
-var reads chan *readOp
+var running bool
+var db DbType
+var readDeviceChan chan *readDeviceOp
+var readDeviceIdsChan chan *readDeviceIdsOp
 var writes chan *writeOp
 
 func init() {
+	running = false
 	db = make(map[DeviceId]Device)
 
-	reads = make(chan *readOp)
+	readDeviceChan = make(chan *readDeviceOp)
+	readDeviceIdsChan = make(chan *readDeviceIdsOp)
 	writes = make(chan *writeOp)
 }
 
 func CreateDevice(name string) (deviceId DeviceId) {
+	if running {
+		log.Panic("must no call vedata.CreateDevice after vedata.Run")
+	}
+
 	deviceId = DeviceId(len(db) + 1)
 
 	db[deviceId] = Device{
@@ -46,12 +62,25 @@ func CreateDevice(name string) (deviceId DeviceId) {
 	return
 }
 
-func (deviceId DeviceId) Read() {
-	read := &readOp{
+func (deviceId DeviceId) ReadDevice() (device Device, err error) {
+	read := &readDeviceOp{
 		deviceId: deviceId,
-		response: make(chan bmv.NumericValues)}
-	reads <- read
+		response: make(chan bool),
+		err:      nil,
+		device:   Device{},
+	}
+	readDeviceChan <- read
 	<-read.response
+
+	return read.device, read.err
+}
+
+func ReadDeviceIds() (ret []DeviceId) {
+	read := &readDeviceIdsOp{
+		response: make(chan []DeviceId)}
+	readDeviceIdsChan <- read
+	ret = <-read.response
+	return
 }
 
 func (deviceId DeviceId) Write(numericValues bmv.NumericValues) {
@@ -66,6 +95,7 @@ func (deviceId DeviceId) Write(numericValues bmv.NumericValues) {
 
 func Run() {
 	go func() {
+		running = true
 		for {
 			select {
 			case write := <-writes:
@@ -73,9 +103,21 @@ func Run() {
 					db[write.deviceId].NumericValues[k] = v
 				}
 				write.response <- true
-			case read := <-reads:
-				log.Printf("vedata.Read %v", read)
-				read.response <- db[read.deviceId].NumericValues
+			case read := <-readDeviceChan:
+				var ok bool
+				read.device, ok = db[read.deviceId]
+				if !ok {
+					read.err = errors.New("device not found")
+				}
+				read.response <- true
+			case read := <-readDeviceIdsChan:
+				deviceIds := make([]DeviceId, len(db))
+				i := 0
+				for k, _ := range db {
+					deviceIds[i] = k
+					i++
+				}
+				read.response <- deviceIds
 			}
 		}
 	}()

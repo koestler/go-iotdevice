@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/koestler/go-ve-sensor/bmv"
-	"github.com/koestler/go-ve-sensor/http"
 	"github.com/koestler/go-ve-sensor/vedata"
 	"github.com/koestler/go-ve-sensor/vedirect"
+	"github.com/koestler/go-ve-sensor/vehttp"
 	"log"
 	"os"
 	"strconv"
@@ -19,30 +19,11 @@ func main() {
 	}
 	defer vd.Close()
 
-	// setup routes
-	var routes = http.Routes{
-		http.Route{
-			"Index",
-			"GET",
-			"/",
-			Index,
-		},
-	}
-
 	// setup vedata (the database)
 	vedata.Run()
 	bmvDeviceId := vedata.CreateDevice("test0")
 
 	// start bmv reader
-	routes = append(routes,
-		http.Route{
-			"bmv",
-			"GET",
-			"/bmv/",
-			HttpHandleBmv,
-		},
-	)
-
 	go func() {
 		numericValues := make(bmv.NumericValues)
 
@@ -60,12 +41,11 @@ func main() {
 			}
 
 			bmvDeviceId.Write(numericValues)
-			log.Printf("numericValues=%v", numericValues)
 		}
 	}()
 
 	// start http server
-	go func(routes http.Routes) {
+	go func() {
 		bind := os.Getenv("BIND")
 		if len(bind) < 1 {
 			bind = "127.0.0.1"
@@ -78,8 +58,8 @@ func main() {
 			return
 		}
 
-		http.Run(bind, port, routes)
-	}(routes)
+		vehttp.Run(bind, port, vehttp.HttpRoutes)
+	}()
 
 	select {}
 }
