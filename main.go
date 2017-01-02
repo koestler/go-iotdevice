@@ -40,7 +40,7 @@ func main() {
 
 	go func() {
 		numericValues := make([]bmv.NumericValue, len(bmv.RegisterList700))
-		for {
+		for _ = range time.Tick(200 * time.Millisecond) {
 			if err := vd.VeCommandPing(); err != nil {
 				log.Printf("main: VeCommandPing failed: %v", err)
 			}
@@ -52,8 +52,6 @@ func main() {
 					numericValues[i] = numericValue
 				}
 			}
-
-			time.Sleep(200 * time.Millisecond)
 		}
 	}()
 
