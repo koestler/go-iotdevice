@@ -12,8 +12,8 @@ import (
 	"strconv"
 )
 
-//go:generate frontend/download
-//go:generate go-bindata -prefix "frontend/" -pkg main "frontend/..."
+//go:generate frontend/install
+//go:generate go-bindata -prefix "frontend/" -pkg main "frontend"
 
 var HttpRoutes = vehttp.Routes{
 	vehttp.Route{
