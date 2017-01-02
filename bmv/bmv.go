@@ -19,17 +19,10 @@ type NumericValue struct {
 	Unit  string
 }
 
-var RegisterList = []Register{
+var RegisterList700 = []Register{
 	Register{
 		Name:    "MainVoltage",
 		Address: 0xED8D,
-		Factor:  0.01,
-		Unit:    "V",
-		Signed:  false,
-	},
-	Register{
-		Name:    "AuxVoltage",
-		Address: 0xED7D,
 		Factor:  0.01,
 		Unit:    "V",
 		Signed:  false,
@@ -70,32 +63,11 @@ var RegisterList = []Register{
 		Signed:  false,
 	},
 	Register{
-		Name:    "Synchronized",
-		Address: 0xEEB6,
-		Factor:  1,
-		Unit:    "1",
-		Signed:  false,
-	},
-	Register{
 		Name:    "Temperature",
 		Address: 0xEDEC,
 		Factor:  0.01,
 		Unit:    "K",
 		Signed:  false,
-	},
-	Register{
-		Name:    "MidPointVoltage",
-		Address: 0x0382,
-		Factor:  0.01,
-		Unit:    "V",
-		Signed:  false,
-	},
-	Register{
-		Name:    "MidPointVoltageDeviation",
-		Address: 0x0383,
-		Factor:  0.1,
-		Unit:    "%",
-		Signed:  true,
 	},
 	Register{
 		Name:    "DepthOfTheDeepestDischarge",
@@ -182,6 +154,51 @@ var RegisterList = []Register{
 		Signed:  false,
 	},
 	Register{
+		Name:    "AmountOfDischargedEnergy",
+		Address: 0x0310,
+		Factor:  0.01,
+		Unit:    "kWh",
+		Signed:  false,
+	},
+	Register{
+		Name:    "AmountOfChargedEnergy",
+		Address: 0x0311,
+		Factor:  0.01,
+		Unit:    "kWh",
+		Signed:  false,
+	},
+}
+
+var RegisterList702 = []Register{
+	Register{
+		Name:    "AuxVoltage",
+		Address: 0xED7D,
+		Factor:  0.01,
+		Unit:    "V",
+		Signed:  false,
+	},
+	Register{
+		Name:    "Synchronized",
+		Address: 0xEEB6,
+		Factor:  1,
+		Unit:    "1",
+		Signed:  false,
+	},
+	Register{
+		Name:    "MidPointVoltage",
+		Address: 0x0382,
+		Factor:  0.01,
+		Unit:    "V",
+		Signed:  false,
+	},
+	Register{
+		Name:    "MidPointVoltageDeviation",
+		Address: 0x0383,
+		Factor:  0.1,
+		Unit:    "%",
+		Signed:  true,
+	},
+	Register{
 		Name:    "NumberOfLowAuxVoltageAlarms",
 		Address: 0x030C,
 		Factor:  1,
@@ -209,25 +226,9 @@ var RegisterList = []Register{
 		Unit:    "V",
 		Signed:  true,
 	},
-	Register{
-		Name:    "AmountOfDischargedEnergy",
-		Address: 0x0310,
-		Factor:  0.01,
-		Unit:    "kWh",
-		Signed:  false,
-	},
-	Register{
-		Name:    "AmountOfChargedEnergy",
-		Address: 0x0311,
-		Factor:  0.01,
-		Unit:    "kWh",
-		Signed:  false,
-	},
 }
 
 func (reg Register) RecvNumeric(vd *vedirect.Vedirect) (result NumericValue, err error) {
-	log.Printf("bmv.BmvGetResgiter begin\n")
-
 	var value float64
 
 	if reg.Signed {
@@ -251,6 +252,5 @@ func (reg Register) RecvNumeric(vd *vedirect.Vedirect) (result NumericValue, err
 		Unit:  reg.Unit,
 	}
 
-	log.Printf("bmv.BmvGetResgiter end, result=%v\n", result)
 	return
 }

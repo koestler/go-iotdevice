@@ -39,13 +39,13 @@ func main() {
 	)
 
 	go func() {
-		numericValues := make([]bmv.NumericValue, len(bmv.RegisterList))
+		numericValues := make([]bmv.NumericValue, len(bmv.RegisterList700))
 		for {
 			if err := vd.VeCommandPing(); err != nil {
 				log.Printf("main: VeCommandPing failed: %v", err)
 			}
 
-			for i, reg := range bmv.RegisterList {
+			for i, reg := range bmv.RegisterList700 {
 				if numericValue, err := reg.RecvNumeric(vd); err != nil {
 					log.Printf("main: bmv.RecvNumeric failed: %v", err)
 				} else {
