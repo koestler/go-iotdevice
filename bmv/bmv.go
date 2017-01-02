@@ -5,163 +5,144 @@ import (
 	"log"
 )
 
+type NumericValues map[string]NumericValue
+
+type NumericValue struct {
+	Value float64
+	Unit  string
+}
+
+type Registers map[string]Register
+
 type Register struct {
-	Name    string
 	Address uint16
 	Factor  float64
 	Unit    string
 	Signed  bool
 }
 
-type NumericValue struct {
-	Name  string
-	Value float64
-	Unit  string
-}
-
-var RegisterList700 = []Register{
-	Register{
-		Name:    "MainVoltage",
+var RegisterList700 = Registers{
+	"MainVoltage": Register{
 		Address: 0xED8D,
 		Factor:  0.01,
 		Unit:    "V",
 		Signed:  false,
 	},
-	Register{
-		Name:    "Current",
+	"Current": Register{
 		Address: 0xED8F,
 		Factor:  0.1,
 		Unit:    "A",
 		Signed:  true,
 	},
-	Register{
-		Name:    "Power",
+	"Power": Register{
 		Address: 0xED8E,
 		Factor:  1,
 		Unit:    "W",
 		Signed:  true,
 	},
-	Register{
-		Name:    "Consumed",
+	"Consumed": Register{
 		Address: 0xEEFF,
 		Factor:  0.1,
 		Unit:    "Ah",
 		Signed:  true,
 	},
-	Register{
-		Name:    "StateOfCharge",
+	"StateOfCharge": Register{
 		Address: 0x0FFF,
 		Factor:  0.01,
 		Unit:    "%",
 		Signed:  false,
 	},
-	Register{
-		Name:    "TimeToGo",
+	"TimeToGo": Register{
 		Address: 0x0FFE,
 		Factor:  1,
 		Unit:    "min",
 		Signed:  false,
 	},
-	Register{
-		Name:    "Temperature",
+	"Temperature": Register{
 		Address: 0xEDEC,
 		Factor:  0.01,
 		Unit:    "K",
 		Signed:  false,
 	},
-	Register{
-		Name:    "DepthOfTheDeepestDischarge",
+	"DepthOfTheDeepestDischarge": Register{
 		Address: 0x0300,
 		Factor:  0.1,
 		Unit:    "Ah",
 		Signed:  true,
 	},
-	Register{
-		Name:    "DepthOfTheLastDischarge",
+	"DepthOfTheLastDischarge": Register{
 		Address: 0x0301,
 		Factor:  0.1,
 		Unit:    "Ah",
 		Signed:  true,
 	},
-	Register{
-		Name:    "DepthOfTheAverageDischarge",
+	"DepthOfTheAverageDischarge": Register{
 		Address: 0x0302,
 		Factor:  0.1,
 		Unit:    "Ah",
 		Signed:  true,
 	},
-	Register{
-		Name:    "NumberOfCycles",
+	"NumberOfCycles": Register{
 		Address: 0x0303,
 		Factor:  1,
 		Unit:    "",
 		Signed:  false,
 	},
-	Register{
-		Name:    "NumberOfFullDischarges",
+	"NumberOfFullDischarges": Register{
 		Address: 0x0304,
 		Factor:  1,
 		Unit:    "",
 		Signed:  false,
 	},
-	Register{
-		Name:    "CumulativeAmpHours",
+	"CumulativeAmpHours": Register{
 		Address: 0x0305,
 		Factor:  0.1,
 		Unit:    "Ah",
 		Signed:  true,
 	},
-	Register{
-		Name:    "MainVoltageMinimum",
+	"MainVoltageMinimum": Register{
 		Address: 0x0306,
 		Factor:  0.01,
 		Unit:    "V",
 		Signed:  false,
 	},
-	Register{
-		Name:    "MainVoltageMaximum",
+	"MainVoltageMaximum": Register{
 		Address: 0x0307,
 		Factor:  0.01,
 		Unit:    "V",
 		Signed:  false,
 	},
-	Register{
-		Name:    "DaysSinceFullChrage",
+	"DaysSinceFullChrage": Register{
 		Address: 0x0308,
 		Factor:  1,
 		Unit:    "d",
 		Signed:  false,
 	},
-	Register{
-		Name:    "NumberOfAutomaticSynchronizations",
+	"NumberOfAutomaticSynchronizations": Register{
 		Address: 0x0309,
 		Factor:  1,
 		Unit:    "",
 		Signed:  false,
 	},
-	Register{
-		Name:    "NumberOfLowMainVoltageAlarms",
+	"NumberOfLowMainVoltageAlarms": Register{
 		Address: 0x030A,
 		Factor:  1,
 		Unit:    "",
 		Signed:  false,
 	},
-	Register{
-		Name:    "NumberOfHighMainVoltageAlarms",
+	"NumberOfHighMainVoltageAlarms": Register{
 		Address: 0x030B,
 		Factor:  1,
 		Unit:    "",
 		Signed:  false,
 	},
-	Register{
-		Name:    "AmountOfDischargedEnergy",
+	"AmountOfDischargedEnergy": Register{
 		Address: 0x0310,
 		Factor:  0.01,
 		Unit:    "kWh",
 		Signed:  false,
 	},
-	Register{
-		Name:    "AmountOfChargedEnergy",
+	"AmountOfChargedEnergy": Register{
 		Address: 0x0311,
 		Factor:  0.01,
 		Unit:    "kWh",
@@ -169,58 +150,50 @@ var RegisterList700 = []Register{
 	},
 }
 
-var RegisterList702 = []Register{
-	Register{
-		Name:    "AuxVoltage",
+var RegisterList702 = Registers{
+	"AuxVoltage": Register{
 		Address: 0xED7D,
 		Factor:  0.01,
 		Unit:    "V",
 		Signed:  false,
 	},
-	Register{
-		Name:    "Synchronized",
+	"Synchronized": Register{
 		Address: 0xEEB6,
 		Factor:  1,
 		Unit:    "1",
 		Signed:  false,
 	},
-	Register{
-		Name:    "MidPointVoltage",
+	"MidPointVoltage": Register{
 		Address: 0x0382,
 		Factor:  0.01,
 		Unit:    "V",
 		Signed:  false,
 	},
-	Register{
-		Name:    "MidPointVoltageDeviation",
+	"MidPointVoltageDeviation": Register{
 		Address: 0x0383,
 		Factor:  0.1,
 		Unit:    "%",
 		Signed:  true,
 	},
-	Register{
-		Name:    "NumberOfLowAuxVoltageAlarms",
+	"NumberOfLowAuxVoltageAlarms": Register{
 		Address: 0x030C,
 		Factor:  1,
 		Unit:    "",
 		Signed:  false,
 	},
-	Register{
-		Name:    "NumberOfHighAuxVoltageAlarms",
+	"NumberOfHighAuxVoltageAlarms": Register{
 		Address: 0x030D,
 		Factor:  1,
 		Unit:    "",
 		Signed:  false,
 	},
-	Register{
-		Name:    "AuxVoltageMinimum",
+	"AuxVoltageMinimum": Register{
 		Address: 0x030E,
 		Factor:  0.01,
 		Unit:    "V",
 		Signed:  true,
 	},
-	Register{
-		Name:    "AuxVoltageMaximum",
+	"AuxVoltageMaximum": Register{
 		Address: 0x030F,
 		Factor:  0.01,
 		Unit:    "V",
@@ -247,7 +220,6 @@ func (reg Register) RecvNumeric(vd *vedirect.Vedirect) (result NumericValue, err
 	}
 
 	result = NumericValue{
-		Name:  reg.Name,
 		Value: value * reg.Factor,
 		Unit:  reg.Unit,
 	}

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/koestler/go-ve-sensor/bmv"
 	"github.com/koestler/go-ve-sensor/http"
+	"github.com/koestler/go-ve-sensor/vedata"
 	"github.com/koestler/go-ve-sensor/vedirect"
 	"log"
 	"os"
@@ -28,6 +29,9 @@ func main() {
 		},
 	}
 
+	// setup vedata (the database)
+	vedata.Run()
+
 	// start bmv reader
 	routes = append(routes,
 		http.Route{
@@ -39,19 +43,22 @@ func main() {
 	)
 
 	go func() {
-		numericValues := make([]bmv.NumericValue, len(bmv.RegisterList700))
+		numericValues := make(bmv.NumericValues)
+
 		for _ = range time.Tick(200 * time.Millisecond) {
 			if err := vd.VeCommandPing(); err != nil {
 				log.Printf("main: VeCommandPing failed: %v", err)
 			}
 
-			for i, reg := range bmv.RegisterList700 {
+			for regName, reg := range bmv.RegisterList700 {
 				if numericValue, err := reg.RecvNumeric(vd); err != nil {
 					log.Printf("main: bmv.RecvNumeric failed: %v", err)
 				} else {
-					numericValues[i] = numericValue
+					numericValues[regName] = numericValue
 				}
 			}
+
+			log.Printf("numericValues=%v", numericValues)
 		}
 	}()
 
