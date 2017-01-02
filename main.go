@@ -46,22 +46,20 @@ func main() {
 	go func() {
 		numericValues := make(bmv.NumericValues)
 
-		for _ = range time.Tick(200 * time.Millisecond) {
+		for _ = range time.Tick(500 * time.Millisecond) {
 			if err := vd.VeCommandPing(); err != nil {
 				log.Printf("main: VeCommandPing failed: %v", err)
 			}
 
 			for regName, reg := range bmv.RegisterList700 {
-				log.Printf("main: bmv.RecvNumeric regName=%v", regName)
-
 				if numericValue, err := reg.RecvNumeric(vd); err != nil {
 					log.Printf("main: bmv.RecvNumeric failed: %v", err)
 				} else {
 					numericValues[regName] = numericValue
-					bmvDeviceId.WriteNumericValue(regName, numericValue)
 				}
 			}
 
+			bmvDeviceId.Write(numericValues)
 			log.Printf("numericValues=%v", numericValues)
 		}
 	}()

@@ -18,10 +18,9 @@ type readOp struct {
 }
 
 type writeOp struct {
-	deviceId DeviceId
-	key      string
-	value    bmv.NumericValue
-	response chan bool
+	deviceId      DeviceId
+	numericValues bmv.NumericValues
+	response      chan bool
 }
 
 var db map[DeviceId]Device
@@ -55,12 +54,11 @@ func (deviceId DeviceId) Read() {
 	<-read.response
 }
 
-func (deviceId DeviceId) WriteNumericValue(key string, value bmv.NumericValue) {
+func (deviceId DeviceId) Write(numericValues bmv.NumericValues) {
 	write := &writeOp{
-		deviceId: deviceId,
-		key:      key,
-		value:    value,
-		response: make(chan bool),
+		deviceId:      deviceId,
+		numericValues: numericValues,
+		response:      make(chan bool),
 	}
 	writes <- write
 	<-write.response
@@ -71,7 +69,9 @@ func Run() {
 		for {
 			select {
 			case write := <-writes:
-				db[write.deviceId].NumericValues[write.key] = write.value
+				for k, v := range write.numericValues {
+					db[write.deviceId].NumericValues[k] = v
+				}
 				write.response <- true
 			case read := <-reads:
 				log.Printf("vedata.Read %v", read)
