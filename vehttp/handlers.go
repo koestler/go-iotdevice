@@ -1,20 +1,25 @@
 package vehttp
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/koestler/go-ve-sensor/vedata"
+	"io"
 	"net/http"
 	"strconv"
 )
+
+//go:generate frontend/download
+//go:generate go-bindata -prefix "frontend/" -pkg vehttp "frontend/..."
 
 var HttpRoutes = Routes{
 	Route{
 		"Index",
 		"GET",
 		"/",
-		Index,
+		HttpHandleAssetsGet,
 	},
 	Route{
 		"DeviceIndex",
@@ -28,15 +33,17 @@ var HttpRoutes = Routes{
 		"/device/{DeviceId:[0-9]+}",
 		HttpHandleDeviceGet,
 	},
+	Route{
+		"Assets",
+		"GET",
+		"/assets/{Path}",
+		HttpHandleAssetsGet,
+	},
 }
 
 type jsonErr struct {
 	Code int    `json:"code"`
 	Text string `json:"text"`
-}
-
-func Index(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Welcome to the go-ve-sensor server!\n")
 }
 
 func writeJsonHeaders(w http.ResponseWriter, status int) {
@@ -93,5 +100,22 @@ func HttpHandleDeviceGet(w http.ResponseWriter, r *http.Request) {
 		w.Write(b)
 	} else {
 		jsonWriteNotFound(w)
+	}
+}
+
+func HttpHandleAssetsGet(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	path := vars["Path"]
+	if path == "" {
+		path = "index.html"
+	}
+
+	if bs, err := Asset(path); err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprint(w, "404 asset not found\n")
+	} else {
+		var reader = bytes.NewBuffer(bs)
+		io.Copy(w, reader)
 	}
 }
