@@ -1,4 +1,4 @@
-package vehttp
+package main
 
 import (
 	"bytes"
@@ -6,34 +6,35 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/koestler/go-ve-sensor/vedata"
+	"github.com/koestler/go-ve-sensor/vehttp"
 	"io"
 	"net/http"
 	"strconv"
 )
 
 //go:generate frontend/download
-//go:generate go-bindata -prefix "frontend/" -pkg vehttp "frontend/..."
+//go:generate go-bindata -prefix "frontend/" -pkg main "frontend/..."
 
-var HttpRoutes = Routes{
-	Route{
+var HttpRoutes = vehttp.Routes{
+	vehttp.Route{
 		"Index",
 		"GET",
 		"/",
 		HttpHandleAssetsGet,
 	},
-	Route{
+	vehttp.Route{
 		"DeviceIndex",
 		"GET",
 		"/device/",
 		HttpHandleDeviceIndex,
 	},
-	Route{
+	vehttp.Route{
 		"DeviceIndex",
 		"GET",
 		"/device/{DeviceId:[0-9]+}",
 		HttpHandleDeviceGet,
 	},
-	Route{
+	vehttp.Route{
 		"Assets",
 		"GET",
 		"/assets/{Path}",

@@ -58,7 +58,7 @@ func main() {
 			return
 		}
 
-		vehttp.Run(bind, port, vehttp.HttpRoutes)
+		vehttp.Run(bind, port, HttpRoutes)
 	}()
 
 	select {}
