@@ -247,13 +247,6 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 	return
 }
 
-func reverseBytes(b []byte) {
-	for i := len(b)/2 - 1; i >= 0; i-- {
-		opp := len(b) - 1 - i
-		b[i], b[opp] = b[opp], b[i]
-	}
-}
-
 func littleEndianBytesToUint(bytes []byte) (res uint64) {
 	for i, b := range bytes {
 		res |= uint64(b) << uint(i*8)
