@@ -6,12 +6,23 @@ import (
 	"github.com/koestler/go-ve-sensor/vedirect"
 	"github.com/koestler/go-ve-sensor/vehttp"
 	"log"
-	"os"
-	"strconv"
 	"time"
 )
 
 func main() {
+	log.Printf("start go-ve-sensor...")
+
+	// start http server
+	go func() {
+		httpdConfig := GetHttpdConfig()
+		vehttp.Run(httpdConfig.Bind, httpdConfig.Port, HttpRoutes)
+	}()
+
+	select {}
+
+}
+
+func todo() {
 	vd, err := vedirect.Open("/dev/ttyUSB0")
 	if err != nil {
 		log.Fatalf("main:cannot create vedirect")
@@ -44,22 +55,4 @@ func main() {
 		}
 	}()
 
-	// start http server
-	go func() {
-		bind := os.Getenv("BIND")
-		if len(bind) < 1 {
-			bind = "127.0.0.1"
-		}
-
-		port, err := strconv.Atoi(os.Getenv("PORT"))
-		if err != nil {
-			log.Fatal("while parsing the PORT env variable:")
-			log.Fatal(err.Error())
-			return
-		}
-
-		vehttp.Run(bind, port, HttpRoutes)
-	}()
-
-	select {}
 }
