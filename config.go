@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"github.com/go-ini/ini"
 	"log"
 	"strings"
@@ -22,32 +24,38 @@ type HttpdConfig struct {
 	Port int
 }
 
-func GetHttpdConfig() (httpdConfig *HttpdConfig) {
+func GetHttpdConfig() (httpdConfig *HttpdConfig, err error) {
 	httpdConfig = &HttpdConfig{
 		Bind: "127.0.0.1",
-		Port: 8000,
+		Port: 0,
 	}
 
-	err := config.Section("Httpd").MapTo(httpdConfig)
+	err = config.Section("Httpd").MapTo(httpdConfig)
 
 	if err != nil {
-		log.Fatal("cannot read httpd configuration: %v", err)
+		return nil, fmt.Errorf("cannot read httpd configuration: %v", err)
+	}
+
+	if httpdConfig.Port == 0 {
+		return nil, errors.New("Httpd:Port missing")
 	}
 
 	return
 }
 
 type BmvConfig struct {
-	Type   string
-	Device string
-	Aux    string
+	DeviceName string
+	Type       string
+	Device     string
+	Aux        string
 }
 
 func GetBmvConfig(sectionName string) (bmvConfig BmvConfig) {
 	bmvConfig = BmvConfig{
-		Type:   "unset",
-		Device: "unset",
-		Aux:    "none",
+		DeviceName: sectionName[5:],
+		Type:       "unset",
+		Device:     "unset",
+		Aux:        "none",
 	}
 
 	err := config.Section(sectionName).MapTo(&bmvConfig)

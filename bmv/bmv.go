@@ -215,7 +215,7 @@ func (reg Register) RecvNumeric(vd *vedirect.Vedirect) (result NumericValue, err
 	}
 
 	if err != nil {
-		log.Printf("bmv.BmvGetResgite failed: %v", err)
+		log.Printf("bmv.RecvNumeric failed: %v", err)
 		return
 	}
 
