@@ -112,7 +112,7 @@ var RegisterList700 = Registers{
 		Unit:    "V",
 		Signed:  false,
 	},
-	"DaysSinceFullChrage": Register{
+	"DaysSinceFullCharge": Register{
 		Address: 0x0308,
 		Factor:  1,
 		Unit:    "d",
