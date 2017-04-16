@@ -9,8 +9,6 @@ import (
 func main() {
 	log.Print("start go-ve-sensor...")
 
-	_ = "breakpoint"
-
 	// start http server
 	httpdConfig, err := GetHttpdConfig()
 	if err == nil {

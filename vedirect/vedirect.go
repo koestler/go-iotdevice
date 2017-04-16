@@ -26,8 +26,6 @@ func Open(portName string) (*Vedirect, error) {
 		InterCharacterTimeout: 100,
 	}
 
-	_ = "breakpoint"
-
 	io, err := serial.Open(options)
 	if err != nil {
 		log.Fatalf("vedirect.Open: %v\n", err)
@@ -170,9 +168,6 @@ func (vd *Vedirect) SendVeCommand(cmd VeCommand, data []byte) (err error) {
 }
 
 func (vd *Vedirect) VeCommandPing() (err error) {
-
-	_ = "breakpoint"
-
 	err = vd.SendVeCommand(VeCommandPing, []byte{})
 	if err != nil {
 		return err
@@ -277,9 +272,6 @@ func littleEndianBytesToInt(bytes []byte) (res int64) {
 }
 
 func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
-
-	_ = "breakpoint"
-
 	var rawValues []byte
 	rawValues, err = vd.VeCommand(VeCommandGet, address)
 	if err != nil {
