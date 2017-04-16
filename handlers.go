@@ -9,8 +9,8 @@ import (
 	"github.com/koestler/go-ve-sensor/vedata"
 	"github.com/koestler/go-ve-sensor/vehttp"
 	"io"
+	"log"
 	"net/http"
-	"strconv"
 )
 
 //go:generate frontend/install
@@ -24,6 +24,12 @@ var HttpRoutes = vehttp.Routes{
 		HttpHandleAssetsGet,
 	},
 	vehttp.Route{
+		"Assets",
+		"GET",
+		"/assets/{Path}",
+		HttpHandleAssetsGet,
+	},
+	vehttp.Route{
 		"DeviceIndex",
 		"GET",
 		"/device/",
@@ -32,14 +38,8 @@ var HttpRoutes = vehttp.Routes{
 	vehttp.Route{
 		"DeviceIndex",
 		"GET",
-		"/device/{DeviceId:[0-9]+}",
+		"/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}",
 		HttpHandleDeviceGet,
-	},
-	vehttp.Route{
-		"Assets",
-		"GET",
-		"/assets/{Path}",
-		HttpHandleAssetsGet,
 	},
 }
 
@@ -95,13 +95,9 @@ func HttpHandleDeviceIndex(w http.ResponseWriter, r *http.Request) {
 func HttpHandleDeviceGet(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	var deviceIdInt int
-	var err error
-	if deviceIdInt, err = strconv.Atoi(vars["DeviceId"]); err != nil {
-		panic(err)
-	}
+	log.Printf("HttpHandleDeviceGet: vars=%v", vars)
 
-	deviceId := vedata.DeviceId(deviceIdInt)
+	deviceId := vedata.DeviceId(vars["DeviceId"])
 	device, err := deviceId.ReadDevice()
 
 	if err == nil {

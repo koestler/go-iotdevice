@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type DeviceId uint64
+type DeviceId string
 
 type Device struct {
 	Config        config.BmvConfig
@@ -57,14 +57,14 @@ func CreateDevice(config config.BmvConfig) (deviceId DeviceId) {
 		log.Panic("must no call vedata.CreateDevice after vedata.Run")
 	}
 
-	deviceId = DeviceId(len(db) + 1)
+	deviceId = DeviceId(config.Name)
 
 	db[deviceId] = &Device{
 		Config:        config,
 		NumericValues: make(bmv.NumericValues),
 	}
 
-	log.Printf("vedata: device created: %v = %v", deviceId, config.Name)
+	log.Printf("vedata: device created: %v", deviceId)
 
 	return
 }
