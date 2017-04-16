@@ -18,8 +18,33 @@ func GetSession(mongoHost string) *mgo.Session {
 	return session
 }
 
+func ensureIndexAndIgnoreError(collection *mgo.Collection, index mgo.Index) {
+	err := collection.EnsureIndex(index)
+
+	if err != nil {
+		log.Printf("mongo: index creation failed: %v", err)
+	}
+
+}
+
 func Run(session *mgo.Session, databaseName string, rawValuesIntervall int) {
 	collection := session.DB(databaseName).C("RawValues")
+
+	ensureIndexAndIgnoreError(collection, mgo.Index{
+		Key:        []string{"type"},
+		Unique:     false,
+		DropDups:   false,
+		Background: true,
+		Sparse:     true,
+	})
+
+	ensureIndexAndIgnoreError(collection, mgo.Index{
+		Key:        []string{"name", "updated"},
+		Unique:     false,
+		DropDups:   false,
+		Background: true,
+		Sparse:     true,
+	})
 
 	go func() {
 		for _ = range time.Tick(time.Duration(rawValuesIntervall) * time.Millisecond) {
