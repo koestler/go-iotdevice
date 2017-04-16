@@ -43,8 +43,6 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 	id := []byte{byte(address), byte(address >> 8)}
 	param := append(id, 0x00)
 
-	//vd.RecvFlush()
-
 	err = vd.SendVeCommand(command, param)
 	if err != nil {
 		return
