@@ -32,11 +32,8 @@ func Run(session *mgo.Session, databaseName string, rawValuesIntervall int) {
 
 				if err := collection.Insert(device); err != nil {
 					log.Print("mongo: cannot insert: %v", err)
-				} else {
-					log.Printf("mongo: write ...")
 				}
 			}
-
 		}
 	}()
 }

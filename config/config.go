@@ -11,11 +11,11 @@ import (
 var config *ini.File
 
 func init() {
-	log.Printf("load configuration...")
+	log.Printf("config: load configuration...")
 	var err error
 	config, err = ini.Load("config.ini")
 	if err != nil {
-		log.Fatal("cannot load configuration: %v", err)
+		log.Fatal("config: cannot load configuration: %v", err)
 	}
 }
 
@@ -85,7 +85,7 @@ func GetBmvConfig(sectionName string) (bmvConfig BmvConfig) {
 	err := config.Section(sectionName).MapTo(&bmvConfig)
 
 	if err != nil {
-		log.Fatal("cannot read bmv configuration: %v", err)
+		log.Fatal("config: cannot read bmv configuration: %v", err)
 	}
 
 	return

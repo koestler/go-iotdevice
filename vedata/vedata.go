@@ -13,8 +13,9 @@ import (
 type DeviceId string
 
 type Device struct {
-	Config        config.BmvConfig
-	LastUpdate    time.Time
+	Name          string
+	Type          string
+	Updated       time.Time
 	NumericValues bmv.NumericValues
 }
 
@@ -54,13 +55,14 @@ func init() {
 
 func CreateDevice(config config.BmvConfig) (deviceId DeviceId) {
 	if running {
-		log.Panic("must no call vedata.CreateDevice after vedata.Run")
+		log.Panic("vedata: must no call vedata.CreateDevice after vedata.Run")
 	}
 
 	deviceId = DeviceId(config.Name)
 
 	db[deviceId] = &Device{
-		Config:        config,
+		Name:          config.Name,
+		Type:          config.Type,
 		NumericValues: make(bmv.NumericValues),
 	}
 
@@ -119,7 +121,7 @@ func Run() {
 					for k, v := range write.numericValues {
 						device.NumericValues[k] = v
 					}
-					device.LastUpdate = time.Now()
+					device.Updated = time.Now()
 				}
 				write.response <- true
 			case read := <-readDeviceChan:

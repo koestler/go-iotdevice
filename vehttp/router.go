@@ -36,6 +36,6 @@ func newRouter(routes Routes) *mux.Router {
 func Run(bind string, port int, routes Routes) {
 	router := newRouter(routes)
 
-	log.Printf("[go-ve-sensor] listening on port %v", port)
+	log.Printf("vehttp: listening on port %v", port)
 	log.Fatal(router, http.ListenAndServe(bind+":"+strconv.Itoa(port), router))
 }

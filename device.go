@@ -17,7 +17,7 @@ func BmvStart(config config.BmvConfig) {
 	// create
 	vd, err := vedirect.Open(config.Device)
 	if err != nil {
-		log.Fatalf("main:cannot create vedirect, device=%v", config.Device)
+		log.Fatalf("device: cannot create vedirect, device=%v", config.Device)
 		return
 	}
 
@@ -27,25 +27,25 @@ func BmvStart(config config.BmvConfig) {
 
 		for _ = range time.Tick(400 * time.Millisecond) {
 			if err := vd.VeCommandPing(); err != nil {
-				log.Printf("main: VeCommandPing failed: %v", err)
+				log.Printf("device: VeCommandPing failed: %v", err)
 			}
 
 			var registers bmv.Registers
 
 			switch config.Type {
-			case "700":
+			case "bmv700":
 				registers = bmv.RegisterList700
 				break
-			case "702":
+			case "bmv702":
 				registers = bmv.RegisterList702
 				break
 			default:
-				log.Fatalf("unknown Bmv.Type: %v", config.Type)
+				log.Fatalf("device: unknown Bmv.Type: %v", config.Type)
 			}
 
 			for regName, reg := range registers {
 				if numericValue, err := reg.RecvNumeric(vd); err != nil {
-					log.Printf("main: bmv.RecvNumeric failed: %v", err)
+					log.Printf("device: bmv.RecvNumeric failed: %v", err)
 				} else {
 					numericValues[regName] = numericValue
 					if config.DebugPrint {

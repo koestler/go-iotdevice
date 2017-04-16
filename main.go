@@ -9,15 +9,15 @@ import (
 )
 
 func main() {
-	log.Print("start go-ve-sensor...")
+	log.Print("main: start go-ve-sensor...")
 
 	// start http server
 	httpdConfig, err := config.GetHttpdConfig()
 	if err == nil {
-		log.Print("start http server, config=%v", httpdConfig)
+		log.Print("main: start http server, config=%v", httpdConfig)
 		go vehttp.Run(httpdConfig.Bind, httpdConfig.Port, HttpRoutes)
 	} else {
-		log.Printf("skip http server, err=%v", err)
+		log.Printf("main: skip http server, err=%v", err)
 	}
 
 	// startup Bmv Device
@@ -27,22 +27,21 @@ func main() {
 	}
 
 	// run database synchronization routine
-	log.Print("start database")
+	log.Print("main: start database")
 	vedata.Run()
 
 	// initialize mongodb
 	mongoConfig, err := config.GetMongoConfig()
-	log.Printf("mongoConfig=%v", mongoConfig)
 	if err == nil {
-		log.Printf("start mongodatabase writer")
+		log.Printf("main: start mongo database connection, config=%v", mongoConfig)
 		mongoSession := mongo.GetSession(mongoConfig.MongoHost)
 		defer mongoSession.Close()
 		mongo.Run(mongoSession, mongoConfig.DatabaseName, mongoConfig.RawValuesIntervall)
 	} else {
-		log.Printf("skip mongo database initialization")
+		log.Printf("main: skip mongo database initialization")
 	}
 
-	log.Print("start completed")
+	log.Print("main: start completed")
 	select {}
 
 }
