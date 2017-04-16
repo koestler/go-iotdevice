@@ -114,7 +114,7 @@ var RegisterList700 = Registers{
 	},
 	"DaysSinceFullCharge": Register{
 		Address: 0x0308,
-		Factor:  1,
+		Factor:  float64(1) / float64(86400),
 		Unit:    "d",
 		Signed:  false,
 	},
