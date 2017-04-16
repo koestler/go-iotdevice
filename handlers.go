@@ -8,7 +8,6 @@ import (
 	"github.com/koestler/go-ve-sensor/vedata"
 	"github.com/koestler/go-ve-sensor/vehttp"
 	"io"
-	"log"
 	"net/http"
 )
 
@@ -82,8 +81,6 @@ func HttpHandleDeviceIndex(w http.ResponseWriter, r *http.Request) {
 
 func HttpHandleDeviceGet(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-
-	log.Printf("HttpHandleDeviceGet: vars=%v", vars)
 
 	deviceId := vedata.DeviceId(vars["DeviceId"])
 	device, err := deviceId.ReadDevice()
