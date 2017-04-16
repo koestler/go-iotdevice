@@ -43,6 +43,28 @@ func GetHttpdConfig() (httpdConfig *HttpdConfig, err error) {
 	return
 }
 
+type MongoConfig struct {
+	MongoHost          string
+	DatabaseName       string
+	RawValuesIntervall int
+}
+
+func GetMongoConfig() (mongoConfig *MongoConfig, err error) {
+	mongoConfig = &MongoConfig{
+		MongoHost:          "127.0.0.1",
+		DatabaseName:       "go-ve-sensor",
+		RawValuesIntervall: 2000,
+	}
+
+	err = config.Section("Mongo").MapTo(mongoConfig)
+
+	if err != nil {
+		return nil, fmt.Errorf("cannot read mongo configuration: %v", err)
+	}
+
+	return
+}
+
 type BmvConfig struct {
 	Name       string
 	Type       string
