@@ -2,16 +2,17 @@ package main
 
 import (
 	"github.com/koestler/go-ve-sensor/bmv"
+	"github.com/koestler/go-ve-sensor/config"
 	"github.com/koestler/go-ve-sensor/vedata"
 	"github.com/koestler/go-ve-sensor/vedirect"
 	"log"
 	"time"
 )
 
-func BmvStart(config BmvConfig) {
+func BmvStart(config config.BmvConfig) {
 
 	// create new db device connection
-	bmvDeviceId := vedata.CreateDevice(config.DeviceName)
+	bmvDeviceId := vedata.CreateDevice(config)
 
 	// create
 	vd, err := vedirect.Open(config.Device)
@@ -19,13 +20,12 @@ func BmvStart(config BmvConfig) {
 		log.Fatalf("main:cannot create vedirect, device=%v", config.Device)
 		return
 	}
-	//defer vd.Close()
 
 	// start bmv reader
 	go func() {
 		numericValues := make(bmv.NumericValues)
 
-		for _ = range time.Tick(200 * time.Millisecond) {
+		for _ = range time.Tick(400 * time.Millisecond) {
 			if err := vd.VeCommandPing(); err != nil {
 				log.Printf("main: VeCommandPing failed: %v", err)
 			}
@@ -48,7 +48,9 @@ func BmvStart(config BmvConfig) {
 					log.Printf("main: bmv.RecvNumeric failed: %v", err)
 				} else {
 					numericValues[regName] = numericValue
-					log.Printf("%v : %v = %v", config.DeviceName, regName, numericValue)
+					if config.DebugPrint {
+						log.Printf("%v : %v = %v", config.Name, regName, numericValue)
+					}
 				}
 			}
 

@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"github.com/koestler/go-ve-sensor/bmv"
+	"github.com/koestler/go-ve-sensor/config"
 	"log"
 	"time"
 )
@@ -12,7 +13,7 @@ import (
 type DeviceId uint64
 
 type Device struct {
-	Name          string
+	Config        config.BmvConfig
 	LastUpdate    time.Time
 	NumericValues bmv.NumericValues
 }
@@ -51,7 +52,7 @@ func init() {
 	writes = make(chan *writeOp)
 }
 
-func CreateDevice(name string) (deviceId DeviceId) {
+func CreateDevice(config config.BmvConfig) (deviceId DeviceId) {
 	if running {
 		log.Panic("must no call vedata.CreateDevice after vedata.Run")
 	}
@@ -59,9 +60,11 @@ func CreateDevice(name string) (deviceId DeviceId) {
 	deviceId = DeviceId(len(db) + 1)
 
 	db[deviceId] = &Device{
-		Name:          name,
+		Config:        config,
 		NumericValues: make(bmv.NumericValues),
 	}
+
+	log.Printf("vedata: device created: %v = %v", deviceId, config.Name)
 
 	return
 }

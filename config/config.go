@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"errors"
@@ -44,18 +44,20 @@ func GetHttpdConfig() (httpdConfig *HttpdConfig, err error) {
 }
 
 type BmvConfig struct {
-	DeviceName string
+	Name       string
 	Type       string
 	Device     string
 	Aux        string
+	DebugPrint bool
 }
 
 func GetBmvConfig(sectionName string) (bmvConfig BmvConfig) {
 	bmvConfig = BmvConfig{
-		DeviceName: sectionName[5:],
+		Name:       sectionName[4:],
 		Type:       "unset",
 		Device:     "unset",
 		Aux:        "none",
+		DebugPrint: false,
 	}
 
 	err := config.Section(sectionName).MapTo(&bmvConfig)

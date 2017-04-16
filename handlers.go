@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/koestler/go-ve-sensor/config"
 	"github.com/koestler/go-ve-sensor/vedata"
 	"github.com/koestler/go-ve-sensor/vehttp"
 	"io"
@@ -71,9 +72,20 @@ func jsonWriteError(w http.ResponseWriter, text string) {
 func HttpHandleDeviceIndex(w http.ResponseWriter, r *http.Request) {
 	deviceIds := vedata.ReadDeviceIds()
 
+	configMap := make(map[vedata.DeviceId]config.BmvConfig)
+
+	for _, deviceId := range deviceIds {
+		device, err := deviceId.ReadDevice()
+		if err != nil {
+			continue
+		}
+
+		configMap[deviceId] = device.Config
+	}
+
 	writeJsonHeaders(w, http.StatusOK)
 
-	b, err := json.MarshalIndent(deviceIds, "", "    ")
+	b, err := json.MarshalIndent(configMap, "", "    ")
 	if err != nil {
 		panic(err)
 	}

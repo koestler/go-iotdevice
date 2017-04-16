@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/koestler/go-ve-sensor/config"
 	"github.com/koestler/go-ve-sensor/vedata"
 	"github.com/koestler/go-ve-sensor/vehttp"
 	"log"
@@ -10,7 +11,7 @@ func main() {
 	log.Print("start go-ve-sensor...")
 
 	// start http server
-	httpdConfig, err := GetHttpdConfig()
+	httpdConfig, err := config.GetHttpdConfig()
 	if err == nil {
 		log.Print("start http server, config=%v", httpdConfig)
 		go func() {
@@ -22,7 +23,7 @@ func main() {
 
 	// startup Bmv Device
 	log.Print("start devices")
-	for _, bmvConfig := range GetBmvConfigs() {
+	for _, bmvConfig := range config.GetBmvConfigs() {
 		BmvStart(bmvConfig)
 	}
 
