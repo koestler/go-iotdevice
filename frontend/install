@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-cd frontend/
-bower install
-ln -sf bower_components/jquery/dist/jquery.min.js jquery.js
-ln -sf bower_components/mustache.js/mustache.min.js mustache.js 

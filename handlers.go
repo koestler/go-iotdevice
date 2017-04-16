@@ -8,13 +8,25 @@ import (
 	"github.com/koestler/go-ve-sensor/vedata"
 	"github.com/koestler/go-ve-sensor/vehttp"
 	"io"
+	"log"
 	"net/http"
 )
 
-//go:generate frontend/install
-//go:generate go-bindata -prefix "frontend/" -pkg main "frontend"
+//go:generate ./frontend_to_bindata.sh
 
 var HttpRoutes = vehttp.Routes{
+	vehttp.Route{
+		"DeviceIndex",
+		"GET",
+		"/api/v0/device/",
+		HttpHandleDeviceIndex,
+	},
+	vehttp.Route{
+		"DeviceIndex",
+		"GET",
+		"/api/v0/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}",
+		HttpHandleDeviceGet,
+	},
 	vehttp.Route{
 		"Index",
 		"GET",
@@ -24,20 +36,8 @@ var HttpRoutes = vehttp.Routes{
 	vehttp.Route{
 		"Assets",
 		"GET",
-		"/assets/{Path}",
+		"/{Path:.+}",
 		HttpHandleAssetsGet,
-	},
-	vehttp.Route{
-		"DeviceIndex",
-		"GET",
-		"/device/",
-		HttpHandleDeviceIndex,
-	},
-	vehttp.Route{
-		"DeviceIndex",
-		"GET",
-		"/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}",
-		HttpHandleDeviceGet,
 	},
 }
 
@@ -108,6 +108,7 @@ func HttpHandleAssetsGet(w http.ResponseWriter, r *http.Request) {
 	if bs, err := Asset(path); err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprint(w, "404 asset not found\n")
+		log.Printf("handlers: %v", err)
 	} else {
 		var reader = bytes.NewBuffer(bs)
 		io.Copy(w, reader)
