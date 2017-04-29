@@ -15,32 +15,22 @@ func main() {
 		// register device in deviceDb
 		device := dataflow.DeviceCreate(bmvConfig.Name, bmvConfig.Model);
 		registers := bmv.BmvRegisterFactory(bmvConfig.Model);
-		log.Printf("bmvConfig=%v", bmvConfig)
-		log.Printf("device=%v", device)
-		log.Printf("registers=%v", registers)
 
+		// setup the datasource
 		source := dataflow.SourceBmvStartDummy(device, registers)
-		rounded := dataflow.Rounder(source)
-		dataflow.SinkLog(rounded)
 
-		/*
-		// register values in valueDb
-		for registerName, register := range registers {
-			dataflow.ValueCreate(registerName, register.Unit)
-		}
-		*/
+		// store raw values
+		rawStorage := dataflow.StorageCreate()
+		rawStorage.Receive(source)
 
-		//dataflow.DevicePrintToLog()
-		//dataflow.ValuePrintToLog()
+		// store rounded values
+		roundedStorage := dataflow.StorageCreate()
+		rounded := dataflow.Rounder(rawStorage.Subscribe())
+		roundedStorage.Receive(rounded)
 
-		/*
-		go func(deviceId dataflow.DeviceId) {
-			for _ = range time.Tick(time.Second) {
-
-			}
-		}(deviceId)
-		*/
-
+		// sink everything
+		dataflow.SinkLog("raw    ", rawStorage.Subscribe())
+		dataflow.SinkLog("rounded", roundedStorage.Subscribe())
 	}
 
 	log.Print("main: start completed")
