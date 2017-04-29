@@ -1,7 +1,6 @@
 package dataflow
 
-type iState map[string]Value // inner State
-type State map[*Device]iState
+type State map[*Device]ValueMap
 
 type ValueStorageInstance struct {
 	// this represents the state of the storage instance and must only be access by the main go routine
@@ -47,7 +46,7 @@ func (instance *ValueStorageInstance) mainStorageRoutine() {
 func (instance *ValueStorageInstance) handleNewValue(newValue Value) {
 	// check if the newValue is not present or has been changed
 	if _, ok := instance.state[newValue.Device]; !ok {
-		instance.state[newValue.Device] = make(iState)
+		instance.state[newValue.Device] = make(ValueMap)
 	}
 	if currentValue, ok := instance.state[newValue.Device][newValue.Name]; !ok || currentValue != newValue {
 		// copy the input value to all subscribed output channels
@@ -70,14 +69,14 @@ func (instance *ValueStorageInstance) handleNewReadStateRequest(newReadStateRequ
 			continue
 		}
 
-		deviceState = make(iState)
+		response[device] = make(ValueMap)
 
 		for valueName, value := range deviceState {
 			if !filterByValueName(filter, valueName) {
 				continue
 			}
 
-			deviceState[valueName] = value
+			response[device][valueName] = value
 		}
 	}
 
@@ -98,7 +97,7 @@ func ValueStorageCreate() (valueStorageInstance *ValueStorageInstance) {
 	return
 }
 
-func (instance *ValueStorageInstance) ValueStoreGet(filter Filter) (State) {
+func (instance *ValueStorageInstance) GetState(filter Filter) (State) {
 	response := make(chan State)
 
 	request := readStateRequest{
@@ -109,6 +108,20 @@ func (instance *ValueStorageInstance) ValueStoreGet(filter Filter) (State) {
 	instance.readStateRequestChannel <- &request
 
 	return <-request.response
+}
+
+func (instance *ValueStorageInstance) GetMap(filter Filter) (result ValueMap) {
+	result = make(ValueMap)
+
+	state := instance.GetState(filter)
+
+	for _, deviceState := range state {
+		for valueName, value := range deviceState {
+			result[valueName] = value
+		}
+	}
+
+	return
 }
 
 // this is a simple fan-in routine which copies all inputs to the same NewValue channel

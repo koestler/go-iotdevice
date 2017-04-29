@@ -14,7 +14,7 @@ func main() {
 
 	setupStorageAndDataFlow()
 	setupBmvSources()
-	setupTestSinks()
+	//setupTestSinks()
 	setupHttpServer()
 
 	log.Print("main: start completed; run until kill signal is received")
@@ -69,7 +69,6 @@ func setupHttpServer() {
 		log.Print("main: start webserver server, config=%v", httpdConfig)
 
 		env := &webserver.Environment{
-			RawStorage: rawStorage,
 			RoundedStorage: roundedStorage,
 			Devices:dataflow.DevicesGet(),
 		}

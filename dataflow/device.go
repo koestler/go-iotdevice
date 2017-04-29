@@ -52,5 +52,5 @@ func DevicesGetByName(name string) (*Device, error) {
 		}
 	}
 
-	return nil, errors.New("device not found")
+	return nil, errors.New("device not found: " + name)
 }

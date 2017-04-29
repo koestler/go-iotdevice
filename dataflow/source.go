@@ -3,7 +3,6 @@ package dataflow
 import (
 	"github.com/koestler/go-ve-sensor/bmv"
 	"time"
-	"log"
 	"math/rand"
 )
 
@@ -16,7 +15,6 @@ func SourceCreateBmvStartDummy(device *Device, registers bmv.Registers) (*Source
 	go func() {
 		defer close(output)
 		for _ = range time.Tick(time.Second) {
-			log.Print("SourceCreateBmvStartDummy tik");
 			for name, register := range registers {
 				output <- Value{
 					Device:        device,

@@ -11,8 +11,8 @@ import (
 
 // Our application wide data containers
 type Environment struct {
-	RawStorage, RoundedStorage *dataflow.ValueStorageInstance
-	Devices                    []*dataflow.Device
+	RoundedStorage *dataflow.ValueStorageInstance
+	Devices        []*dataflow.Device
 }
 
 // Error represents a handler error. It provides methods for a HTTP status

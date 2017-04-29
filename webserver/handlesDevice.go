@@ -26,7 +26,7 @@ func HandleDeviceIndex(env *Environment, w http.ResponseWriter, r *http.Request)
 	return nil;
 }
 
-func HandleDeviceGet(env *Environment, w http.ResponseWriter, r *http.Request) error {
+func HandleDeviceGetRoundedValues(env *Environment, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 
 	device, err := dataflow.DevicesGetByName(vars["DeviceId"])
@@ -34,8 +34,12 @@ func HandleDeviceGet(env *Environment, w http.ResponseWriter, r *http.Request) e
 		return StatusError{404, err}
 	}
 
+	roundedValues := env.RoundedStorage.GetMap(dataflow.Filter{Devices: map[*dataflow.Device]bool{device: true}})
+
+	roundedValuesEssential := roundedValues.ConvertToEssential()
+
 	writeJsonHeaders(w)
-	b, err := json.MarshalIndent(device, "", "    ")
+	b, err := json.MarshalIndent(roundedValuesEssential, "", "    ")
 	if err != nil {
 		return StatusError{500, err}
 	}
