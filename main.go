@@ -19,8 +19,9 @@ func main() {
 		log.Printf("device=%v", device)
 		log.Printf("registers=%v", registers)
 
-		s := dataflow.SourceBmvStartDummy(device, registers)
-		dataflow.SinkLog(s)
+		source := dataflow.SourceBmvStartDummy(device, registers)
+		rounded := dataflow.Rounder(source)
+		dataflow.SinkLog(rounded)
 
 		/*
 		// register values in valueDb

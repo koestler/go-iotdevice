@@ -1,10 +1,11 @@
 package dataflow
 
 type Value struct {
-	Name string
-	Device *Device
-	Value float64
-	Unit string
+	Name          string
+	Device        *Device
+	Value         float64
+	Unit          string
+	RoundDecimals int
 }
 
 /*
