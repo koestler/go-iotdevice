@@ -7,12 +7,16 @@ import (
 	"math/rand"
 )
 
-func SourceBmvStartDummy(device *Device, registers bmv.Registers) <-chan Value {
+type Source struct {
+	outputChain chan Value
+}
+
+func SourceCreateBmvStartDummy(device *Device, registers bmv.Registers) (*Source) {
 	output := make(chan Value)
 	go func() {
 		defer close(output)
 		for _ = range time.Tick(time.Second) {
-			log.Print("SourceBmvStartDummy tik");
+			log.Print("SourceCreateBmvStartDummy tik");
 			for name, register := range registers {
 				output <- Value{
 					Device:        device,
@@ -24,5 +28,16 @@ func SourceBmvStartDummy(device *Device, registers bmv.Registers) <-chan Value {
 			}
 		}
 	}()
-	return output
+	return &Source{
+		outputChain: output,
+	}
+}
+
+func (source *Source) Drain() <-chan Value {
+	return source.outputChain
+}
+
+func (source *Source) Append(fillable Fillable) Fillable {
+	fillable.Fill(source.Drain())
+	return fillable
 }

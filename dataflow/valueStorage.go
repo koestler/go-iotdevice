@@ -65,7 +65,7 @@ func ValueStorageCreate() (valueStorageInstance *ValueStorageInstance) {
 }
 
 // this is a simple fan-in routine which copies all inputs to the same NewValue channel
-func (valueStorageInstance *ValueStorageInstance) Receive(input <-chan Value) {
+func (valueStorageInstance *ValueStorageInstance) Fill(input <-chan Value) {
 	go func() {
 		for value := range input {
 			valueStorageInstance.inputChannel <- value
@@ -73,11 +73,11 @@ func (valueStorageInstance *ValueStorageInstance) Receive(input <-chan Value) {
 	}()
 }
 
-func (valueStorageInstance *ValueStorageInstance) Subscribe() <-chan Value {
-	return valueStorageInstance.SubscribeFiltered(SubscriptionFilter{});
+func (valueStorageInstance *ValueStorageInstance) Drain() <-chan Value {
+	return valueStorageInstance.Subscribe(SubscriptionFilter{});
 }
 
-func (valueStorageInstance *ValueStorageInstance) SubscribeFiltered(filter SubscriptionFilter) <-chan Value {
+func (valueStorageInstance *ValueStorageInstance) Subscribe(filter SubscriptionFilter) <-chan Value {
 	output := make(chan Value)
 
 	valueStorageInstance.subscriptionChannel <- subscription{
@@ -86,6 +86,11 @@ func (valueStorageInstance *ValueStorageInstance) SubscribeFiltered(filter Subsc
 	}
 
 	return output
+}
+
+func (valueStorageInstance *ValueStorageInstance) Append(fillable Fillable) Fillable {
+	fillable.Fill(valueStorageInstance.Drain())
+	return fillable
 }
 
 func (subscription subscription) forward(newValue Value) {

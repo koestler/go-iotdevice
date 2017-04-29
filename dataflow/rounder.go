@@ -13,16 +13,40 @@ func roundDecimals(number float64, decimals int) (float64) {
 	return round(number*shift) / shift;
 }
 
-func Rounder(input <-chan Value) <-chan Value {
-	output := make(chan Value)
+type Rounder struct {
+	input, output chan Value
+}
+
+func RounderCreate() (*Rounder) {
+	rounder := Rounder{
+		input:  make(chan Value),
+		output: make(chan Value),
+	}
 
 	go func() {
-		for value := range input {
+		defer close(rounder.output)
+		for value := range rounder.input {
 			value.Value = roundDecimals(value.Value, value.RoundDecimals)
-			output <- value
+			rounder.output <- value
 		}
-		close(output)
 	}()
 
-	return output
+	return &rounder
+}
+
+func (rounder *Rounder) Fill(input <-chan Value) {
+	go func() {
+		for value := range input {
+			rounder.input <- value
+		}
+	}()
+}
+
+func (rounder *Rounder) Drain() <-chan Value {
+	return rounder.output
+}
+
+func (rounder *Rounder) Append(fillable Fillable) Fillable {
+	fillable.Fill(rounder.Drain())
+	return fillable
 }
