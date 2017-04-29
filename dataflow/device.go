@@ -2,7 +2,10 @@ package dataflow
 
 import (
 	"sync"
+	"errors"
 )
+
+// todo: this should be refactored in a proper DeviceStorage without global DevicesGet() method
 
 type Device struct {
 	Name  string
@@ -38,4 +41,16 @@ func DevicesGet() (devices []*Device) {
 	// copy only the slice, not the actual values such that pointers to Devices remain the same
 	// -> never ever mutate a Device object
 	return deviceDb
+}
+
+func DevicesGetByName(name string) (*Device, error) {
+	devices := DevicesGet()
+
+	for _, device := range devices {
+		if device.Name == name {
+			return device, nil
+		}
+	}
+
+	return nil, errors.New("device not found")
 }

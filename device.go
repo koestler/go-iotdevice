@@ -1,5 +1,5 @@
 package main
-
+/*
 import (
 	"github.com/koestler/go-ve-sensor/bmv"
 	"github.com/koestler/go-ve-sensor/config"
@@ -59,3 +59,5 @@ func BmvStart(config config.BmvConfig) {
 	}()
 
 }
+
+*/
