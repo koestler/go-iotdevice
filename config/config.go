@@ -67,7 +67,7 @@ func GetMongoConfig() (mongoConfig *MongoConfig, err error) {
 
 type BmvConfig struct {
 	Name       string
-	Type       string
+	Model      string
 	Device     string
 	Aux        string
 	DebugPrint bool
@@ -76,7 +76,7 @@ type BmvConfig struct {
 func GetBmvConfig(sectionName string) (bmvConfig BmvConfig) {
 	bmvConfig = BmvConfig{
 		Name:       sectionName[4:],
-		Type:       "unset",
+		Model:      "unset",
 		Device:     "unset",
 		Aux:        "none",
 		DebugPrint: false,

@@ -62,7 +62,7 @@ func CreateDevice(config config.BmvConfig) (deviceId DeviceId) {
 
 	db[deviceId] = &Device{
 		Name:          config.Name,
-		Type:          config.Type,
+		Type:          config.Model,
 		NumericValues: make(bmv.NumericValues),
 	}
 

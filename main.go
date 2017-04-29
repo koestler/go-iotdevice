@@ -2,43 +2,44 @@ package main
 
 import (
 	"github.com/koestler/go-ve-sensor/config"
-	"github.com/koestler/go-ve-sensor/mongo"
-	"github.com/koestler/go-ve-sensor/vedata"
-	"github.com/koestler/go-ve-sensor/vehttp"
 	"log"
+	"github.com/koestler/go-ve-sensor/dataflow"
+	"github.com/koestler/go-ve-sensor/bmv"
 )
 
 func main() {
 	log.Print("main: start go-ve-sensor...")
 
-	// start http server
-	httpdConfig, err := config.GetHttpdConfig()
-	if err == nil {
-		log.Print("main: start http server, config=%v", httpdConfig)
-		go vehttp.Run(httpdConfig.Bind, httpdConfig.Port, HttpRoutes)
-	} else {
-		log.Printf("main: skip http server, err=%v", err)
-	}
-
-	// startup Bmv Device
-	log.Print("start devices")
+	// get devices from database and create them
 	for _, bmvConfig := range config.GetBmvConfigs() {
-		BmvStart(bmvConfig)
-	}
+		// register device in deviceDb
+		device := dataflow.DeviceCreate(bmvConfig.Name, bmvConfig.Model);
+		registers := bmv.BmvRegisterFactory(bmvConfig.Model);
+		log.Printf("bmvConfig=%v", bmvConfig)
+		log.Printf("device=%v", device)
+		log.Printf("registers=%v", registers)
 
-	// run database synchronization routine
-	log.Print("main: start database")
-	vedata.Run()
+		s := dataflow.SourceBmvStartDummy(device, registers)
+		dataflow.SinkLog(s)
 
-	// initialize mongodb
-	mongoConfig, err := config.GetMongoConfig()
-	if err == nil {
-		log.Printf("main: start mongo database connection, config=%v", mongoConfig)
-		mongoSession := mongo.GetSession(mongoConfig.MongoHost)
-		defer mongoSession.Close()
-		mongo.Run(mongoSession, mongoConfig.DatabaseName, mongoConfig.RawValuesIntervall)
-	} else {
-		log.Printf("main: skip mongo database initialization")
+		/*
+		// register values in valueDb
+		for registerName, register := range registers {
+			dataflow.ValueCreate(registerName, register.Unit)
+		}
+		*/
+
+		//dataflow.DevicePrintToLog()
+		//dataflow.ValuePrintToLog()
+
+		/*
+		go func(deviceId dataflow.DeviceId) {
+			for _ = range time.Tick(time.Second) {
+
+			}
+		}(deviceId)
+		*/
+
 	}
 
 	log.Print("main: start completed")

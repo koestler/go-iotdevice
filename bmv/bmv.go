@@ -21,7 +21,7 @@ type Register struct {
 	Signed  bool
 }
 
-var RegisterList700 = Registers{
+var RegisterList700Essential = Registers{
 	"MainVoltage": Register{
 		Address: 0xED8D,
 		Factor:  0.01,
@@ -40,6 +40,9 @@ var RegisterList700 = Registers{
 		Unit:    "W",
 		Signed:  true,
 	},
+}
+
+var RegisterList700 = Registers{
 	"Consumed": Register{
 		Address: 0xEEFF,
 		Factor:  0.1,
