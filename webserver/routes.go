@@ -16,19 +16,19 @@ var httpRoutes = HttpRoutes{
 		HandleDeviceIndex,
 	},
 	HttpRoute{
-		"DeviceIndex",
+		"DeviceRoundedValues",
 		"GET",
 		"/api/v0/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/RoundedValues",
 		HandleDeviceGetRoundedValues,
 	},
 	HttpRoute{
-		"DeviceIndex",
+		"DeviceRoundedValuesWebSocket",
 		"GET",
 		"/api/v0/ws/RoundedValues",
 		HandleWsRoundedValues,
 	},
 	HttpRoute{
-		"Index",
+		"ApiIndex",
 		"GET",
 		"/api{Path:.*}",
 		HandleApiNotFound,
