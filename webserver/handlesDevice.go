@@ -9,12 +9,6 @@ import (
 
 func HandleDeviceIndex(env *Environment, w http.ResponseWriter, r *http.Request) error {
 	devices := dataflow.DevicesGet()
-	/*
-	deviceNames := make([]string, len(devices), len(devices))
-	for i, device := range devices {
-		deviceNames[i] = device.Name
-	}
-	*/
 
 	writeJsonHeaders(w)
 	b, err := json.MarshalIndent(devices, "", "    ")
@@ -35,7 +29,6 @@ func HandleDeviceGetRoundedValues(env *Environment, w http.ResponseWriter, r *ht
 	}
 
 	roundedValues := env.RoundedStorage.GetMap(dataflow.Filter{Devices: map[*dataflow.Device]bool{device: true}})
-
 	roundedValuesEssential := roundedValues.ConvertToEssential()
 
 	writeJsonHeaders(w)

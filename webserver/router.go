@@ -5,18 +5,39 @@ import (
 	"net/http"
 )
 
-type Route struct {
+type WsRoute struct {
+	Name        string
+	Pattern     string
+	HandlerFunc HandlerHandleFunc
+}
+
+type HttpRoute struct {
 	Name        string
 	Method      string
 	Pattern     string
 	HandlerFunc HandlerHandleFunc
 }
 
-type Routes []Route
+type WsRoutes []WsRoute
+type HttpRoutes []HttpRoute
 
-func newRouter(routes Routes, env *Environment) *mux.Router {
+func newRouter(env *Environment) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
-	for _, route := range routes {
+
+	// setup websocket routes
+	for _, route := range wsRoutes {
+		var handler http.Handler
+		handler = Handler{Env: env, Handle: route.HandlerFunc}
+		handler = Logger(handler, route.Name)
+
+		router.Path(route.Pattern).
+			Name(route.Name).
+			Handler(handler)
+
+	}
+
+	// setup normal http routes
+	for _, route := range httpRoutes {
 		var handler http.Handler
 		handler = Handler{Env: env, Handle: route.HandlerFunc}
 		handler = Logger(handler, route.Name)
@@ -27,5 +48,6 @@ func newRouter(routes Routes, env *Environment) *mux.Router {
 			Handler(handler)
 
 	}
+
 	return router
 }

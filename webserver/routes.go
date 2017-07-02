@@ -1,25 +1,39 @@
 package webserver
 
-var HttpRoutes = Routes{
-	Route{
+var wsRoutes = WsRoutes{
+	WsRoute{
+		"ws-test",
+		"/ws/v0/RoundedValues",
+		HandleWsRoundedValues,
+	},
+}
+
+var httpRoutes = HttpRoutes{
+	HttpRoute{
 		"DeviceIndex",
 		"GET",
 		"/api/v0/device/",
 		HandleDeviceIndex,
 	},
-	Route{
+	HttpRoute{
 		"DeviceIndex",
 		"GET",
 		"/api/v0/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/RoundedValues",
 		HandleDeviceGetRoundedValues,
 	},
-	Route{
+	HttpRoute{
+		"DeviceIndex",
+		"GET",
+		"/api/v0/ws/RoundedValues",
+		HandleDeviceGetRoundedValues,
+	},
+	HttpRoute{
 		"Index",
 		"GET",
 		"/",
 		HandleAssetsGet,
 	},
-	Route{
+	HttpRoute{
 		"Assets",
 		"GET",
 		"/{Path:.+}",

@@ -51,18 +51,22 @@ type Handler struct {
 // ServeHTTP allows our Handler type to satisfy webserver.Handler.
 func (handler Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := handler.Handle(handler.Env, w, r)
+	log.Printf("ServeHTTP err=%v", err)
+
 	if err != nil {
 		switch e := err.(type) {
 		case Error:
 			// We can retrieve the status here and write out a specific
 			// HTTP status code.
 			log.Printf("HTTP %d - %s", e.Status(), e)
-			http.Error(w, e.Error(), e.Status())
+			http.Error(w, "", e.Status())
+			return
 		default:
 			// Any error types we don't specifically look out for default
 			// to serving a HTTP 500
 			http.Error(w, http.StatusText(http.StatusInternalServerError),
 				http.StatusInternalServerError)
+			return
 		}
 	}
 }

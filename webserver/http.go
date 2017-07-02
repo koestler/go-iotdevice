@@ -7,7 +7,7 @@ import (
 )
 
 func Run(bind string, port int, env *Environment) {
-	router := newRouter(HttpRoutes, env)
+	router := newRouter(env)
 
 	address := bind + ":" + strconv.Itoa(port)
 
