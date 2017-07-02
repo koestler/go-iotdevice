@@ -28,10 +28,16 @@ var httpRoutes = HttpRoutes{
 		HandleDeviceGetRoundedValues,
 	},
 	HttpRoute{
+		"DeviceIndex",
+		"GET",
+		"/api/v0/ws/RoundedValues",
+		HandleDeviceGetRoundedValues,
+	},
+	HttpRoute{
 		"Index",
 		"GET",
-		"/",
-		HandleAssetsGet,
+		"/api",
+		HandleApiNotFound,
 	},
 	HttpRoute{
 		"Assets",
