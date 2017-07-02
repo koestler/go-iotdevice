@@ -1,6 +1,8 @@
 package dataflow
 
-import "log"
+import (
+	"log"
+)
 
 func SinkLog(prefix string, input <-chan Value) {
 	go func() {

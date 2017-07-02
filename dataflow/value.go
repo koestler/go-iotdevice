@@ -20,10 +20,14 @@ type ValueEssentialMap map[string]ValueEssential
 func (valueMap ValueMap) ConvertToEssential() (valueEssentialMap ValueEssentialMap) {
 	valueEssentialMap = make(ValueEssentialMap, len(valueMap))
 	for i, v := range valueMap {
-		valueEssentialMap[i] = ValueEssential{
-			Value: v.Value,
-			Unit:  v.Unit,
-		}
+		valueEssentialMap[i] = v.ConvertToEssential()
 	}
 	return
+}
+
+func (value Value) ConvertToEssential() (ValueEssential) {
+	return ValueEssential{
+		Value: value.Value,
+		Unit:  value.Unit,
+	}
 }
