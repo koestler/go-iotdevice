@@ -7,7 +7,7 @@ import (
 	"github.com/koestler/go-ve-sensor/dataflow"
 )
 
-func HandleDeviceIndex(env *Environment, w http.ResponseWriter, r *http.Request) error {
+func HandleDeviceIndex(env *Environment, w http.ResponseWriter, r *http.Request) Error {
 	devices := dataflow.DevicesGet()
 
 	writeJsonHeaders(w)
@@ -20,7 +20,7 @@ func HandleDeviceIndex(env *Environment, w http.ResponseWriter, r *http.Request)
 	return nil;
 }
 
-func HandleDeviceGetRoundedValues(env *Environment, w http.ResponseWriter, r *http.Request) error {
+func HandleDeviceGetRoundedValues(env *Environment, w http.ResponseWriter, r *http.Request) Error {
 	vars := mux.Vars(r)
 
 	device, err := dataflow.DevicesGetByName(vars["DeviceId"])

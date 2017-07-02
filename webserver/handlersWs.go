@@ -16,10 +16,10 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func HandleWsRoundedValues(env *Environment, w http.ResponseWriter, r *http.Request) error {
+func HandleWsRoundedValues(env *Environment, w http.ResponseWriter, r *http.Request) Error {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		return StatusError{500, err}
+		return nil
 	}
 
 	go func() {

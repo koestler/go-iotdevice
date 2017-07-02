@@ -25,18 +25,12 @@ var httpRoutes = HttpRoutes{
 		"DeviceIndex",
 		"GET",
 		"/api/v0/ws/RoundedValues",
-		HandleDeviceGetRoundedValues,
-	},
-	HttpRoute{
-		"DeviceIndex",
-		"GET",
-		"/api/v0/ws/RoundedValues",
-		HandleDeviceGetRoundedValues,
+		HandleWsRoundedValues,
 	},
 	HttpRoute{
 		"Index",
 		"GET",
-		"/api",
+		"/api{Path:.*}",
 		HandleApiNotFound,
 	},
 	HttpRoute{

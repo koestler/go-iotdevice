@@ -39,7 +39,7 @@ func (statusError StatusError) Status() int {
 }
 
 // define an extended version of http.HandlerFunc
-type HandlerHandleFunc func(e *Environment, w http.ResponseWriter, r *http.Request) error
+type HandlerHandleFunc func(e *Environment, w http.ResponseWriter, r *http.Request) Error
 
 // The Handler struct that takes a configured Environment and a function matching
 // our useful signature.
@@ -53,14 +53,14 @@ func (handler Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := handler.Handle(handler.Env, w, r)
 
 	if err != nil {
-		log.Printf("handlers: ServeHTTP err=%v", err)
+		log.Printf("ServeHTTP err=%v", err)
 
 		switch e := err.(type) {
 		case Error:
 			// We can retrieve the status here and write out a specific
 			// HTTP status code.
 			log.Printf("HTTP %d - %s", e.Status(), e)
-			http.Error(w, "", e.Status())
+			http.Error(w, http.StatusText(e.Status()), e.Status())
 			return
 		default:
 			// Any error types we don't specifically look out for default
