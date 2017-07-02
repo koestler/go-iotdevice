@@ -24,7 +24,7 @@ var httpRoutes = HttpRoutes{
 	HttpRoute{
 		"DeviceRoundedValuesWebSocket",
 		"GET",
-		"/api/v0/ws/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/RoundedValues",
+		"/api/v0/ws/RoundedValues",
 		HandleWsRoundedValues,
 	},
 	HttpRoute{

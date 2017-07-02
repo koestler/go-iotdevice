@@ -2,7 +2,6 @@ package webserver
 
 import (
 	"github.com/gorilla/websocket"
-	"github.com/gorilla/mux"
 	"net/http"
 	"github.com/koestler/go-ve-sensor/dataflow"
 	"log"
@@ -24,15 +23,8 @@ func HandleWsRoundedValues(env *Environment, w http.ResponseWriter, r *http.Requ
 		return nil
 	}
 
-	// get device id
-	vars := mux.Vars(r)
-	device, err := dataflow.DevicesGetByName(vars["DeviceId"])
-	if err != nil {
-		return StatusError{404, err}
-	}
-
 	// setup filter
-	filter := dataflow.Filter{Devices: map[*dataflow.Device]bool{device: true}}
+	filter := dataflow.Filter{}
 
 	// subscribe to data
 	dataChan := env.RoundedStorage.Subscribe(filter)
