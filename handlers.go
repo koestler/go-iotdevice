@@ -120,14 +120,13 @@ func HttpHandleAssetsGet(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "404 asset not found\n")
 		log.Printf("handlers: %v", err)
 	} else {
-		w.WriteHeader(http.StatusOK)
-
 		if strings.HasSuffix(path, ".js") {
 			w.Header().Set("Content-Type", "application/javascript")
 		} else if strings.HasSuffix(path, ".css") {
 			w.Header().Set("Content-Type", "text/css")
 		}
 
+		w.WriteHeader(http.StatusOK)
 		var reader = bytes.NewBuffer(bs)
 		io.Copy(w, reader)
 	}
