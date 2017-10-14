@@ -56,6 +56,13 @@ func GetMongoConfig() (mongoConfig *MongoConfig, err error) {
 		RawValuesIntervall: 2000,
 	}
 
+	// check if mongo sections exists
+	_, err = config.GetSection("Mongo")
+	if err != nil {
+		// Section Mongo does not exist
+		return nil, errors.New("no mongo configuration found")
+	}
+
 	err = config.Section("Mongo").MapTo(mongoConfig)
 
 	if err != nil {
