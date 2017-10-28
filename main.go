@@ -6,6 +6,7 @@ import (
 	"github.com/koestler/go-ve-sensor/vedata"
 	"github.com/koestler/go-ve-sensor/vehttp"
 	"log"
+	"github.com/koestler/go-ve-sensor/cam"
 )
 
 func main() {
@@ -20,10 +21,16 @@ func main() {
 		log.Printf("main: skip http server, err=%v", err)
 	}
 
-	// startup Bmv Device
-	log.Print("start devices")
+	// startup Bmv devices
+	log.Print("start bmv devices")
 	for _, bmvConfig := range config.GetBmvConfigs() {
 		BmvStart(bmvConfig)
+	}
+
+	// startup Cam devices
+	log.Print("start camera devices")
+	for _, camConfig := range config.GetCamConfigs() {
+		cam.FtpCamStart(camConfig)
 	}
 
 	// run database synchronization routine
@@ -38,7 +45,7 @@ func main() {
 		defer mongoSession.Close()
 		mongo.Run(mongoSession, mongoConfig.DatabaseName, mongoConfig.RawValuesIntervall)
 	} else {
-		log.Printf("main: skip mongo database initialization")
+		log.Printf("main: skip mongo database initialization (%v)", err)
 	}
 
 	log.Print("main: start completed")
