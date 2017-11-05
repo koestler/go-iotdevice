@@ -4,14 +4,14 @@ import (
 	"image"
 	//"image/jpeg"
 	"io/ioutil"
-	"time"
 	"log"
 	"github.com/koestler/go-ve-sensor/config"
 	"regexp"
+	"github.com/fsnotify/fsnotify"
 )
 
 type FtpCam struct {
-	Name string
+	Name          string
 	DirectoryName string
 	CurrentImage  *image.NRGBA
 }
@@ -24,16 +24,13 @@ func FtpCamStart(config config.CamConfig) {
 	}
 
 	cam := &FtpCam{
-		Name : config.Name,
-		DirectoryName:config.DirectoryName,
+		Name:          config.Name,
+		DirectoryName: config.DirectoryName,
 	}
 
-	go func() {
-		for _ = range time.Tick(500 * time.Millisecond) {
-			getNewestFile(cam.DirectoryName)
-		}
-	}()
+	//setupWatcher(cam.DirectoryName, cam.CurrentImage)
 
+	getNewestFile(cam.DirectoryName)
 
 }
 
@@ -49,15 +46,44 @@ func getNewestFile(directoryName string) {
 
 	fileNameRegex, _ := regexp.Compile("\\.(jpg|JPG)$")
 
-	fileNames = make(string, 0, 20)
+	//fileNames := make(string, 0, 20)
 
 	for _, f := range fileInfos {
-		if fileNameRegex.Match(f.Name()) {
-
+		if fileNameRegex.Match([]byte(f.Name())) {
+			log.Printf("filename: %s", f.Name())
 		}
-		log.Printf("filename: %s", f.Name())
 	}
 
-	log.Printf("ftpCam: fileInfos=%v", fileInfos)
+}
 
+func setupWatcher(directoryName string, curr chan string) {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
+
+	//done := make(chan bool)
+	go func() {
+		//current := ""
+
+		for {
+			select {
+			case event := <-watcher.Events:
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					getNewestFile(directoryName)
+
+					log.Println("modified file:", event.Name)
+				}
+			case err := <-watcher.Errors:
+				log.Println("error:", err)
+			}
+		}
+	}()
+
+	err = watcher.Add(directoryName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	//<-done
 }
