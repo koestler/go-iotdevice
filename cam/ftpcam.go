@@ -2,12 +2,15 @@ package cam
 
 import (
 	"image"
-	//"image/jpeg"
-	"io/ioutil"
-	"log"
 	"github.com/koestler/go-ve-sensor/config"
-	"regexp"
-	"github.com/fsnotify/fsnotify"
+
+	"github.com/fclairamb/ftpserver/server"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 type FtpCam struct {
@@ -16,74 +19,52 @@ type FtpCam struct {
 	CurrentImage  *image.NRGBA
 }
 
+var (
+	ftpServer *server.FtpServer
+)
+
 func FtpCamStart(config config.CamConfig) {
+	// Setting up the logger
+	logger := log.With(
+		log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)),
+		"ts", log.DefaultTimestampUTC,
+		"caller", log.DefaultCaller,
+	)
 
-	if config.Type != "ftp" {
-		log.Printf("ftpcam: unsupported camera type. config=%v", config)
+	// Loading the driver
+	driver, err := NewDriver("")
+
+	if err != nil {
+		level.Error(logger).Log("msg", "Could not load the driver", "err", err)
 		return
 	}
 
-	cam := &FtpCam{
-		Name:          config.Name,
-		DirectoryName: config.DirectoryName,
+	// Overriding the driver default silent logger by a sub-logger (component: driver)
+	driver.Logger = log.With(logger, "component", "driver")
+
+	// Instantiating the server by passing our driver implementation
+	ftpServer = server.NewFtpServer(driver)
+
+	// Overriding the server default silent logger by a sub-logger (component: server)
+	ftpServer.Logger = log.With(logger, "component", "server")
+
+	// Preparing the SIGTERM handling
+	go signalHandler()
+
+	// Blocking call, behaving similarly to the http.ListenAndServe
+	if err := ftpServer.ListenAndServe(); err != nil {
+		level.Error(logger).Log("msg", "Problem listening", "err", err)
 	}
-
-	//setupWatcher(cam.DirectoryName, cam.CurrentImage)
-
-	getNewestFile(cam.DirectoryName)
-
 }
 
-func getNewestFile(directoryName string) {
-
-	// get files sorted by name
-	fileInfos, err := ioutil.ReadDir(directoryName)
-
-	if err != nil {
-		log.Print("ftpCam: error listing files: %v", err)
-		return
-	}
-
-	fileNameRegex, _ := regexp.Compile("\\.(jpg|JPG)$")
-
-	//fileNames := make(string, 0, 20)
-
-	for _, f := range fileInfos {
-		if fileNameRegex.Match([]byte(f.Name())) {
-			log.Printf("filename: %s", f.Name())
+func signalHandler() {
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGTERM)
+	for {
+		switch <-ch {
+		case syscall.SIGTERM:
+			ftpServer.Stop()
+			break
 		}
 	}
-
-}
-
-func setupWatcher(directoryName string, curr chan string) {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer watcher.Close()
-
-	//done := make(chan bool)
-	go func() {
-		//current := ""
-
-		for {
-			select {
-			case event := <-watcher.Events:
-				if event.Op&fsnotify.Write == fsnotify.Write {
-					getNewestFile(directoryName)
-
-					log.Println("modified file:", event.Name)
-				}
-			case err := <-watcher.Errors:
-				log.Println("error:", err)
-			}
-		}
-	}()
-
-	err = watcher.Add(directoryName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	//<-done
 }
