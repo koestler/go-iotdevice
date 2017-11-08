@@ -32,7 +32,7 @@ func FtpCamStart(config config.CamConfig) {
 	)
 
 	// Loading the driver
-	driver, err := NewDriver("")
+	driver, err := NewDriver()
 
 	if err != nil {
 		level.Error(logger).Log("msg", "Could not load the driver", "err", err)
