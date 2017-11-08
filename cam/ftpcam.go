@@ -39,14 +39,11 @@ func FtpCamStart(config config.CamConfig) {
 		return
 	}
 
-	// Overriding the driver default silent logger by a sub-logger (component: driver)
-	driver.Logger = log.With(logger, "component", "driver")
-
 	// Instantiating the server by passing our driver implementation
 	ftpServer = server.NewFtpServer(driver)
 
 	// Overriding the server default silent logger by a sub-logger (component: server)
-	ftpServer.Logger = log.With(logger, "component", "server")
+	//ftpServer.Logger = log.With(logger, "component", "server")
 
 	// Preparing the SIGTERM handling
 	go signalHandler()

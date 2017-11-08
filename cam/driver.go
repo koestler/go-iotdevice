@@ -2,29 +2,27 @@
 package cam
 
 import (
-	"bytes"
 	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"time"
+	"log"
 
 	"github.com/fclairamb/ftpserver/server"
-	"github.com/go-kit/kit/log"
+	"strings"
 )
 
 // MainDriver defines a very basic ftpserver driver
 type MainDriver struct {
-	Logger  log.Logger // Logger
-	BaseDir string     // Base directory from which to serve file
 }
 
 // ClientDriver defines a very basic client driver
 type ClientDriver struct {
-	BaseDir string // Base directory from which to server file
+	directories map[string]bool
+	files       map[string]virtualFile
 }
 
 // NewSampleDriver creates a sample driver
@@ -37,10 +35,7 @@ func NewDriver(dir string) (*MainDriver, error) {
 		}
 	}
 
-	drv := &MainDriver{
-		Logger:  log.NewNopLogger(),
-		BaseDir: dir,
-	}
+	drv := &MainDriver{}
 
 	return drv, nil
 }
@@ -68,48 +63,91 @@ func (driver *MainDriver) GetTLSConfig() (*tls.Config, error) {
 
 // WelcomeUser is called to send the very first welcome message
 func (driver *MainDriver) WelcomeUser(cc server.ClientContext) (string, error) {
+	log.Printf("ftpcam-diver: WelcomeUser cc.ID=%v", cc.ID())
+
 	cc.SetDebug(true)
-	// This will remain the official name for now
 	return fmt.Sprintf(
-		"Welcome on go-ve-sensor ftpserver, you're on dir %s, your ID is %d, your IP:port is %s",
-		driver.BaseDir, cc.ID(), cc.RemoteAddr(),
+		"Welcome on go-ve-sensor ftpserver, your ID is %d, your IP:port is %s", cc.ID(), cc.RemoteAddr(),
 	), nil
 }
 
 // AuthUser authenticates the user and selects an handling driver
 func (driver *MainDriver) AuthUser(cc server.ClientContext, user, pass string) (server.ClientHandlingDriver, error) {
+	log.Printf("ftpcam-diver: AuthUser cc.ID=%v", cc.ID())
+
 	if user == "bad" || pass == "bad" {
 		return nil, errors.New("bad username or password")
 	}
 
-	return &ClientDriver{BaseDir: driver.BaseDir}, nil
+	return &ClientDriver{
+		directories: make(map[string]bool),
+		files:       make(map[string]virtualFile),
+	}, nil
 }
 
 // UserLeft is called when the user disconnects, even if he never authenticated
 func (driver *MainDriver) UserLeft(cc server.ClientContext) {
-
+	log.Printf("ftpcam-diver: UserLeft")
 }
 
 // ChangeDirectory changes the current working directory
 func (driver *ClientDriver) ChangeDirectory(cc server.ClientContext, directory string) error {
+	log.Printf("ftpcam-diver: ChangeDirectory cc.ID=%v, directory=%v", cc.ID(), directory)
+
 	if directory == "/debug" {
 		cc.SetDebug(!cc.Debug())
 		return nil
-	} else if directory == "/virtual" {
-		return nil
 	}
-	_, err := os.Stat(driver.BaseDir + directory)
-	return err
+	return nil
 }
 
 // MakeDirectory creates a directory
 func (driver *ClientDriver) MakeDirectory(cc server.ClientContext, directory string) error {
-	return os.Mkdir(driver.BaseDir+directory, 0777)
+	log.Printf("ftpcam-diver: MakeDirectory, cc.ID=%v, directory=%v", cc.ID(), directory)
+	driver.directories[directory] = true
+	return nil;
+}
+
+func (driver *ClientDriver) LogContent() {
+	log.Printf("directories=%v", driver.directories)
+	log.Printf("files=%v", driver.files)
 }
 
 // ListFiles lists the files of a directory
 func (driver *ClientDriver) ListFiles(cc server.ClientContext) ([]os.FileInfo, error) {
+	log.Printf("ftpcam-diver: ListFiles cc.Path=%v", cc.Path())
 
+	driver.LogContent()
+
+	path := cc.Path()
+	if !strings.HasSuffix(path, "/") {
+		path = path + "/"
+	}
+
+	files := make([]os.FileInfo, 0)
+	for directory, _ := range driver.directories {
+		if !strings.HasPrefix(directory, path) {
+			continue
+		}
+
+		reminder := directory[len(path):]
+		if len(reminder) < 1 || strings.Contains(reminder, "/") {
+			// subdir -> ignore
+			continue
+		}
+
+		files = append(files,
+			virtualFileInfo{
+				name: reminder,
+				mode: os.FileMode(0666) | os.ModeDir,
+				size: 4096,
+			},
+		)
+	}
+
+	return files, nil
+
+	/*
 	if cc.Path() == "/virtual" {
 		files := make([]os.FileInfo, 0)
 		files = append(files,
@@ -126,88 +164,91 @@ func (driver *ClientDriver) ListFiles(cc server.ClientContext) ([]os.FileInfo, e
 		)
 		return files, nil
 	}
-
-	path := driver.BaseDir + cc.Path()
-
-	files, err := ioutil.ReadDir(path)
-
-	// We add a virtual dir
-	if cc.Path() == "/" && err == nil {
-		files = append(files, virtualFileInfo{
-			name: "virtual",
-			mode: os.FileMode(0666) | os.ModeDir,
-			size: 4096,
-		})
-	}
-
-	return files, err
+*/
 }
 
 // OpenFile opens a file in 3 possible modes: read, write, appending write (use appropriate flags)
 func (driver *ClientDriver) OpenFile(cc server.ClientContext, path string, flag int) (server.FileStream, error) {
-
-	if path == "/virtual/localpath.txt" {
-		return &virtualFile{content: []byte(driver.BaseDir)}, nil
-	}
-
-	path = driver.BaseDir + path
+	log.Printf("ftpcam-diver: OpenFile cc.ID=%v path=%v flag=%v", cc.ID(), path, flag)
 
 	// If we are writing and we are not in append mode, we should remove the file
 	if (flag & os.O_WRONLY) != 0 {
 		flag |= os.O_CREATE
 		if (flag & os.O_APPEND) == 0 {
-			os.Remove(path)
+			delete(driver.files, path);
 		}
 	}
 
-	return os.OpenFile(path, flag, 0666)
+	if (flag & os.O_CREATE) != 0 {
+		driver.files[path] = virtualFile{
+			make([]byte, 0),
+			0,
+			0,
+		}
+	}
+
+	file, ok := driver.files[path]
+	if !ok {
+		return nil, os.ErrNotExist
+	}
+
+	return &file, nil
 }
 
 // GetFileInfo gets some info around a file or a directory
 func (driver *ClientDriver) GetFileInfo(cc server.ClientContext, path string) (os.FileInfo, error) {
-	path = driver.BaseDir + path
+	log.Printf("ftpcam-diver: GetFileInfo cc.ID=%v path=%v", cc.ID(), path)
 
-	return os.Stat(path)
+	if _, ok := driver.directories[path]; !ok {
+		return nil, os.ErrNotExist
+	}
+
+	return &virtualFileInfo{
+		name: path,
+		mode: os.FileMode(0666) | os.ModeDir,
+		size: 4096,
+	}, nil
 }
 
 // CanAllocate gives the approval to allocate some data
 func (driver *ClientDriver) CanAllocate(cc server.ClientContext, size int) (bool, error) {
+	log.Printf("ftpcam-diver: CanAllocate cc.ID=%v size=%v", cc.ID(), size)
 	return true, nil
 }
 
 // ChmodFile changes the attributes of the file
 func (driver *ClientDriver) ChmodFile(cc server.ClientContext, path string, mode os.FileMode) error {
-	path = driver.BaseDir + path
-
-	return os.Chmod(path, mode)
+	log.Printf("ftpcam-diver: ChmodFile cc.ID=%v path=%v, mode=%v", cc.ID(), path, mode)
+	return os.ErrPermission
 }
 
 // DeleteFile deletes a file or a directory
 func (driver *ClientDriver) DeleteFile(cc server.ClientContext, path string) error {
-	path = driver.BaseDir + path
-
-	return os.Remove(path)
+	log.Printf("ftpcam-diver: DeleteFile cc.ID=%v path=%v", cc.ID(), path)
+	return os.ErrPermission
 }
 
 // RenameFile renames a file or a directory
 func (driver *ClientDriver) RenameFile(cc server.ClientContext, from, to string) error {
-	from = driver.BaseDir + from
-	to = driver.BaseDir + to
-
-	return os.Rename(from, to)
+	log.Printf("ftpcam-diver: RenameFile cc.ID=%v from=%v to=%v", cc.ID(), from, to)
+	return os.ErrPermission
 }
 
 // The virtual file is an example of how you can implement a purely virtual file
 type virtualFile struct {
-	content    []byte // Content of the file
-	readOffset int    // Reading offset
+	content     []byte // Content of the file
+	readOffset  int    // Reading offset
+	writeOffset int    // Reading offset
 }
 
 func (f *virtualFile) Close() error {
+	log.Printf("ftpcam-driver: virtualFile.Close f=%v", f)
 	return nil
 }
 
 func (f *virtualFile) Read(buffer []byte) (int, error) {
+	log.Printf("ftpcam-driver: virtualFile.Read f=%v", f)
+
 	n := copy(buffer, f.content[f.readOffset:])
 	f.readOffset += n
 	if n == 0 {
@@ -218,11 +259,18 @@ func (f *virtualFile) Read(buffer []byte) (int, error) {
 }
 
 func (f *virtualFile) Seek(n int64, w int) (int64, error) {
+	log.Printf("ftpcam-driver: virtualFile.Seek f=%v", f)
+
 	return 0, nil
 }
 
 func (f *virtualFile) Write(buffer []byte) (int, error) {
-	return 0, nil
+	log.Printf("ftpcam-driver: virtualFile.Write f=%v", f)
+
+	n := copy(f.content[f.writeOffset:], buffer)
+	f.writeOffset += n
+
+	return n, nil
 }
 
 type virtualFileInfo struct {
@@ -253,20 +301,4 @@ func (f virtualFileInfo) ModTime() time.Time {
 
 func (f virtualFileInfo) Sys() interface{} {
 	return nil
-}
-
-func externalIP() (string, error) {
-	// If you need to take a bet, amazon is about as reliable & sustainable a service as you can get
-	rsp, err := http.Get("http://checkip.amazonaws.com")
-	if err != nil {
-		return "", err
-	}
-	defer rsp.Body.Close()
-
-	buf, err := ioutil.ReadAll(rsp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	return string(bytes.TrimSpace(buf)), nil
 }
