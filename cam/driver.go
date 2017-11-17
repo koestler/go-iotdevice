@@ -83,12 +83,12 @@ func (driver *MainDriver) AuthUser(cc server.ClientContext, user, pass string) (
 
 // UserLeft is called when the user disconnects, even if he never authenticated
 func (driver *MainDriver) UserLeft(cc server.ClientContext) {
-	log.Printf("ftpcam-diver: UserLeft")
+	log.Printf("ftpcam-diver: UserLeft cc.ID=%v", cc.ID())
 }
 
 // ChangeDirectory changes the current working directory
 func (driver *ClientDriver) ChangeDirectory(cc server.ClientContext, directory string) error {
-	log.Printf("ftpcam-diver: ChangeDirectory cc.ID=%v, directory=%v", cc.ID(), directory)
+	log.Printf("ftpcam-diver: ChangeDirectory cc.ID=%v directory=%v", cc.ID(), directory)
 
 	// create directories on the fly
 	driver.vfs.directories[directory] = true
@@ -97,7 +97,7 @@ func (driver *ClientDriver) ChangeDirectory(cc server.ClientContext, directory s
 
 // MakeDirectory creates a directory
 func (driver *ClientDriver) MakeDirectory(cc server.ClientContext, directory string) error {
-	log.Printf("ftpcam-diver: MakeDirectory, cc.ID=%v, directory=%v", cc.ID(), directory)
+	log.Printf("ftpcam-diver: MakeDirectory, cc.ID=%v directory=%v", cc.ID(), directory)
 	driver.vfs.directories[directory] = true
 	return nil;
 }
@@ -109,7 +109,7 @@ func (driver *ClientDriver) LogContent() {
 
 // ListFiles lists the files of a directory
 func (driver *ClientDriver) ListFiles(cc server.ClientContext) ([]os.FileInfo, error) {
-	log.Printf("ftpcam-diver: ListFiles cc.Path=%v", cc.Path())
+	log.Printf("ftpcam-diver: ListFiles cc.ID=%v cc.Path=%v", cc.ID(), cc.Path())
 
 	driver.LogContent()
 
