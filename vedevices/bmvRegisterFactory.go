@@ -12,6 +12,8 @@ func BmvRegisterFactory(model string) Registers {
 		return RegisterListBmv700
 	case "bmv702":
 		return RegisterListBmv702
+	case "blueSolarMppt75_15":
+		return RegisterListSolar
 	default:
 		log.Fatalf("device: unknown Bmv.Model: %v", model)
 	}
