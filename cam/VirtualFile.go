@@ -6,12 +6,25 @@ package cam
 import (
 	"io"
 	"errors"
+	"time"
 )
 
 type VirtualFile struct {
 	buffer        []byte
 	writePosition int
 	readPosition  int
+	deviceName    string
+	filePath      string
+	modified      time.Time
+}
+
+type VirtualFileByCreated []*VirtualFile
+func (s VirtualFileByCreated) Len() int {return len(s)}
+func (s VirtualFileByCreated) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s VirtualFileByCreated) Less(i, j int) bool {
+	return s[i].modified.Before(s[j].modified)
 }
 
 func (vf *VirtualFile) Write(p []byte) (n int, err error) {
@@ -60,5 +73,6 @@ func (vf *VirtualFile) Read(b []byte) (n int, err error) {
 }
 
 func (vf *VirtualFile) Close() error {
+	camUpdatePicture(vf)
 	return nil
 }

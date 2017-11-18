@@ -1,7 +1,6 @@
 package cam
 
 import (
-	"image"
 	"github.com/koestler/go-ve-sensor/config"
 
 	"github.com/fclairamb/ftpserver/server"
@@ -13,15 +12,7 @@ import (
 	"syscall"
 )
 
-type FtpCam struct {
-	Name          string
-	DirectoryName string
-	CurrentImage  *image.NRGBA
-}
-
-var (
-	ftpServer *server.FtpServer
-)
+var ftpServer *server.FtpServer
 
 func FtpCamStart(config config.CamConfig) {
 	// Setting up the logger
@@ -43,7 +34,7 @@ func FtpCamStart(config config.CamConfig) {
 	ftpServer = server.NewFtpServer(driver)
 
 	// Overriding the server default silent logger by a sub-logger (component: server)
-	ftpServer.Logger = log.With(logger, "component", "server")
+	//ftpServer.Logger = log.With(logger, "component", "server")
 
 	// Preparing the SIGTERM handling
 	go signalHandler()

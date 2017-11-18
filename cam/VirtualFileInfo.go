@@ -6,9 +6,10 @@ import (
 )
 
 type VirtualFileInfo struct {
-	name string
-	size int64
-	mode os.FileMode
+	name     string
+	size     int64
+	mode     os.FileMode
+	modified time.Time
 }
 
 func (f VirtualFileInfo) Name() string {
@@ -28,7 +29,7 @@ func (f VirtualFileInfo) IsDir() bool {
 }
 
 func (f VirtualFileInfo) ModTime() time.Time {
-	return time.Now().UTC()
+	return f.modified
 }
 
 func (f VirtualFileInfo) Sys() interface{} {
