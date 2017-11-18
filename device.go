@@ -1,5 +1,5 @@
 package main
-
+/*
 import (
 	"github.com/koestler/go-ve-sensor/bmv"
 	"github.com/koestler/go-ve-sensor/config"
@@ -32,7 +32,7 @@ func BmvStart(config config.BmvConfig) {
 
 			var registers bmv.Registers
 
-			switch config.Type {
+			switch config.Model {
 			case "bmv700":
 				registers = bmv.RegisterList700
 				break
@@ -40,7 +40,7 @@ func BmvStart(config config.BmvConfig) {
 				registers = bmv.RegisterList702
 				break
 			default:
-				log.Fatalf("device: unknown Bmv.Type: %v", config.Type)
+				log.Fatalf("device: unknown Bmv.Model: %v", config.Model)
 			}
 
 			for regName, reg := range registers {
@@ -59,3 +59,5 @@ func BmvStart(config config.BmvConfig) {
 	}()
 
 }
+
+*/

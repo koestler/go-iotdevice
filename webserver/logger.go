@@ -1,4 +1,4 @@
-package vehttp
+package webserver
 
 import (
 	"log"
