@@ -1,7 +1,7 @@
 package main
 /*
 import (
-	"github.com/koestler/go-ve-sensor/bmv"
+	"github.com/koestler/go-ve-sensor/vedevices"
 	"github.com/koestler/go-ve-sensor/config"
 	"github.com/koestler/go-ve-sensor/vedata"
 	"github.com/koestler/go-ve-sensor/vedirect"
@@ -21,23 +21,23 @@ func BmvStart(config config.BmvConfig) {
 		return
 	}
 
-	// start bmv reader
+	// start vedevices reader
 	go func() {
-		numericValues := make(bmv.NumericValues)
+		numericValues := make(vedevices.NumericValues)
 
 		for _ = range time.Tick(400 * time.Millisecond) {
 			if err := vd.VeCommandPing(); err != nil {
 				log.Printf("device: VeCommandPing failed: %v", err)
 			}
 
-			var registers bmv.Registers
+			var registers vedevices.Registers
 
 			switch config.Model {
 			case "bmv700":
-				registers = bmv.RegisterList700
+				registers = vedevices.RegisterListBmv700
 				break
 			case "bmv702":
-				registers = bmv.RegisterList702
+				registers = vedevices.RegisterListBmv702
 				break
 			default:
 				log.Fatalf("device: unknown Bmv.Model: %v", config.Model)
@@ -45,7 +45,7 @@ func BmvStart(config config.BmvConfig) {
 
 			for regName, reg := range registers {
 				if numericValue, err := reg.RecvNumeric(vd); err != nil {
-					log.Printf("device: bmv.RecvNumeric failed: %v", err)
+					log.Printf("device: vedevices.RecvNumeric failed: %v", err)
 				} else {
 					numericValues[regName] = numericValue
 					if config.DebugPrint {

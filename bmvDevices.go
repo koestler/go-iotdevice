@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/koestler/go-ve-sensor/dataflow"
 	"github.com/koestler/go-ve-sensor/config"
-	"github.com/koestler/go-ve-sensor/bmv"
+	"github.com/koestler/go-ve-sensor/vedevices"
 )
 
 func BmvDevicesSetupAndRun() (sources []dataflow.Drainable) {
@@ -18,7 +18,7 @@ func BmvDevicesSetupAndRun() (sources []dataflow.Drainable) {
 		device := dataflow.DeviceCreate(bmvConfig.Name, bmvConfig.Model);
 
 		// get relevant registers
-		registers := bmv.BmvRegisterFactory(bmvConfig.Model);
+		registers := vedevices.BmvRegisterFactory(bmvConfig.Model);
 
 		// setup the datasource
 		sources[i] = dataflow.SourceCreateBmvStartDummy(device, registers)

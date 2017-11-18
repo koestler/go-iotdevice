@@ -92,7 +92,7 @@ func GetBmvConfig(sectionName string) (bmvConfig BmvConfig) {
 	err := config.Section(sectionName).MapTo(&bmvConfig)
 
 	if err != nil {
-		log.Fatal("config: cannot read bmv configuration: %v", err)
+		log.Fatal("config: cannot read vedevices configuration: %v", err)
 	}
 
 	return

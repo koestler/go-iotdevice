@@ -1,4 +1,4 @@
-package bmv
+package vedevices
 
 import (
 	"log"
@@ -7,11 +7,11 @@ import (
 func BmvRegisterFactory(model string) Registers {
 	switch model {
 	case "bmv700Essential":
-		return RegisterList700Essential
+		return RegisterListBmv700Essential
 	case "bmv700":
-		return RegisterList700
+		return RegisterListBmv700
 	case "bmv702":
-		return RegisterList702
+		return RegisterListBmv702
 	default:
 		log.Fatalf("device: unknown Bmv.Model: %v", model)
 	}

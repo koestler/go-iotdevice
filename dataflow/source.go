@@ -1,7 +1,7 @@
 package dataflow
 
 import (
-	"github.com/koestler/go-ve-sensor/bmv"
+	"github.com/koestler/go-ve-sensor/vedevices"
 	"time"
 	"math/rand"
 )
@@ -10,7 +10,7 @@ type Source struct {
 	outputChain chan Value
 }
 
-func SourceCreateBmvStartDummy(device *Device, registers bmv.Registers) (*Source) {
+func SourceCreateBmvStartDummy(device *Device, registers vedevices.Registers) (*Source) {
 	output := make(chan Value)
 	go func() {
 		defer close(output)
