@@ -178,39 +178,31 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 	}
 
 	// extract value
-	value = rawValues[3:]
-
-	return
+	return rawValues[3:], nil
 }
 
 func (vd *Vedirect) VeCommandGetUint(address uint16) (value uint64, err error) {
-
 	rawValue, err := vd.VeCommandGet(address)
 	if err != nil {
 		return
 	}
 
-	value = littleEndianBytesToUint(rawValue)
-
-	return
+	return littleEndianBytesToUint(rawValue), nil
 }
 
 func (vd *Vedirect) VeCommandGetInt(address uint16) (value int64, err error) {
-
 	rawValue, err := vd.VeCommandGet(address)
 	if err != nil {
 		return
 	}
 
-	value = littleEndianBytesToInt(rawValue)
-
-	return
+	return littleEndianBytesToInt(rawValue), nil
 }
 
 func (vd *Vedirect) RecvVeResponse(maxLength int) (data []byte, err error) {
 	_, err = vd.RecvUntil(':', 1024)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	data, err = vd.RecvUntil('\n', maxLength)

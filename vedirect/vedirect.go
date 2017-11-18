@@ -68,7 +68,7 @@ func (vd *Vedirect) RecvFlush() (err error) {
 		}
 
 		if n < nBuff {
-			break
+			return nil // read buffer empty -> we are done
 		}
 	}
 
