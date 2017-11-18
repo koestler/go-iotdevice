@@ -1,32 +1,34 @@
 package cam
 
 import (
-	"github.com/koestler/go-ve-sensor/config"
-
 	"github.com/fclairamb/ftpserver/server"
-	"github.com/go-kit/kit/log"
+	kitlog "github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 
 	"os"
 	"os/signal"
 	"syscall"
+	"log"
 )
 
 var ftpServer *server.FtpServer
 
-func FtpCamStart(config config.CamConfig) {
+func Run() {
 	// Setting up the logger
-	logger := log.With(
-		log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout)),
-		"ts", log.DefaultTimestampUTC,
-		"caller", log.DefaultCaller,
+	logger := kitlog.With(
+		kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout)),
+		"ts", kitlog.DefaultTimestampUTC,
+		"caller", kitlog.DefaultCaller,
 	)
 
 	// Loading the driver
-	driver, err := NewDriver()
+	listenHost := "0.0.0.0"
+	listenPort := 2121
+
+	driver, err := NewDriver(listenHost, listenPort)
 
 	if err != nil {
-		level.Error(logger).Log("msg", "Could not load the driver", "err", err)
+		level.Error(logger).Log("msg", "ftpserver: Could not load the driver", "err", err)
 		return
 	}
 
@@ -40,9 +42,13 @@ func FtpCamStart(config config.CamConfig) {
 	go signalHandler()
 
 	// Blocking call, behaving similarly to the http.ListenAndServe
-	if err := ftpServer.ListenAndServe(); err != nil {
-		level.Error(logger).Log("msg", "Problem listening", "err", err)
-	}
+
+	go func() {
+		log.Printf("ftpserver: listening on %v:%v", listenHost, listenPort)
+		if err := ftpServer.ListenAndServe(); err != nil {
+			level.Error(logger).Log("msg", "ftpserver: Problem listening", "err", err)
+		}
+	}()
 }
 
 func signalHandler() {

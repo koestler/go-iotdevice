@@ -11,6 +11,8 @@ func Run(bind string, port int, env *Environment) {
 
 	address := bind + ":" + strconv.Itoa(port)
 
-	log.Printf("webserver: listening on port %v", address)
-	go log.Fatal(router, http.ListenAndServe(address, router))
+	go func() {
+		log.Printf("webserver: listening on %v", address)
+		log.Fatal(router, http.ListenAndServe(address, router))
+	}()
 }

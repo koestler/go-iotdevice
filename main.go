@@ -13,16 +13,11 @@ var rawStorage, roundedStorage *dataflow.ValueStorageInstance
 func main() {
 	log.Print("main: start go-ve-sensor...")
 
-		// startup Cam devices
-	log.Print("start camera devices")
-	for _, camConfig := range config.GetCamConfigs() {
-		cam.FtpCamStart(camConfig)
-	}
-
 	setupStorageAndDataFlow()
 	setupBmvSources()
-	//setupTestSinks()
+	setupTestSinks()
 	setupHttpServer()
+	setupFtpServer()
 
 	log.Print("main: start completed; run until kill signal is received")
 
@@ -48,7 +43,7 @@ func setupStorageAndDataFlow() {
 	// chain those
 	rawStorage.Append(rounder)
 	rounder.Append(roundedStorage)
-	
+
 }
 
 func setupBmvSources() {
@@ -78,11 +73,16 @@ func setupHttpServer() {
 
 		env := &webserver.Environment{
 			RoundedStorage: roundedStorage,
-			Devices:dataflow.DevicesGet(),
+			Devices:        dataflow.DevicesGet(),
 		}
 
 		webserver.Run(httpdConfig.Bind, httpdConfig.Port, env)
 	} else {
 		log.Printf("main: skip webserver server, err=%v", err)
 	}
+}
+
+func setupFtpServer() {
+	// todo: get ftp config
+	cam.Run()
 }

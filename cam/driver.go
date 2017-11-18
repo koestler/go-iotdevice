@@ -24,7 +24,9 @@ type VirtualFileSystem struct {
 
 // MainDriver defines a very basic ftpserver driver
 type MainDriver struct {
-	vfs VirtualFileSystem
+	vfs        VirtualFileSystem
+	listenHost string
+	listenPort int
 }
 
 // ClientDriver defines a very basic client driver
@@ -34,13 +36,15 @@ type ClientDriver struct {
 }
 
 // NewSampleDriver creates a sample driver
-func NewDriver() (*MainDriver, error) {
+func NewDriver(listenHost string, listenPort int) (*MainDriver, error) {
 	// create new virtual in-memory filesystem
 	driver := &MainDriver{
 		vfs: VirtualFileSystem{
 			directories: make(map[string]bool),
 			files:       make(map[string]*VirtualFile),
 		},
+		listenHost: listenHost,
+		listenPort: listenPort,
 	}
 
 	return driver, nil
@@ -50,8 +54,8 @@ func NewDriver() (*MainDriver, error) {
 func (driver *MainDriver) GetSettings() *server.Settings {
 	var config server.Settings
 
-	config.ListenHost = "0.0.0.0"
-	config.ListenPort = 2121
+	config.ListenHost = driver.listenHost
+	config.ListenPort = driver.listenPort
 	config.PublicHost = "::1"
 	config.MaxConnections = 32
 	config.DataPortRange = &server.PortRange{Start: 2122, End: 2200}
