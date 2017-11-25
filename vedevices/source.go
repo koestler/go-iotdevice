@@ -9,9 +9,9 @@ import (
 	"github.com/koestler/go-ve-sensor/config"
 )
 
-func CreateDummySource(device *dataflow.Device, config config.BmvConfig) (*dataflow.Source) {
+func CreateDummySource(device *dataflow.Device, config config.VedeviceConfig) (*dataflow.Source) {
 	// get relevant registers
-	registers := BmvRegisterFactory(config.Model);
+	registers := RegisterFactory(config.Model);
 
 	// setup output chain
 	output := make(chan dataflow.Value)
@@ -36,7 +36,7 @@ func CreateDummySource(device *dataflow.Device, config config.BmvConfig) (*dataf
 	return dataflow.CreateSource(output)
 }
 
-func CreateSource(device *dataflow.Device, config config.BmvConfig) (err error, source *dataflow.Source) {
+func CreateSource(device *dataflow.Device, config config.VedeviceConfig) (err error, source *dataflow.Source) {
 	// open vedirect device
 	vd, err := vedirect.Open(config.Device)
 	if err != nil {
@@ -44,7 +44,7 @@ func CreateSource(device *dataflow.Device, config config.BmvConfig) (err error, 
 	}
 
 	// get relevant registers
-	registers := BmvRegisterFactory(config.Model);
+	registers := RegisterFactory(config.Model);
 
 	// setup output chain with enough space to hold some values
 	output := make(chan dataflow.Value, len(registers)/4)

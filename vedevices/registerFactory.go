@@ -4,7 +4,7 @@ import (
 	"log"
 )
 
-func BmvRegisterFactory(model string) Registers {
+func RegisterFactory(model string) Registers {
 	switch model {
 	case "bmv700Essential":
 		return RegisterListBmv700Essential
