@@ -1,4 +1,4 @@
-package cam
+package ftpServer
 
 import (
 	"github.com/fclairamb/ftpserver/server"
@@ -13,7 +13,7 @@ import (
 
 var ftpServer *server.FtpServer
 
-func Run() {
+func Run(bind string, port int) {
 	// Setting up the logger
 	logger := kitlog.With(
 		kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout)),
@@ -22,13 +22,13 @@ func Run() {
 	)
 
 	// Loading the driver
-	listenHost := "0.0.0.0"
-	listenPort := 2121
+	listenHost := bind
+	listenPort := port
 
 	driver, err := NewDriver(listenHost, listenPort)
 
 	if err != nil {
-		level.Error(logger).Log("msg", "ftpserver: Could not load the driver", "err", err)
+		level.Error(logger).Log("msg", "ftpServer: Could not load the driver", "err", err)
 		return
 	}
 
@@ -44,9 +44,9 @@ func Run() {
 	// Blocking call, behaving similarly to the http.ListenAndServe
 
 	go func() {
-		log.Printf("ftpserver: listening on %v:%v", listenHost, listenPort)
+		log.Printf("ftpServer: listening on %v:%v", listenHost, listenPort)
 		if err := ftpServer.ListenAndServe(); err != nil {
-			level.Error(logger).Log("msg", "ftpserver: Problem listening", "err", err)
+			level.Error(logger).Log("msg", "ftpServer: Problem listening", "err", err)
 		}
 	}()
 }

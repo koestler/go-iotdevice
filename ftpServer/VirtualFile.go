@@ -1,4 +1,4 @@
-package cam
+package ftpServer
 
 // https://github.com/orcaman/writerseeker/blob/master/writerseeker.go
 // bytes/reader

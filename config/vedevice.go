@@ -14,8 +14,8 @@ type VedeviceConfig struct {
 
 const vedevicePrefix = "Vedevice."
 
-func GetVedeviceConfig(sectionName string) (bmvConfig VedeviceConfig) {
-	bmvConfig = VedeviceConfig{
+func GetVedeviceConfig(sectionName string) (bmvConfig *VedeviceConfig) {
+	bmvConfig = &VedeviceConfig{
 		Name:       sectionName[len(vedevicePrefix):],
 		Model:      "unset",
 		Device:     "unset",
@@ -31,7 +31,7 @@ func GetVedeviceConfig(sectionName string) (bmvConfig VedeviceConfig) {
 	return
 }
 
-func GetVedeviceConfigs() (bmvConfigs []VedeviceConfig) {
+func GetVedeviceConfigs() (bmvConfigs []*VedeviceConfig) {
 	sections := config.SectionStrings()
 	for _, sectionName := range sections {
 		if !strings.HasPrefix(sectionName, vedevicePrefix) {

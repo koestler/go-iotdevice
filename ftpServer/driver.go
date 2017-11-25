@@ -1,5 +1,5 @@
 // Package sample is a sample server driver
-package cam
+package ftpServer
 
 import (
 	"crypto/tls"
@@ -22,7 +22,7 @@ type VirtualFileSystem struct {
 	files       FileList
 }
 
-// MainDriver defines a very basic ftpserver driver
+// MainDriver defines a very basic ftpServer driver
 type MainDriver struct {
 	vfs        VirtualFileSystem
 	listenHost string
@@ -76,7 +76,7 @@ func (driver *MainDriver) WelcomeUser(cc server.ClientContext) (string, error) {
 
 	cc.SetDebug(true)
 	return fmt.Sprintf(
-		"Welcome on go-ve-sensor ftpserver, your ID is %d, your IP:port is %s", cc.ID(), cc.RemoteAddr(),
+		"Welcome on go-ve-sensor ftpServer, your ID is %d, your IP:port is %s", cc.ID(), cc.RemoteAddr(),
 	), nil
 }
 

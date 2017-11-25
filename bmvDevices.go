@@ -8,7 +8,6 @@ import (
 )
 
 func BmvDevicesSetupAndRun() (sources []dataflow.Drainable) {
-
 	configs := config.GetVedeviceConfigs()
 
 	sources = make([]dataflow.Drainable, 0, len(configs))
