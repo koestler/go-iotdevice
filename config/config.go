@@ -76,7 +76,6 @@ type BmvConfig struct {
 	Name       string
 	Model      string
 	Device     string
-	Aux        string
 	DebugPrint bool
 }
 
@@ -85,7 +84,6 @@ func GetBmvConfig(sectionName string) (bmvConfig BmvConfig) {
 		Name:       sectionName[4:],
 		Model:      "unset",
 		Device:     "unset",
-		Aux:        "none",
 		DebugPrint: false,
 	}
 

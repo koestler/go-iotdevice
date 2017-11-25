@@ -9,7 +9,7 @@ import (
 )
 
 type Vedirect struct {
-	io io.ReadWriteCloser
+	ioHandle io.ReadWriteCloser
 }
 
 func Open(portName string) (*Vedirect, error) {
@@ -24,19 +24,18 @@ func Open(portName string) (*Vedirect, error) {
 		InterCharacterTimeout: 100,
 	}
 
-	io, err := serial.Open(options)
+	ioHandle, err := serial.Open(options)
 	if err != nil {
-		log.Fatalf("vedirect.Open: %v\n", err)
-		return nil, errors.New("cannot open port")
+		return nil, errors.New(fmt.Sprintf("cannot open port: %v", portName))
 	}
 
-	log.Printf("vedirect: Open succeeded portName=%v, io=%v", portName, io)
+	log.Printf("vedirect: Open succeeded portName=%v, ioHandle=%v", portName, ioHandle)
 
-	return &Vedirect{io: io}, nil
+	return &Vedirect{ioHandle: ioHandle}, nil
 }
 
 func (vd *Vedirect) Read(b []byte) (n int, err error) {
-	n, err = vd.io.Read(b)
+	n, err = vd.ioHandle.Read(b)
 	if err != nil {
 		log.Printf("vedirect: Read error: %v\n", err)
 	}
@@ -61,7 +60,7 @@ func (vd *Vedirect) RecvFlush() (err error) {
 	b := make([]byte, nBuff)
 
 	for {
-		n, err := vd.io.Read(b)
+		n, err := vd.ioHandle.Read(b)
 
 		if err == io.EOF {
 			return nil
@@ -104,7 +103,7 @@ func (vd *Vedirect) RecvUntil(needle byte, maxLength int) (data []byte, err erro
 }
 
 func (vd *Vedirect) write(b []byte) (n int, err error) {
-	n, err = vd.io.Write(b)
+	n, err = vd.ioHandle.Write(b)
 	if err != nil {
 		log.Printf("vedirect: Write error: %v\n", err)
 		return 0, err
@@ -113,5 +112,5 @@ func (vd *Vedirect) write(b []byte) (n int, err error) {
 }
 
 func (vd *Vedirect) Close() (err error) {
-	return vd.io.Close()
+	return vd.ioHandle.Close()
 }

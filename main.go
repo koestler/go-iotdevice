@@ -57,12 +57,14 @@ func setupBmvSources() {
 
 func setupTestSinks() {
 	// setup some test sinks
+	/*
 	devices := dataflow.DevicesGet()
 	f0 := dataflow.Filter{
 		Devices:    map[*dataflow.Device]bool{devices[0]: true},
 		ValueNames: map[string]bool{"Power": true},
 	};
 	dataflow.SinkLog("raw    ", rawStorage.Subscribe(f0))
+	*/
 	dataflow.SinkLog("rounded", roundedStorage.Drain())
 }
 
