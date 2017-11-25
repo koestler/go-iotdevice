@@ -9,6 +9,8 @@ import (
 var indent = 0
 
 func debugPrintf(format string, v ...interface{}) {
+	return
+
 	intro := strings.Split(format, "=")[0]
 
 	if indent > 0 && strings.Contains(intro, "end") {

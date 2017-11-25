@@ -55,7 +55,7 @@ func CreateSource(device *dataflow.Device, config config.BmvConfig) (err error, 
 		// flush buffer
 		vd.RecvFlush()
 
-		for _ = range time.Tick(400*time.Millisecond) {
+		for _ = range time.Tick(100*time.Millisecond) {
 			if err := vd.VeCommandPing(); err != nil {
 				log.Printf("vedevices source: VeCommandPing failed: %v", err)
 				continue
@@ -63,7 +63,9 @@ func CreateSource(device *dataflow.Device, config config.BmvConfig) (err error, 
 
 			for name, register := range registers {
 				if numericValue, err := register.RecvNumeric(vd); err != nil {
-					log.Printf("device: vedevices.RecvNumeric failed: %v", err)
+					log.Printf(
+						"device: vedevices.RecvNumeric failed device=%v name=%v err=%v", device, name, err,
+					)
 				} else {
 					output <- dataflow.Value{
 						Device:        device,

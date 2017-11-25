@@ -1,5 +1,6 @@
 package vedevices
 
+// todo: understand the enums
 var RegisterListSolarBatterySettings = Registers{
 	"AutomaticEqualizationMode": Register{
 		Address:       0xEDFD,
@@ -215,6 +216,7 @@ var RegisterListSolarPanelData = Registers{
 		Signed:        false,
 		RoundDecimals: 2,
 	},
+	/*
 	"PanelCurrent": Register{
 		Address:       0xEDBD,
 		Factor:        0.1,
@@ -222,6 +224,7 @@ var RegisterListSolarPanelData = Registers{
 		Signed:        false,
 		RoundDecimals: 1,
 	},
+	*/
 	"PanelMaximumVoltage": Register{
 		Address:       0xEDB8,
 		Factor:        0.01,
@@ -232,6 +235,7 @@ var RegisterListSolarPanelData = Registers{
 }
 
 var RegisterListSolar = mergeRegisters(
+	RegisterListSolarBatterySettings,
 	RegisterListSolarChargerData,
 	RegisterListSolarPanelData,
 )
