@@ -1,4 +1,4 @@
-package webserver
+package httpServer
 
 import (
 	"github.com/gorilla/mux"

@@ -5,13 +5,13 @@ import (
 	"errors"
 )
 
-type HttpdConfig struct {
+type HttpServerConfig struct {
 	Bind string
 	Port int
 }
 
-func GetHttpdConfig() (httpdConfig *HttpdConfig, err error) {
-	httpdConfig = &HttpdConfig{
+func GetHttpServerConfig() (httpdConfig *HttpServerConfig, err error) {
+	httpdConfig = &HttpServerConfig{
 		Bind: "127.0.0.1",
 		Port: 0,
 	}

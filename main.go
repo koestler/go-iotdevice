@@ -5,7 +5,7 @@ import (
 	"github.com/koestler/go-ve-sensor/ftpServer"
 	"github.com/koestler/go-ve-sensor/dataflow"
 	"github.com/koestler/go-ve-sensor/config"
-	"github.com/koestler/go-ve-sensor/webserver"
+	"github.com/koestler/go-ve-sensor/httpServer"
 )
 
 var rawStorage, roundedStorage *dataflow.ValueStorageInstance
@@ -69,18 +69,18 @@ func setupTestSinks() {
 }
 
 func setupHttpServer() {
-	httpdConfig, err := config.GetHttpdConfig()
+	httpServerConfig, err := config.GetHttpServerConfig()
 	if err == nil {
-		log.Print("main: start http server, Bind=%v, Port=%v", httpdConfig.Bind, httpdConfig.Port)
+		log.Print("main: start httpServer, Bind=%v, Port=%v", httpServerConfig.Bind, httpServerConfig.Port)
 
-		env := &webserver.Environment{
+		env := &httpServer.Environment{
 			RoundedStorage: roundedStorage,
 			Devices:        dataflow.DevicesGet(),
 		}
 
-		webserver.Run(httpdConfig.Bind, httpdConfig.Port, env)
+		httpServer.Run(httpServerConfig.Bind, httpServerConfig.Port, env)
 	} else {
-		log.Printf("main: skip http server, err=%v", err)
+		log.Printf("main: skip httpServer, err=%v", err)
 	}
 }
 

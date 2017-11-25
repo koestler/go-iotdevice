@@ -1,4 +1,4 @@
-package webserver
+package httpServer
 
 // this setup is based on the following, awesome article:
 //https://elithrar.github.io/article/custom-handlers-avoiding-globals/
@@ -48,7 +48,7 @@ type Handler struct {
 	Handle HandlerHandleFunc
 }
 
-// ServeHTTP allows our Handler type to satisfy webserver.Handler.
+// ServeHTTP allows our Handler type to satisfy httpServer.Handler.
 func (handler Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := handler.Handle(handler.Env, w, r)
 

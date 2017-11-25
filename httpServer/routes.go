@@ -1,4 +1,4 @@
-package webserver
+package httpServer
 
 var wsRoutes = WsRoutes{
 	WsRoute{

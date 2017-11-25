@@ -1,4 +1,4 @@
-package webserver
+package httpServer
 
 import "net/http"
 
