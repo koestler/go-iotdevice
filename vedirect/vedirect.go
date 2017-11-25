@@ -34,7 +34,14 @@ func Open(portName string) (*Vedirect, error) {
 	return &Vedirect{ioHandle: ioHandle}, nil
 }
 
-func (vd *Vedirect) Read(b []byte) (n int, err error) {
+func (vd *Vedirect) Close() (err error) {
+	debugPrintf("vedirect: Close begin")
+	err = vd.ioHandle.Close()
+	debugPrintf("vedirect: Close end err=%v", err)
+	return
+}
+
+func (vd *Vedirect) read(b []byte) (n int, err error) {
 	n, err = vd.ioHandle.Read(b)
 	if err != nil {
 		log.Printf("vedirect: Read error: %v\n", err)
@@ -42,46 +49,46 @@ func (vd *Vedirect) Read(b []byte) (n int, err error) {
 	return
 }
 
-func (vd *Vedirect) Recv(b []byte) (err error) {
-	nRequested := len(b)
-
-	for n := 0; n < nRequested; {
-		nRead, err := vd.Read(b[n:])
-		if err != nil {
-			return err
-		}
-		n += nRead
+func (vd *Vedirect) Write(b []byte) (n int, err error) {
+	debugPrintf("vedirect: Write b=%s len=%v", b, len(b))
+	n, err = vd.ioHandle.Write(b)
+	if err != nil {
+		log.Printf("vedirect: Write error: %v\n", err)
+		return 0, err
 	}
-	return nil
+	return
 }
 
 func (vd *Vedirect) RecvFlush() (err error) {
+	debugPrintf("vedirect: RecvFlush begin")
+
 	nBuff := 64
 	b := make([]byte, nBuff)
+	flushed := 0
 
 	for {
 		n, err := vd.ioHandle.Read(b)
+		flushed += n
 
-		if err == io.EOF {
+		if err == io.EOF || n < nBuff {
+			// n < nBuff: read buffer empty -> we are done
+			debugPrintf("vedirect: RecvFlush end flushed=%v", flushed)
 			return nil
 		}
-
-		if n < nBuff {
-			return nil // read buffer empty -> we are done
-		}
 	}
-
-	return nil
 }
 
 func (vd *Vedirect) RecvUntil(needle byte, maxLength int) (data []byte, err error) {
+	debugPrintf("vedirect: RecvUntil begin needle=%c maxLength=%v", needle, maxLength)
+
 	b := make([]byte, 1)
 	data = make([]byte, 0, maxLength)
 
 	for i := 0; i <= maxLength; i += 1 {
-		n, err := vd.Read(b)
+		n, err := vd.read(b)
 
 		if err != nil {
+			debugPrintf("vedirect: RecvUntil end err=%v", err)
 			return nil, err
 		}
 
@@ -91,6 +98,7 @@ func (vd *Vedirect) RecvUntil(needle byte, maxLength int) (data []byte, err erro
 		}
 
 		if n == 1 && b[0] == needle {
+			debugPrintf("vedirect: RecvUntil end data=%s size=%v", data, len(data))
 			return data, nil
 		}
 
@@ -98,19 +106,6 @@ func (vd *Vedirect) RecvUntil(needle byte, maxLength int) (data []byte, err erro
 	}
 
 	return nil, errors.New(
-		fmt.Sprintf("vedirect.RecvUntil gave up after reaching maxLength=%v\n", maxLength),
+		fmt.Sprintf("vedirect: RecvUntil end gave up after reaching maxLength=%v", maxLength),
 	)
-}
-
-func (vd *Vedirect) write(b []byte) (n int, err error) {
-	n, err = vd.ioHandle.Write(b)
-	if err != nil {
-		log.Printf("vedirect: Write error: %v\n", err)
-		return 0, err
-	}
-	return
-}
-
-func (vd *Vedirect) Close() (err error) {
-	return vd.ioHandle.Close()
 }
