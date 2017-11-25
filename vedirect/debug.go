@@ -3,18 +3,24 @@ package vedirect
 import (
 	"log"
 	"strings"
+	"fmt"
 )
 
 var indent = 0
 
 func debugPrintf(format string, v ...interface{}) {
-	if strings.Contains(format, "end") {
+	intro := strings.Split(format, "=")[0]
+
+	if indent > 0 && strings.Contains(intro, "end") {
 		indent -= 1
 	}
 
-	log.Printf(strings.Repeat("  ", indent)+format, v...)
+	s := fmt.Sprintf(format, v...)
+	s = strings.Replace(s, "\n", "\\n", -1)
 
-	if strings.Contains(format, "begin") {
+	log.Print(strings.Repeat("  ", indent) + s)
+
+	if indent < 64 && strings.Contains(intro, "begin") {
 		indent += 1
 	}
 }

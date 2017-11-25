@@ -52,10 +52,13 @@ func CreateSource(device *dataflow.Device, config config.BmvConfig) (err error, 
 	// start vedevices reader
 	go func() {
 		defer close(output)
-		for {
+		// flush buffer
+		vd.RecvFlush()
+
+		for _ = range time.Tick(400*time.Millisecond) {
 			if err := vd.VeCommandPing(); err != nil {
-				log.Printf("vedevices source: VeCommandPing failed: %v; exit", err)
-				return
+				log.Printf("vedevices source: VeCommandPing failed: %v", err)
+				continue
 			}
 
 			for name, register := range registers {

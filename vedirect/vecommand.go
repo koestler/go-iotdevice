@@ -36,7 +36,7 @@ func (vd *Vedirect) VeCommandPing() (err error) {
 		return err
 	}
 
-	_, err = vd.RecvVeResponse(7)
+	_, err = vd.RecvVeResponse()
 	if err != nil {
 		debugPrintf("vedirect: VeCommandPing end err=%v", err)
 		return err
@@ -60,14 +60,14 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 	}
 
 	var responseData []byte
-	responseData, err = vd.RecvVeResponse(64)
+	responseData, err = vd.RecvVeResponse()
 	if err != nil {
 		return
 	}
 
 	if len(responseData) < 8 {
 		err = errors.New(fmt.Sprintf("responseData too short, len(resposneData)=%v", len(responseData)))
-		log.Printf("vedirect: VeCommandGet, error: %v", err)
+		debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	}
 
@@ -75,7 +75,7 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 	var responseCommand VeCommand
 	if s, err := strconv.ParseUint(string(responseData[0]), 16, 8); err != nil {
 		err = errors.New(fmt.Sprintf("cannot parse responseCommand, s=%v, err=%v", s, err))
-		log.Printf("vedirect: VeCommandGet, error: %v", err)
+		debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	} else {
 		responseCommand = VeCommand(s)
@@ -83,7 +83,7 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 
 	if VeCommandGet != responseCommand {
 		err = errors.New(fmt.Sprintf("VeCommandGet != responseCommand, VeCommandGet=%v, responseCommand=%v", VeCommandGet, responseCommand))
-		log.Printf("vedirect: VeCommandGet, error: %v", err)
+		debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	}
 
@@ -91,7 +91,7 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 	hexData := responseData[1:]
 	if len(hexData)%2 != 0 {
 		err = errors.New(fmt.Sprintf("received an odd number of hex bytes, len(hexData)=%v", len(hexData)))
-		log.Printf("vedirect: VeCommandGet, error: %v", err)
+		debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	}
 
@@ -100,7 +100,7 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 
 	if n, err := hex.Decode(binData, hexData); err != nil || n != numbBytes {
 		err = errors.New(fmt.Sprintf("hex to bin conversion failed: n=%v, err=%v", n, err))
-		log.Printf("vedirect: VeCommandGet, error: %v", err)
+		debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	}
 
@@ -111,7 +111,7 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 	checksum := computeChecksum(responseCommand, values)
 	if checksum != responseChecksum {
 		err = errors.New(fmt.Sprintf("checksum != responseChecksum, checksum=%X, responseChecksum=%X", checksum, responseChecksum))
-		log.Printf("vedirect: VeCommandGet, error: %v", err)
+		debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	}
 
@@ -178,7 +178,7 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 	responseAddress := uint16(littleEndianBytesToUint(rawValues[0:2]))
 	if address != responseAddress {
 		err = errors.New(fmt.Sprintf("address != responseAddress, address=%v, responseAddress=%v", address, responseAddress))
-		log.Printf("vedirect: VeCommandGet, error: %v", err)
+		debugPrintf("vedirect: VeCommandGet end err=%v", err)
 		return nil, err
 	}
 
@@ -186,7 +186,7 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 	responseFlag := VeResponseFlag(littleEndianBytesToUint(rawValues[2:3]))
 	if VeResponseFlagOk != responseFlag {
 		err = errors.New(fmt.Sprintf("VeResponseFlagOk != responseFlag, responseFlag=%v", responseFlag))
-		log.Printf("vedirect: VeCommandGet, error: %v", err)
+		debugPrintf("vedirect: VeCommandGet end err=%v", err)
 		return nil, err
 	}
 
@@ -197,36 +197,56 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 }
 
 func (vd *Vedirect) VeCommandGetUint(address uint16) (value uint64, err error) {
+	debugPrintf("vedirect: VeCommandGetUint begin")
+
 	rawValue, err := vd.VeCommandGet(address)
 	if err != nil {
+		debugPrintf("vedirect: VeCommandGetUint end err=%v", err)
 		return
 	}
 
-	return littleEndianBytesToUint(rawValue), nil
+	value = littleEndianBytesToUint(rawValue)
+	debugPrintf("vedirect: VeCommandGetUint end value=%v", value)
+	return
 }
 
 func (vd *Vedirect) VeCommandGetInt(address uint16) (value int64, err error) {
+	debugPrintf("vedirect: VeCommandGetInt begin")
+
 	rawValue, err := vd.VeCommandGet(address)
 	if err != nil {
+		debugPrintf("vedirect: VeCommandGetInt end err=%v", err)
 		return
 	}
+	value = littleEndianBytesToInt(rawValue)
 
-	return littleEndianBytesToInt(rawValue), nil
+	debugPrintf("vedirect: VeCommandGetInt end value=%v", value)
+	return
 }
 
-func (vd *Vedirect) RecvVeResponse(maxLength int) (data []byte, err error) {
-	debugPrintf("vedirect: RecvVeResponse begin maxLength=%v", maxLength)
+func (vd *Vedirect) RecvVeResponse() (data []byte, err error) {
+	debugPrintf("vedirect: RecvVeResponse begin")
 
-	_, err = vd.RecvUntil(':', 1024)
-	if err != nil {
-		debugPrintf("vedirect: RecvVeResponse end err=%v", err)
-		return nil, err
-	}
+	for {
+		// search start marker
+		_, err = vd.RecvUntil(':', 1024)
+		if err != nil {
+			debugPrintf("vedirect: RecvVeResponse end err=%v", err)
+			return nil, err
+		}
 
-	data, err = vd.RecvUntil('\n', maxLength)
-	if err != nil {
-		debugPrintf("vedirect: RecvVeResponse end err=%v", err)
-		return nil, err
+		// search end marker
+		data, err = vd.RecvUntil('\n', 64)
+		if err != nil {
+			debugPrintf("vedirect: RecvVeResponse end err=%v", err)
+			return nil, err
+		}
+
+		if len(data) > 0 && data[0] == 'A' {
+			debugPrintf("vedirect: RecvVeResponse async message received; ignore and read next response")
+		} else {
+			break;
+		}
 	}
 
 	debugPrintf("vedirect: RecvVeResponse end")
