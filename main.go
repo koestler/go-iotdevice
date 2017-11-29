@@ -7,6 +7,7 @@ import (
 	"github.com/koestler/go-ve-sensor/config"
 	"github.com/koestler/go-ve-sensor/httpServer"
 	"github.com/koestler/go-ve-sensor/deviceDb"
+	"github.com/koestler/go-ve-sensor/vedevices"
 )
 
 var rawStorage, roundedStorage *dataflow.ValueStorageInstance
@@ -50,7 +51,33 @@ func setupStorageAndDataFlow() {
 func setupBmvSources() {
 	log.Printf("main: setup Bmv sources")
 
-	sources := BmvDevicesSetupAndRun()
+	configs := config.GetVedeviceConfigs()
+
+	sources := make([]dataflow.Drainable, 0, len(configs))
+
+	// get devices from database and create them
+	for _, c := range configs {
+		log.Printf(
+			"bmvDevices: setup name=%v model=%v device=%v",
+			c.Name, c.Model, c.Device,
+		)
+
+		// register device in deviceDb
+		device := deviceDb.DeviceCreate(c.Name, c.Model);
+
+		// setup the datasource
+		if "dummy" == c.Device {
+			sources = append(sources, vedevices.CreateDummySource(device, c))
+		} else {
+			if err, source := vedevices.CreateSource(device, c); err == nil {
+				sources = append(sources, source)
+			} else {
+				log.Printf("bmvDevices: error while CreateSoruce: %v", err)
+			}
+		}
+	}
+
+	// append them as sources to the raw storage
 	for _, source := range sources {
 		source.Append(rawStorage)
 	}
