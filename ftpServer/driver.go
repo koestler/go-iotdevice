@@ -13,6 +13,7 @@ import (
 	"time"
 	"sort"
 	"path"
+	"github.com/koestler/go-ve-sensor/config"
 )
 
 type FileList map[string]*VirtualFile
@@ -27,6 +28,7 @@ type MainDriver struct {
 	vfs        VirtualFileSystem
 	listenHost string
 	listenPort int
+	cameras    []*config.FtpCameraConfig
 }
 
 // ClientDriver defines a very basic client driver
@@ -36,7 +38,7 @@ type ClientDriver struct {
 }
 
 // NewSampleDriver creates a sample driver
-func NewDriver(listenHost string, listenPort int) (*MainDriver, error) {
+func NewDriver(listenHost string, listenPort int, cameras []*config.FtpCameraConfig) (*MainDriver, error) {
 	// create new virtual in-memory filesystem
 	driver := &MainDriver{
 		vfs: VirtualFileSystem{
@@ -45,6 +47,7 @@ func NewDriver(listenHost string, listenPort int) (*MainDriver, error) {
 		},
 		listenHost: listenHost,
 		listenPort: listenPort,
+		cameras:    cameras,
 	}
 
 	return driver, nil
@@ -52,17 +55,17 @@ func NewDriver(listenHost string, listenPort int) (*MainDriver, error) {
 
 // GetSettings returns some general settings around the server setup
 func (driver *MainDriver) GetSettings() *server.Settings {
-	var config server.Settings
+	var settings server.Settings
 
-	config.ListenHost = driver.listenHost
-	config.ListenPort = driver.listenPort
-	config.PublicHost = "::1"
-	config.MaxConnections = 32
-	config.DataPortRange = &server.PortRange{Start: 2122, End: 2200}
-	config.DisableMLSD = true
-	config.NonStandardActiveDataPort = false
+	settings.ListenHost = driver.listenHost
+	settings.ListenPort = driver.listenPort
+	settings.PublicHost = "::1"
+	settings.MaxConnections = 32
+	settings.DataPortRange = &server.PortRange{Start: 2122, End: 2200}
+	settings.DisableMLSD = true
+	settings.NonStandardActiveDataPort = false
 
-	return &config
+	return &settings
 }
 
 // GetTLSConfig returns a TLS Certificate to use
@@ -84,14 +87,16 @@ func (driver *MainDriver) WelcomeUser(cc server.ClientContext) (string, error) {
 func (driver *MainDriver) AuthUser(cc server.ClientContext, user, pass string) (server.ClientHandlingDriver, error) {
 	log.Printf("ftpcam-diver: AuthUser cc.ID=%v", cc.ID())
 
-	if user == "bad" || pass == "bad" {
-		return nil, errors.New("bad username or password")
+	for _, camera := range driver.cameras {
+		if camera.User == user && camera.Password == pass {
+			return &ClientDriver{
+				vfs:        driver.vfs,
+				deviceName: user,
+			}, nil
+		}
 	}
 
-	return &ClientDriver{
-		vfs:        driver.vfs,
-		deviceName: user,
-	}, nil
+	return nil, errors.New("bad username or password")
 }
 
 // UserLeft is called when the user disconnects, even if he never authenticated

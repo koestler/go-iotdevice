@@ -15,12 +15,13 @@ type FtpServerConfig struct {
 
 type FtpCameraConfig struct {
 	Name     string
+	User     string
 	Password string
 }
 
 func GetFtpServerConfig() (ftpConfig *FtpServerConfig, err error) {
 	ftpConfig = &FtpServerConfig{
-		Bind:     "127.0.0.1",
+		Bind:     "",
 		Port:     21,
 		DebugLog: false,
 	}
@@ -44,7 +45,8 @@ const ftpCameraPrefix = "FtpCamera."
 func GetFtpCameraConfig(sectionName string) (cameraConfig *FtpCameraConfig) {
 	cameraConfig = &FtpCameraConfig{
 		Name:     sectionName[len(ftpCameraPrefix):],
-		Password: "empty",
+		User: "",
+		Password: "",
 	}
 
 	err := config.Section(sectionName).MapTo(&cameraConfig)

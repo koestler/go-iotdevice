@@ -91,7 +91,7 @@ func setupFtpServer() {
 			"main: start ftpServer server, Bind=%v, Port=%v",
 			ftpServerConfig.Bind, ftpServerConfig.Port,
 		)
-		ftpServer.Run(ftpServerConfig.Bind, ftpServerConfig.Port)
+		ftpServer.Run(ftpServerConfig, config.GetFtpCameraConfigs())
 	} else {
 		log.Printf("main: skip ftpServer server, err=%v", err)
 	}

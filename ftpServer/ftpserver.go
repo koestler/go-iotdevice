@@ -9,11 +9,12 @@ import (
 	"os/signal"
 	"syscall"
 	"log"
+	"github.com/koestler/go-ve-sensor/config"
 )
 
 var ftpServer *server.FtpServer
 
-func Run(bind string, port int) {
+func Run(config *config.FtpServerConfig, cameras []*config.FtpCameraConfig) {
 	// Setting up the logger
 	logger := kitlog.With(
 		kitlog.NewLogfmtLogger(kitlog.NewSyncWriter(os.Stdout)),
@@ -22,10 +23,10 @@ func Run(bind string, port int) {
 	)
 
 	// Loading the driver
-	listenHost := bind
-	listenPort := port
+	listenHost := config.Bind
+	listenPort := config.Port
 
-	driver, err := NewDriver(listenHost, listenPort)
+	driver, err := NewDriver(listenHost, listenPort, cameras)
 
 	if err != nil {
 		level.Error(logger).Log("msg", "ftpServer: Could not load the driver", "err", err)
