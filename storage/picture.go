@@ -1,29 +1,32 @@
-package ftpServer
+package storage
 
 import (
-	"github.com/koestler/go-ve-sensor/storage"
 	"errors"
 	"time"
 )
 
-var PictureStorage = PictureStorageCreate()
+var PictureDb = PictureStorageCreate()
 
 type Picture struct {
-	created time.Time
-	path    string
+	Created time.Time
+	Path    string
 }
 
-type State map[*storage.Device]*Picture
+type State map[*Device]*Picture
 
 type writeRequest struct {
-	device  *storage.Device
+	device  *Device
 	picture *Picture
 }
 
+type readResponse struct {
+	picture *Picture
+	err     error
+}
+
 type readRequest struct {
-	device   *storage.Device
-	picture  *Picture
-	response chan error
+	device   *Device
+	response chan readResponse
 }
 
 type PictureStorageInstance struct {
@@ -41,10 +44,15 @@ func (instance *PictureStorageInstance) mainStorageRoutine() {
 			instance.state[writeRequest.device] = writeRequest.picture
 		case readRequest := <-instance.readRequestChannel:
 			if picture, ok := instance.state[readRequest.device]; ok {
-				readRequest.picture = picture
-				readRequest.response <- nil
+				readRequest.response <- readResponse{
+					picture: picture,
+					err:     nil,
+				}
 			} else {
-				readRequest.response <- errors.New("device does not exist")
+				readRequest.response <- readResponse{
+					picture: nil,
+					err:     errors.New("picture for given device does not exist"),
+				}
 			}
 		}
 	}
@@ -63,20 +71,19 @@ func PictureStorageCreate() (instance *PictureStorageInstance) {
 	return
 }
 
-func (instance *PictureStorageInstance) SetPicture(device *storage.Device, picture *Picture) {
+func (instance *PictureStorageInstance) SetPicture(device *Device, picture *Picture) {
 	instance.writeRequestChannel <- writeRequest{
 		device:  device,
 		picture: picture,
 	}
 }
 
-func (instance *PictureStorageInstance) GetPicture(device *storage.Device) (picture *Picture, err error) {
-	response := make(chan error)
+func (instance *PictureStorageInstance) GetPicture(device *Device) (picture *Picture, err error) {
+	response := make(chan readResponse)
 	instance.readRequestChannel <- readRequest{
 		device:   device,
-		picture:  picture,
 		response: response,
 	}
-	err = <-response
-	return
+	r := <-response
+	return r.picture, r.err
 }

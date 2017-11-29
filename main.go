@@ -18,7 +18,7 @@ func main() {
 	setupStorageAndDataFlow()
 	setupBmvDevices()
 	setupCameraDevices()
-	setupTestSinks()
+	//setupTestSinks()
 	setupHttpServer()
 	setupFtpServer()
 

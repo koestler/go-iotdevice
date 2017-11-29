@@ -1,13 +1,15 @@
 package ftpServer
 
-import "log"
+import (
+	"github.com/koestler/go-ve-sensor/storage"
+)
 
 func onFileClose(vf *VirtualFile) {
-	log.Printf("ftpServer: onFileClose device.name=%v filePath=%v", vf.device.Name, vf.filePath)
+	//log.Printf("ftpServer: onFileClose device.name=%v filePath=%v", vf.device.Name, vf.filePath)
 
-	picture := Picture{
-		created: vf.modified,
-		path:    vf.filePath,
+	picture := storage.Picture{
+		Created: vf.modified,
+		Path:    vf.filePath,
 	}
-	PictureStorage.SetPicture(vf.device, &picture)
+	storage.PictureDb.SetPicture(vf.device, &picture)
 }
