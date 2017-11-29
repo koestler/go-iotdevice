@@ -1,4 +1,4 @@
-package deviceDb
+package storage
 
 import (
 	"sync"

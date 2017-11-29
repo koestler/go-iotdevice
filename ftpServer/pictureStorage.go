@@ -1,7 +1,7 @@
 package ftpServer
 
 import (
-	"github.com/koestler/go-ve-sensor/deviceDb"
+	"github.com/koestler/go-ve-sensor/storage"
 	"errors"
 	"time"
 )
@@ -13,15 +13,15 @@ type Picture struct {
 	path    string
 }
 
-type State map[*deviceDb.Device]*Picture
+type State map[*storage.Device]*Picture
 
 type writeRequest struct {
-	device  *deviceDb.Device
+	device  *storage.Device
 	picture *Picture
 }
 
 type readRequest struct {
-	device   *deviceDb.Device
+	device   *storage.Device
 	picture  *Picture
 	response chan error
 }
@@ -63,14 +63,14 @@ func PictureStorageCreate() (instance *PictureStorageInstance) {
 	return
 }
 
-func (instance *PictureStorageInstance) SetPicture(device *deviceDb.Device, picture *Picture) {
+func (instance *PictureStorageInstance) SetPicture(device *storage.Device, picture *Picture) {
 	instance.writeRequestChannel <- writeRequest{
 		device:  device,
 		picture: picture,
 	}
 }
 
-func (instance *PictureStorageInstance) GetPicture(device *deviceDb.Device) (picture *Picture, err error) {
+func (instance *PictureStorageInstance) GetPicture(device *storage.Device) (picture *Picture, err error) {
 	response := make(chan error)
 	instance.readRequestChannel <- readRequest{
 		device:   device,

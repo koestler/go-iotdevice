@@ -1,9 +1,9 @@
 package dataflow
 
-import "github.com/koestler/go-ve-sensor/deviceDb"
+import "github.com/koestler/go-ve-sensor/storage"
 
 type Value struct {
-	Device        *deviceDb.Device
+	Device        *storage.Device
 	Name          string
 	Value         float64
 	Unit          string

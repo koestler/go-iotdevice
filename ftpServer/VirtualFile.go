@@ -7,14 +7,14 @@ import (
 	"io"
 	"errors"
 	"time"
-	"github.com/koestler/go-ve-sensor/deviceDb"
+	"github.com/koestler/go-ve-sensor/storage"
 )
 
 type VirtualFile struct {
 	buffer        []byte
 	writePosition int
 	readPosition  int
-	device        *deviceDb.Device
+	device        *storage.Device
 	filePath      string
 	modified      time.Time
 }

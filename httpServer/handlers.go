@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"log"
 	"github.com/koestler/go-ve-sensor/dataflow"
-	"github.com/koestler/go-ve-sensor/deviceDb"
+	"github.com/koestler/go-ve-sensor/storage"
 )
 
 // Our application wide data containers
 type Environment struct {
 	RoundedStorage *dataflow.ValueStorageInstance
-	Devices        []*deviceDb.Device
+	Devices        []*storage.Device
 }
 
 // Error represents a handler error. It provides methods for a HTTP status

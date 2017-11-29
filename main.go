@@ -6,7 +6,7 @@ import (
 	"github.com/koestler/go-ve-sensor/dataflow"
 	"github.com/koestler/go-ve-sensor/config"
 	"github.com/koestler/go-ve-sensor/httpServer"
-	"github.com/koestler/go-ve-sensor/deviceDb"
+	"github.com/koestler/go-ve-sensor/storage"
 	"github.com/koestler/go-ve-sensor/vedevices"
 )
 
@@ -63,8 +63,8 @@ func setupBmvDevices() {
 			c.Name, c.Model, c.Device,
 		)
 
-		// register device in deviceDb
-		device := deviceDb.DeviceCreate(c.Name, c.Model);
+		// register device in storage
+		device := storage.DeviceCreate(c.Name, c.Model);
 
 		// setup the datasource
 		if "dummy" == c.Device {
@@ -90,7 +90,7 @@ func setupCameraDevices() {
 	cameras := config.GetFtpCameraConfigs()
 
 	for _, camera := range cameras {
-		deviceDb.DeviceCreate(camera.Name, "camera");
+		storage.DeviceCreate(camera.Name, "camera");
 	}
 }
 
@@ -114,7 +114,7 @@ func setupHttpServer() {
 
 		env := &httpServer.Environment{
 			RoundedStorage: roundedStorage,
-			Devices:        deviceDb.GetAll(),
+			Devices:        storage.GetAll(),
 		}
 
 		httpServer.Run(httpServerConfig.Bind, httpServerConfig.Port, env)
