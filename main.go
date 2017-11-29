@@ -6,6 +6,7 @@ import (
 	"github.com/koestler/go-ve-sensor/dataflow"
 	"github.com/koestler/go-ve-sensor/config"
 	"github.com/koestler/go-ve-sensor/httpServer"
+	"github.com/koestler/go-ve-sensor/deviceDb"
 )
 
 var rawStorage, roundedStorage *dataflow.ValueStorageInstance
@@ -75,7 +76,7 @@ func setupHttpServer() {
 
 		env := &httpServer.Environment{
 			RoundedStorage: roundedStorage,
-			Devices:        dataflow.DevicesGet(),
+			Devices:        deviceDb.GetAll(),
 		}
 
 		httpServer.Run(httpServerConfig.Bind, httpServerConfig.Port, env)

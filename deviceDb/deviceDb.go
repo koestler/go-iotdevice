@@ -1,11 +1,11 @@
-package dataflow
+package deviceDb
 
 import (
 	"sync"
 	"errors"
 )
 
-// todo: this should be refactored in a proper DeviceStorage without global DevicesGet() method
+// todo: this should be refactored in a proper DeviceStorage without global GetAll() method
 
 type Device struct {
 	Name  string
@@ -34,7 +34,7 @@ func DeviceCreate(name, model string) (device *Device) {
 	return
 }
 
-func DevicesGet() (devices []*Device) {
+func GetAll() (devices []*Device) {
 	deviceDbMutex.RLock()
 	defer deviceDbMutex.RUnlock()
 
@@ -43,8 +43,8 @@ func DevicesGet() (devices []*Device) {
 	return deviceDb
 }
 
-func DevicesGetByName(name string) (*Device, error) {
-	devices := DevicesGet()
+func GetByName(name string) (*Device, error) {
+	devices := GetAll()
 
 	for _, device := range devices {
 		if device.Name == name {

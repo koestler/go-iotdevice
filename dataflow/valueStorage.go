@@ -1,6 +1,8 @@
 package dataflow
 
-type State map[*Device]ValueMap
+import "github.com/koestler/go-ve-sensor/deviceDb"
+
+type State map[*deviceDb.Device]ValueMap
 
 type ValueStorageInstance struct {
 	// this represents the state of the storage instance and must only be access by the main go routine
@@ -16,7 +18,7 @@ type ValueStorageInstance struct {
 }
 
 type Filter struct {
-	Devices    map[*Device]bool
+	Devices    map[*deviceDb.Device]bool
 	ValueNames map[string]bool
 }
 
@@ -153,7 +155,7 @@ func (instance *ValueStorageInstance) Append(fillable Fillable) Fillable {
 	return fillable
 }
 
-func filterByDevice(filter *Filter, device *Device) bool {
+func filterByDevice(filter *Filter, device *deviceDb.Device) bool {
 	// list is empty -> every device is ok
 	if len(filter.Devices) < 1 {
 		return true

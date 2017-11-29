@@ -7,9 +7,10 @@ import (
 	"log"
 	"github.com/koestler/go-ve-sensor/vedirect"
 	"github.com/koestler/go-ve-sensor/config"
+	"github.com/koestler/go-ve-sensor/deviceDb"
 )
 
-func CreateDummySource(device *dataflow.Device, config *config.VedeviceConfig) (*dataflow.Source) {
+func CreateDummySource(device *deviceDb.Device, config *config.VedeviceConfig) (*dataflow.Source) {
 	// get relevant registers
 	registers := RegisterFactory(config.Model);
 
@@ -36,7 +37,7 @@ func CreateDummySource(device *dataflow.Device, config *config.VedeviceConfig) (
 	return dataflow.CreateSource(output)
 }
 
-func CreateSource(device *dataflow.Device, config *config.VedeviceConfig) (err error, source *dataflow.Source) {
+func CreateSource(device *deviceDb.Device, config *config.VedeviceConfig) (err error, source *dataflow.Source) {
 	// open vedirect device
 	vd, err := vedirect.Open(config.Device)
 	if err != nil {

@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/koestler/go-ve-sensor/dataflow"
+	"github.com/koestler/go-ve-sensor/deviceDb"
 )
 
 func HandleDeviceIndex(env *Environment, w http.ResponseWriter, r *http.Request) Error {
-	devices := dataflow.DevicesGet()
+	devices := deviceDb.GetAll()
 
 	// cache device index for 5 minutes
 	w.Header().Set("Cache-Control", "public, max-age=300")
@@ -26,12 +27,12 @@ func HandleDeviceIndex(env *Environment, w http.ResponseWriter, r *http.Request)
 func HandleDeviceGetRoundedValues(env *Environment, w http.ResponseWriter, r *http.Request) Error {
 	vars := mux.Vars(r)
 
-	device, err := dataflow.DevicesGetByName(vars["DeviceId"])
+	device, err := deviceDb.GetByName(vars["DeviceId"])
 	if err != nil {
 		return StatusError{404, err}
 	}
 
-	roundedValues := env.RoundedStorage.GetMap(dataflow.Filter{Devices: map[*dataflow.Device]bool{device: true}})
+	roundedValues := env.RoundedStorage.GetMap(dataflow.Filter{Devices: map[*deviceDb.Device]bool{device: true}})
 	roundedValuesEssential := roundedValues.ConvertToEssential()
 
 	writeJsonHeaders(w)

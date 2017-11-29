@@ -5,6 +5,7 @@ import (
 	"github.com/koestler/go-ve-sensor/config"
 	"github.com/koestler/go-ve-sensor/vedevices"
 	"log"
+	"github.com/koestler/go-ve-sensor/deviceDb"
 )
 
 func BmvDevicesSetupAndRun() (sources []dataflow.Drainable) {
@@ -20,7 +21,7 @@ func BmvDevicesSetupAndRun() (sources []dataflow.Drainable) {
 		)
 
 		// register device in deviceDb
-		device := dataflow.DeviceCreate(c.Name, c.Model);
+		device := deviceDb.DeviceCreate(c.Name, c.Model);
 
 		// setup the datasource
 		if "dummy" == c.Device {
