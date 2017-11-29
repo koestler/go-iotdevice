@@ -14,6 +14,7 @@ import (
 	"sort"
 	"path"
 	"github.com/koestler/go-ve-sensor/config"
+	"github.com/koestler/go-ve-sensor/deviceDb"
 )
 
 type FileList map[string]*VirtualFile
@@ -33,8 +34,8 @@ type MainDriver struct {
 
 // ClientDriver defines a very basic client driver
 type ClientDriver struct {
-	vfs        VirtualFileSystem
-	deviceName string
+	vfs    VirtualFileSystem
+	device *deviceDb.Device
 }
 
 // NewSampleDriver creates a sample driver
@@ -89,9 +90,14 @@ func (driver *MainDriver) AuthUser(cc server.ClientContext, user, pass string) (
 
 	for _, camera := range driver.cameras {
 		if camera.User == user && camera.Password == pass {
+			device, err := deviceDb.GetByName(camera.Name)
+			if err != nil {
+				return nil, err
+			}
+
 			return &ClientDriver{
-				vfs:        driver.vfs,
-				deviceName: user,
+				vfs:    driver.vfs,
+				device: device,
 			}, nil
 		}
 	}
@@ -209,9 +215,9 @@ func (driver *ClientDriver) OpenFile(cc server.ClientContext, filePath string, f
 
 	if (flag & os.O_CREATE) != 0 {
 		driver.vfs.files[filePath] = &VirtualFile{
-			deviceName: driver.deviceName,
-			filePath:   filePath,
-			modified:   time.Now(),
+			device:   driver.device,
+			filePath: filePath,
+			modified: time.Now(),
 		}
 	}
 

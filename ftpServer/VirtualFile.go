@@ -7,19 +7,21 @@ import (
 	"io"
 	"errors"
 	"time"
+	"github.com/koestler/go-ve-sensor/deviceDb"
 )
 
 type VirtualFile struct {
 	buffer        []byte
 	writePosition int
 	readPosition  int
-	deviceName    string
+	device        *deviceDb.Device
 	filePath      string
 	modified      time.Time
 }
 
 type VirtualFileByCreated []*VirtualFile
-func (s VirtualFileByCreated) Len() int {return len(s)}
+
+func (s VirtualFileByCreated) Len() int { return len(s) }
 func (s VirtualFileByCreated) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
@@ -73,6 +75,6 @@ func (vf *VirtualFile) Read(b []byte) (n int, err error) {
 }
 
 func (vf *VirtualFile) Close() error {
-	camUpdatePicture(vf)
+	onFileClose(vf)
 	return nil
 }

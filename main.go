@@ -16,7 +16,8 @@ func main() {
 	log.Print("main: start go-ve-sensor...")
 
 	setupStorageAndDataFlow()
-	setupBmvSources()
+	setupBmvDevices()
+	setupCameraDevices()
 	setupTestSinks()
 	setupHttpServer()
 	setupFtpServer()
@@ -48,8 +49,8 @@ func setupStorageAndDataFlow() {
 
 }
 
-func setupBmvSources() {
-	log.Printf("main: setup Bmv sources")
+func setupBmvDevices() {
+	log.Printf("main: setup Bmv Devices")
 
 	configs := config.GetVedeviceConfigs()
 
@@ -80,6 +81,16 @@ func setupBmvSources() {
 	// append them as sources to the raw storage
 	for _, source := range sources {
 		source.Append(rawStorage)
+	}
+}
+
+func setupCameraDevices() {
+	log.Printf("main: setup Camera Devices")
+
+	cameras := config.GetFtpCameraConfigs()
+
+	for _, camera := range cameras {
+		deviceDb.DeviceCreate(camera.Name, "camera");
 	}
 }
 

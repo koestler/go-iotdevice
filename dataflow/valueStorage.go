@@ -88,12 +88,12 @@ func (instance *ValueStorageInstance) handleNewReadStateRequest(newReadStateRequ
 func ValueStorageCreate() (valueStorageInstance *ValueStorageInstance) {
 	valueStorageInstance = &ValueStorageInstance{
 		state:                   make(State),
-		inputChannel:            make(chan Value, 4), // input channel is buffered
+		inputChannel:            make(chan Value, 32), // input channel is buffered
 		subscriptionChannel:     make(chan *subscription),
 		readStateRequestChannel: make(chan *readStateRequest),
 	}
 
-	// main go routine
+	// start main go routine
 	go valueStorageInstance.mainStorageRoutine()
 
 	return
