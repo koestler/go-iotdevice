@@ -76,7 +76,7 @@ func (driver *MainDriver) GetTLSConfig() (*tls.Config, error) {
 
 // WelcomeUser is called to send the very first welcome message
 func (driver *MainDriver) WelcomeUser(cc server.ClientContext) (string, error) {
-	log.Printf("ftpcam-diver: WelcomeUser cc.ID=%v", cc.ID())
+	log.Printf("ftpcam-driver: WelcomeUser cc.ID=%v", cc.ID())
 
 	cc.SetDebug(true)
 	return fmt.Sprintf(
@@ -86,7 +86,7 @@ func (driver *MainDriver) WelcomeUser(cc server.ClientContext) (string, error) {
 
 // AuthUser authenticates the user and selects an handling driver
 func (driver *MainDriver) AuthUser(cc server.ClientContext, user, pass string) (server.ClientHandlingDriver, error) {
-	log.Printf("ftpcam-diver: AuthUser cc.ID=%v", cc.ID())
+	log.Printf("ftpcam-driver: AuthUser cc.ID=%v", cc.ID())
 
 	for _, camera := range driver.cameras {
 		if camera.User == user && camera.Password == pass {
@@ -107,12 +107,12 @@ func (driver *MainDriver) AuthUser(cc server.ClientContext, user, pass string) (
 
 // UserLeft is called when the user disconnects, even if he never authenticated
 func (driver *MainDriver) UserLeft(cc server.ClientContext) {
-	log.Printf("ftpcam-diver: UserLeft cc.ID=%v", cc.ID())
+	log.Printf("ftpcam-driver: UserLeft cc.ID=%v", cc.ID())
 }
 
 // ChangeDirectory changes the current working directory
 func (driver *ClientDriver) ChangeDirectory(cc server.ClientContext, directory string) error {
-	log.Printf("ftpcam-diver: ChangeDirectory cc.ID=%v directory=%v", cc.ID(), directory)
+	log.Printf("ftpcam-driver: ChangeDirectory cc.ID=%v directory=%v", cc.ID(), directory)
 
 	// create directories on the fly
 	driver.vfs.directories[path.Clean(directory)] = true
@@ -121,14 +121,14 @@ func (driver *ClientDriver) ChangeDirectory(cc server.ClientContext, directory s
 
 // MakeDirectory creates a directory
 func (driver *ClientDriver) MakeDirectory(cc server.ClientContext, directory string) error {
-	log.Printf("ftpcam-diver: MakeDirectory, cc.ID=%v directory=%v", cc.ID(), directory)
+	log.Printf("ftpcam-driver: MakeDirectory, cc.ID=%v directory=%v", cc.ID(), directory)
 	driver.vfs.directories[path.Clean(directory)] = true
 	return nil;
 }
 
 // ListFiles lists the files of a directory
 func (driver *ClientDriver) ListFiles(cc server.ClientContext) ([]os.FileInfo, error) {
-	log.Printf("ftpcam-diver: ListFiles cc.ID=%v cc.Path=%v", cc.ID(), cc.Path())
+	log.Printf("ftpcam-driver: ListFiles cc.ID=%v cc.Path=%v", cc.ID(), cc.Path())
 
 	dirPath := getDirPath(cc.Path())
 
@@ -200,7 +200,7 @@ func (vf *VirtualFile) getFileInfo(name string) VirtualFileInfo {
 
 // OpenFile opens a file in 3 possible modes: read, write, appending write (use appropriate flags)
 func (driver *ClientDriver) OpenFile(cc server.ClientContext, filePath string, flag int) (server.FileStream, error) {
-	log.Printf("ftpcam-diver: OpenFile cc.ID=%v filePath=%v flag=%v", cc.ID(), filePath, flag)
+	log.Printf("ftpcam-driver: OpenFile cc.ID=%v filePath=%v flag=%v", cc.ID(), filePath, flag)
 
 	// cleanup filesystem
 	driver.vfs.pathRetention(getDirPath(path.Dir(filePath)))
@@ -231,7 +231,7 @@ func (driver *ClientDriver) OpenFile(cc server.ClientContext, filePath string, f
 
 // GetFileInfo gets some info around a file or a directory
 func (driver *ClientDriver) GetFileInfo(cc server.ClientContext, path string) (os.FileInfo, error) {
-	log.Printf("ftpcam-diver: GetFileInfo cc.ID=%v path=%v", cc.ID(), path)
+	log.Printf("ftpcam-driver: GetFileInfo cc.ID=%v path=%v", cc.ID(), path)
 
 	if file, ok := driver.vfs.files[path]; ok {
 		return file.getFileInfo(path), nil
@@ -249,25 +249,25 @@ func (driver *ClientDriver) GetFileInfo(cc server.ClientContext, path string) (o
 
 // CanAllocate gives the approval to allocate some data
 func (driver *ClientDriver) CanAllocate(cc server.ClientContext, size int) (bool, error) {
-	log.Printf("ftpcam-diver: CanAllocate cc.ID=%v size=%v", cc.ID(), size)
+	log.Printf("ftpcam-driver: CanAllocate cc.ID=%v size=%v", cc.ID(), size)
 	return true, nil
 }
 
 // ChmodFile changes the attributes of the file
 func (driver *ClientDriver) ChmodFile(cc server.ClientContext, path string, mode os.FileMode) error {
-	log.Printf("ftpcam-diver: ChmodFile cc.ID=%v path=%v, mode=%v", cc.ID(), path, mode)
+	log.Printf("ftpcam-driver: ChmodFile cc.ID=%v path=%v, mode=%v", cc.ID(), path, mode)
 	return os.ErrPermission
 }
 
 // DeleteFile deletes a file or a directory
 func (driver *ClientDriver) DeleteFile(cc server.ClientContext, path string) error {
-	log.Printf("ftpcam-diver: DeleteFile cc.ID=%v path=%v", cc.ID(), path)
+	log.Printf("ftpcam-driver: DeleteFile cc.ID=%v path=%v", cc.ID(), path)
 	return os.ErrPermission
 }
 
 // RenameFile renames a file or a directory
 func (driver *ClientDriver) RenameFile(cc server.ClientContext, from, to string) error {
-	log.Printf("ftpcam-diver: RenameFile cc.ID=%v from=%v to=%v", cc.ID(), from, to)
+	log.Printf("ftpcam-driver: RenameFile cc.ID=%v from=%v to=%v", cc.ID(), from, to)
 	return os.ErrPermission
 }
 
