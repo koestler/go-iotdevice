@@ -17,7 +17,7 @@ func onFileClose(vf *VirtualFile) {
 		return;
 	}
 
-	oupImg := imaging.Resize(inpImg, 1024, 0, imaging.Box)
+	oupImg := imaging.Resize(inpImg, 640, 0, imaging.Box)
 
 	imageBuffer := new(bytes.Buffer)
 	err = jpeg.Encode(imageBuffer, oupImg, nil)
@@ -26,10 +26,10 @@ func onFileClose(vf *VirtualFile) {
 		return
 	}
 
-
 	picture := storage.Picture{
-		Created: vf.modified,
-		Jpeg:    imageBuffer.Bytes(),
+		Created:   vf.modified,
+		JpegThumb: imageBuffer.Bytes(),
+		JpegRaw:   vf.buffer,
 	}
 	storage.PictureDb.SetPicture(vf.device, &picture)
 }

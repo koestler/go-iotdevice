@@ -24,8 +24,14 @@ var httpRoutes = HttpRoutes{
 	HttpRoute{
 		"DevicePicture",
 		"GET",
-		"/api/v0/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/Picture",
-		HandleDeviceGetPicture,
+		"/api/v0/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/Picture/Thumb",
+		HandleDeviceGetPictureThumb,
+	},
+	HttpRoute{
+		"DevicePicture",
+		"GET",
+		"/api/v0/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/Picture/Raw",
+		HandleDeviceGetPictureRaw,
 	},
 	HttpRoute{
 		"DeviceRoundedValuesWebSocket",

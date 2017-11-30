@@ -8,8 +8,9 @@ import (
 var PictureDb = PictureStorageCreate()
 
 type Picture struct {
-	Created time.Time
-	Jpeg    []byte
+	Created   time.Time
+	JpegThumb []byte
+	JpegRaw   []byte
 }
 
 type State map[*Device]*Picture
