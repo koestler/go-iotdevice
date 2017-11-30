@@ -9,7 +9,7 @@ var PictureDb = PictureStorageCreate()
 
 type Picture struct {
 	Created time.Time
-	Path    string
+	Jpeg    []byte
 }
 
 type State map[*Device]*Picture

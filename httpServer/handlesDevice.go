@@ -57,11 +57,9 @@ func HandleDeviceGetPicture(env *Environment, w http.ResponseWriter, r *http.Req
 		return StatusError{404, err}
 	}
 
-	writeJsonHeaders(w)
-	b, err := json.MarshalIndent(picture, "", "    ")
-	if err != nil {
+	writeJpegHeaders(w)
+	if _, err = w.Write(picture.Jpeg); err != nil {
 		return StatusError{500, err}
 	}
-	w.Write(b)
 	return nil
 }
