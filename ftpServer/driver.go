@@ -15,6 +15,7 @@ import (
 	"path"
 	"github.com/koestler/go-ve-sensor/config"
 	"github.com/koestler/go-ve-sensor/storage"
+	"strconv"
 )
 
 type FileList map[string]*VirtualFile
@@ -55,18 +56,16 @@ func NewDriver(listenHost string, listenPort int, cameras []*config.FtpCameraCon
 }
 
 // GetSettings returns some general settings around the server setup
-func (driver *MainDriver) GetSettings() *server.Settings {
+func (driver *MainDriver) GetSettings() (*server.Settings, error) {
 	var settings server.Settings
 
-	settings.ListenHost = driver.listenHost
-	settings.ListenPort = driver.listenPort
+	settings.ListenAddr = driver.listenHost + ":" + strconv.Itoa(driver.listenPort)
 	settings.PublicHost = "::1"
-	settings.MaxConnections = 32
 	settings.DataPortRange = &server.PortRange{Start: 2122, End: 2200}
 	settings.DisableMLSD = true
 	settings.NonStandardActiveDataPort = false
 
-	return &settings
+	return &settings, nil
 }
 
 // GetTLSConfig returns a TLS Certificate to use
