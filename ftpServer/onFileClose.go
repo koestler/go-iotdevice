@@ -6,10 +6,16 @@ import (
 	"log"
 	"github.com/disintegration/imaging"
 	"bytes"
+	"regexp"
 )
 
 func onFileClose(vf *VirtualFile) {
 	//log.Printf("ftpServer: onFileClose device.name=%v filePath=%v", vf.device.Name, vf.filePath)
+
+	if matched, err := regexp.MatchString(`\.(JPG|jpg)$`, vf.filePath); err == nil && !matched {
+		log.Printf("ftpServer: onFileClose file ignored evice.name=%v filePath=%v", vf.device.Name, vf.filePath)
+		return;
+	}
 
 	inpImg, err := jpeg.Decode(vf)
 	if err != nil {
