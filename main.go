@@ -64,7 +64,7 @@ func setupBmvDevices() {
 		)
 
 		// register device in storage
-		device := storage.DeviceCreate(c.Name, c.Model);
+		device := storage.DeviceCreate(c.Name, c.Model, c.FrontendConfig);
 
 		// setup the datasource
 		if "dummy" == c.Device {
@@ -90,7 +90,7 @@ func setupCameraDevices() {
 	cameras := config.GetFtpCameraConfigs()
 
 	for _, camera := range cameras {
-		storage.DeviceCreate(camera.Name, "camera");
+		storage.DeviceCreate(camera.Name, "camera", "{}");
 	}
 }
 
@@ -110,7 +110,7 @@ func setupTestSinks() {
 func setupHttpServer() {
 	httpServerConfig, err := config.GetHttpServerConfig()
 	if err == nil {
-		log.Print("main: start httpServer, Bind=%v, Port=%v", httpServerConfig.Bind, httpServerConfig.Port)
+		log.Printf("main: start httpServer, Bind=%v, Port=%v", httpServerConfig.Bind, httpServerConfig.Port)
 
 		env := &httpServer.Environment{
 			RoundedStorage: roundedStorage,

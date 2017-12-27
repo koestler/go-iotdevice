@@ -8,8 +8,9 @@ import (
 // todo: this should be refactored in a proper DeviceStorage without global GetAll() method
 
 type Device struct {
-	Name  string
-	Model string
+	Name           string
+	Model          string
+	FrontendConfig interface{}
 }
 
 var deviceDbMutex sync.RWMutex
@@ -20,13 +21,14 @@ func init() {
 }
 
 // this function must not be used concurrently
-func DeviceCreate(name, model string) (device *Device) {
+func DeviceCreate(name, model string, frontendConfig interface{}) (device *Device) {
 	deviceDbMutex.Lock()
 	defer deviceDbMutex.Unlock()
 
 	device = &Device{
-		Name:  name,
-		Model: model,
+		Name:           name,
+		Model:          model,
+		FrontendConfig: frontendConfig,
 	}
 
 	deviceDb = append(deviceDb, device)
