@@ -16,19 +16,25 @@ var httpRoutes = HttpRoutes{
 		HandleDeviceIndex,
 	},
 	HttpRoute{
-		"DeviceRoundedValues",
+		"FrontendConfig",
+		"GET",
+		"/api/v0/FrontendConfig",
+		HandleFrontendConfig,
+	},
+	HttpRoute{
+		"RoundedValues",
 		"GET",
 		"/api/v0/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/RoundedValues",
 		HandleDeviceGetRoundedValues,
 	},
 	HttpRoute{
-		"DevicePicture",
+		"DevicePictureThumb",
 		"GET",
 		"/api/v0/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/Picture/Thumb",
 		HandleDeviceGetPictureThumb,
 	},
 	HttpRoute{
-		"DevicePicture",
+		"DevicePictureRaw",
 		"GET",
 		"/api/v0/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/Picture/Raw",
 		HandleDeviceGetPictureRaw,
