@@ -13,10 +13,18 @@ type FtpServerConfig struct {
 	DebugLog bool
 }
 
+type FtpCameraConfigRead struct {
+	Name               string
+	User               string
+	Password           string
+	FrontendConfigPath string
+}
+
 type FtpCameraConfig struct {
-	Name     string
-	User     string
-	Password string
+	Name           string
+	User           string
+	Password       string
+	FrontendConfig interface{}
 }
 
 func GetFtpServerConfig() (ftpConfig *FtpServerConfig, err error) {
@@ -43,17 +51,25 @@ func GetFtpServerConfig() (ftpConfig *FtpServerConfig, err error) {
 const ftpCameraPrefix = "FtpCamera."
 
 func GetFtpCameraConfig(sectionName string) (cameraConfig *FtpCameraConfig) {
-	cameraConfig = &FtpCameraConfig{
-		Name:     sectionName[len(ftpCameraPrefix):],
-		User: "",
-		Password: "",
+	cameraConfigRead := &FtpCameraConfigRead{
+		Name:               sectionName[len(ftpCameraPrefix):],
+		User:               "",
+		Password:           "",
+		FrontendConfigPath: "",
 	}
 
-	err := config.Section(sectionName).MapTo(&cameraConfig)
-
+	err := config.Section(sectionName).MapTo(&cameraConfigRead)
 	if err != nil {
 		log.Fatal("config: cannot read ftpServer configuration: %v", err)
 	}
+
+	cameraConfig = &FtpCameraConfig{
+		Name:     cameraConfigRead.Name,
+		User:     cameraConfigRead.User,
+		Password: cameraConfigRead.Password,
+	}
+
+	cameraConfig.FrontendConfig = readJsonConfig(cameraConfigRead.FrontendConfigPath)
 
 	return
 }

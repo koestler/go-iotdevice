@@ -3,8 +3,6 @@ package config
 import (
 	"strings"
 	"log"
-	"io/ioutil"
-	"encoding/json"
 )
 
 type VedeviceConfigRead struct {
@@ -46,21 +44,7 @@ func GetVedeviceConfig(sectionName string) (bmvConfig *VedeviceConfig) {
 		DebugPrint: bmvConfigRead.DebugPrint,
 	}
 
-	if len(bmvConfigRead.FrontendConfigPath) > 0 {
-		b, err := ioutil.ReadFile(configDir + bmvConfigRead.FrontendConfigPath)
-		if err != nil {
-			log.Fatalf("config: cannot read frontendConfig file: %v", bmvConfigRead.FrontendConfigPath)
-		}
-		var data interface{}
-		err = json.Unmarshal(b, &data)
-		if err != nil {
-			log.Fatalf("config: cannot decode frontendConfig: %s", b)
-		}
-
-		bmvConfig.FrontendConfig = data
-	} else {
-		bmvConfig.FrontendConfig = "{}" // empty dict
-	}
+	bmvConfig.FrontendConfig = readJsonConfig(bmvConfigRead.FrontendConfigPath)
 
 	return
 }

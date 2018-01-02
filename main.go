@@ -115,7 +115,7 @@ func setupCameraDevices() {
 	cameras := config.GetFtpCameraConfigs()
 
 	for _, camera := range cameras {
-		storage.DeviceCreate(camera.Name, "ftpCamera", "{}");
+		storage.DeviceCreate(camera.Name, "ftpCamera", camera.FrontendConfig);
 	}
 }
 
