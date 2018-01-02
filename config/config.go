@@ -7,11 +7,11 @@ import (
 
 var config *ini.File
 
-func init() {
-	log.Printf("config: load configuration...")
+func Setup(source string) {
+	log.Printf("config: load configuration source=%v", source)
 	var err error
-	config, err = ini.Load("config.ini")
+	config, err = ini.Load(source)
 	if err != nil {
-		log.Fatal("config: cannot load configuration: %v", err)
+		log.Fatalf("config: cannot load configuration: %v", err)
 	}
 }

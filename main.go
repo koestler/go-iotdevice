@@ -8,13 +8,22 @@ import (
 	"github.com/koestler/go-ve-sensor/httpServer"
 	"github.com/koestler/go-ve-sensor/storage"
 	"github.com/koestler/go-ve-sensor/vedevices"
+	"github.com/jessevdk/go-flags"
+	"os"
 )
+
+type CmdOptions struct {
+	Config flags.Filename `short:"c" long:"config" description:"Config File in ini format" default:"./config.ini"`
+}
+
+var cmdOptions CmdOptions
 
 var rawStorage, roundedStorage *dataflow.ValueStorageInstance
 
 func main() {
 	log.Print("main: start go-ve-sensor...")
 
+	setupConfig()
 	setupStorageAndDataFlow()
 	setupBmvDevices()
 	setupCameraDevices()
@@ -25,6 +34,22 @@ func main() {
 	log.Print("main: start completed; run until kill signal is received")
 
 	select {}
+}
+
+func setupConfig() {
+	log.Printf("main: setup config")
+
+	// parse command line options
+	parser := flags.NewParser(&cmdOptions, flags.Default)
+	if _, err := parser.Parse(); err != nil {
+		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
+			os.Exit(0)
+		} else {
+			os.Exit(1)
+		}
+	}
+	// initialize config library
+	config.Setup(string(cmdOptions.Config))
 }
 
 func setupStorageAndDataFlow() {
