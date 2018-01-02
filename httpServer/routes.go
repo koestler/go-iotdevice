@@ -12,7 +12,7 @@ var httpRoutes = HttpRoutes{
 	HttpRoute{
 		"DeviceIndex",
 		"GET",
-		"/api/v0/device/",
+		"/api/v0/Devices",
 		HandleDeviceIndex,
 	},
 	HttpRoute{
@@ -24,19 +24,19 @@ var httpRoutes = HttpRoutes{
 	HttpRoute{
 		"RoundedValues",
 		"GET",
-		"/api/v0/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/RoundedValues",
+		"/api/v0/Device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/RoundedValues",
 		HandleDeviceGetRoundedValues,
 	},
 	HttpRoute{
 		"DevicePictureThumb",
 		"GET",
-		"/api/v0/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/Picture/Thumb",
+		"/api/v0/Device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/Picture/Thumb",
 		HandleDeviceGetPictureThumb,
 	},
 	HttpRoute{
 		"DevicePictureRaw",
 		"GET",
-		"/api/v0/device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/Picture/Raw",
+		"/api/v0/Device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/Picture/Raw",
 		HandleDeviceGetPictureRaw,
 	},
 	HttpRoute{
