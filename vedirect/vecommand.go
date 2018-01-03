@@ -177,7 +177,7 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 	// check address
 	responseAddress := uint16(littleEndianBytesToUint(rawValues[0:2]))
 	if address != responseAddress {
-		err = errors.New(fmt.Sprintf("address != responseAddress, address=%v, responseAddress=%v", address, responseAddress))
+		err = errors.New(fmt.Sprintf("address != responseAddress, address=%x, responseAddress=%x", address, responseAddress))
 		debugPrintf("vedirect: VeCommandGet end err=%v", err)
 		return nil, err
 	}

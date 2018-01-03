@@ -105,6 +105,9 @@ func (vd *Vedirect) RecvUntil(needle byte, maxLength int) (data []byte, err erro
 		data = append(data, b[0])
 	}
 
+	debugPrintf("vedirect: RecvUntil end gave up after reaching maxLength=%v, data=%s size=%v",
+		maxLength, data, len(data))
+
 	err = errors.New(
 		fmt.Sprintf("vedirect: RecvUntil end gave up after reaching maxLength=%v", maxLength),
 	)
