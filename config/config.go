@@ -21,6 +21,9 @@ func Setup(source string) {
 	if err != nil {
 		log.Fatalf("config: cannot load configuration: %v", err)
 	}
+
+	// setup submodules
+	setupVedirect()
 }
 
 func readJsonConfig(frontendConfigPath string) (frontendConfig interface{}) {

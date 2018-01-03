@@ -4,16 +4,20 @@ import (
 	"log"
 	"strings"
 	"fmt"
+	"github.com/koestler/go-ve-sensor/config"
 )
 
 var indent = 0
 
 func debugPrintf(format string, v ...interface{}) {
-	return
+	// check if debug output is enabled
+	if !config.VedirectConfig.DebugPrint {
+		return
+	}
 
 	intro := strings.Split(format, "=")[0]
 
-	if indent > 0 && strings.Contains(intro, "end") {
+	if indent > 0 && strings.Contains(intro, " end") {
 		indent -= 1
 	}
 
@@ -22,7 +26,7 @@ func debugPrintf(format string, v ...interface{}) {
 
 	log.Print(strings.Repeat("  ", indent) + s)
 
-	if indent < 64 && strings.Contains(intro, "begin") {
+	if indent < 64 && strings.Contains(intro, " begin") {
 		indent += 1
 	}
 }

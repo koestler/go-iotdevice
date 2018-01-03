@@ -9,7 +9,6 @@ type VedeviceConfigRead struct {
 	Name               string
 	Model              string
 	Device             string
-	DebugPrint         bool
 	FrontendConfigPath string
 }
 
@@ -17,7 +16,6 @@ type VedeviceConfig struct {
 	Name           string
 	Model          string
 	Device         string
-	DebugPrint     bool
 	FrontendConfig interface{}
 }
 
@@ -29,7 +27,6 @@ func GetVedeviceConfig(sectionName string) (bmvConfig *VedeviceConfig) {
 		Model:              "unset",
 		FrontendConfigPath: "",
 		Device:             "unset",
-		DebugPrint:         false,
 	}
 
 	err := config.Section(sectionName).MapTo(bmvConfigRead)
@@ -41,7 +38,6 @@ func GetVedeviceConfig(sectionName string) (bmvConfig *VedeviceConfig) {
 		Name:       bmvConfigRead.Name,
 		Model:      bmvConfigRead.Model,
 		Device:     bmvConfigRead.Device,
-		DebugPrint: bmvConfigRead.DebugPrint,
 	}
 
 	bmvConfig.FrontendConfig = readJsonConfig(bmvConfigRead.FrontendConfigPath)
