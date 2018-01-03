@@ -199,7 +199,7 @@ func (vf *VirtualFile) getFileInfo(name string) VirtualFileInfo {
 
 // OpenFile opens a file in 3 possible modes: read, write, appending write (use appropriate flags)
 func (driver *ClientDriver) OpenFile(cc server.ClientContext, filePath string, flag int) (server.FileStream, error) {
-	log.Printf("ftpcam-driver: OpenFile cc.ID=%v filePath=%v flag=%v", cc.ID(), filePath, flag)
+	//log.Printf("ftpcam-driver: OpenFile cc.ID=%v filePath=%v flag=%v", cc.ID(), filePath, flag)
 
 	// cleanup filesystem
 	driver.vfs.pathRetention(getDirPath(path.Dir(filePath)))
@@ -276,7 +276,7 @@ func (vfs *VirtualFileSystem) pathRetention(dirPath string) {
 
 	// delete all but last 5 files
 	for i := 0; i <= len(fileList)-5; i++ {
-		log.Printf("ftpcam-driver: virtualFileSystem cleanup filePath=%v", fileList[i].filePath)
+		//log.Printf("ftpcam-driver: virtualFileSystem cleanup filePath=%v", fileList[i].filePath)
 		delete(vfs.files, fileList[i].filePath)
 	}
 }

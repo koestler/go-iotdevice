@@ -17,5 +17,4 @@ func setupVedirect() {
 	if err != nil {
 		log.Printf("cannot read Vedirect configuration: %v", err)
 	}
-	log.Printf("vedirect config=%v", VedirectConfig)
 }
