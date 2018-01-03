@@ -20,10 +20,14 @@ func computeChecksum(cmd VeCommand, data []byte) (checksum byte) {
 }
 
 func (vd *Vedirect) SendVeCommand(cmd VeCommand, data []byte) (err error) {
+	debugPrintf("vedirect: SendVeCommand begin")
+
 	checksum := computeChecksum(cmd, data)
 	str := fmt.Sprintf(":%X%X%X\n", cmd, data, checksum)
 
 	_, err = vd.Write([]byte(str))
+
+	debugPrintf("vedirect: SendVeCommand end")
 	return
 }
 
@@ -167,33 +171,41 @@ func littleEndianBytesToInt(input []byte) (res int64) {
 func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 	debugPrintf("vedirect: VeCommandGet begin address=%x", address)
 
-	var rawValues []byte
-	rawValues, err = vd.VeCommand(VeCommandGet, address)
-	if err != nil {
-		debugPrintf("vedirect: VeCommandGet end err=%v", err)
-		return
+	// fetch response using multiple tries to
+	// deal with old data in the tx buffer of the ve device and our rx buffer
+	const numbTries = 16
+	for try := 0; try < numbTries; try++ {
+		var rawValues []byte
+		rawValues, err = vd.VeCommand(VeCommandGet, address)
+		if err != nil {
+			debugPrintf("vedirect: VeCommandGet retry try=%v err=%v", try, err)
+			continue
+		}
+
+		// check address
+		responseAddress := uint16(littleEndianBytesToUint(rawValues[0:2]))
+		if address != responseAddress {
+			err = errors.New(fmt.Sprintf("address != responseAddress, address=%x, responseAddress=%x", address, responseAddress))
+			debugPrintf("vedirect: VeCommandGet retry try=%v err=%v", try, err)
+			continue
+		}
+
+		// check flag
+		responseFlag := VeResponseFlag(littleEndianBytesToUint(rawValues[2:3]))
+		if VeResponseFlagOk != responseFlag {
+			err = errors.New(fmt.Sprintf("VeResponseFlagOk != responseFlag, responseFlag=%v", responseFlag))
+			debugPrintf("vedirect: VeCommandGet retry try=%v err=%v", try, err)
+			continue
+		}
+
+		// extract value
+		debugPrintf("vedirect: VeCommandGet end")
+		return rawValues[3:], nil
 	}
 
-	// check address
-	responseAddress := uint16(littleEndianBytesToUint(rawValues[0:2]))
-	if address != responseAddress {
-		err = errors.New(fmt.Sprintf("address != responseAddress, address=%x, responseAddress=%x", address, responseAddress))
-		debugPrintf("vedirect: VeCommandGet end err=%v", err)
-		return nil, err
-	}
-
-	// check flag
-	responseFlag := VeResponseFlag(littleEndianBytesToUint(rawValues[2:3]))
-	if VeResponseFlagOk != responseFlag {
-		err = errors.New(fmt.Sprintf("VeResponseFlagOk != responseFlag, responseFlag=%v", responseFlag))
-		debugPrintf("vedirect: VeCommandGet end err=%v", err)
-		return nil, err
-	}
-
-	// extract value
-
-	debugPrintf("vedirect: VeCommandGet end")
-	return rawValues[3:], nil
+	debugPrintf("vedirect: VeCommandGet end tries=%v last err=%v")
+	err = errors.New(fmt.Sprintf("gave up after %v tries, last err=%v", numbTries, err))
+	return nil, err
 }
 
 func (vd *Vedirect) VeCommandGetUint(address uint16) (value uint64, err error) {
