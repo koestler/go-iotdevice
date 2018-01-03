@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-//go:generate ../frontend_to_bindata.sh
-
 func HandleAssetsGet(env *Environment, w http.ResponseWriter, r *http.Request) Error {
 	vars := mux.Vars(r)
 

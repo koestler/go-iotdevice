@@ -12,6 +12,8 @@ import (
 	"os"
 )
 
+//go:generate ./frontend_to_bindata.sh
+
 type CmdOptions struct {
 	Config flags.Filename `short:"c" long:"config" description:"Config File in ini format" default:"./config.ini"`
 }

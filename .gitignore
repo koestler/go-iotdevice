@@ -1,2 +1,2 @@
 go-ve-sensor
-bindata.go
+httpServer/frontend-bindata.go

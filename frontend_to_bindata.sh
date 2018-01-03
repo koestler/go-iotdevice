@@ -1,2 +1,5 @@
 #!/usr/bin/env bash
-go-bindata -prefix "../frontend/" -pkg httpServer -nomemcopy -nocompress `find ../frontend/ -type d`
+
+cp -r ~/git/react-ve-sensor/build/* ./frontend
+
+go-bindata -o httpServer/frontend-bindata.go -prefix "./frontend/" -pkg httpServer -nomemcopy -nocompress `find ./frontend/ -type d`
