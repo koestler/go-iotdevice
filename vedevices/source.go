@@ -8,11 +8,13 @@ import (
 	"github.com/koestler/go-ve-sensor/vedirect"
 	"github.com/koestler/go-ve-sensor/config"
 	"github.com/koestler/go-ve-sensor/storage"
+	"fmt"
+	"errors"
 )
 
 func CreateDummySource(device *storage.Device, config *config.VedeviceConfig) (*dataflow.Source) {
 	// get relevant registers
-	registers := RegisterFactory(config.Model);
+	registers := RegisterFactoryByModel(config.Model);
 
 	// setup output chain
 	output := make(chan dataflow.Value)
@@ -44,8 +46,33 @@ func CreateSource(device *storage.Device, config *config.VedeviceConfig) (err er
 		return err, nil
 	}
 
+	// send ping
+	if err := vd.VeCommandPing(); err != nil {
+		log.Printf("vedevices source: VeCommandPing failed: %v", err)
+		return err, nil
+	}
+
+	// get deviceId
+	deviceId, err := vd.VeCommandDeviceId();
+	if err != nil {
+		log.Printf("vedevices source: VeCommandDeviceId failed: %v", err)
+		return err, nil
+	}
+
+	product := deviceId.String()
+	if len(product) < 1 {
+		log.Printf("vedevices source: unknown deviceId=%x", deviceId)
+		return err, nil
+	}
+
+	log.Printf("vedevices source: setup product=%v", product)
+
 	// get relevant registers
-	registers := RegisterFactory(config.Model);
+	registers := RegisterFactoryByProduct(deviceId);
+	if registers == nil {
+		log.Printf("vedevices source: no registers found for deviceId=%x", deviceId)
+		return errors.New(fmt.Sprintf("no registers found for deviceId=%x", deviceId)), nil
+	}
 
 	// setup output chain with enough space to hold some values
 	output := make(chan dataflow.Value, len(registers)/4)

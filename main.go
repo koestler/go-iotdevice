@@ -100,7 +100,7 @@ func setupBmvDevices() {
 			if err, source := vedevices.CreateSource(device, c); err == nil {
 				sources = append(sources, source)
 			} else {
-				log.Printf("bmvDevices: error while CreateSoruce: %v", err)
+				log.Printf("bmvDevices: error during CreateSource: %v", err)
 			}
 		}
 	}

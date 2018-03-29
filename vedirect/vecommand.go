@@ -51,7 +51,7 @@ func (vd *Vedirect) VeCommandPing() (err error) {
 	return nil
 }
 
-func (vd *Vedirect) VeCommandDeviceId() (deviceId uint64, err error) {
+func (vd *Vedirect) VeCommandDeviceId() (deviceId VeProduct, err error) {
 	debugPrintf("vedirect: VeCommandDeviceId begin")
 
 	rawValue, err := vd.VeCommand(VeCommandDeviceId, 0)
@@ -60,7 +60,7 @@ func (vd *Vedirect) VeCommandDeviceId() (deviceId uint64, err error) {
 		return 0, err
 	}
 
-	deviceId = littleEndianBytesToUint(rawValue)
+	deviceId = VeProduct(littleEndianBytesToUint(rawValue))
 
 	debugPrintf("vedirect: VeCommandDeviceId end deviceId=%x", deviceId)
 	return deviceId, nil
