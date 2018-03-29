@@ -80,13 +80,7 @@ var RegisterListSolarBatterySettings = Registers{
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"BmsPresent": Register{
-		Address:       0xEDE8,
-		Factor:        1,
-		Unit:          "",
-		Signed:        false,
-		RoundDecimals: 0,
-	},
+	// BmsPresent 0xEDE8 skipped, Introduced in firmware version 1.17
 }
 
 var RegisterListSolarChargerData = Registers{
@@ -192,13 +186,7 @@ var RegisterListSolarChargerData = Registers{
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"StreetlightVersion": Register{
-		Address:       0xEDCC,
-		Factor:        1,
-		Unit:          "",
-		Signed:        false,
-		RoundDecimals: 0,
-	},
+	// StreetlightVersion 0xEDCC skipped; only available in firmware version 1.16 and higher
 }
 
 var RegisterListSolarPanelData = Registers{
