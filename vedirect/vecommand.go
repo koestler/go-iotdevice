@@ -248,7 +248,7 @@ func (vd *Vedirect) RecvVeResponse() (data []byte, err error) {
 		}
 
 		// search end marker
-		data, err = vd.RecvUntil('\n', 64)
+		data, err = vd.RecvUntil('\n', 1024)
 		if err != nil {
 			debugPrintf("vedirect: RecvVeResponse end err=%v", err)
 			return nil, err
