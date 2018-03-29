@@ -16,13 +16,16 @@ import (
 	"github.com/koestler/go-ve-sensor/config"
 	"github.com/koestler/go-ve-sensor/storage"
 	"strconv"
+	"sync"
 )
 
 type FileList map[string]*VirtualFile
 
 type VirtualFileSystem struct {
-	directories map[string]bool
-	files       FileList
+	directories     map[string]bool
+	directoriesLock sync.RWMutex
+	files           FileList
+	filesLock       sync.RWMutex
 }
 
 // MainDriver defines a very basic ftpServer driver
@@ -114,6 +117,8 @@ func (driver *ClientDriver) ChangeDirectory(cc server.ClientContext, directory s
 	log.Printf("ftpcam-driver: ChangeDirectory cc.ID=%v directory=%v", cc.ID(), directory)
 
 	// create directories on the fly
+	driver.vfs.directoriesLock.Lock()
+	defer driver.vfs.directoriesLock.Unlock()
 	driver.vfs.directories[path.Clean(directory)] = true
 	return nil
 }
@@ -121,6 +126,8 @@ func (driver *ClientDriver) ChangeDirectory(cc server.ClientContext, directory s
 // MakeDirectory creates a directory
 func (driver *ClientDriver) MakeDirectory(cc server.ClientContext, directory string) error {
 	log.Printf("ftpcam-driver: MakeDirectory, cc.ID=%v directory=%v", cc.ID(), directory)
+	driver.vfs.directoriesLock.Lock()
+	defer driver.vfs.directoriesLock.Unlock()
 	driver.vfs.directories[path.Clean(directory)] = true
 	return nil;
 }
@@ -132,6 +139,7 @@ func (driver *ClientDriver) ListFiles(cc server.ClientContext) ([]os.FileInfo, e
 	dirPath := getDirPath(cc.Path())
 
 	files := make([]os.FileInfo, 0)
+	driver.vfs.directoriesLock.RLock()
 	for directory, _ := range driver.vfs.directories {
 		if !strings.HasPrefix(directory, dirPath) {
 			continue
@@ -152,8 +160,11 @@ func (driver *ClientDriver) ListFiles(cc server.ClientContext) ([]os.FileInfo, e
 			},
 		)
 	}
+	driver.vfs.directoriesLock.RUnlock()
 
+	driver.vfs.filesLock.RLock()
 	fileList := driver.vfs.files.getFilesInsidePath(dirPath)
+	driver.vfs.filesLock.RUnlock()
 	for _, file := range fileList {
 		files = append(files, file.getFileInfo(file.filePath[len(dirPath):]))
 	}
@@ -208,18 +219,24 @@ func (driver *ClientDriver) OpenFile(cc server.ClientContext, filePath string, f
 	if (flag & os.O_WRONLY) != 0 {
 		flag |= os.O_CREATE
 		if (flag & os.O_APPEND) == 0 {
+			driver.vfs.filesLock.Lock()
 			delete(driver.vfs.files, filePath);
+			driver.vfs.filesLock.Unlock()
 		}
 	}
 
 	if (flag & os.O_CREATE) != 0 {
+		driver.vfs.filesLock.Lock()
 		driver.vfs.files[filePath] = &VirtualFile{
 			device:   driver.device,
 			filePath: filePath,
 			modified: time.Now(),
 		}
+		driver.vfs.filesLock.Unlock()
 	}
 
+	driver.vfs.filesLock.RLock()
+	defer driver.vfs.filesLock.RUnlock()
 	file, ok := driver.vfs.files[filePath]
 	if !ok {
 		return nil, os.ErrNotExist
@@ -232,15 +249,21 @@ func (driver *ClientDriver) OpenFile(cc server.ClientContext, filePath string, f
 func (driver *ClientDriver) GetFileInfo(cc server.ClientContext, path string) (os.FileInfo, error) {
 	log.Printf("ftpcam-driver: GetFileInfo cc.ID=%v path=%v", cc.ID(), path)
 
+	driver.vfs.filesLock.Lock()
+	defer driver.vfs.filesLock.Unlock()
 	if file, ok := driver.vfs.files[path]; ok {
 		return file.getFileInfo(path), nil
-	} else if _, ok := driver.vfs.directories[path]; !ok {
-		return &VirtualFileInfo{
-			name:     path,
-			mode:     os.FileMode(0666) | os.ModeDir,
-			size:     4096,
-			modified: time.Now(),
-		}, nil
+	} else {
+		driver.vfs.directoriesLock.RLock()
+		defer driver.vfs.directoriesLock.RUnlock()
+		if _, ok := driver.vfs.directories[path]; !ok {
+			return &VirtualFileInfo{
+				name:     path,
+				mode:     os.FileMode(0666) | os.ModeDir,
+				size:     4096,
+				modified: time.Now(),
+			}, nil
+		}
 	}
 
 	return nil, os.ErrNotExist
@@ -272,11 +295,15 @@ func (driver *ClientDriver) RenameFile(cc server.ClientContext, from, to string)
 
 func (vfs *VirtualFileSystem) pathRetention(dirPath string) {
 	// get file list ordered by modified asc
+	vfs.filesLock.RLock()
 	fileList := vfs.files.getFilesInsidePath(dirPath)
+	vfs.filesLock.RUnlock()
 
 	// delete all but last 5 files
+	vfs.filesLock.Lock()
 	for i := 0; i <= len(fileList)-5; i++ {
 		//log.Printf("ftpcam-driver: virtualFileSystem cleanup filePath=%v", fileList[i].filePath)
 		delete(vfs.files, fileList[i].filePath)
 	}
+	vfs.filesLock.Unlock()
 }
