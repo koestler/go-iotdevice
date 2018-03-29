@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-func computeChecksum(cmd VeCommand, data []byte) (checksum byte) {
+func computeChecksum(cmd byte, data []byte) (checksum byte) {
 	checksum = byte(0x55)
 	checksum -= byte(cmd)
 	for _, v := range data {
@@ -22,7 +22,7 @@ func computeChecksum(cmd VeCommand, data []byte) (checksum byte) {
 func (vd *Vedirect) SendVeCommand(cmd VeCommand, data []byte) (err error) {
 	debugPrintf("vedirect: SendVeCommand begin")
 
-	checksum := computeChecksum(cmd, data)
+	checksum := computeChecksum(byte(cmd), data)
 	str := fmt.Sprintf(":%X%X%X\n", cmd, data, checksum)
 
 	_, err = vd.Write([]byte(str))
@@ -51,11 +51,29 @@ func (vd *Vedirect) VeCommandPing() (err error) {
 	return nil
 }
 
+func (vd *Vedirect) VeCommandDeviceId() (deviceId uint64, err error) {
+	debugPrintf("vedirect: VeCommandDeviceId begin")
+
+	rawValue, err := vd.VeCommand(VeCommandDeviceId, 0)
+	if err != nil {
+		debugPrintf("vedirect: VeCommandDeviceId end err=%v", err)
+		return 0, err
+	}
+
+	deviceId = littleEndianBytesToUint(rawValue)
+
+	debugPrintf("vedirect: VeCommandDeviceId end deviceId=%x", deviceId)
+	return deviceId, nil
+}
+
 func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte, err error) {
 	debugPrintf("vedirect: VeCommand begin command=%v, address=%x", command, address)
 
-	id := []byte{byte(address), byte(address >> 8)}
-	param := append(id, 0x00)
+	var param []byte
+	if command == VeCommandGet || command == VeCommandSet {
+		id := []byte{byte(address), byte(address >> 8)}
+		param = append(id, 0x00)
+	}
 
 	err = vd.SendVeCommand(command, param)
 	if err != nil {
@@ -69,24 +87,27 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 		return
 	}
 
-	if len(responseData) < 8 {
-		err = errors.New(fmt.Sprintf("responseData too short, len(resposneData)=%v", len(responseData)))
+	if len(responseData) < 7 {
+		err = errors.New(fmt.Sprintf("responseData too short, len(responseData)=%v", len(responseData)))
 		debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	}
 
 	// extract and check command
-	var responseCommand VeCommand
+	var response VeResponse
 	if s, err := strconv.ParseUint(string(responseData[0]), 16, 8); err != nil {
-		err = errors.New(fmt.Sprintf("cannot parse responseCommand, s=%v, err=%v", s, err))
+		err = errors.New(fmt.Sprintf("cannot parse response, s=%v, err=%v", s, err))
 		debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	} else {
-		responseCommand = VeCommand(s)
+		response = VeResponse(s)
 	}
 
-	if VeCommandGet != responseCommand {
-		err = errors.New(fmt.Sprintf("VeCommandGet != responseCommand, VeCommandGet=%v, responseCommand=%v", VeCommandGet, responseCommand))
+	expectedResponse := ResponseForCommand(command)
+	if expectedResponse != response {
+		err = errors.New(fmt.Sprintf(
+			"expectedResponse != response, expectedResponse=%v, response=%v",
+			expectedResponse, response))
 		debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	}
@@ -112,7 +133,7 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 	values = binData[:len(binData)-1]
 	responseChecksum := binData[len(binData)-1]
 
-	checksum := computeChecksum(responseCommand, values)
+	checksum := computeChecksum(byte(response), values)
 	if checksum != responseChecksum {
 		err = errors.New(fmt.Sprintf("checksum != responseChecksum, checksum=%X, responseChecksum=%X", checksum, responseChecksum))
 		debugPrintf("vedirect: VeCommand end err=%v", err)

@@ -23,6 +23,27 @@ const (
 	VeResponseAsync   VeResponse = 0x0A
 )
 
+func ResponseForCommand(command VeCommand) (response VeResponse) {
+	switch command {
+	case VeCommandPing:
+		return VeResponsePing
+	case VeCommandAppVersion:
+		return VeResponseDone
+	case VeCommandDeviceId:
+		return VeResponseDone
+	case VeCommandRestart:
+		return VeResponseDone
+	case VeCommandGet:
+		return VeResponseGet
+	case VeCommandSet:
+		return VeResponseSet
+	case VeCommandAsync:
+		return VeResponseAsync
+	}
+
+	return VeResponseUnknown;
+}
+
 type VeResponseFlag byte
 
 const (
