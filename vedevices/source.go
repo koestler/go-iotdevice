@@ -92,7 +92,7 @@ func CreateSource(device *storage.Device, config *config.VedeviceConfig) (err er
 			for name, register := range registers {
 				if numericValue, err := register.RecvNumeric(vd); err != nil {
 					log.Printf(
-						"device: vedevices.RecvNumeric failed device=%v name=%v err=%v", device, name, err,
+						"device: vedevices.RecvNumeric failed device=%v nameName=%v err=%v", device.Name, name, err,
 					)
 				} else {
 					output <- dataflow.Value{

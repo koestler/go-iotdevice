@@ -166,6 +166,7 @@ var RegisterListBmv702 = mergeRegisters(
 			Signed:        false,
 			RoundDecimals: 2,
 		},
+		/*
 		"Synchronized": Register{
 			Address:       0xEEB6,
 			Factor:        1,
@@ -173,6 +174,7 @@ var RegisterListBmv702 = mergeRegisters(
 			Signed:        false,
 			RoundDecimals: 0,
 		},
+		*/
 		"MidPointVoltage": Register{
 			Address:       0x0382,
 			Factor:        0.01,
@@ -187,6 +189,7 @@ var RegisterListBmv702 = mergeRegisters(
 			Signed:        true,
 			RoundDecimals: 1,
 		},
+		/*
 		"NumberOfLowAuxVoltageAlarms": Register{
 			Address:       0x030C,
 			Factor:        1,
@@ -201,6 +204,7 @@ var RegisterListBmv702 = mergeRegisters(
 			Signed:        false,
 			RoundDecimals: 0,
 		},
+		*/
 		"AuxVoltageMinimum": Register{
 			Address:       0x030E,
 			Factor:        0.01,
