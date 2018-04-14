@@ -112,14 +112,14 @@ func (driver *ClientDriver) ChangeDirectory(cc server.ClientContext, directory s
 	log.Printf("ftpcam-driver: ChangeDirectory cc.ID=%v directory=%v", cc.ID(), directory)
 
 	// create directories on the fly
-	driver.vfs.directories.Set(path.Clean(directory))
+	driver.vfs.directories.Create(path.Clean(directory))
 	return nil
 }
 
 // MakeDirectory creates a directory
 func (driver *ClientDriver) MakeDirectory(cc server.ClientContext, directory string) error {
 	log.Printf("ftpcam-driver: MakeDirectory, cc.ID=%v directory=%v", cc.ID(), directory)
-	driver.vfs.directories.Set(path.Clean(directory))
+	driver.vfs.directories.Create(path.Clean(directory))
 	return nil;
 }
 
@@ -130,7 +130,7 @@ func (driver *ClientDriver) ListFiles(cc server.ClientContext) ([]os.FileInfo, e
 	dirPath := getDirPath(cc.Path())
 
 	files := make([]os.FileInfo, 0)
-	for directory := range driver.vfs.directories.Iter() {
+	for directory := range driver.vfs.directories.Iterate() {
 		if !strings.HasPrefix(directory, dirPath) {
 			continue
 		}
@@ -170,8 +170,8 @@ func getDirPath(dirPath string) string {
 func (fl FileList) getFilesInsidePath(dirPath string) (ret []*VirtualFile) {
 	ret = make([]*VirtualFile, 0, fl.Length())
 
-	for item := range fl.Iter() {
-		filePath := item.Key
+	for item := range fl.Iterate() {
+		filePath := item.Path
 		file := item.Value
 
 		if !strings.HasPrefix(filePath, dirPath) {
@@ -209,12 +209,12 @@ func (driver *ClientDriver) OpenFile(cc server.ClientContext, filePath string, f
 	if (flag & os.O_WRONLY) != 0 {
 		flag |= os.O_CREATE
 		if (flag & os.O_APPEND) == 0 {
-			driver.vfs.files.Unset(filePath)
+			driver.vfs.files.Delete(filePath)
 		}
 	}
 
 	if (flag & os.O_CREATE) != 0 {
-		driver.vfs.files.Set(
+		driver.vfs.files.Create(
 			filePath,
 			&VirtualFile{
 				device:   driver.device,
@@ -238,7 +238,7 @@ func (driver *ClientDriver) GetFileInfo(cc server.ClientContext, path string) (o
 
 	if file, ok := driver.vfs.files.Get(path); ok {
 		return file.getFileInfo(path), nil
-	} else if ok := driver.vfs.directories.Isset(path); !ok {
+	} else if ok := driver.vfs.directories.Exists(path); !ok {
 		return &VirtualFileInfo{
 			name:     path,
 			mode:     os.FileMode(0666) | os.ModeDir,
@@ -281,6 +281,6 @@ func (vfs *VirtualFileSystem) pathRetention(dirPath string) {
 	// delete all but last 5 files
 	for i := 0; i <= len(fileList)-5; i++ {
 		//log.Printf("ftpcam-driver: virtualFileSystem cleanup filePath=%v", fileList[i].filePath)
-		vfs.files.Unset(fileList[i].filePath)
+		vfs.files.Delete(fileList[i].filePath)
 	}
 }

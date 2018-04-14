@@ -8,7 +8,7 @@ type FileList struct {
 }
 
 type FileListItem struct {
-	Key string
+	Path  string
 	Value *VirtualFile
 }
 
@@ -18,22 +18,22 @@ func NewFileList() FileList {
 	}
 }
 
-func (fl *FileList) Set(key string, file *VirtualFile) {
+func (fl *FileList) Create(path string, file *VirtualFile) {
 	fl.Lock()
-	fl.items[key] = file
+	fl.items[path] = file
 	fl.Unlock()
 }
 
-func (fl *FileList) Unset(key string) {
+func (fl *FileList) Delete(path string) {
 	fl.Lock()
-	delete(fl.items, key)
+	delete(fl.items, path)
 	fl.Unlock()
 }
 
-func (fl *FileList) Get (key string) (file *VirtualFile, ok bool) {
+func (fl *FileList) Get(path string) (file *VirtualFile, ok bool) {
 	fl.RLock()
 	defer fl.RUnlock()
-	file, ok = fl.items[key]
+	file, ok = fl.items[path]
 	return
 }
 
@@ -43,15 +43,15 @@ func (fl *FileList) Length() int  {
 	return len(fl.items)
 }
 
-func (fl *FileList) Iter() <-chan FileListItem {
+func (fl *FileList) Iterate() <-chan FileListItem {
 	c := make(chan FileListItem)
 
 	go func() {
 		fl.RLock()
 		defer fl.RUnlock()
 
-		for key, file := range fl.items {
-			c <- FileListItem{key, file}
+		for path, file := range fl.items {
+			c <- FileListItem{path, file}
 		}
 
 		close(c)

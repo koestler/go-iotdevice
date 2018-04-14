@@ -13,26 +13,26 @@ func NewDirectoryList() DirectoryList {
 	}
 }
 
-func (dl *DirectoryList) Set(key string) {
+func (dl *DirectoryList) Create(path string) {
 	dl.Lock()
-	dl.items[key] = true
+	dl.items[path] = true
 	dl.Unlock()
 }
 
-func (dl *DirectoryList) Unset(key string) {
+func (dl *DirectoryList) Delete(path string) {
 	dl.Lock()
-	delete(dl.items, key)
+	delete(dl.items, path)
 	dl.Unlock()
 }
 
-func (dl *DirectoryList) Isset(key string) (isset bool) {
+func (dl *DirectoryList) Exists(path string) (exists bool) {
 	dl.RLock()
-	_, isset = dl.items[key]
+	_, exists = dl.items[path]
 	dl.Unlock()
 	return
 }
 
-func (dl *DirectoryList) Iter() <-chan string {
+func (dl *DirectoryList) Iterate() <-chan string {
 	c := make(chan string)
 
 	go func() {
