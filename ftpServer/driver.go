@@ -19,8 +19,8 @@ import (
 )
 
 type VirtualFileSystem struct {
-	directories DirectoryList
-	files       FileList
+	directories *DirectoryList
+	files       *FileList
 }
 
 // MainDriver defines a very basic ftpServer driver

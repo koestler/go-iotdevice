@@ -7,8 +7,8 @@ type DirectoryList struct {
 	items map[string]bool
 }
 
-func NewDirectoryList() DirectoryList {
-	return DirectoryList{
+func NewDirectoryList() *DirectoryList {
+	return &DirectoryList{
 		items: make(map[string]bool),
 	}
 }

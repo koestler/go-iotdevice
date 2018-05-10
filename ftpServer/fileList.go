@@ -12,8 +12,8 @@ type FileListItem struct {
 	Value *VirtualFile
 }
 
-func NewFileList() FileList {
-	return FileList{
+func NewFileList() *FileList {
+	return &FileList{
 		items: make(map[string]*VirtualFile),
 	}
 }
