@@ -167,7 +167,7 @@ func getDirPath(dirPath string) string {
 	return dirPath
 }
 
-func (fl FileList) getFilesInsidePath(dirPath string) (ret []*VirtualFile) {
+func (fl *FileList) getFilesInsidePath(dirPath string) (ret []*VirtualFile) {
 	ret = make([]*VirtualFile, 0, fl.Length())
 
 	for item := range fl.Iterate() {
