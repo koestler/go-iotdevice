@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/koestler/go-ve-sensor/mqttClient"
 	"log"
 	"github.com/koestler/go-ve-sensor/ftpServer"
 	"github.com/koestler/go-ve-sensor/dataflow"
@@ -32,6 +33,7 @@ func main() {
 	//setupTestSinks()
 	setupHttpServer()
 	setupFtpServer()
+	setupMqttClient()
 
 	log.Print("main: start completed; run until kill signal is received")
 
@@ -160,5 +162,19 @@ func setupFtpServer() {
 		ftpServer.Run(ftpServerConfig, config.GetFtpCameraConfigs())
 	} else {
 		log.Printf("main: skip ftpServer server, err=%v", err)
+	}
+}
+
+
+func setupMqttClient() {
+	mqttClientConfig, err := config.GetMqttClientConfig()
+	if err == nil {
+		log.Printf(
+			"main: start mqtt client, broker=%v, clientId=%v",
+			mqttClientConfig.Broker, mqttClientConfig.ClientId,
+		)
+		mqttClient.Run(mqttClientConfig)
+	} else {
+		log.Printf("main: skip mqtt client, err=%v", err)
 	}
 }
