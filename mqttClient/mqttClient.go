@@ -1,18 +1,19 @@
 package mqttClient
 
 import (
+	"encoding/json"
 	"github.com/eclipse/paho.mqtt.golang"
 	"github.com/koestler/go-ve-sensor/config"
+	"github.com/koestler/go-ve-sensor/dataflow"
 	"log"
 	"os"
-	"os/signal"
-	"syscall"
+	"strings"
 )
 
 var client mqtt.Client
 
-func Run(config *config.MqttClientConfig)  {
-
+func Run(config *config.MqttClientConfig, storage *dataflow.ValueStorageInstance) {
+	// configure client and start connection
 	opts := mqtt.NewClientOptions().AddBroker(config.Broker).SetClientID(config.ClientId)
 	if len(config.User) > 0 {
 		opts.SetUsername(config.User)
@@ -36,21 +37,38 @@ func Run(config *config.MqttClientConfig)  {
 
 	client.Publish(config.AvailableTopic, config.Qos, true, "Online")
 
-	go signalHandler()
+	// sink values from data store and publish to mqtt broker
+	dataChan := storage.Subscribe(dataflow.Filter{})
+	sink(dataChan, config.Qos, config.ValueTopic)
 }
 
-func Stop() {
-	client.Disconnect(250)
+type Message struct {
+	Value float64
+	Unit  string
 }
 
-func signalHandler() {
-	ch := make(chan os.Signal)
-	signal.Notify(ch, syscall.SIGTERM)
-	for {
-		switch <-ch {
-		case syscall.SIGTERM:
-			Stop()
-			break
-		}
+func convertValueToMessage(value dataflow.Value) (Message) {
+	return Message{
+		Value: value.Value,
+		Unit:  value.Unit,
 	}
+}
+
+func sink(input <-chan dataflow.Value, qos byte, topicTemplate string) {
+	go func() {
+		for value := range input {
+			if !client.IsConnected() {
+				continue
+			}
+
+			topic := strings.Replace(topicTemplate, "%DeviceName%", value.Device.Name, 1)
+			topic = strings.Replace(topic, "%DeviceModel%", value.Device.Model, 1)
+			topic = strings.Replace(topic, "%ValueName%", value.Name, 1)
+			topic = strings.Replace(topic, "%ValueUnit%", value.Unit, 1)
+
+			if b, err := json.Marshal(convertValueToMessage(value)); err == nil {
+				client.Publish(topic, qos, false, b)
+			}
+		}
+	}()
 }

@@ -13,6 +13,7 @@ type MqttClientConfig struct {
 	Qos byte
 	DebugLog bool
 	AvailableTopic string
+	ValueTopic string
 }
 
 func GetMqttClientConfig() (mqttClientConfig *MqttClientConfig, err error) {
@@ -24,6 +25,7 @@ func GetMqttClientConfig() (mqttClientConfig *MqttClientConfig, err error) {
 		Qos: 1,
 		DebugLog: false,
 		AvailableTopic: "go-ve-sensor/LWT",
+		ValueTopic: "go-ve-sensor/%DeviceName%/%ValueName%",
 	}
 
 	// check if mqttClient sections exists

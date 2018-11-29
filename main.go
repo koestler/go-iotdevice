@@ -30,7 +30,6 @@ func main() {
 	setupStorageAndDataFlow()
 	setupBmvDevices()
 	setupCameraDevices()
-	//setupTestSinks()
 	setupHttpServer()
 	setupFtpServer()
 	setupMqttClient()
@@ -123,19 +122,6 @@ func setupCameraDevices() {
 	}
 }
 
-func setupTestSinks() {
-	// setup some test sinks
-	/*
-	devices := dataflow.DevicesGet()
-	f0 := dataflow.Filter{
-		Devices:    map[*dataflow.Device]bool{devices[0]: true},
-		ValueNames: map[string]bool{"Power": true},
-	};
-	dataflow.SinkLog("raw    ", rawStorage.Subscribe(f0))
-	*/
-	dataflow.SinkLog("rounded", roundedStorage.Drain())
-}
-
 func setupHttpServer() {
 	httpServerConfig, err := config.GetHttpServerConfig()
 	if err == nil {
@@ -173,7 +159,7 @@ func setupMqttClient() {
 			"main: start mqtt client, broker=%v, clientId=%v",
 			mqttClientConfig.Broker, mqttClientConfig.ClientId,
 		)
-		mqttClient.Run(mqttClientConfig)
+		mqttClient.Run(mqttClientConfig, roundedStorage)
 	} else {
 		log.Printf("main: skip mqtt client, err=%v", err)
 	}
