@@ -22,7 +22,9 @@ func Run(config *config.MqttClientConfig, storage *dataflow.ValueStorageInstance
 		opts.SetPassword(config.Password)
 	}
 
-	opts.SetWill(config.AvailableTopic, "Offline", config.Qos, true)
+	availableTopic := replaceTemplate(config.AvailableTopic, config)
+
+	opts.SetWill(availableTopic, "Offline", config.Qos, true)
 
 	mqtt.ERROR = log.New(os.Stdout, "", 0)
 	if config.DebugLog {
@@ -35,11 +37,17 @@ func Run(config *config.MqttClientConfig, storage *dataflow.ValueStorageInstance
 	}
 	log.Printf("mqttClient: connected to %v", config.Broker)
 
-	client.Publish(config.AvailableTopic, config.Qos, true, "Online")
+	client.Publish(availableTopic, config.Qos, true, "Online")
 
 	// sink values from data store and publish to mqtt broker
 	dataChan := storage.Subscribe(dataflow.Filter{})
-	sink(dataChan, config.Qos, config.ValueTopic)
+	sink(dataChan, config.Qos, replaceTemplate(config.ValueTopic, config))
+}
+
+func replaceTemplate(template string, config *config.MqttClientConfig) (r string){
+	r = strings.Replace(template, "%Prefix%", config.TopicPrefix, 1)
+	r = strings.Replace(r, "%ClientId%", config.ClientId, 1)
+	return
 }
 
 type Message struct {
