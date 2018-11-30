@@ -15,6 +15,7 @@ type MqttClientConfig struct {
 	TopicPrefix string
 	AvailableTopic string
 	ValueTopic string
+	RetainValues bool
 }
 
 func GetMqttClientConfig() (mqttClientConfig *MqttClientConfig, err error) {
@@ -28,6 +29,7 @@ func GetMqttClientConfig() (mqttClientConfig *MqttClientConfig, err error) {
 		TopicPrefix: "",
 		AvailableTopic: "%Prefix%%ClientId%/LWT",
 		ValueTopic: "%Prefix%%ClientId%/%DeviceName%/%ValueName%",
+		RetainValues: true,
 	}
 
 	// check if mqttClient sections exists

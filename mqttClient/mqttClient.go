@@ -41,10 +41,10 @@ func Run(config *config.MqttClientConfig, storage *dataflow.ValueStorageInstance
 
 	// sink values from data store and publish to mqtt broker
 	dataChan := storage.Subscribe(dataflow.Filter{})
-	sink(dataChan, config.Qos, replaceTemplate(config.ValueTopic, config))
+	sink(dataChan, config.Qos, replaceTemplate(config.ValueTopic, config), config.RetainValues)
 }
 
-func replaceTemplate(template string, config *config.MqttClientConfig) (r string){
+func replaceTemplate(template string, config *config.MqttClientConfig) (r string) {
 	r = strings.Replace(template, "%Prefix%", config.TopicPrefix, 1)
 	r = strings.Replace(r, "%ClientId%", config.ClientId, 1)
 	return
@@ -62,7 +62,7 @@ func convertValueToMessage(value dataflow.Value) (Message) {
 	}
 }
 
-func sink(input <-chan dataflow.Value, qos byte, topicTemplate string) {
+func sink(input <-chan dataflow.Value, qos byte, topicTemplate string, retainValues bool) {
 	go func() {
 		for value := range input {
 			if !client.IsConnected() {
@@ -75,7 +75,7 @@ func sink(input <-chan dataflow.Value, qos byte, topicTemplate string) {
 			topic = strings.Replace(topic, "%ValueUnit%", value.Unit, 1)
 
 			if b, err := json.Marshal(convertValueToMessage(value)); err == nil {
-				client.Publish(topic, qos, false, b)
+				client.Publish(topic, qos, retainValues, b)
 			}
 		}
 	}()
