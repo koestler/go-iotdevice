@@ -27,7 +27,7 @@ func GetHttpServerConfig() (httpServerConfig *HttpServerConfig, err error) {
 		Bind:               "127.0.0.1",
 		Port:               0,
 		FrontendConfigPath: "",
-		LogFile:            "-",
+		LogFile:            "",
 	}
 
 	err = config.Section("HttpServer").MapTo(httpServerConfigRead)

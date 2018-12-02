@@ -1,6 +1,7 @@
 package httpServer
 
 import (
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -17,7 +18,7 @@ func Run(bind string, port int, logFilePath string, env *Environment) {
 	}()
 }
 
-func getLogger(logFilePath string) (writer *log.Logger) {
+func getLogger(logFilePath string) (writer io.Writer) {
 	if len(logFilePath) < 1 {
 		// disable logging
 		log.Print("httpServer: log disabled")
@@ -27,7 +28,7 @@ func getLogger(logFilePath string) (writer *log.Logger) {
 	if logFilePath == "-" {
 		// use stdout
 		log.Print("httpServer: log to stdout")
-		return log.New(os.Stdout, "httpServer: ", log.LstdFlags)
+		return os.Stdout
 	}
 
 	file, err := os.OpenFile(logFilePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
@@ -35,5 +36,5 @@ func getLogger(logFilePath string) (writer *log.Logger) {
 		log.Fatalf("httpServer: cannot open logfile: %s", err.Error())
 	}
 	log.Printf("httpServer: log to file=%s", logFilePath)
-	return log.New(file, "", log.LstdFlags)
+	return file
 }
