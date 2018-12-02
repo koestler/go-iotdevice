@@ -35,10 +35,10 @@ func GetMqttClientConfig() (mqttClientConfig *MqttClientConfig, err error) {
 		AvailableEnable:   true,
 		AvailableTopic:    "%Prefix%%ClientId%/LWT",
 		TelemetryInterval: "10s",
-		TelemetryTopic:    "%Prefix%tele/%ClientId%/%DeviceName%",
+		TelemetryTopic:    "%Prefix%tele/ve/%DeviceName%",
 		TelemetryRetain:   false,
 		RealtimeEnable:    false,
-		RealtimeTopic:     "%Prefix%stat/%ClientId%/%DeviceName%/%ValueName%",
+		RealtimeTopic:     "%Prefix%stat/ve/%DeviceName%/%ValueName%",
 		RealtimeRetain:    true,
 	}
 
