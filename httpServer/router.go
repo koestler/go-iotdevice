@@ -2,6 +2,7 @@ package httpServer
 
 import (
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 )
 
@@ -21,14 +22,16 @@ type HttpRoute struct {
 type WsRoutes []WsRoute
 type HttpRoutes []HttpRoute
 
-func newRouter(env *Environment) *mux.Router {
+func newRouter(logger *log.Logger, env *Environment) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 
 	// setup websocket routes
 	for _, route := range wsRoutes {
 		var handler http.Handler
 		handler = Handler{Env: env, Handle: route.HandlerFunc}
-		handler = Logger(handler, route.Name)
+		if logger != nil {
+			handler = Logger(handler, route.Name, logger)
+		}
 
 		router.Path(route.Pattern).
 			Name(route.Name).
@@ -40,7 +43,9 @@ func newRouter(env *Environment) *mux.Router {
 	for _, route := range httpRoutes {
 		var handler http.Handler
 		handler = Handler{Env: env, Handle: route.HandlerFunc}
-		handler = Logger(handler, route.Name)
+		if logger != nil {
+			handler = Logger(handler, route.Name, logger)
+		}
 
 		router.Methods(route.Method).
 			Path(route.Pattern).

@@ -1,19 +1,25 @@
 package config
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 )
 
 type HttpServerConfigRead struct {
 	Bind               string
 	Port               int
 	FrontendConfigPath string
+
+	// empty string: logging disabled
+	// -           : log to stdoud (default)
+	// else        : used as file path for a log file
+	LogFile string
 }
 type HttpServerConfig struct {
 	Bind           string
 	Port           int
 	FrontendConfig interface{}
+	LogFile        string
 }
 
 func GetHttpServerConfig() (httpServerConfig *HttpServerConfig, err error) {
@@ -21,6 +27,7 @@ func GetHttpServerConfig() (httpServerConfig *HttpServerConfig, err error) {
 		Bind:               "127.0.0.1",
 		Port:               0,
 		FrontendConfigPath: "",
+		LogFile:            "-",
 	}
 
 	err = config.Section("HttpServer").MapTo(httpServerConfigRead)
@@ -33,8 +40,9 @@ func GetHttpServerConfig() (httpServerConfig *HttpServerConfig, err error) {
 	}
 
 	httpServerConfig = &HttpServerConfig{
-		Bind: httpServerConfigRead.Bind,
-		Port: httpServerConfigRead.Port,
+		Bind:    httpServerConfigRead.Bind,
+		Port:    httpServerConfigRead.Port,
+		LogFile: httpServerConfigRead.LogFile,
 	}
 
 	httpServerConfig.FrontendConfig = readJsonConfig(httpServerConfigRead.FrontendConfigPath)

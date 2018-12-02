@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/koestler/go-ve-sensor/mqttClient"
-	"log"
-	"github.com/koestler/go-ve-sensor/ftpServer"
-	"github.com/koestler/go-ve-sensor/dataflow"
+	"github.com/jessevdk/go-flags"
 	"github.com/koestler/go-ve-sensor/config"
+	"github.com/koestler/go-ve-sensor/dataflow"
+	"github.com/koestler/go-ve-sensor/ftpServer"
 	"github.com/koestler/go-ve-sensor/httpServer"
+	"github.com/koestler/go-ve-sensor/mqttClient"
 	"github.com/koestler/go-ve-sensor/storage"
 	"github.com/koestler/go-ve-sensor/vedevices"
-	"github.com/jessevdk/go-flags"
+	"log"
 	"os"
 )
 
@@ -132,7 +132,7 @@ func setupHttpServer() {
 			Devices:        storage.GetAll(),
 		}
 
-		httpServer.Run(httpServerConfig.Bind, httpServerConfig.Port, env)
+		httpServer.Run(httpServerConfig.Bind, httpServerConfig.Port, httpServerConfig.LogFile, env)
 	} else {
 		log.Printf("main: skip httpServer, err=%v", err)
 	}
@@ -150,7 +150,6 @@ func setupFtpServer() {
 		log.Printf("main: skip ftpServer server, err=%v", err)
 	}
 }
-
 
 func setupMqttClient() {
 	mqttClientConfig, err := config.GetMqttClientConfig()
