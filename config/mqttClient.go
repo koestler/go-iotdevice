@@ -6,30 +6,40 @@ import (
 )
 
 type MqttClientConfig struct {
-	Broker string
-	User string
-	Password string
-	ClientId string
-	Qos byte
-	DebugLog bool
-	TopicPrefix string
-	AvailableTopic string
-	ValueTopic string
-	RetainValues bool
+	Broker            string
+	User              string
+	Password          string
+	ClientId          string
+	Qos               byte
+	DebugLog          bool
+	TopicPrefix       string
+	AvailableEnable   bool
+	AvailableTopic    string
+	TelemetryInterval string
+	TelemetryTopic    string
+	TelemetryRetain   bool
+	RealtimeEnable    bool
+	RealtimeTopic     string
+	RealtimeRetain    bool
 }
 
 func GetMqttClientConfig() (mqttClientConfig *MqttClientConfig, err error) {
 	mqttClientConfig = &MqttClientConfig{
-		Broker: "",
-		User: "",
-		Password: "",
-		ClientId: "go-ve-sensor",
-		Qos: 1,
-		DebugLog: false,
-		TopicPrefix: "",
-		AvailableTopic: "%Prefix%%ClientId%/LWT",
-		ValueTopic: "%Prefix%%ClientId%/%DeviceName%/%ValueName%",
-		RetainValues: true,
+		Broker:            "",
+		User:              "",
+		Password:          "",
+		ClientId:          "go-ve-sensor",
+		Qos:               1,
+		DebugLog:          false,
+		TopicPrefix:       "",
+		AvailableEnable:   true,
+		AvailableTopic:    "%Prefix%%ClientId%/LWT",
+		TelemetryInterval: "10s",
+		TelemetryTopic:    "%Prefix%tele/%ClientId%/%DeviceName%",
+		TelemetryRetain:   false,
+		RealtimeEnable:    false,
+		RealtimeTopic:     "%Prefix%stat/%ClientId%/%DeviceName%/%ValueName%",
+		RealtimeRetain:    true,
 	}
 
 	// check if mqttClient sections exists
