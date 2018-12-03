@@ -117,8 +117,7 @@ type TelemetryMessage struct {
 	Time     string
 	NextTele string
 	TimeZone string
-	Values   map[string]float64
-	Units    map[string]string
+	Values   dataflow.ValueEssentialMap
 }
 
 func transmitTelemetry(
@@ -132,25 +131,13 @@ func transmitTelemetry(
 
 		for now := range time.Tick(interval) {
 			for device, deviceState := range storage.GetState(filter) {
-
 				topic := replaceTemplate(cfg.TelemetryTopic, cfg)
 				topic = strings.Replace(topic, "%DeviceName%", device.Name, 1)
-
-				values := make(map[string]float64, len(deviceState))
-				units := make(map[string]string, len(deviceState))
-
-				for valueName, value := range deviceState.ConvertToEssential() {
-					values[valueName] = value.Value
-					if len(value.Unit) > 0 {
-						units[valueName] = value.Unit
-					}
-				}
 
 				payload := TelemetryMessage{
 					Time:     timeToString(now.UTC()),
 					NextTele: timeToString(now.Add(interval)),
-					Values:   values,
-					Units:    units,
+					Values:   deviceState.ConvertToEssential(),
 				}
 
 				if b, err := json.Marshal(payload); err == nil {
