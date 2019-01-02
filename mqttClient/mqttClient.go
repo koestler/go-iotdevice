@@ -25,7 +25,7 @@ func Run(config *config.MqttClientConfig, storage *dataflow.ValueStorageInstance
 		opts.SetPassword(config.Password)
 	}
 
-	availableTopic := replaceTemplate(config.AvailableTopic, config)
+	availableTopic := GetAvailableTopic(config)
 
 	if (config.AvailableEnable) {
 		opts.SetWill(availableTopic, "Offline", config.Qos, true)
@@ -70,6 +70,10 @@ func Run(config *config.MqttClientConfig, storage *dataflow.ValueStorageInstance
 	}
 
 	return
+}
+
+func GetAvailableTopic(cfg *config.MqttClientConfig) string {
+	return replaceTemplate(cfg.AvailableTopic, cfg)
 }
 
 func replaceTemplate(template string, config *config.MqttClientConfig) (r string) {

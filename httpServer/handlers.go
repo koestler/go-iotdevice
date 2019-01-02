@@ -4,16 +4,18 @@ package httpServer
 //https://elithrar.github.io/article/custom-handlers-avoiding-globals/
 
 import (
-	"net/http"
-	"log"
+	"github.com/koestler/go-ve-sensor/config"
 	"github.com/koestler/go-ve-sensor/dataflow"
 	"github.com/koestler/go-ve-sensor/storage"
+	"log"
+	"net/http"
 )
 
 // Our application wide data containers
 type Environment struct {
-	RoundedStorage *dataflow.ValueStorageInstance
-	Devices        []*storage.Device
+	RoundedStorage   *dataflow.ValueStorageInstance
+	Devices          []*storage.Device
+	MqttClientConfig *config.MqttClientConfig
 }
 
 // Error represents a handler error. It provides methods for a HTTP status

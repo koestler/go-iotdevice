@@ -23,6 +23,8 @@ var cmdOptions CmdOptions
 
 var rawStorage, roundedStorage *dataflow.ValueStorageInstance
 
+var mqttClientConfig *config.MqttClientConfig
+
 func main() {
 	log.Print("main: start go-ve-sensor...")
 
@@ -30,9 +32,9 @@ func main() {
 	setupStorageAndDataFlow()
 	setupBmvDevices()
 	setupCameraDevices()
-	setupHttpServer()
 	setupFtpServer()
 	setupMqttClient()
+	setupHttpServer()
 
 	log.Print("main: start completed; run until kill signal is received")
 
@@ -122,22 +124,6 @@ func setupCameraDevices() {
 	}
 }
 
-func setupHttpServer() {
-	httpServerConfig, err := config.GetHttpServerConfig()
-	if err == nil {
-		log.Printf("main: start httpServer, Bind=%v, Port=%v", httpServerConfig.Bind, httpServerConfig.Port)
-
-		env := &httpServer.Environment{
-			RoundedStorage: roundedStorage,
-			Devices:        storage.GetAll(),
-		}
-
-		httpServer.Run(httpServerConfig.Bind, httpServerConfig.Port, httpServerConfig.LogFile, env)
-	} else {
-		log.Printf("main: skip httpServer, err=%v", err)
-	}
-}
-
 func setupFtpServer() {
 	ftpServerConfig, err := config.GetFtpServerConfig()
 	if err == nil {
@@ -152,7 +138,8 @@ func setupFtpServer() {
 }
 
 func setupMqttClient() {
-	mqttClientConfig, err := config.GetMqttClientConfig()
+	var err error
+	mqttClientConfig, err = config.GetMqttClientConfig()
 	if err == nil {
 		log.Printf(
 			"main: start mqtt client, broker=%v, clientId=%v",
@@ -161,5 +148,22 @@ func setupMqttClient() {
 		mqttClient.Run(mqttClientConfig, roundedStorage)
 	} else {
 		log.Printf("main: skip mqtt client, err=%v", err)
+	}
+}
+
+func setupHttpServer() {
+	httpServerConfig, err := config.GetHttpServerConfig()
+	if err == nil {
+		log.Printf("main: start httpServer, Bind=%v, Port=%v", httpServerConfig.Bind, httpServerConfig.Port)
+
+		env := &httpServer.Environment{
+			RoundedStorage:   roundedStorage,
+			Devices:          storage.GetAll(),
+			MqttClientConfig: mqttClientConfig,
+		}
+
+		httpServer.Run(httpServerConfig.Bind, httpServerConfig.Port, httpServerConfig.LogFile, env)
+	} else {
+		log.Printf("main: skip httpServer, err=%v", err)
 	}
 }

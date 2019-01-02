@@ -1,8 +1,9 @@
 package storage
 
 import (
-	"sync"
 	"errors"
+	"github.com/koestler/go-ve-sensor/vedirect"
+	"sync"
 )
 
 // todo: this should be refactored in a proper DeviceStorage without global GetAll() method
@@ -10,6 +11,7 @@ import (
 type Device struct {
 	Name           string
 	Model          string
+	DeviceId       vedirect.VeProduct
 	FrontendConfig interface{}
 }
 

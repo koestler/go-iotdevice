@@ -64,6 +64,7 @@ func CreateSource(device *storage.Device, config *config.VedeviceConfig) (err er
 		log.Printf("vedevices source: unknown deviceId=%x", deviceId)
 		return err, nil
 	}
+	device.DeviceId = deviceId
 
 	log.Printf("vedevices source: setup product=%v", product)
 

@@ -40,6 +40,12 @@ var httpRoutes = HttpRoutes{
 		HandleDeviceGetPictureRaw,
 	},
 	HttpRoute{
+		"HassMqttSensorsYaml",
+		"GET",
+		"/api/v0/Hass/MqttSensors",
+		HandleHassMqttSensorsYaml,
+	},
+	HttpRoute{
 		"DeviceRoundedValuesWebSocket",
 		"GET",
 		"/api/v0/ws/RoundedValues",

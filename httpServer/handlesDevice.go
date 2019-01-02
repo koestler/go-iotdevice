@@ -1,11 +1,11 @@
 package httpServer
 
 import (
-	"net/http"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/koestler/go-ve-sensor/dataflow"
 	"github.com/koestler/go-ve-sensor/storage"
+	"net/http"
 )
 
 func HandleDeviceIndex(env *Environment, w http.ResponseWriter, r *http.Request) Error {

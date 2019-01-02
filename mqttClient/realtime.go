@@ -2,6 +2,7 @@ package mqttClient
 
 import (
 	"encoding/json"
+	"github.com/koestler/go-ve-sensor/config"
 	"github.com/koestler/go-ve-sensor/dataflow"
 	"strings"
 	"time"
@@ -21,25 +22,46 @@ func convertValueToRealtimeMessage(value dataflow.Value) (RealtimeMessage) {
 	}
 }
 
+func GetRealtimeTopic(
+	cfg *config.MqttClientConfig,
+	deviceName string,
+	deviceModel string,
+	valueName string,
+	valueUnit string,
+) string {
+	topic := replaceTemplate(cfg.RealtimeTopic, cfg)
+	// replace Device/Value specific palceholders
+
+	topic = strings.Replace(topic, "%DeviceName%", deviceName, 1)
+	topic = strings.Replace(topic, "%DeviceModel%", deviceModel, 1)
+	topic = strings.Replace(topic, "%ValueName%", valueName, 1)
+	topic = strings.Replace(topic, "%ValueUnit%", valueUnit, 1)
+
+	return topic
+}
+
 func transmitRealtime(input <-chan dataflow.Value, mqttClient *MqttClient) {
 	go func() {
 		cfg := mqttClient.config
-
-		topic := replaceTemplate(cfg.RealtimeTopic, cfg)
 
 		for value := range input {
 			if !mqttClient.client.IsConnected() {
 				continue
 			}
 
-			// replace Device/Value specific palceholders
-			topic := strings.Replace(topic, "%DeviceName%", value.Device.Name, 1)
-			topic = strings.Replace(topic, "%DeviceModel%", value.Device.Model, 1)
-			topic = strings.Replace(topic, "%ValueName%", value.Name, 1)
-			topic = strings.Replace(topic, "%ValueUnit%", value.Unit, 1)
-
 			if b, err := json.Marshal(convertValueToRealtimeMessage(value)); err == nil {
-				mqttClient.client.Publish(topic, cfg.Qos, cfg.RealtimeRetain, b)
+				mqttClient.client.Publish(
+					GetRealtimeTopic(
+						cfg,
+						value.Device.Name,
+						value.Device.Model,
+						value.Name,
+						value.Unit,
+					),
+					cfg.Qos,
+					cfg.RealtimeRetain,
+					b,
+				)
 			}
 		}
 	}()
