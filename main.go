@@ -11,6 +11,8 @@ import (
 	"github.com/koestler/go-ve-sensor/vedevices"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 //go:generate ./frontend_to_bindata.sh
@@ -38,7 +40,11 @@ func main() {
 
 	log.Print("main: start completed; run until kill signal is received")
 
-	select {}
+	// setup SIGTERM, SIGINT handlers
+	gracefulStop := make(chan os.Signal)
+	signal.Notify(gracefulStop, syscall.SIGTERM)
+	signal.Notify(gracefulStop, syscall.SIGINT)
+	<-gracefulStop
 }
 
 func setupConfig() {
