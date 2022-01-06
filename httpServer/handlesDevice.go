@@ -43,39 +43,3 @@ func HandleDeviceGetRoundedValues(env *Environment, w http.ResponseWriter, r *ht
 	w.Write(b)
 	return nil
 }
-
-func HandleDeviceGetPictureThumb(env *Environment, w http.ResponseWriter, r *http.Request) Error {
-	return HandleDeviceGetPicture(env, w, r, true)
-}
-
-func HandleDeviceGetPictureRaw(env *Environment, w http.ResponseWriter, r *http.Request) Error {
-	return HandleDeviceGetPicture(env, w, r, false)
-}
-
-func HandleDeviceGetPicture(env *Environment, w http.ResponseWriter, r *http.Request, thumb bool) Error {
-	vars := mux.Vars(r)
-
-	device, err := storage.GetByName(vars["DeviceId"])
-
-	if err != nil {
-		return StatusError{404, err}
-	}
-
-	picture, err := storage.PictureDb.GetPicture(device)
-	if err != nil {
-		return StatusError{404, err}
-	}
-
-	var jpeg []byte
-	if thumb {
-		jpeg = picture.JpegThumb
-	} else {
-		jpeg = picture.JpegRaw
-	}
-
-	writeJpegHeaders(w)
-	if _, err = w.Write(jpeg); err != nil {
-		return StatusError{500, err}
-	}
-	return nil
-}

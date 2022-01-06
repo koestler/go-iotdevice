@@ -28,18 +28,6 @@ var httpRoutes = HttpRoutes{
 		HandleDeviceGetRoundedValues,
 	},
 	HttpRoute{
-		"DevicePictureThumb",
-		"GET",
-		"/api/v0/Device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/Picture/Thumb",
-		HandleDeviceGetPictureThumb,
-	},
-	HttpRoute{
-		"DevicePictureRaw",
-		"GET",
-		"/api/v0/Device/{DeviceId:[a-zA-Z0-9\\-]{1,32}}/Picture/Raw",
-		HandleDeviceGetPictureRaw,
-	},
-	HttpRoute{
 		"HassMqttSensorsYaml",
 		"GET",
 		"/api/v0/Hass/MqttSensors",
