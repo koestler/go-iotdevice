@@ -4,7 +4,6 @@ import (
 	"github.com/jessevdk/go-flags"
 	"github.com/koestler/go-ve-sensor/config"
 	"github.com/koestler/go-ve-sensor/dataflow"
-	"github.com/koestler/go-ve-sensor/ftpServer"
 	"github.com/koestler/go-ve-sensor/httpServer"
 	"github.com/koestler/go-ve-sensor/mqttClient"
 	"github.com/koestler/go-ve-sensor/storage"
@@ -31,8 +30,6 @@ func main() {
 	setupConfig()
 	setupStorageAndDataFlow()
 	setupBmvDevices()
-	setupCameraDevices()
-	setupFtpServer()
 	setupMqttClient()
 	setupHttpServer()
 
@@ -115,29 +112,6 @@ func setupBmvDevices() {
 	// append them as sources to the raw storage
 	for _, source := range sources {
 		source.Append(rawStorage)
-	}
-}
-
-func setupCameraDevices() {
-	log.Printf("main: setup Camera Devices")
-
-	cameras := config.GetFtpCameraConfigs()
-
-	for _, camera := range cameras {
-		storage.DeviceCreate(camera.Name, "ftpCamera", camera.FrontendConfig);
-	}
-}
-
-func setupFtpServer() {
-	ftpServerConfig, err := config.GetFtpServerConfig()
-	if err == nil {
-		log.Printf(
-			"main: start ftpServer server, Bind=%v, Port=%v",
-			ftpServerConfig.Bind, ftpServerConfig.Port,
-		)
-		ftpServer.Run(ftpServerConfig, config.GetFtpCameraConfigs())
-	} else {
-		log.Printf("main: skip ftpServer server, err=%v", err)
 	}
 }
 
