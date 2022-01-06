@@ -57,16 +57,4 @@ var httpRoutes = HttpRoutes{
 		"/api{Path:.*}",
 		HandleApiNotFound,
 	},
-	HttpRoute{
-		"AssetsIndex",
-		"GET",
-		"/",
-		HandleAssetsGet,
-	},
-	HttpRoute{
-		"Assets",
-		"GET",
-		"/{Path:.+}",
-		HandleAssetsGet,
-	},
 }
