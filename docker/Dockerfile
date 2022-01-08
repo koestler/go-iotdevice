@@ -24,7 +24,7 @@ RUN groupadd -g 1000 app && \
 RUN chown app:app /go-victron-to-mqtt
 
 # use already compiled frontend
-FROM koestler/js-victron-to-mqtt:latest AS js-builder
+FROM koestler/js-victron-to-mqtt:main AS js-builder
 # todo: swtich version from latest to v1
 
 # build final image
