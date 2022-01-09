@@ -1,6 +1,6 @@
 package dataflow
 
-import "github.com/koestler/go-ve-sensor/storage"
+import "github.com/koestler/go-victron-to-mqtt/storage"
 
 type Value struct {
 	Device        *storage.Device
@@ -27,7 +27,7 @@ func (valueMap ValueMap) ConvertToEssential() (valueEssentialMap ValueEssentialM
 	return
 }
 
-func (value Value) ConvertToEssential() (ValueEssential) {
+func (value Value) ConvertToEssential() ValueEssential {
 	return ValueEssential{
 		Value: value.Value,
 		Unit:  value.Unit,

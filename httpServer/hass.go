@@ -2,9 +2,9 @@ package httpServer
 
 import (
 	"errors"
-	"github.com/koestler/go-ve-sensor/config"
-	"github.com/koestler/go-ve-sensor/mqttClient"
-	"github.com/koestler/go-ve-sensor/vedevices"
+	"github.com/koestler/go-victron-to-mqtt/config"
+	"github.com/koestler/go-victron-to-mqtt/mqttClient"
+	"github.com/koestler/go-victron-to-mqtt/vedevices"
 	"gopkg.in/yaml.v2"
 	"net/http"
 	"strings"
@@ -14,7 +14,7 @@ import (
 // - platform: mqtt
 //   name:                  "ve_24v_bmv_current"
 //   state_topic:           "piegn/stat/ve/24v-bmv/Current"
-//   availability_topic:    "piegn/tele/software/srv1-go-ve-sensor/LWT"
+//   availability_topic:    "piegn/tele/software/srv1-go-victron-to-mqtt/LWT"
 //   value_template:        "{{ value_json.Value }}"
 //   unit_of_measurement:   "W"
 //   payload_available:     "Online"
@@ -30,7 +30,6 @@ type hassSensor struct {
 	PayloadNotAvailable string `yaml:"payload_not_available"`
 }
 
-
 func HandleHassMqttSensorsYaml(env *Environment, w http.ResponseWriter, r *http.Request) Error {
 	if env.MqttClientConfig == nil {
 		return StatusError{404, errors.New("mqtt module not enabled")}
@@ -38,7 +37,7 @@ func HandleHassMqttSensorsYaml(env *Environment, w http.ResponseWriter, r *http.
 
 	configs := make([]hassSensor, 0)
 	for _, device := range env.Devices {
-		registers := vedevices.RegisterFactoryByProduct(device.DeviceId);
+		registers := vedevices.RegisterFactoryByProduct(device.DeviceId)
 		if registers == nil {
 			continue
 		}
@@ -64,7 +63,6 @@ func HandleHassMqttSensorsYaml(env *Environment, w http.ResponseWriter, r *http.
 	w.Write(b)
 	return nil
 }
-
 
 func registerToHassSensor(
 	mqttClientConfig *config.MqttClientConfig,

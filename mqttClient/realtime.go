@@ -2,8 +2,8 @@ package mqttClient
 
 import (
 	"encoding/json"
-	"github.com/koestler/go-ve-sensor/config"
-	"github.com/koestler/go-ve-sensor/dataflow"
+	"github.com/koestler/go-victron-to-mqtt/config"
+	"github.com/koestler/go-victron-to-mqtt/dataflow"
 	"strings"
 	"time"
 )
@@ -14,7 +14,7 @@ type RealtimeMessage struct {
 	Unit  string
 }
 
-func convertValueToRealtimeMessage(value dataflow.Value) (RealtimeMessage) {
+func convertValueToRealtimeMessage(value dataflow.Value) RealtimeMessage {
 	return RealtimeMessage{
 		Time:  timeToString(time.Now()),
 		Value: value.Value,

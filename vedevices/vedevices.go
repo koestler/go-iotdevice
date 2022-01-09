@@ -1,7 +1,7 @@
 package vedevices
 
 import (
-	"github.com/koestler/go-ve-sensor/vedirect"
+	"github.com/koestler/go-victron-to-mqtt/vedirect"
 	"log"
 )
 

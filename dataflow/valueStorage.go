@@ -1,6 +1,6 @@
 package dataflow
 
-import "github.com/koestler/go-ve-sensor/storage"
+import "github.com/koestler/go-victron-to-mqtt/storage"
 
 type State map[*storage.Device]ValueMap
 
@@ -99,7 +99,7 @@ func ValueStorageCreate() (valueStorageInstance *ValueStorageInstance) {
 	return
 }
 
-func (instance *ValueStorageInstance) GetState(filter Filter) (State) {
+func (instance *ValueStorageInstance) GetState(filter Filter) State {
 	response := make(chan State)
 
 	request := readStateRequest{
@@ -136,7 +136,7 @@ func (instance *ValueStorageInstance) Fill(input <-chan Value) {
 }
 
 func (instance *ValueStorageInstance) Drain() <-chan Value {
-	return instance.Subscribe(Filter{});
+	return instance.Subscribe(Filter{})
 }
 
 func (instance *ValueStorageInstance) Subscribe(filter Filter) <-chan Value {
@@ -162,8 +162,8 @@ func filterByDevice(filter *Filter, device *storage.Device) bool {
 	}
 
 	// only ok if present and true
-	_, ok := filter.Devices[device];
-	return ok && filter.Devices[device];
+	_, ok := filter.Devices[device]
+	return ok && filter.Devices[device]
 }
 
 func filterByValueName(filter *Filter, valueName string) bool {
@@ -173,8 +173,8 @@ func filterByValueName(filter *Filter, valueName string) bool {
 	}
 
 	// only ok if present and true
-	_, ok := filter.ValueNames[valueName];
-	return ok && filter.ValueNames[valueName];
+	_, ok := filter.ValueNames[valueName]
+	return ok && filter.ValueNames[valueName]
 }
 
 func filterValue(filter *Filter, value *Value) bool {

@@ -1,8 +1,8 @@
 package vedevices
 
 import (
+	"github.com/koestler/go-victron-to-mqtt/vedirect"
 	"log"
-	"github.com/koestler/go-ve-sensor/vedirect"
 )
 
 func RegisterFactoryByModel(model string) Registers {

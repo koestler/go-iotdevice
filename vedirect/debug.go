@@ -1,10 +1,10 @@
 package vedirect
 
 import (
+	"fmt"
+	"github.com/koestler/go-victron-to-mqtt/config"
 	"log"
 	"strings"
-	"fmt"
-	"github.com/koestler/go-ve-sensor/config"
 )
 
 var indent = 0

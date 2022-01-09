@@ -4,9 +4,9 @@ package httpServer
 //https://elithrar.github.io/article/custom-handlers-avoiding-globals/
 
 import (
-	"github.com/koestler/go-ve-sensor/config"
-	"github.com/koestler/go-ve-sensor/dataflow"
-	"github.com/koestler/go-ve-sensor/storage"
+	"github.com/koestler/go-victron-to-mqtt/config"
+	"github.com/koestler/go-victron-to-mqtt/dataflow"
+	"github.com/koestler/go-victron-to-mqtt/storage"
 	"log"
 	"net/http"
 )

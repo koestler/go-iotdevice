@@ -2,12 +2,12 @@ package main
 
 import (
 	"github.com/jessevdk/go-flags"
-	"github.com/koestler/go-ve-sensor/config"
-	"github.com/koestler/go-ve-sensor/dataflow"
-	"github.com/koestler/go-ve-sensor/httpServer"
-	"github.com/koestler/go-ve-sensor/mqttClient"
-	"github.com/koestler/go-ve-sensor/storage"
-	"github.com/koestler/go-ve-sensor/vedevices"
+	"github.com/koestler/go-victron-to-mqtt/config"
+	"github.com/koestler/go-victron-to-mqtt/dataflow"
+	"github.com/koestler/go-victron-to-mqtt/httpServer"
+	"github.com/koestler/go-victron-to-mqtt/mqttClient"
+	"github.com/koestler/go-victron-to-mqtt/storage"
+	"github.com/koestler/go-victron-to-mqtt/vedevices"
 	"log"
 	"os"
 	"os/signal"
@@ -25,7 +25,7 @@ var rawStorage, roundedStorage *dataflow.ValueStorageInstance
 var mqttClientConfig *config.MqttClientConfig
 
 func main() {
-	log.Print("main: start go-ve-sensor...")
+	log.Print("main: start go-victron-to-mqtt...")
 
 	setupConfig()
 	setupStorageAndDataFlow()
@@ -95,7 +95,7 @@ func setupBmvDevices() {
 		)
 
 		// register device in storage
-		device := storage.DeviceCreate(c.Name, c.Model, c.FrontendConfig);
+		device := storage.DeviceCreate(c.Name, c.Model, c.FrontendConfig)
 
 		// setup the datasource
 		if "dummy" == c.Device {

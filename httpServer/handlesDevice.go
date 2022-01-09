@@ -3,8 +3,8 @@ package httpServer
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"github.com/koestler/go-ve-sensor/dataflow"
-	"github.com/koestler/go-ve-sensor/storage"
+	"github.com/koestler/go-victron-to-mqtt/dataflow"
+	"github.com/koestler/go-victron-to-mqtt/storage"
 	"net/http"
 )
 
@@ -21,7 +21,7 @@ func HandleDeviceIndex(env *Environment, w http.ResponseWriter, r *http.Request)
 	}
 	w.Write(b)
 
-	return nil;
+	return nil
 }
 
 func HandleDeviceGetRoundedValues(env *Environment, w http.ResponseWriter, r *http.Request) Error {

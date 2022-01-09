@@ -1,10 +1,10 @@
 package httpServer
 
 import (
+	"encoding/json"
+	"github.com/koestler/go-victron-to-mqtt/config"
 	"log"
 	"net/http"
-	"encoding/json"
-	"github.com/koestler/go-ve-sensor/config"
 )
 
 var frontendConfigSet bool = false
@@ -31,5 +31,5 @@ func HandleFrontendConfig(env *Environment, w http.ResponseWriter, r *http.Reque
 	}
 	w.Write(b)
 
-	return nil;
+	return nil
 }

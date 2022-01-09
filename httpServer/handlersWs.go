@@ -2,9 +2,9 @@ package httpServer
 
 import (
 	"github.com/gorilla/websocket"
-	"net/http"
-	"github.com/koestler/go-ve-sensor/dataflow"
+	"github.com/koestler/go-victron-to-mqtt/dataflow"
 	"log"
+	"net/http"
 )
 
 var upgrader = websocket.Upgrader{
@@ -30,7 +30,7 @@ func HandleWsRoundedValues(env *Environment, w http.ResponseWriter, r *http.Requ
 	dataChan := env.RoundedStorage.Subscribe(filter)
 	sinkJson(conn, dataChan)
 
-	return nil;
+	return nil
 }
 
 type Message struct {
@@ -39,7 +39,7 @@ type Message struct {
 	Value      float64
 }
 
-func convertValueToMessage(value dataflow.Value) (Message) {
+func convertValueToMessage(value dataflow.Value) Message {
 	return Message{
 		DeviceName: value.Device.Name,
 		ValueName:  value.Name,

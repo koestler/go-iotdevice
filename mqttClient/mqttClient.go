@@ -2,8 +2,8 @@ package mqttClient
 
 import (
 	"github.com/eclipse/paho.mqtt.golang"
-	"github.com/koestler/go-ve-sensor/config"
-	"github.com/koestler/go-ve-sensor/dataflow"
+	"github.com/koestler/go-victron-to-mqtt/config"
+	"github.com/koestler/go-victron-to-mqtt/dataflow"
 	"log"
 	"os"
 	"strings"
@@ -27,7 +27,7 @@ func Run(config *config.MqttClientConfig, storage *dataflow.ValueStorageInstance
 
 	availableTopic := GetAvailableTopic(config)
 
-	if (config.AvailableEnable) {
+	if config.AvailableEnable {
 		opts.SetWill(availableTopic, "Offline", config.Qos, true)
 	}
 
@@ -48,7 +48,7 @@ func Run(config *config.MqttClientConfig, storage *dataflow.ValueStorageInstance
 	}
 
 	// send Online
-	if (config.AvailableEnable) {
+	if config.AvailableEnable {
 		client.Publish(availableTopic, config.Qos, true, "Online")
 	}
 

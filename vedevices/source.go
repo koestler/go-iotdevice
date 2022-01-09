@@ -1,20 +1,20 @@
 package vedevices
 
 import (
-	"github.com/koestler/go-ve-sensor/dataflow"
-	"time"
-	"math/rand"
-	"log"
-	"github.com/koestler/go-ve-sensor/vedirect"
-	"github.com/koestler/go-ve-sensor/config"
-	"github.com/koestler/go-ve-sensor/storage"
-	"fmt"
 	"errors"
+	"fmt"
+	"github.com/koestler/go-victron-to-mqtt/config"
+	"github.com/koestler/go-victron-to-mqtt/dataflow"
+	"github.com/koestler/go-victron-to-mqtt/storage"
+	"github.com/koestler/go-victron-to-mqtt/vedirect"
+	"log"
+	"math/rand"
+	"time"
 )
 
-func CreateDummySource(device *storage.Device, config *config.VedeviceConfig) (*dataflow.Source) {
+func CreateDummySource(device *storage.Device, config *config.VedeviceConfig) *dataflow.Source {
 	// get relevant registers
-	registers := RegisterFactoryByModel(config.Model);
+	registers := RegisterFactoryByModel(config.Model)
 
 	// setup output chain
 	output := make(chan dataflow.Value)
@@ -53,7 +53,7 @@ func CreateSource(device *storage.Device, config *config.VedeviceConfig) (err er
 	}
 
 	// get deviceId
-	deviceId, err := vd.VeCommandDeviceId();
+	deviceId, err := vd.VeCommandDeviceId()
 	if err != nil {
 		log.Printf("vedevices source: VeCommandDeviceId failed: %v", err)
 		return err, nil
@@ -69,7 +69,7 @@ func CreateSource(device *storage.Device, config *config.VedeviceConfig) (err er
 	log.Printf("vedevices source: setup product=%v", product)
 
 	// get relevant registers
-	registers := RegisterFactoryByProduct(deviceId);
+	registers := RegisterFactoryByProduct(deviceId)
 	if registers == nil {
 		log.Printf("vedevices source: no registers found for deviceId=%x", deviceId)
 		return errors.New(fmt.Sprintf("no registers found for deviceId=%x", deviceId)), nil
@@ -84,7 +84,7 @@ func CreateSource(device *storage.Device, config *config.VedeviceConfig) (err er
 		// flush buffer
 		vd.RecvFlush()
 
-		for _ = range time.Tick(100*time.Millisecond) {
+		for _ = range time.Tick(100 * time.Millisecond) {
 			if err := vd.VeCommandPing(); err != nil {
 				log.Printf("vedevices source: VeCommandPing failed: %v", err)
 				continue

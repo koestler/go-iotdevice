@@ -2,7 +2,7 @@ package mqttClient
 
 import (
 	"encoding/json"
-	"github.com/koestler/go-ve-sensor/dataflow"
+	"github.com/koestler/go-victron-to-mqtt/dataflow"
 	"strings"
 	"time"
 )
