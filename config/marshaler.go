@@ -27,8 +27,10 @@ func (c Config) MarshalYAML() (interface{}, error) {
 		}(),
 		Views: func() viewConfigReadList {
 			views := make(viewConfigReadList, len(c.views))
+			i := 0
 			for _, c := range c.views {
-				views = append(views, c.convertToRead())
+				views[i] = c.convertToRead()
+				i++
 			}
 			return views
 		}(),

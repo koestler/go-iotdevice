@@ -2,7 +2,6 @@ package vedirect
 
 import (
 	"fmt"
-	"github.com/koestler/go-victron-to-mqtt/config"
 	"log"
 	"strings"
 )
@@ -11,9 +10,9 @@ var indent = 0
 
 func debugPrintf(format string, v ...interface{}) {
 	// check if debug output is enabled
-	if !config.VedirectConfig.DebugPrint {
-		return
-	}
+	//if !config.VedirectConfig.DebugPrint {
+	//	return
+	//}
 
 	intro := strings.Split(format, "=")[0]
 

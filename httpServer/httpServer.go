@@ -1,40 +1,93 @@
 package httpServer
 
 import (
-	"io"
+	"context"
+	"github.com/gin-contrib/gzip"
+	"github.com/gin-gonic/gin"
+	"github.com/koestler/go-victron-to-mqtt/config"
 	"log"
 	"net/http"
-	"os"
+	"net/url"
 	"strconv"
+	"time"
 )
 
-func Run(bind string, port int, logFilePath string, env *Environment) {
-	go func() {
-		router := newRouter(getLogger(logFilePath), env)
-		address := bind + ":" + strconv.Itoa(port)
-
-		log.Printf("httpServer: listening on %v", address)
-		log.Fatal(router, http.ListenAndServe(address, router))
-	}()
+type HttpServer struct {
+	config Config
+	server *http.Server
 }
 
-func getLogger(logFilePath string) (writer io.Writer) {
-	if len(logFilePath) < 1 {
-		// disable logging
-		log.Print("httpServer: log disabled")
-		return nil
+type Environment struct {
+	Config       Config
+	ProjectTitle string
+	Views        []*config.ViewConfig
+	Auth         config.AuthConfig
+}
+
+type Config interface {
+	BuildVersion() string
+	Bind() string
+	Port() int
+	LogRequests() bool
+	LogDebug() bool
+	LogConfig() bool
+	EnableDocs() bool
+	FrontendProxy() *url.URL
+	FrontendPath() string
+	GetViewNames() []string
+	FrontendExpires() time.Duration
+	ConfigExpires() time.Duration
+}
+
+func Run(env *Environment) (httpServer *HttpServer) {
+	config := env.Config
+
+	gin.SetMode("release")
+	engine := gin.New()
+	if config.LogRequests() {
+		engine.Use(gin.Logger())
+	}
+	engine.Use(gin.Recovery())
+	engine.Use(gzip.Gzip(gzip.BestCompression))
+	engine.Use(authJwtMiddleware(env))
+
+	if config.EnableDocs() {
+		setupSwaggerDocs(engine, config)
+	}
+	addApiV1Routes(engine, config, env)
+	setupFrontend(engine, config)
+
+	server := &http.Server{
+		Addr:    config.Bind() + ":" + strconv.Itoa(config.Port()),
+		Handler: engine,
 	}
 
-	if logFilePath == "-" {
-		// use stdout
-		log.Print("httpServer: log to stdout")
-		return os.Stdout
-	}
+	go func() {
+		if config.LogDebug() {
+			log.Printf("httpServer: listening on %v", server.Addr)
+		}
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			log.Printf("httpServer: stopped due to error: %s", err)
+		}
+	}()
 
-	file, err := os.OpenFile(logFilePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	return &HttpServer{
+		config: config,
+		server: server,
+	}
+}
+
+func (s *HttpServer) Shutdown() {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err := s.server.Shutdown(ctx)
 	if err != nil {
-		log.Fatalf("httpServer: cannot open logfile: %s", err.Error())
+		log.Printf("httpServer: graceful shutdown failed: %s", err)
 	}
-	log.Printf("httpServer: log to file=%s", logFilePath)
-	return file
+}
+
+func addApiV1Routes(r *gin.Engine, config Config, env *Environment) {
+	v0 := r.Group("/api/v1/")
+	setupConfig(v0, env)
+	setupLogin(v0, env)
 }

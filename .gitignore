@@ -1,1 +1,2 @@
 go-victron-to-mqtt
+*.passwd

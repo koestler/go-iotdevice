@@ -1,147 +1,132 @@
 package main
 
 import (
+	"fmt"
 	"github.com/jessevdk/go-flags"
 	"github.com/koestler/go-victron-to-mqtt/config"
-	"github.com/koestler/go-victron-to-mqtt/dataflow"
-	"github.com/koestler/go-victron-to-mqtt/httpServer"
-	"github.com/koestler/go-victron-to-mqtt/mqttClient"
-	"github.com/koestler/go-victron-to-mqtt/storage"
-	"github.com/koestler/go-victron-to-mqtt/vedevices"
 	"log"
 	"os"
 	"os/signal"
+	"runtime/pprof"
 	"syscall"
 )
 
+// is set through linker by build.sh
+var buildVersion string
+var buildTime string
+
 type CmdOptions struct {
-	Config flags.Filename `short:"c" long:"config" description:"Config File in ini format" default:"./config.ini"`
+	Version    bool           `long:"version" description:"Print the build version and timestamp"`
+	Config     flags.Filename `short:"c" long:"config" description:"Config File in yaml format" default:"./config.yaml"`
+	CpuProfile flags.Filename `long:"cpuprofile" description:"write cpu profile to <file>"`
+	MemProfile flags.Filename `long:"memprofile" description:"write memory profile to <file>"`
 }
 
-var cmdOptions CmdOptions
+const (
+	ExitSuccess          = 0
+	ExitDueToCmdOptions  = 1
+	ExitDueToConfig      = 2
+	ExitDueToModuleStart = 3
+)
 
-var rawStorage, roundedStorage *dataflow.ValueStorageInstance
-
-var mqttClientConfig *config.MqttClientConfig
-
-func main() {
-	log.Print("main: start go-victron-to-mqtt...")
-
-	setupConfig()
-	setupStorageAndDataFlow()
-	setupBmvDevices()
-	setupMqttClient()
-	setupHttpServer()
-
-	log.Print("main: start completed; run until kill signal is received")
-
-	// setup SIGTERM, SIGINT handlers
-	gracefulStop := make(chan os.Signal)
-	signal.Notify(gracefulStop, syscall.SIGTERM)
-	signal.Notify(gracefulStop, syscall.SIGINT)
-	<-gracefulStop
-}
-
-func setupConfig() {
-	log.Printf("main: setup config")
-
+func getCmdOptions() (cmdOptions CmdOptions, cmdName string) {
 	// parse command line options
 	parser := flags.NewParser(&cmdOptions, flags.Default)
+	parser.Usage = "[-c <path to yaml config file>]"
 	if _, err := parser.Parse(); err != nil {
 		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
-			os.Exit(0)
+			os.Exit(ExitSuccess)
 		} else {
-			os.Exit(1)
+			os.Exit(ExitDueToCmdOptions)
 		}
 	}
-	// initialize config library
-	config.Setup(string(cmdOptions.Config))
+
+	if cmdOptions.Version {
+		fmt.Println("github.com/koestler/go-victron-to-mqtt version:", buildVersion)
+		fmt.Println("build at:", buildTime)
+		os.Exit(ExitSuccess)
+	}
+
+	return cmdOptions, parser.Name
 }
 
-func setupStorageAndDataFlow() {
-	log.Printf("main: setup storage and data flow")
+func getConfig(cmdOptions CmdOptions, cmdName string) *config.Config {
+	// read, transform and validate configuration
+	cfg, err := config.ReadConfigFile(cmdName, string(cmdOptions.Config))
+	if len(err) > 0 {
+		for _, e := range err {
+			log.Printf("config: error: %v", e)
+		}
+		os.Exit(ExitDueToConfig)
+	}
 
-	// setup dataflow pipeline
-	// 1. sources:
-	// those are appended by separate routines
+	if cfg.LogConfig() {
+		if err := cfg.PrintConfig(); err != nil {
+			log.Printf("config: cannot print: %s", err)
+		}
+	}
 
-	// 2. storage for raw values
-	rawStorage = dataflow.ValueStorageCreate()
-
-	// 3. rounder
-	rounder := dataflow.RounderCreate()
-
-	// 4. storage for rounded values
-	roundedStorage = dataflow.ValueStorageCreate()
-
-	// chain those
-	rawStorage.Append(rounder)
-	rounder.Append(roundedStorage)
-
+	return &cfg
 }
 
-func setupBmvDevices() {
-	log.Printf("main: setup Bmv Devices")
+func main() {
+	// read cmd parameters and configuration file; on error: os.Exit
+	cmdOptions, cmdName := getCmdOptions()
+	cfg := getConfig(cmdOptions, cmdName)
 
-	configs := config.GetVedeviceConfigs()
+	// call defer statements before os.Exit
+	exitCode := func() (exitCode int) {
+		// whenever an error is pushed to this chan, main is terminated
+		initiateShutdown := make(chan error, 4)
 
-	sources := make([]dataflow.Drainable, 0, len(configs))
+		if cfg.LogWorkerStart() {
+			log.Printf("main: start go-victron-to-mqtt version=%s", buildVersion)
+		}
 
-	// get devices from database and create them
-	for _, c := range configs {
-		log.Printf(
-			"bmvDevices: setup name=%v model=%v device=%v",
-			c.Name, c.Model, c.Device,
-		)
+		// start cpu profiling if enabled
+		if runCpuProfile(string(cmdOptions.CpuProfile)) {
+			defer pprof.StopCPUProfile()
+		}
 
-		// register device in storage
-		device := storage.DeviceCreate(c.Name, c.Model, c.FrontendConfig)
+		// start camera clients
+		//cameraClientPoolInstance := runCameraClient(cfg, initiateShutdown)
+		//defer cameraClientPoolInstance.Shutdown()
 
-		// setup the datasource
-		if "dummy" == c.Device {
-			sources = append(sources, vedevices.CreateDummySource(device, c))
-		} else {
-			if err, source := vedevices.CreateSource(device, c); err == nil {
-				sources = append(sources, source)
-			} else {
-				log.Printf("bmvDevices: error during CreateSource: %v", err)
+		// start http server
+		httpServerInstance := runHttpServer(cfg)
+		defer httpServerInstance.Shutdown()
+
+		// start mqtt clients
+		//mqttClientInstances := runMqttClient(cfg, initiateShutdown)
+		//for _, client := range mqttClientInstances {
+		//	defer client.Shutdown()
+		//}
+
+		// setup SIGTERM, SIGINT handlers
+		gracefulStop := make(chan os.Signal)
+		signal.Notify(gracefulStop, syscall.SIGTERM)
+		signal.Notify(gracefulStop, syscall.SIGINT)
+
+		// wait for something to trigger a shutdown
+		select {
+		case err := <-initiateShutdown:
+			log.Printf("main: forced shutdown due to fatal error: %s", err)
+			exitCode = ExitDueToModuleStart
+		case sig := <-gracefulStop:
+			if cfg.LogWorkerStart() {
+				log.Printf("main: graceful shutdown; caught signal: %+v", sig)
 			}
-		}
-	}
-
-	// append them as sources to the raw storage
-	for _, source := range sources {
-		source.Append(rawStorage)
-	}
-}
-
-func setupMqttClient() {
-	var err error
-	mqttClientConfig, err = config.GetMqttClientConfig()
-	if err == nil {
-		log.Printf(
-			"main: start mqtt client, broker=%v, clientId=%v",
-			mqttClientConfig.Broker, mqttClientConfig.ClientId,
-		)
-		mqttClient.Run(mqttClientConfig, roundedStorage)
-	} else {
-		log.Printf("main: skip mqtt client, err=%v", err)
-	}
-}
-
-func setupHttpServer() {
-	httpServerConfig, err := config.GetHttpServerConfig()
-	if err == nil {
-		log.Printf("main: start httpServer, Bind=%v, Port=%v", httpServerConfig.Bind, httpServerConfig.Port)
-
-		env := &httpServer.Environment{
-			RoundedStorage:   roundedStorage,
-			Devices:          storage.GetAll(),
-			MqttClientConfig: mqttClientConfig,
+			exitCode = ExitSuccess
 		}
 
-		httpServer.Run(httpServerConfig.Bind, httpServerConfig.Port, httpServerConfig.LogFile, env)
-	} else {
-		log.Printf("main: skip httpServer, err=%v", err)
+		// write memory profile; after that defer will run the shutdown methods
+		writeMemProfile(string(cmdOptions.MemProfile))
+
+		return
+	}()
+
+	if cfg.LogWorkerStart() {
+		log.Printf("main: stutdown completed; exit %d", exitCode)
 	}
+	os.Exit(exitCode)
 }

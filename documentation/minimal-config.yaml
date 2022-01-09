@@ -1,0 +1,15 @@
+Version: 0
+ProjectTitle: Configurable Title of Project
+
+HttpServer:
+
+Devices:
+  0-solar:
+    Device: /dev/ttyVE0
+
+Views:
+  - Name: all
+    Title: Alles
+    Devices:
+      0-solar:
+        title: Solar Charger

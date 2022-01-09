@@ -1,11 +1,9 @@
 package httpServer
 
 import (
-	"errors"
 	"github.com/koestler/go-victron-to-mqtt/config"
 	"github.com/koestler/go-victron-to-mqtt/mqttClient"
 	"github.com/koestler/go-victron-to-mqtt/vedevices"
-	"gopkg.in/yaml.v2"
 	"net/http"
 	"strings"
 )
@@ -31,10 +29,6 @@ type hassSensor struct {
 }
 
 func HandleHassMqttSensorsYaml(env *Environment, w http.ResponseWriter, r *http.Request) Error {
-	if env.MqttClientConfig == nil {
-		return StatusError{404, errors.New("mqtt module not enabled")}
-	}
-
 	configs := make([]hassSensor, 0)
 	for _, device := range env.Devices {
 		registers := vedevices.RegisterFactoryByProduct(device.DeviceId)
