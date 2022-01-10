@@ -278,7 +278,7 @@ func (vd *Vedirect) RecvVeResponse() (data []byte, err error) {
 		if len(data) > 0 && data[0] == 'A' {
 			debugPrintf("vedirect: RecvVeResponse async message received; ignore and read next response")
 		} else {
-			break;
+			break
 		}
 	}
 

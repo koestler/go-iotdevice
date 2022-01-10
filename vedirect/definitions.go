@@ -41,7 +41,7 @@ func ResponseForCommand(command VeCommand) (response VeResponse) {
 		return VeResponseAsync
 	}
 
-	return VeResponseUnknown;
+	return VeResponseUnknown
 }
 
 type VeResponseFlag byte
