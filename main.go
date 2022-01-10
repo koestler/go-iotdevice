@@ -77,7 +77,7 @@ func main() {
 	// call defer statements before os.Exit
 	exitCode := func() (exitCode int) {
 		// whenever an error is pushed to this chan, main is terminated
-		initiateShutdown := make(chan error, 4)
+		initiateShutdown := make(chan error)
 
 		if cfg.LogWorkerStart() {
 			log.Printf("main: start go-victron-to-mqtt version=%s", buildVersion)
@@ -88,8 +88,11 @@ func main() {
 			defer pprof.StopCPUProfile()
 		}
 
+		// start storage
+		storages := runStorageAndDataFlow()
+
 		// start devices
-		devicePoolInstance := runDevices(cfg, initiateShutdown)
+		devicePoolInstance := runDevices(cfg, storages.raw, initiateShutdown)
 		defer devicePoolInstance.Shutdown()
 
 		// start http server

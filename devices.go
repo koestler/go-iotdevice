@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/koestler/go-victron-to-mqtt/config"
+	"github.com/koestler/go-victron-to-mqtt/dataflow"
 	"github.com/koestler/go-victron-to-mqtt/vedevices"
 	"github.com/pkg/errors"
 	"log"
@@ -9,6 +10,7 @@ import (
 
 func runDevices(
 	cfg *config.Config,
+	target dataflow.Fillable,
 	initiateShutdown chan<- error,
 ) *vedevices.DevicePool {
 	devicePoolInstance := vedevices.RunPool()
@@ -30,7 +32,7 @@ func runDevices(
 			logDebug:     cfg.LogDebug(),
 		}
 
-		if device, err := vedevices.RunDevice(&deviceConfig); err != nil {
+		if device, err := vedevices.RunDevice(&deviceConfig, target); err != nil {
 			log.Printf("deviceClient[%s]: start failed: %s", device.Name(), err)
 		} else {
 			devicePoolInstance.AddDevice(device)
@@ -59,40 +61,3 @@ type deviceConfig struct {
 func (cc *deviceConfig) LogDebug() bool {
 	return cc.logDebug
 }
-
-/*
-func setupBmvDevices() {
-	log.Printf("main: setup Bmv Devices")
-
-	configs := config.GetVedeviceConfigs()
-
-	sources := make([]dataflow.Drainable, 0, len(configs))
-
-	// get devices from database and create them
-	for _, c := range configs {
-		log.Printf(
-			"bmvDevices: setup name=%v model=%v device=%v",
-			c.Name, c.Model, c.Device,
-		)
-
-		// register device in storage
-		device := storage.DeviceCreate(c.Name, c.Model, c.FrontendConfig)
-
-		// setup the datasource
-		if "dummy" == c.Device {
-			sources = append(sources, vedevices.CreateDummySource(device, c))
-		} else {
-			if err, source := vedevices.CreateSource(device, c); err == nil {
-				sources = append(sources, source)
-			} else {
-				log.Printf("bmvDevices: error during CreateSource: %v", err)
-			}
-		}
-	}
-
-	// append them as sources to the raw storage
-	for _, source := range sources {
-		source.Append(rawStorage)
-	}
-}
-*/

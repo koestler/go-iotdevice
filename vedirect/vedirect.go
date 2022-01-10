@@ -59,7 +59,7 @@ func (vd *Vedirect) Write(b []byte) (n int, err error) {
 	return
 }
 
-func (vd *Vedirect) RecvFlush() (err error) {
+func (vd *Vedirect) RecvFlush() {
 	debugPrintf("vedirect: RecvFlush begin")
 
 	nBuff := 64
@@ -73,7 +73,6 @@ func (vd *Vedirect) RecvFlush() (err error) {
 		if err == io.EOF || n < nBuff {
 			// n < nBuff: read buffer empty -> we are done
 			debugPrintf("vedirect: RecvFlush end flushed=%v", flushed)
-			return nil
 		}
 	}
 }

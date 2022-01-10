@@ -2,6 +2,7 @@ package vedevices
 
 import (
 	"github.com/koestler/go-victron-to-mqtt/config"
+	"github.com/koestler/go-victron-to-mqtt/dataflow"
 	"github.com/koestler/go-victron-to-mqtt/vedirect"
 )
 
@@ -14,16 +15,26 @@ type Config interface {
 
 type Device struct {
 	// configuration
-	config Config
+	cfg Config
 
-	product vedirect.VeProduct
+	source  *dataflow.Source
+	product *vedirect.VeProduct
 }
 
-func RunDevice(config Config) (*Device, error) {
-	Device := &Device{
-		config: config,
+func RunDevice(cfg Config, target dataflow.Fillable) (device *Device, err error) {
+	err, source, product := CreateSource(cfg)
+	if err != nil {
+		return nil, err
 	}
 
+	// pipe all data to next stage
+	source.Append(target)
+
+	Device := &Device{
+		cfg:     cfg,
+		source:  source,
+		product: product,
+	}
 	return Device, nil
 }
 
@@ -32,9 +43,9 @@ func (c *Device) Shutdown() {
 }
 
 func (c *Device) Name() string {
-	return c.config.Name()
+	return c.cfg.Name()
 }
 
 func (c *Device) Config() Config {
-	return c.config
+	return c.cfg
 }

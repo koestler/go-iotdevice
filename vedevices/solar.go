@@ -205,13 +205,13 @@ var RegisterListSolarPanelData = Registers{
 		RoundDecimals: 2,
 	},
 	/*
-	"PanelCurrent": Register{
-		Address:       0xEDBD,
-		Factor:        0.1,
-		Unit:          "A",
-		Signed:        false,
-		RoundDecimals: 1,
-	},
+		"PanelCurrent": Register{
+			Address:       0xEDBD,
+			Factor:        0.1,
+			Unit:          "A",
+			Signed:        false,
+			RoundDecimals: 1,
+		},
 	*/
 	"PanelMaximumVoltage": Register{
 		Address:       0xEDB8,
