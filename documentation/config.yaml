@@ -1,8 +1,8 @@
 Version: 0                                                 # must be 0
+ProjectTitle: Configurable Title of Project                # optional, default go-victron-to-mqtt: used as <title> in the http frontend
 LogConfig: True                                            # optional, default False, outputs the configuration including defaults on startup
 LogWorkerStart: True                                       # optional, default False, outputs what devices and mqtt clients are started
 LogDebug: True                                             # optional, default False, outputs various debug information
-ProjectTitle: Configurable Title of Project                # optional, default go-victron-to-mqtt: used as <title> in the http frontend
 
 Auth:                                                      # when this section is missing, login is not supported
   JwtSecret: Ra3aenaiqu7tie9Moozaedei6ahphiesh0dai5eexai2  # optional, default random, used to sign the JWT tokens
@@ -17,11 +17,27 @@ HttpServer:
 
 Devices:
   0-solar:
-    Device: /dev/ttyVE0
+    Kind: RandomSolar
+  1-bmv:
+    Kind: RandomBmv
+  2-bmv:
+    Kind: RandomBmv
 
 Views:
-  - Name: all
-    Title: Alles
+  - Name: public
+    Title: Simple
     Devices:
       0-solar:
-        title: Solar Charger
+        Title: Solar Charger
+      1-bmv:
+        Title: Battery One
+
+  - Name: private
+    Title: Details
+    Devices:
+      0-solar:
+        Title: Solar Charger
+      1-bmv:
+        Title: Battery One
+      2-bmv:
+        Title: Battery Two

@@ -1,11 +1,11 @@
 Version: 0
-ProjectTitle: Configurable Title of Project
 
 HttpServer:
 
 Devices:
   0-solar:
     Device: /dev/ttyVE0
+    Kind: Vedirect
 
 Views:
   - Name: all

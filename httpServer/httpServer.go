@@ -90,4 +90,5 @@ func addApiV1Routes(r *gin.Engine, config Config, env *Environment) {
 	v0 := r.Group("/api/v1/")
 	setupConfig(v0, env)
 	setupLogin(v0, env)
+	setupFields(v0, env)
 }

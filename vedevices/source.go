@@ -1,44 +1,6 @@
 package vedevices
 
-import (
-	"errors"
-	"fmt"
-	"github.com/koestler/go-victron-to-mqtt/config"
-	"github.com/koestler/go-victron-to-mqtt/dataflow"
-	"github.com/koestler/go-victron-to-mqtt/storage"
-	"github.com/koestler/go-victron-to-mqtt/vedirect"
-	"log"
-	"math/rand"
-	"time"
-)
-
-func CreateDummySource(device *storage.Device, config *config.VedeviceConfig) *dataflow.Source {
-	// get relevant registers
-	registers := RegisterFactoryByModel(config.Model)
-
-	// setup output chain
-	output := make(chan dataflow.Value)
-
-	// start source go routine
-	go func() {
-		defer close(output)
-		for _ = range time.Tick(time.Second) {
-			for name, register := range registers {
-				output <- dataflow.Value{
-					Device:        device,
-					Name:          name,
-					Value:         1e2 * rand.Float64() * register.Factor,
-					Unit:          register.Unit,
-					RoundDecimals: register.RoundDecimals,
-				}
-			}
-		}
-	}()
-
-	// return data source
-	return dataflow.CreateSource(output)
-}
-
+/*
 func CreateSource(device *storage.Device, config *config.VedeviceConfig) (err error, source *dataflow.Source) {
 	// open vedirect device
 	vd, err := vedirect.Open(config.Device)
@@ -111,3 +73,4 @@ func CreateSource(device *storage.Device, config *config.VedeviceConfig) (err er
 	// return data source
 	return nil, dataflow.CreateSource(output)
 }
+*/

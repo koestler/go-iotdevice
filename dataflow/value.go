@@ -1,9 +1,7 @@
 package dataflow
 
-import "github.com/koestler/go-victron-to-mqtt/storage"
-
 type Value struct {
-	Device        *storage.Device
+	DeviceName    string
 	Name          string
 	Value         float64
 	Unit          string

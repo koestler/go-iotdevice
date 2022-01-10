@@ -4,7 +4,7 @@ type Source struct {
 	outputChain chan Value
 }
 
-func CreateSource(output chan Value) (*Source) {
+func CreateSource(output chan Value) *Source {
 	return &Source{
 		outputChain: output,
 	}

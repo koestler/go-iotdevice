@@ -1,12 +1,14 @@
 package config
 
 import (
+	"fmt"
 	"net/url"
 	"time"
 )
 
 type Config struct {
 	version        int                 `yaml:"Version"`        // must be 0
+	projectTitle   string              `yaml:"ProjectTitle"`   // optional: default go-victron-to-mqtt
 	auth           AuthConfig          `yaml:"Auth"`           // optional: default Disabled
 	mqttClients    []*MqttClientConfig `yaml:"MqttClient"`     // mandatory: at least 1 must be defined
 	devices        []*DeviceConfig     `yaml:"Devices"`        // mandatory: at least 1 must be defined
@@ -15,7 +17,6 @@ type Config struct {
 	logConfig      bool                `yaml:"LogConfig"`      // optional: default False
 	logWorkerStart bool                `yaml:"LogWorkerStart"` // optional: default False
 	logDebug       bool                `yaml:"LogDebug"`       // optional: default False
-	projectTitle   string              `yaml:"ProjectTitle"`   // optional: default go-victron-to-mqtt
 }
 
 type AuthConfig struct {
@@ -45,8 +46,9 @@ type MqttClientConfig struct {
 }
 
 type DeviceConfig struct {
-	name   string // defined automatically by map key
-	device string // mandatory: the serial device eg. /dev/ttyVE0
+	name   string     // defined automatically by map key
+	kind   DeviceKind // mandatory: what connection protocol is used
+	device string     // optional: the serial device eg. /dev/ttyVE0
 }
 
 type ViewDeviceConfig struct {
@@ -78,6 +80,7 @@ type HttpServerConfig struct {
 // Read structs are given to yaml for decoding and are slightly less exact in types
 type configRead struct {
 	Version        *int                    `yaml:"Version"`
+	ProjectTitle   string                  `yaml:"ProjectTitle"`
 	Auth           *authConfigRead         `yaml:"Auth"`
 	MqttClients    mqttClientConfigReadMap `yaml:"MqttClients"`
 	Devices        deviceConfigReadMap     `yaml:"Devices"`
@@ -86,7 +89,6 @@ type configRead struct {
 	LogConfig      *bool                   `yaml:"LogConfig"`
 	LogWorkerStart *bool                   `yaml:"LogWorkerStart"`
 	LogDebug       *bool                   `yaml:"LogDebug"`
-	ProjectTitle   string                  `yaml:"ProjectTitle"`
 }
 
 type authConfigRead struct {
@@ -116,6 +118,7 @@ type mqttClientConfigRead struct {
 type mqttClientConfigReadMap map[string]mqttClientConfigRead
 
 type deviceConfigRead struct {
+	Kind   string `yaml:"Kind"`
 	Device string `yaml:"Device"`
 }
 
@@ -147,4 +150,42 @@ type httpServerConfigRead struct {
 	FrontendPath    string `yaml:"FrontendPath"`
 	FrontendExpires string `yaml:"FrontendExpires"`
 	ConfigExpires   string `yaml:"ConfigExpires"`
+}
+
+// device kind
+type DeviceKind int
+
+const (
+	UndefinedKind DeviceKind = iota
+	RandomBmvKind
+	RandomSolarKind
+	VedirectKind
+)
+
+func (dk DeviceKind) String() string {
+	switch dk {
+	case UndefinedKind:
+		return "Undefined"
+	case RandomBmvKind:
+		return "RandomBmv"
+	case RandomSolarKind:
+		return "RandomSolar"
+	case VedirectKind:
+		return "Vedirect"
+	default:
+		return fmt.Sprintf("Kind%d", int(dk))
+	}
+}
+
+func DeviceKindFromString(s string) DeviceKind {
+	if s == "RandomBmv" {
+		return RandomBmvKind
+	}
+	if s == "RandomSolar" {
+		return RandomSolarKind
+	}
+	if s == "Vedirect" {
+		return VedirectKind
+	}
+	return UndefinedKind
 }

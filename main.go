@@ -88,9 +88,9 @@ func main() {
 			defer pprof.StopCPUProfile()
 		}
 
-		// start camera clients
-		//cameraClientPoolInstance := runCameraClient(cfg, initiateShutdown)
-		//defer cameraClientPoolInstance.Shutdown()
+		// start devices
+		devicePoolInstance := runDevices(cfg, initiateShutdown)
+		defer devicePoolInstance.Shutdown()
 
 		// start http server
 		httpServerInstance := runHttpServer(cfg)

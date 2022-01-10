@@ -9,6 +9,10 @@ func (c Config) Version() int {
 	return c.version
 }
 
+func (c Config) ProjectTitle() string {
+	return c.projectTitle
+}
+
 func (c Config) Auth() AuthConfig {
 	return c.auth
 }
@@ -39,10 +43,6 @@ func (c Config) LogWorkerStart() bool {
 
 func (c Config) LogDebug() bool {
 	return c.logDebug
-}
-
-func (c Config) ProjectTitle() string {
-	return c.projectTitle
 }
 
 func (c AuthConfig) Enabled() bool {
@@ -127,6 +127,10 @@ func (c MqttClientConfig) LogMessages() bool {
 
 func (c DeviceConfig) Name() string {
 	return c.name
+}
+
+func (c DeviceConfig) Kind() DeviceKind {
+	return c.kind
 }
 
 func (c DeviceConfig) Device() string {

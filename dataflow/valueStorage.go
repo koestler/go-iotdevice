@@ -1,8 +1,6 @@
 package dataflow
 
-import "github.com/koestler/go-victron-to-mqtt/storage"
-
-type State map[*storage.Device]ValueMap
+type State map[string]ValueMap
 
 type ValueStorageInstance struct {
 	// this represents the state of the storage instance and must only be access by the main go routine
@@ -18,7 +16,7 @@ type ValueStorageInstance struct {
 }
 
 type Filter struct {
-	Devices    map[*storage.Device]bool
+	Devices    map[string]bool
 	ValueNames map[string]bool
 }
 
@@ -47,17 +45,17 @@ func (instance *ValueStorageInstance) mainStorageRoutine() {
 
 func (instance *ValueStorageInstance) handleNewValue(newValue Value) {
 	// check if the newValue is not present or has been changed
-	if _, ok := instance.state[newValue.Device]; !ok {
-		instance.state[newValue.Device] = make(ValueMap)
+	if _, ok := instance.state[newValue.DeviceName]; !ok {
+		instance.state[newValue.DeviceName] = make(ValueMap)
 	}
-	if currentValue, ok := instance.state[newValue.Device][newValue.Name]; !ok || currentValue != newValue {
+	if currentValue, ok := instance.state[newValue.DeviceName][newValue.Name]; !ok || currentValue != newValue {
 		// copy the input value to all subscribed output channels
 		for _, subscription := range instance.subscriptions {
 			subscription.forward(newValue)
 		}
 
 		// and save the new state
-		instance.state[newValue.Device][newValue.Name] = newValue
+		instance.state[newValue.DeviceName][newValue.Name] = newValue
 	}
 }
 
@@ -66,19 +64,19 @@ func (instance *ValueStorageInstance) handleNewReadStateRequest(newReadStateRequ
 
 	response := make(State)
 
-	for device, deviceState := range instance.state {
-		if !filterByDevice(filter, device) {
+	for deviceName, deviceState := range instance.state {
+		if !filterByDevice(filter, deviceName) {
 			continue
 		}
 
-		response[device] = make(ValueMap)
+		response[deviceName] = make(ValueMap)
 
 		for valueName, value := range deviceState {
 			if !filterByValueName(filter, valueName) {
 				continue
 			}
 
-			response[device][valueName] = value
+			response[deviceName][valueName] = value
 		}
 	}
 
@@ -155,15 +153,15 @@ func (instance *ValueStorageInstance) Append(fillable Fillable) Fillable {
 	return fillable
 }
 
-func filterByDevice(filter *Filter, device *storage.Device) bool {
+func filterByDevice(filter *Filter, deviceName string) bool {
 	// list is empty -> every device is ok
 	if len(filter.Devices) < 1 {
 		return true
 	}
 
 	// only ok if present and true
-	_, ok := filter.Devices[device]
-	return ok && filter.Devices[device]
+	_, ok := filter.Devices[deviceName]
+	return ok && filter.Devices[deviceName]
 }
 
 func filterByValueName(filter *Filter, valueName string) bool {
@@ -178,7 +176,7 @@ func filterByValueName(filter *Filter, valueName string) bool {
 }
 
 func filterValue(filter *Filter, value *Value) bool {
-	return filterByDevice(filter, value.Device) && filterByValueName(filter, value.Name)
+	return filterByDevice(filter, value.DeviceName) && filterByValueName(filter, value.Name)
 }
 
 func (subscription subscription) forward(newValue Value) {

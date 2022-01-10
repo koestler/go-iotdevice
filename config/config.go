@@ -77,6 +77,12 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 		}
 	}
 
+	if len(c.ProjectTitle) > 0 {
+		ret.projectTitle = c.ProjectTitle
+	} else {
+		ret.projectTitle = "go-victron-to-mqtt"
+	}
+
 	if c.LogConfig != nil && *c.LogConfig {
 		ret.logConfig = true
 	}
@@ -87,12 +93,6 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 
 	if c.LogDebug != nil && *c.LogDebug {
 		ret.logDebug = true
-	}
-
-	if len(c.ProjectTitle) > 0 {
-		ret.projectTitle = c.ProjectTitle
-	} else {
-		ret.projectTitle = "go-victron-to-mqtt"
 	}
 
 	return
@@ -370,13 +370,18 @@ func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, e
 	ret = DeviceConfig{
 		name:   name,
 		device: c.Device,
+		kind:   DeviceKindFromString(c.Kind),
 	}
 
 	if !nameMatcher.MatchString(ret.name) {
 		err = append(err, fmt.Errorf("DeviceConfig->Name='%s' does not match %s", ret.name, NameRegexp))
 	}
 
-	if len(ret.device) < 1 {
+	if ret.kind == UndefinedKind {
+		err = append(err, fmt.Errorf("DeviceConfig->%s->Kind='%s' is invalid", name, c.Kind))
+	}
+
+	if ret.kind == VedirectKind && len(c.Device) < 1 {
 		err = append(err, fmt.Errorf("DeviceConfig->%s->Device must not be empty", name))
 	}
 
