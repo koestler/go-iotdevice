@@ -20,13 +20,14 @@ func setupFields(r *gin.RouterGroup, env *Environment) {
 		view := v
 		for _, deviceName := range view.DeviceNames() {
 
-			//client := env.CameraClientPoolInstance.GetClient(camera)
-			//if client == nil {
-			//continue
-			//}
+			device := env.DevicePoolInstance.GetDevice(deviceName)
+			if device == nil {
+				continue
+			}
 
 			relativePath := "fields/" + view.Name() + "/" + deviceName + ".json"
 			r.GET(relativePath, func(c *gin.Context) {
+				//device.Config().
 				c.JSON(200, struct{}{})
 			})
 			if env.Config.LogConfig() {
