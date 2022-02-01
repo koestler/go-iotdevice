@@ -5,6 +5,7 @@ import (
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-victron-to-mqtt/config"
+	"github.com/koestler/go-victron-to-mqtt/vedevices"
 	"log"
 	"net/http"
 	"net/url"
@@ -18,10 +19,11 @@ type HttpServer struct {
 }
 
 type Environment struct {
-	Config       Config
-	ProjectTitle string
-	Views        []*config.ViewConfig
-	Auth         config.AuthConfig
+	Config             Config
+	ProjectTitle       string
+	Views              []*config.ViewConfig
+	Auth               config.AuthConfig
+	DevicePoolInstance *vedevices.DevicePool
 }
 
 type Config interface {
@@ -90,5 +92,5 @@ func addApiV1Routes(r *gin.Engine, config Config, env *Environment) {
 	v0 := r.Group("/api/v1/")
 	setupConfig(v0, env)
 	setupLogin(v0, env)
-	setupFields(v0, env)
+	setupRegisters(v0, env)
 }

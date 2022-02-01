@@ -17,12 +17,13 @@ type Device struct {
 	// configuration
 	cfg Config
 
-	source  *dataflow.Source
-	product *vedirect.VeProduct
+	source    *dataflow.Source
+	product   *vedirect.VeProduct
+	registers Registers
 }
 
 func RunDevice(cfg Config, target dataflow.Fillable) (device *Device, err error) {
-	err, source, product := CreateSource(cfg)
+	err, source, product, registers := CreateSource(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -31,9 +32,10 @@ func RunDevice(cfg Config, target dataflow.Fillable) (device *Device, err error)
 	source.Append(target)
 
 	Device := &Device{
-		cfg:     cfg,
-		source:  source,
-		product: product,
+		cfg:       cfg,
+		source:    source,
+		product:   product,
+		registers: registers,
 	}
 	return Device, nil
 }
@@ -48,4 +50,7 @@ func (c *Device) Name() string {
 
 func (c *Device) Config() Config {
 	return c.cfg
+}
+func (c *Device) Registers() Registers {
+	return c.registers
 }

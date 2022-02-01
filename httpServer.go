@@ -3,12 +3,13 @@ package main
 import (
 	"github.com/koestler/go-victron-to-mqtt/config"
 	"github.com/koestler/go-victron-to-mqtt/httpServer"
+	"github.com/koestler/go-victron-to-mqtt/vedevices"
 	"log"
 )
 
 //go:generate swag init -g httpServer/swagger.go
 
-func runHttpServer(cfg *config.Config) *httpServer.HttpServer {
+func runHttpServer(cfg *config.Config, devicePoolInstance *vedevices.DevicePool) *httpServer.HttpServer {
 	httpServerCfg := cfg.HttpServer()
 	if !httpServerCfg.Enabled() {
 		return nil
@@ -26,9 +27,10 @@ func runHttpServer(cfg *config.Config) *httpServer.HttpServer {
 				cfg.LogConfig(),
 				cfg.LogDebug(),
 			},
-			ProjectTitle: cfg.ProjectTitle(),
-			Views:        cfg.Views(),
-			Auth:         cfg.Auth(),
+			ProjectTitle:       cfg.ProjectTitle(),
+			Views:              cfg.Views(),
+			Auth:               cfg.Auth(),
+			DevicePoolInstance: devicePoolInstance,
 		},
 	)
 }

@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func CreateSource(cfg Config) (err error, source *dataflow.Source, product *vedirect.VeProduct) {
+func CreateSource(cfg Config) (err error, source *dataflow.Source, product *vedirect.VeProduct, registers Registers) {
 	switch cfg.Kind() {
 	case config.RandomBmvKind:
 		return CreateRandomSource(cfg.Name(), RegisterListBmv702)
@@ -19,11 +19,11 @@ func CreateSource(cfg Config) (err error, source *dataflow.Source, product *vedi
 	case config.VedirectKind:
 		return CreateVedirectSource(cfg)
 	default:
-		return fmt.Errorf("unknown kind: %s", cfg.Kind().String()), nil, nil
+		return fmt.Errorf("unknown kind: %s", cfg.Kind().String()), nil, nil, nil
 	}
 }
 
-func CreateRandomSource(deviceName string, registers Registers) (err error, source *dataflow.Source, product *vedirect.VeProduct) {
+func CreateRandomSource(deviceName string, registers Registers) (error, *dataflow.Source, *vedirect.VeProduct, Registers) {
 	// setup output chain
 	output := make(chan dataflow.Value)
 
@@ -45,37 +45,37 @@ func CreateRandomSource(deviceName string, registers Registers) (err error, sour
 	}()
 
 	// return data source
-	return nil, dataflow.CreateSource(output), nil
+	return nil, dataflow.CreateSource(output), nil, registers
 }
 
-func CreateVedirectSource(cfg Config) (err error, source *dataflow.Source, product *vedirect.VeProduct) {
+func CreateVedirectSource(cfg Config) (error, *dataflow.Source, *vedirect.VeProduct, Registers) {
 	// open vedirect device
 	vd, err := vedirect.Open(cfg.Device())
 	if err != nil {
-		return err, nil, nil
+		return err, nil, nil, nil
 	}
 
 	// send ping
 	if err := vd.VeCommandPing(); err != nil {
-		return fmt.Errorf("Ping failed: %s", err), nil, nil
+		return fmt.Errorf("Ping failed: %s", err), nil, nil, nil
 	}
 
 	// get deviceId
 	deviceId, err := vd.VeCommandDeviceId()
 	if err != nil {
-		return fmt.Errorf("Cannot get DeviceId: %s", err), nil, nil
+		return fmt.Errorf("Cannot get DeviceId: %s", err), nil, nil, nil
 	}
 
 	deviceString := deviceId.String()
 	if len(deviceString) < 1 {
-		return fmt.Errorf("unknown deviceId=%x", err), nil, nil
+		return fmt.Errorf("unknown deviceId=%x", err), nil, nil, nil
 	}
 	log.Printf("device[%s]: source: connect to %s", cfg.Name(), deviceString)
 
 	// get relevant registers
 	registers := RegisterFactoryByProduct(deviceId)
 	if registers == nil {
-		return fmt.Errorf("no registers found for deviceId=%x", deviceId), nil, nil
+		return fmt.Errorf("no registers found for deviceId=%x", deviceId), nil, nil, nil
 	}
 
 	// setup output chain with enough capacity to hold some values
@@ -114,5 +114,5 @@ func CreateVedirectSource(cfg Config) (err error, source *dataflow.Source, produ
 	}()
 
 	// return data source
-	return nil, dataflow.CreateSource(output), &deviceId
+	return nil, dataflow.CreateSource(output), &deviceId, registers
 }

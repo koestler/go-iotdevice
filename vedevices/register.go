@@ -12,9 +12,11 @@ type NumericValue struct {
 	Unit  string
 }
 
-type Registers map[string]Register
+type Registers []Register
 
 type Register struct {
+	Name          string
+	Description   string
 	Address       uint16
 	Factor        float64
 	Unit          string
@@ -56,10 +58,18 @@ func mergeRegisters(maps ...Registers) (output Registers) {
 	if size == 1 {
 		return maps[0]
 	}
-	output = make(Registers)
+
+	numb := 0
 	for _, m := range maps {
-		for k, v := range m {
-			output[k] = v
+		numb += len(m)
+	}
+
+	output = make(Registers, numb)
+	i := 0
+	for _, m := range maps {
+		for _, v := range m {
+			output[i] = v
+			i += 1
 		}
 	}
 	return output

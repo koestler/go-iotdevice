@@ -96,7 +96,7 @@ func main() {
 		defer devicePoolInstance.Shutdown()
 
 		// start http server
-		httpServerInstance := runHttpServer(cfg)
+		httpServerInstance := runHttpServer(cfg, devicePoolInstance)
 		defer httpServerInstance.Shutdown()
 
 		// start mqtt clients
