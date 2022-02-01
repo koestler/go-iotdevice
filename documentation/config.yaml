@@ -21,7 +21,8 @@ Devices:
   1-bmv:
     Kind: RandomBmv
   2-bmv:
-    Kind: RandomBmv
+    Kind: Vedirect
+    Device: /dev/ttyUSB0
 
 Views:
   - Name: public

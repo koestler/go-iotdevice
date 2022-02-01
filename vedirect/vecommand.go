@@ -61,6 +61,10 @@ func (vd *Vedirect) VeCommandDeviceId() (deviceId VeProduct, err error) {
 	}
 
 	deviceId = VeProduct(littleEndianBytesToUint(rawValue))
+	if len(deviceId.String()) < 1 {
+		debugPrintf("vedirect: VeCommandDeviceId end unknown deviceId=%x", rawValue)
+		return 0, fmt.Errorf("unknownw deviceId=%x", rawValue)
+	}
 
 	debugPrintf("vedirect: VeCommandDeviceId end deviceId=%x", deviceId)
 	return deviceId, nil

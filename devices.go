@@ -17,23 +17,23 @@ func runDevices(
 
 	countStarted := 0
 
-	for _, device := range cfg.Devices() {
+	for _, cfgDev := range cfg.Devices() {
 		if cfg.LogWorkerStart() {
 			log.Printf(
-				"deviceClient[%s]: start %s, device='%s'",
-				device.Name(),
-				device.Kind().String(),
-				device.Device(),
+				"deviceClient[%s]: start %s, cfgDev='%s'",
+				cfgDev.Name(),
+				cfgDev.Kind().String(),
+				cfgDev.Device(),
 			)
 		}
 
 		deviceConfig := deviceConfig{
-			DeviceConfig: *device,
+			DeviceConfig: *cfgDev,
 			logDebug:     cfg.LogDebug(),
 		}
 
 		if device, err := vedevices.RunDevice(&deviceConfig, target); err != nil {
-			log.Printf("deviceClient[%s]: start failed: %s", device.Name(), err)
+			log.Printf("deviceClient[%s]: start failed: %s", cfgDev.Name(), err)
 		} else {
 			devicePoolInstance.AddDevice(device)
 			countStarted += 1
@@ -47,7 +47,7 @@ func runDevices(
 	}
 
 	if countStarted < 1 {
-		initiateShutdown <- errors.New("no device was started")
+		initiateShutdown <- errors.New("no cfgDev was started")
 	}
 
 	return devicePoolInstance
