@@ -73,6 +73,7 @@ func (vd *Vedirect) RecvFlush() {
 		if err == io.EOF || n < nBuff {
 			// n < nBuff: read buffer empty -> we are done
 			debugPrintf("vedirect: RecvFlush end flushed=%v", flushed)
+			return
 		}
 	}
 }
