@@ -9,11 +9,15 @@ import (
 )
 
 type Vedirect struct {
-	ioHandle io.ReadWriteCloser
+	ioHandle       io.ReadWriteCloser
+	logDebug       bool
+	logDebugIndent int
 }
 
-func Open(portName string) (*Vedirect, error) {
-	log.Printf("vedirect: Open portName=%v", portName)
+func Open(portName string, logDebug bool) (*Vedirect, error) {
+	if logDebug {
+		log.Printf("vedirect: Open portName=%v", portName)
+	}
 
 	options := serial.OpenOptions{
 		PortName:              portName,
@@ -29,15 +33,17 @@ func Open(portName string) (*Vedirect, error) {
 		return nil, errors.New(fmt.Sprintf("cannot open port: %v", portName))
 	}
 
-	log.Printf("vedirect: Open succeeded portName=%v, ioHandle=%v", portName, ioHandle)
+	if logDebug {
+		log.Printf("vedirect: Open succeeded portName=%v, ioHandle=%v", portName, ioHandle)
+	}
 
-	return &Vedirect{ioHandle: ioHandle}, nil
+	return &Vedirect{ioHandle, logDebug, 0}, nil
 }
 
 func (vd *Vedirect) Close() (err error) {
-	debugPrintf("vedirect: Close begin")
+	vd.debugPrintf("vedirect: Close begin")
 	err = vd.ioHandle.Close()
-	debugPrintf("vedirect: Close end err=%v", err)
+	vd.debugPrintf("vedirect: Close end err=%v", err)
 	return
 }
 
@@ -50,7 +56,7 @@ func (vd *Vedirect) read(b []byte) (n int, err error) {
 }
 
 func (vd *Vedirect) Write(b []byte) (n int, err error) {
-	debugPrintf("vedirect: Write b=%s len=%v", b, len(b))
+	vd.debugPrintf("vedirect: Write b=%s len=%v", b, len(b))
 	n, err = vd.ioHandle.Write(b)
 	if err != nil {
 		log.Printf("vedirect: Write error: %v\n", err)
@@ -60,7 +66,7 @@ func (vd *Vedirect) Write(b []byte) (n int, err error) {
 }
 
 func (vd *Vedirect) RecvFlush() {
-	debugPrintf("vedirect: RecvFlush begin")
+	vd.debugPrintf("vedirect: RecvFlush begin")
 
 	nBuff := 64
 	b := make([]byte, nBuff)
@@ -72,14 +78,14 @@ func (vd *Vedirect) RecvFlush() {
 
 		if err == io.EOF || n < nBuff {
 			// n < nBuff: read buffer empty -> we are done
-			debugPrintf("vedirect: RecvFlush end flushed=%v", flushed)
+			vd.debugPrintf("vedirect: RecvFlush end flushed=%v", flushed)
 			return
 		}
 	}
 }
 
 func (vd *Vedirect) RecvUntil(needle byte, maxLength int) (data []byte, err error) {
-	debugPrintf("vedirect: RecvUntil begin needle=%c maxLength=%v", needle, maxLength)
+	vd.debugPrintf("vedirect: RecvUntil begin needle=%c maxLength=%v", needle, maxLength)
 
 	b := make([]byte, 1)
 	data = make([]byte, 0, maxLength)
@@ -88,7 +94,7 @@ func (vd *Vedirect) RecvUntil(needle byte, maxLength int) (data []byte, err erro
 		n, err := vd.read(b)
 
 		if err != nil {
-			debugPrintf("vedirect: RecvUntil end err=%v", err)
+			vd.debugPrintf("vedirect: RecvUntil end err=%v", err)
 			return nil, err
 		}
 
@@ -98,20 +104,20 @@ func (vd *Vedirect) RecvUntil(needle byte, maxLength int) (data []byte, err erro
 		}
 
 		if n == 1 && b[0] == needle {
-			debugPrintf("vedirect: RecvUntil end data=%s size=%v", data, len(data))
+			vd.debugPrintf("vedirect: RecvUntil end data=%s size=%v", data, len(data))
 			return data, nil
 		}
 
 		data = append(data, b[0])
 	}
 
-	debugPrintf("vedirect: RecvUntil end gave up after reaching maxLength=%v, data=%s size=%v",
+	vd.debugPrintf("vedirect: RecvUntil end gave up after reaching maxLength=%v, data=%s size=%v",
 		maxLength, data, len(data))
 
 	err = errors.New(
 		fmt.Sprintf("vedirect: RecvUntil end gave up after reaching maxLength=%v", maxLength),
 	)
 
-	debugPrintf("vedirect: RecvUntil end err=%v", err)
+	vd.debugPrintf("vedirect: RecvUntil end err=%v", err)
 	return nil, err
 }

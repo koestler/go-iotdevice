@@ -46,9 +46,11 @@ type MqttClientConfig struct {
 }
 
 type DeviceConfig struct {
-	name   string     // defined automatically by map key
-	kind   DeviceKind // mandatory: what connection protocol is used
-	device string     // optional: the serial device eg. /dev/ttyVE0
+	name        string     // defined automatically by map key
+	kind        DeviceKind // mandatory: what connection protocol is used
+	device      string     // optional: the serial device eg. /dev/ttyVE0
+	logDebug    bool       // optional: default False
+	logComDebug bool       // optional: default False
 }
 
 type ViewDeviceConfig struct {
@@ -118,8 +120,10 @@ type mqttClientConfigRead struct {
 type mqttClientConfigReadMap map[string]mqttClientConfigRead
 
 type deviceConfigRead struct {
-	Kind   string `yaml:"Kind"`
-	Device string `yaml:"Device"`
+	Kind        string `yaml:"Kind"`
+	Device      string `yaml:"Device"`
+	LogDebug    *bool  `yaml:"LogDebug"`
+	LogComDebug *bool  `yaml:"LogComDebug"`
 }
 
 type deviceConfigReadMap map[string]deviceConfigRead

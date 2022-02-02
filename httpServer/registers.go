@@ -6,7 +6,7 @@ import (
 )
 
 type registerResponse struct {
-	Id          int    `json:"id" example:"60860"`
+	Name        string `json:"name" example:"PanelPower"`
 	Description string `json:"description" example:"Panel power"`
 	Unit        string `json:"unit" example:"W"`
 }
@@ -19,6 +19,7 @@ type registerResponse struct {
 // @Param viewName path string true "View name as provided by the config endpoint"
 // @Param deviceName path string true "Device name as provided in devices array of the config endpoint"
 // @Produce json
+// @success 200 {array} registerResponse
 // @Failure 404 {object} ErrorResponse
 // @Router /registers/{viewName}/{deviceName}.json [get]
 // @Security ApiKeyAuth
@@ -37,8 +38,9 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 			response := make([]registerResponse, len(registers))
 			for i, v := range registers {
 				response[i] = registerResponse{
-					//v.N
-
+					Name:        v.Name,
+					Description: v.Description,
+					Unit:        v.Unit,
 				}
 			}
 

@@ -2,56 +2,64 @@ package vedevices
 
 // todo: understand the enums
 var RegisterListSolarBatterySettings = Registers{
-	"AutomaticEqualizationMode": Register{
+	Register{
+		Name:          "AutomaticEqualizationMode",
 		Address:       0xEDFD,
 		Factor:        1,
 		Unit:          "every X day",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"BatteryBulkTimeLimit": Register{
+	Register{
+		Name:          "BatteryBulkTimeLimit",
 		Address:       0xEDFC,
 		Factor:        0.01,
 		Unit:          "h",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"BatteryAbsorptionTimeLimit": Register{
+	Register{
+		Name:          "BatteryAbsorptionTimeLimit",
 		Address:       0xEDFB,
 		Factor:        0.01,
 		Unit:          "h",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"BatteryAbsorptionVoltage": Register{
+	Register{
+		Name:          "BatteryAbsorptionVoltage",
 		Address:       0xEDF7,
 		Factor:        0.01,
 		Unit:          "V",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"BatteryFloatVoltage": Register{
+	Register{
+		Name:          "BatteryFloatVoltage",
 		Address:       0xEDF6,
 		Factor:        0.01,
 		Unit:          "V",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"BatteryEqualisationVoltage": Register{
+	Register{
+		Name:          "BatteryEqualisationVoltage",
 		Address:       0xEDF4,
 		Factor:        0.01,
 		Unit:          "V",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"BatteryTempCompensation": Register{
+	Register{
+		Name:          "BatteryTempCompensation",
 		Address:       0xEDF2,
 		Factor:        0.01,
 		Unit:          "mV/K",
 		Signed:        true,
 		RoundDecimals: 0,
 	},
-	"BatteryType": Register{
+	Register{
+		Name: "BatteryType",
 		// todo: this is an enum
 		Address:       0xEDF1,
 		Factor:        1,
@@ -59,21 +67,24 @@ var RegisterListSolarBatterySettings = Registers{
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"BatteryMaximumCurrent": Register{
+	Register{
+		Name:          "BatteryMaximumCurrent",
 		Address:       0xEDF0,
 		Factor:        0.1,
 		Unit:          "A",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"BatteryVoltage": Register{
+	Register{
+		Name:          "BatteryVoltage",
 		Address:       0xEDEF,
 		Factor:        1,
 		Unit:          "V",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"BatteryVoltageSetting": Register{
+	Register{
+		Name:          "BatteryVoltageSetting",
 		Address:       0xEDEA,
 		Factor:        1,
 		Unit:          "V",
@@ -84,49 +95,56 @@ var RegisterListSolarBatterySettings = Registers{
 }
 
 var RegisterListSolarChargerData = Registers{
-	"ChargerMaximumCurrent": Register{
+	Register{
+		Name:          "ChargerMaximumCurrent",
 		Address:       0xEDDF,
 		Factor:        0.01,
 		Unit:          "A",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"SystemYield": Register{
+	Register{
+		Name:          "SystemYield",
 		Address:       0xEDDD,
 		Factor:        0.01,
 		Unit:          "kWh",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"UserYield": Register{
+	Register{
+		Name:          "UserYield",
 		Address:       0xEDDC,
 		Factor:        0.01,
 		Unit:          "kWh",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"ChargerInternalTemperature": Register{
+	Register{
+		Name:          "ChargerInternalTemperature",
 		Address:       0xEDDB,
 		Factor:        0.01,
 		Unit:          "C",
 		Signed:        true,
 		RoundDecimals: 2,
 	},
-	"ChargerErrorCode": Register{
+	Register{
+		Name:          "ChargerErrorCode",
 		Address:       0xEDDA,
 		Factor:        1,
 		Unit:          "",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"ChargerCurrent": Register{
+	Register{
+		Name:          "ChargerCurrent",
 		Address:       0xEDD7,
 		Factor:        0.1,
 		Unit:          "A",
 		Signed:        false,
 		RoundDecimals: 1,
 	},
-	"ChargerVoltage": Register{
+	Register{
+		Name:          "ChargerVoltage",
 		Address:       0xEDD5,
 		Factor:        0.01,
 		Unit:          "V",
@@ -134,42 +152,48 @@ var RegisterListSolarChargerData = Registers{
 		RoundDecimals: 2,
 	},
 
-	"AdditionalChargerStateInfo": Register{
+	Register{
+		Name:          "AdditionalChargerStateInfo",
 		Address:       0xEDD4,
 		Factor:        1,
 		Unit:          "",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"YieldToday": Register{
+	Register{
+		Name:          "YieldToday",
 		Address:       0xEDD3,
 		Factor:        0.01,
 		Unit:          "kWh",
 		Signed:        false,
 		RoundDecimals: 2,
 	},
-	"MaximumPowerToday": Register{
+	Register{
+		Name:          "MaximumPowerToday",
 		Address:       0xEDD2,
 		Factor:        1,
 		Unit:          "W",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"YieldYesterday": Register{
+	Register{
+		Name:          "YieldYesterday",
 		Address:       0xEDD1,
 		Factor:        0.01,
 		Unit:          "kWh",
 		Signed:        false,
 		RoundDecimals: 2,
 	},
-	"MaximumPowerYesterday": Register{
+	Register{
+		Name:          "MaximumPowerYesterday",
 		Address:       0xEDD0,
 		Factor:        1,
 		Unit:          "W",
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"Voltage settings range": Register{
+	Register{
+		Name:    "VoltageSettingsRange",
 		Address: 0xEDCE,
 		// todo
 		// Note 5: The low-byte is the minimum system voltage and the high byte is maximum system voltage
@@ -179,7 +203,8 @@ var RegisterListSolarChargerData = Registers{
 		Signed:        false,
 		RoundDecimals: 0,
 	},
-	"HistoryVersion": Register{
+	Register{
+		Name:          "HistoryVersion",
 		Address:       0xEDCD,
 		Factor:        1,
 		Unit:          "",
@@ -190,14 +215,16 @@ var RegisterListSolarChargerData = Registers{
 }
 
 var RegisterListSolarPanelData = Registers{
-	"PanelPower": Register{
+	Register{
+		Name:          "PanelPower",
 		Address:       0xEDBC,
 		Factor:        0.01,
 		Unit:          "W",
 		Signed:        false,
 		RoundDecimals: 2,
 	},
-	"PanelVoltage": Register{
+	Register{
+		Name:          "PanelVoltage",
 		Address:       0xEDBB,
 		Factor:        0.01,
 		Unit:          "V",
@@ -205,15 +232,17 @@ var RegisterListSolarPanelData = Registers{
 		RoundDecimals: 2,
 	},
 	/*
-		"PanelCurrent": Register{
-			Address:       0xEDBD,
-			Factor:        0.1,
-			Unit:          "A",
-			Signed:        false,
-			RoundDecimals: 1,
-		},
+			Register{
+		        Name: "PanelCurrent",
+				Address:       0xEDBD,
+				Factor:        0.1,
+				Unit:          "A",
+				Signed:        false,
+				RoundDecimals: 1,
+			},
 	*/
-	"PanelMaximumVoltage": Register{
+	Register{
+		Name:          "PanelMaximumVoltage",
 		Address:       0xEDB8,
 		Factor:        0.01,
 		Unit:          "V",

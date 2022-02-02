@@ -27,12 +27,7 @@ func runDevices(
 			)
 		}
 
-		deviceConfig := deviceConfig{
-			DeviceConfig: *cfgDev,
-			logDebug:     cfg.LogDebug(),
-		}
-
-		if device, err := vedevices.RunDevice(&deviceConfig, target); err != nil {
+		if device, err := vedevices.RunDevice(cfgDev, target); err != nil {
 			log.Printf("deviceClient[%s]: start failed: %s", cfgDev.Name(), err)
 		} else {
 			devicePoolInstance.AddDevice(device)
@@ -51,13 +46,4 @@ func runDevices(
 	}
 
 	return devicePoolInstance
-}
-
-type deviceConfig struct {
-	config.DeviceConfig
-	logDebug bool
-}
-
-func (cc *deviceConfig) LogDebug() bool {
-	return cc.logDebug
 }

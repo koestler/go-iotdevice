@@ -23,6 +23,7 @@ Devices:
   2-bmv:
     Kind: Vedirect
     Device: /dev/ttyUSB0
+    LogDebug: True
 
 Views:
   - Name: public

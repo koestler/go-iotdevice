@@ -114,7 +114,8 @@ var RegisterListBmv700 = mergeRegisters(
 			Signed:        false,
 			RoundDecimals: 0,
 		},
-		"CumulativeAmpHours": Register{
+		Register{
+			Name:          "CumulativeAmpHours",
 			Description:   "",
 			Address:       0x0305,
 			Factor:        0.1,
@@ -122,7 +123,8 @@ var RegisterListBmv700 = mergeRegisters(
 			Signed:        true,
 			RoundDecimals: 0,
 		},
-		"MainVoltageMinimum": Register{
+		Register{
+			Name:          "MainVoltageMinimum",
 			Description:   "",
 			Address:       0x0306,
 			Factor:        0.01,
@@ -130,7 +132,8 @@ var RegisterListBmv700 = mergeRegisters(
 			Signed:        false,
 			RoundDecimals: 2,
 		},
-		"MainVoltageMaximum": Register{
+		Register{
+			Name:          "MainVoltageMaximum",
 			Description:   "",
 			Address:       0x0307,
 			Factor:        0.01,
@@ -138,7 +141,8 @@ var RegisterListBmv700 = mergeRegisters(
 			Signed:        false,
 			RoundDecimals: 2,
 		},
-		"HoursSinceFullCharge": Register{
+		Register{
+			Name:          "HoursSinceFullCharge",
 			Description:   "",
 			Address:       0x0308,
 			Factor:        float64(24) / float64(86400),
@@ -146,7 +150,8 @@ var RegisterListBmv700 = mergeRegisters(
 			Signed:        false,
 			RoundDecimals: 1,
 		},
-		"NumberOfAutomaticSynchronizations": Register{
+		Register{
+			Name:          "NumberOfAutomaticSynchronizations",
 			Description:   "",
 			Address:       0x0309,
 			Factor:        1,
@@ -154,7 +159,8 @@ var RegisterListBmv700 = mergeRegisters(
 			Signed:        false,
 			RoundDecimals: 0,
 		},
-		"NumberOfLowMainVoltageAlarms": Register{
+		Register{
+			Name:          "NumberOfLowMainVoltageAlarms",
 			Description:   "",
 			Address:       0x030A,
 			Factor:        1,
@@ -162,7 +168,8 @@ var RegisterListBmv700 = mergeRegisters(
 			Signed:        false,
 			RoundDecimals: 0,
 		},
-		"NumberOfHighMainVoltageAlarms": Register{
+		Register{
+			Name:          "NumberOfHighMainVoltageAlarms",
 			Description:   "",
 			Address:       0x030B,
 			Factor:        1,
@@ -170,7 +177,8 @@ var RegisterListBmv700 = mergeRegisters(
 			Signed:        false,
 			RoundDecimals: 0,
 		},
-		"AmountOfDischargedEnergy": Register{
+		Register{
+			Name:          "AmountOfDischargedEnergy",
 			Description:   "",
 			Address:       0x0310,
 			Factor:        0.01,
@@ -178,7 +186,8 @@ var RegisterListBmv700 = mergeRegisters(
 			Signed:        false,
 			RoundDecimals: 1,
 		},
-		"AmountOfChargedEnergy": Register{
+		Register{
+			Name:          "AmountOfChargedEnergy",
 			Description:   "",
 			Address:       0x0311,
 			Factor:        0.01,
@@ -192,7 +201,8 @@ var RegisterListBmv700 = mergeRegisters(
 var RegisterListBmv702 = mergeRegisters(
 	RegisterListBmv700,
 	Registers{
-		"AuxVoltage": Register{
+		Register{
+			Name:          "AuxVoltage",
 			Description:   "",
 			Address:       0xED7D,
 			Factor:        0.01,
@@ -201,16 +211,18 @@ var RegisterListBmv702 = mergeRegisters(
 			RoundDecimals: 2,
 		},
 		/*
-				"Synchronized": Register{
-			Description: "",
-					Address:       0xEEB6,
-					Factor:        1,
-					Unit:          "1",
-					Signed:        false,
-					RoundDecimals: 0,
-				},
+					Register{
+			Name: "Synchronized",
+				Description: "",
+						Address:       0xEEB6,
+						Factor:        1,
+						Unit:          "1",
+						Signed:        false,
+						RoundDecimals: 0,
+					},
 		*/
-		"MidPointVoltage": Register{
+		Register{
+			Name:          "MidPointVoltage",
 			Description:   "",
 			Address:       0x0382,
 			Factor:        0.01,
@@ -218,7 +230,8 @@ var RegisterListBmv702 = mergeRegisters(
 			Signed:        false,
 			RoundDecimals: 2,
 		},
-		"MidPointVoltageDeviation": Register{
+		Register{
+			Name:          "MidPointVoltageDeviation",
 			Description:   "",
 			Address:       0x0383,
 			Factor:        0.1,
@@ -227,24 +240,27 @@ var RegisterListBmv702 = mergeRegisters(
 			RoundDecimals: 1,
 		},
 		/*
-				"NumberOfLowAuxVoltageAlarms": Register{
-			Description: "",
-					Address:       0x030C,
-					Factor:        1,
-					Unit:          "",
-					Signed:        false,
-					RoundDecimals: 0,
-				},
-				"NumberOfHighAuxVoltageAlarms": Register{
-			Description: "",
-					Address:       0x030D,
-					Factor:        1,
-					Unit:          "",
-					Signed:        false,
-					RoundDecimals: 0,
-				},
+					Register{
+			Name: "NumberOfLowAuxVoltageAlarms",
+				Description: "",
+						Address:       0x030C,
+						Factor:        1,
+						Unit:          "",
+						Signed:        false,
+						RoundDecimals: 0,
+					},
+					Register{
+			Name: "NumberOfHighAuxVoltageAlarms",
+				Description: "",
+						Address:       0x030D,
+						Factor:        1,
+						Unit:          "",
+						Signed:        false,
+						RoundDecimals: 0,
+					},
 		*/
-		"AuxVoltageMinimum": Register{
+		Register{
+			Name:          "AuxVoltageMinimum",
 			Description:   "",
 			Address:       0x030E,
 			Factor:        0.01,
@@ -252,7 +268,8 @@ var RegisterListBmv702 = mergeRegisters(
 			Signed:        true,
 			RoundDecimals: 2,
 		},
-		"AuxVoltageMaximum": Register{
+		Register{
+			Name:          "AuxVoltageMaximum",
 			Description:   "",
 			Address:       0x030F,
 			Factor:        0.01,

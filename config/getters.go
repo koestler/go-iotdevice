@@ -137,6 +137,14 @@ func (c DeviceConfig) Device() string {
 	return c.device
 }
 
+func (c DeviceConfig) LogDebug() bool {
+	return c.logDebug
+}
+
+func (c DeviceConfig) LogComDebug() bool {
+	return c.logComDebug
+}
+
 func (c ViewDeviceConfig) Name() string {
 	return c.name
 }

@@ -385,6 +385,14 @@ func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, e
 		err = append(err, fmt.Errorf("DeviceConfig->%s->Device must not be empty", name))
 	}
 
+	if c.LogDebug != nil && *c.LogDebug {
+		ret.logDebug = true
+	}
+
+	if c.LogComDebug != nil && *c.LogComDebug {
+		ret.logComDebug = true
+	}
+
 	return
 }
 
