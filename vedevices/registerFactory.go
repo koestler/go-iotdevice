@@ -1,7 +1,7 @@
 package vedevices
 
 import (
-	"github.com/koestler/go-victron-to-mqtt/vedirect"
+	"github.com/koestler/go-iotdevice/vedirect"
 )
 
 func RegisterFactoryByProduct(product vedirect.VeProduct) Registers {

@@ -1,4 +1,4 @@
-module github.com/koestler/go-victron-to-mqtt
+module github.com/koestler/go-iotdevice
 
 go 1.17
 

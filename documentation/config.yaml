@@ -1,5 +1,5 @@
 Version: 0                                                 # must be 0
-ProjectTitle: Configurable Title of Project                # optional, default go-victron-to-mqtt: used as <title> in the http frontend
+ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice: used as <title> in the http frontend
 LogConfig: True                                            # optional, default False, outputs the configuration including defaults on startup
 LogWorkerStart: True                                       # optional, default False, outputs what devices and mqtt clients are started
 LogDebug: True                                             # optional, default False, outputs various debug information

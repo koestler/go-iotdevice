@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/jessevdk/go-flags"
-	"github.com/koestler/go-victron-to-mqtt/config"
+	"github.com/koestler/go-iotdevice/config"
 	"log"
 	"os"
 	"os/signal"
@@ -42,7 +42,7 @@ func getCmdOptions() (cmdOptions CmdOptions, cmdName string) {
 	}
 
 	if cmdOptions.Version {
-		fmt.Println("github.com/koestler/go-victron-to-mqtt version:", buildVersion)
+		fmt.Println("github.com/koestler/go-iotdevice version:", buildVersion)
 		fmt.Println("build at:", buildTime)
 		os.Exit(ExitSuccess)
 	}
@@ -80,7 +80,7 @@ func main() {
 		initiateShutdown := make(chan error)
 
 		if cfg.LogWorkerStart() {
-			log.Printf("main: start go-victron-to-mqtt version=%s", buildVersion)
+			log.Printf("main: start go-iotdevice version=%s", buildVersion)
 		}
 
 		// start cpu profiling if enabled

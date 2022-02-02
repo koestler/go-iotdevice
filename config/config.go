@@ -80,7 +80,7 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	if len(c.ProjectTitle) > 0 {
 		ret.projectTitle = c.ProjectTitle
 	} else {
-		ret.projectTitle = "go-victron-to-mqtt"
+		ret.projectTitle = "go-iotdevice"
 	}
 
 	if c.LogConfig != nil && *c.LogConfig {
@@ -261,7 +261,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		err = append(err, fmt.Errorf("MqttClientConfig->%s->Broker must not be empty", name))
 	}
 	if len(ret.clientId) < 1 {
-		ret.clientId = "go-victron-to-mqtt"
+		ret.clientId = "go-iotdevice"
 	}
 
 	if c.Qos == nil {

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/koestler/go-victron-to-mqtt/config"
-	"github.com/koestler/go-victron-to-mqtt/httpServer"
-	"github.com/koestler/go-victron-to-mqtt/vedevices"
+	"github.com/koestler/go-iotdevice/config"
+	"github.com/koestler/go-iotdevice/httpServer"
+	"github.com/koestler/go-iotdevice/vedevices"
 	"log"
 )
 

@@ -2,9 +2,9 @@ package vedevices
 
 import (
 	"fmt"
-	"github.com/koestler/go-victron-to-mqtt/config"
-	"github.com/koestler/go-victron-to-mqtt/dataflow"
-	"github.com/koestler/go-victron-to-mqtt/vedirect"
+	"github.com/koestler/go-iotdevice/config"
+	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/vedirect"
 	"log"
 	"math/rand"
 	"time"

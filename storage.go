@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/koestler/go-victron-to-mqtt/dataflow"
+	"github.com/koestler/go-iotdevice/dataflow"
 	"log"
 )
 

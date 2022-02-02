@@ -2,8 +2,8 @@ package mqttClient
 
 import (
 	"encoding/json"
-	"github.com/koestler/go-victron-to-mqtt/config"
-	"github.com/koestler/go-victron-to-mqtt/dataflow"
+	"github.com/koestler/go-iotdevice/config"
+	"github.com/koestler/go-iotdevice/dataflow"
 	"strings"
 	"time"
 )

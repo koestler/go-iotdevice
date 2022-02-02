@@ -1,4 +1,6 @@
-# go-victron-to-mqtt
+# go-iotdevice
+[![Docker Image CI](https://github.com/koestler/js-iotsensor/actions/workflows/docker-image.yml/badge.svg?branch=main)](https://github.com/koestler/js-iotsensor/actions/workflows/docker-image.yml)
+
 This deamon reads various values from Victron Energy devices and publishes them on an MQTT-Server.
 In addition, a http endpoint and a web-frontend is provided to show the values.
 
@@ -6,10 +8,10 @@ In addition, a http endpoint and a web-frontend is provided to show the values.
 
 ### Compile and run inside docker
 ```bash
-docker build -f docker/Dockerfile -t go-victron-to-mqtt .
-docker run --rm --name go-victron-to-mqtt -p 127.0.0.1:8000:8000 \
+docker build -f docker/Dockerfile -t go-iotdevice .
+docker run --rm --name go-iotdevice -p 127.0.0.1:8000:8000 \
   -v "$(pwd)"/documentation/config.yaml:/config.yaml:ro \
-  go-victron-to-mqtt
+  go-iotdevice
 ```
 
 ### run tests

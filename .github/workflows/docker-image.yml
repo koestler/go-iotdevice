@@ -16,7 +16,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: koestler/go-victron-to-mqtt
+          images: koestler/go-iotdevice
           tags: |
             type=ref,event=branch
             type=ref,event=pr

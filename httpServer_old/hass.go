@@ -1,9 +1,9 @@
 package httpServer
 
 import (
-	"github.com/koestler/go-victron-to-mqtt/config"
-	"github.com/koestler/go-victron-to-mqtt/mqttClient"
-	"github.com/koestler/go-victron-to-mqtt/vedevices"
+	"github.com/koestler/go-iotdevice/config"
+	"github.com/koestler/go-iotdevice/mqttClient"
+	"github.com/koestler/go-iotdevice/vedevices"
 	"net/http"
 	"strings"
 )
@@ -12,7 +12,7 @@ import (
 // - platform: mqtt
 //   name:                  "ve_24v_bmv_current"
 //   state_topic:           "piegn/stat/ve/24v-bmv/Current"
-//   availability_topic:    "piegn/tele/software/srv1-go-victron-to-mqtt/LWT"
+//   availability_topic:    "piegn/tele/software/srv1-go-iotdevice/LWT"
 //   value_template:        "{{ value_json.Value }}"
 //   unit_of_measurement:   "W"
 //   payload_available:     "Online"

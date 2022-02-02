@@ -2,12 +2,12 @@ package httpServer
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/koestler/go-victron-to-mqtt/config"
+	"github.com/koestler/go-iotdevice/config"
 	"log"
 )
 
 type configResponse struct {
-	ProjectTitle   string         `json:"projectTitle" example:"go-victron-to-mqtt"`
+	ProjectTitle   string         `json:"projectTitle" example:"go-iotdevice"`
 	BackendVersion string         `json:"backendVersion" example:"v1.2.3"`
 	Views          []viewResponse `json:"views"`
 }

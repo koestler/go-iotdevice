@@ -3,7 +3,7 @@ package httpServer
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	"github.com/koestler/go-victron-to-mqtt/config"
+	"github.com/koestler/go-iotdevice/config"
 	"github.com/pkg/errors"
 	"net/http"
 	"time"

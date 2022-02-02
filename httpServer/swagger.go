@@ -3,20 +3,20 @@ package httpServer
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/koestler/go-victron-to-mqtt/docs"
+	"github.com/koestler/go-iotdevice/docs"
 	"github.com/swaggo/files"       // swagger embed files
 	"github.com/swaggo/gin-swagger" // gin-swagger middleware
 	"log"
 	"net/http"
 )
 
-// @title go-victron-to-mqtt API v1
+// @title go-iotdevice API v1
 // @version 1.0
 // @description This API exposes all the values of the connected devices, allows for authentication
 // and also serves a frontend
 
 // @license.name MIT
-// @license.url https://github.com/koestler/go-victron-to-mqtt/blob/main/LICENSE
+// @license.url https://github.com/koestler/go-iotdevice/blob/main/LICENSE
 
 // @BasePath /api/v1
 // @securityDefinitions.apikey ApiKeyAuth
