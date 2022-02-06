@@ -5,7 +5,7 @@ type State map[string]ValueMap
 type ValueStorageInstance struct {
 	// this represents the state of the storage instance and must only be access by the main go routine
 
-	// state: 1. dimension: Device, 2. dimension: value.Name
+	// state: 1. dimension: Device, 2. dimension: register.Name
 	state         State
 	subscriptions []subscription
 
@@ -45,17 +45,17 @@ func (instance *ValueStorageInstance) mainStorageRoutine() {
 
 func (instance *ValueStorageInstance) handleNewValue(newValue Value) {
 	// check if the newValue is not present or has been changed
-	if _, ok := instance.state[newValue.DeviceName]; !ok {
-		instance.state[newValue.DeviceName] = make(ValueMap)
+	if _, ok := instance.state[newValue.DeviceName()]; !ok {
+		instance.state[newValue.DeviceName()] = make(ValueMap)
 	}
-	if currentValue, ok := instance.state[newValue.DeviceName][newValue.Name]; !ok || currentValue != newValue {
+	if currentValue, ok := instance.state[newValue.DeviceName()][newValue.Register().Name()]; !ok || currentValue != newValue {
 		// copy the input value to all subscribed output channels
 		for _, subscription := range instance.subscriptions {
 			subscription.forward(newValue)
 		}
 
 		// and save the new state
-		instance.state[newValue.DeviceName][newValue.Name] = newValue
+		instance.state[newValue.DeviceName()][newValue.Register().Name()] = newValue
 	}
 }
 
@@ -175,14 +175,14 @@ func filterByValueName(filter *Filter, valueName string) bool {
 	return ok && filter.ValueNames[valueName]
 }
 
-func filterValue(filter *Filter, value *Value) bool {
-	return filterByDevice(filter, value.DeviceName) && filterByValueName(filter, value.Name)
+func filterValue(filter *Filter, value Value) bool {
+	return filterByDevice(filter, value.DeviceName()) && filterByValueName(filter, value.Register().Name())
 }
 
 func (subscription subscription) forward(newValue Value) {
 	filter := subscription.filter
 
-	if filterValue(&filter, &newValue) {
+	if filterValue(&filter, newValue) {
 		// forward value
 		subscription.outputChannel <- newValue
 	}

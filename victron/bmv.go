@@ -1,321 +1,325 @@
-package vedevices
+package victron
 
-var RegisterListBmvProduct = Registers{
-	Register{
+import (
+	"github.com/koestler/go-iotdevice/dataflow"
+)
+
+var RegisterListBmvProduct = dataflow.Registers{
+	dataflow.Register{
 		Category:    "Product",
 		Name:        "ProductId",
 		Description: "Product Id",
 		Address:     0x0100,
-		Type:        StringRegister,
+		Type:        dataflow.StringRegister,
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Product",
 		Name:        "ProductRevision",
 		Description: "Product revision",
 		Address:     0x0101,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      1,
 		Unit:        "",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Product",
 		Name:        "SerialNumber",
 		Description: "Serial number",
 		Address:     0x010A,
-		Type:        StringRegister,
+		Type:        dataflow.StringRegister,
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Product",
 		Name:        "ModelName",
 		Description: "Model name",
 		Address:     0x010B,
-		Type:        StringRegister,
+		Type:        dataflow.StringRegister,
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Product",
 		Name:        "Description",
 		Description: "Description",
 		Address:     0x010C,
-		Type:        StringRegister,
+		Type:        dataflow.StringRegister,
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Product",
 		Name:        "Uptime",
 		Description: "Device uptime",
 		Address:     0x0120,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      1,
 		Unit:        "s",
 	},
 	// skipped Bluetooth capabilities
 }
 
-var RegisterListBmvMonitor = Registers{
-	Register{
+var RegisterListBmvMonitor = dataflow.Registers{
+	dataflow.Register{
 		Category:    "Monitor",
 		Name:        "MainVoltage",
 		Description: "Main Voltage",
 		Address:     0xED8D,
-		Type:        SignedNumberRegister,
+		Type:        dataflow.SignedNumberRegister,
 		Factor:      0.01,
 		Unit:        "V",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Monitor",
 		Name:        "AuxVoltage",
 		Description: "Aux (starter) Voltage",
 		Address:     0xED7D,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      0.01,
 		Unit:        "V",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Monitor",
 		Name:        "Current",
 		Description: "Current",
 		Address:     0xED8F,
-		Type:        SignedNumberRegister,
+		Type:        dataflow.SignedNumberRegister,
 		Factor:      0.1,
 		Unit:        "A",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Monitor",
 		Name:        "CurrentHighRes",
 		Description: "Current (high resolution)",
 		Address:     0xED8C,
-		Type:        SignedNumberRegister,
+		Type:        dataflow.SignedNumberRegister,
 		Factor:      0.001,
 		Unit:        "A",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Monitor",
 		Name:        "Power",
 		Description: "Power",
 		Address:     0xED8E,
-		Type:        SignedNumberRegister,
+		Type:        dataflow.SignedNumberRegister,
 		Factor:      1,
 		Unit:        "W",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Monitor",
 		Name:        "Consumed",
 		Description: "Consumed Ah",
 		Address:     0xEEFF,
-		Type:        SignedNumberRegister,
+		Type:        dataflow.SignedNumberRegister,
 		Factor:      0.1,
 		Unit:        "Ah",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Monitor",
 		Name:        "SOC",
 		Description: "State Of Charge",
 		Address:     0x0FFF,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      0.01,
 		Unit:        "%",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Monitor",
 		Name:        "TTG",
 		Description: "Time to go",
 		Address:     0x0FFE,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      1,
 		Unit:        "min",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Monitor",
 		Name:        "Temperature",
 		Description: "Temperature",
 		Address:     0xEDEC,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      0.01,
 		Unit:        "K",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Monitor",
 		Name:        "MidPointVoltage",
 		Description: "Mid-point voltage",
 		Address:     0x0382,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      0.01,
 		Unit:        "V",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Monitor",
 		Name:        "MidPointVoltageDeviation",
 		Description: "Mid-point voltage deviation",
 		Address:     0x0383,
-		Type:        SignedNumberRegister,
+		Type:        dataflow.SignedNumberRegister,
 		Factor:      0.1,
 		Unit:        "%",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Monitor",
 		Name:        "SynchronizationState",
 		Description: "Synchronization state",
 		Address:     0xEEB6,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      1,
 		Unit:        "1",
 		// todo: decode this enum
 	},
 }
 
-var RegisterListBmvHistoric = Registers{
-	Register{
+var RegisterListBmvHistoric = dataflow.Registers{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "DepthOfTheDeepestDischarge",
 		Description: "Depth of the deepest discharge",
 		Address:     0x0300,
-		Type:        SignedNumberRegister,
+		Type:        dataflow.SignedNumberRegister,
 		Factor:      0.1,
 		Unit:        "Ah",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "DepthOfTheLastDischarge",
 		Description: "Depth of the last discharge",
 		Address:     0x0301,
-		Type:        SignedNumberRegister,
+		Type:        dataflow.SignedNumberRegister,
 		Factor:      0.1,
 		Unit:        "Ah",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "DepthOfTheAverageDischarge",
 		Description: "Depth of the average discharge",
 		Address:     0x0302,
-		Type:        SignedNumberRegister,
+		Type:        dataflow.SignedNumberRegister,
 		Factor:      0.1,
 		Unit:        "Ah",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "NumberOfCycles",
 		Description: "Number of cycles",
 		Address:     0x0303,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      1,
 		Unit:        "",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "NumberOfFullDischarges",
 		Description: "Number of full discharges",
 		Address:     0x0304,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      1,
 		Unit:        "",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "CumulativeAmpHours",
 		Description: "Cumulative Amp Hours",
 		Address:     0x0305,
-		Type:        SignedNumberRegister,
+		Type:        dataflow.SignedNumberRegister,
 		Factor:      0.1,
 		Unit:        "Ah",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "MainVoltageMinimum",
 		Description: "Minimum Voltage",
 		Address:     0x0306,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      0.01,
 		Unit:        "V",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "MainVoltageMaximum",
 		Description: "Maximum Voltage",
 		Address:     0x0307,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      0.01,
 		Unit:        "V",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "HoursSinceFullCharge",
 		Description: "Hours since full charge",
 		Address:     0x0308,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      float64(24) / float64(86400),
 		Unit:        "h",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "NumberOfAutomaticSynchronizations",
 		Description: "Number of automatic synchronizations",
 		Address:     0x0309,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      1,
 		Unit:        "",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "NumberOfLowMainVoltageAlarms",
 		Description: "Number of Low Voltage Alarms",
 		Address:     0x030A,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      1,
 		Unit:        "",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "NumberOfHighMainVoltageAlarms",
 		Description: "Number of High Voltage Alarms",
 		Address:     0x030B,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      1,
 		Unit:        "",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "AuxVoltageMinimum",
 		Description: "Minimum Starter Voltage",
 		Address:     0x030E,
-		Type:        SignedNumberRegister,
+		Type:        dataflow.SignedNumberRegister,
 		Factor:      0.01,
 		Unit:        "V",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "AuxVoltageMaximum",
 		Description: "Maximum Starter Voltage",
 		Address:     0x030F,
-		Type:        SignedNumberRegister,
+		Type:        dataflow.SignedNumberRegister,
 		Factor:      0.01,
 		Unit:        "V",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "AmountOfDischargedEnergy",
 		Description: "Amount of discharged energy",
 		Address:     0x0310,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      0.01,
 		Unit:        "kWh",
 	},
-	Register{
+	dataflow.Register{
 		Category:    "Historic",
 		Name:        "AmountOfChargedEnergy",
 		Description: "Amount of charged energy",
 		Address:     0x0311,
-		Type:        UnsignedNumberRegister,
+		Type:        dataflow.UnsignedNumberRegister,
 		Factor:      0.01,
 		Unit:        "kWh",
 	},
 }
 
-var RegisterListBmv712 = mergeRegisters(
+var RegisterListBmv712 = dataflow.MergeRegisters(
 	RegisterListBmvProduct,
 	RegisterListBmvMonitor,
 	RegisterListBmvHistoric,
 )
 
-var RegisterListBmv702 = filterRegisters(
+var RegisterListBmv702 = dataflow.FilterRegisters(
 	RegisterListBmv712,
 	[]string{
 		"ProductRevision",
@@ -323,7 +327,7 @@ var RegisterListBmv702 = filterRegisters(
 	},
 )
 
-var RegisterListBmv700 = filterRegisters(
+var RegisterListBmv700 = dataflow.FilterRegisters(
 	RegisterListBmv702,
 	[]string{
 		"AuxVoltage",

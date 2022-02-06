@@ -2,14 +2,14 @@ package main
 
 import (
 	"github.com/koestler/go-iotdevice/config"
+	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/httpServer"
-	"github.com/koestler/go-iotdevice/vedevices"
 	"log"
 )
 
 //go:generate swag init -g httpServer/swagger.go
 
-func runHttpServer(cfg *config.Config, devicePoolInstance *vedevices.DevicePool) *httpServer.HttpServer {
+func runHttpServer(cfg *config.Config, devicePoolInstance *device.DevicePool) *httpServer.HttpServer {
 	httpServerCfg := cfg.HttpServer()
 	if !httpServerCfg.Enabled() {
 		return nil

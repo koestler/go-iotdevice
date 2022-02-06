@@ -2,12 +2,15 @@ package httpServer
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/koestler/go-iotdevice/dataflow"
 	"log"
 )
 
 type registerResponse struct {
+	Category    string `json:"category" example:"Monitor"`
 	Name        string `json:"name" example:"PanelPower"`
 	Description string `json:"description" example:"Panel power"`
+	Type        string `json:"type" example:"numeric"`
 	Unit        string `json:"unit" example:"W"`
 }
 
@@ -38,8 +41,10 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 			response := make([]registerResponse, len(registers))
 			for i, v := range registers {
 				response[i] = registerResponse{
+					Category:    v.Category,
 					Name:        v.Name,
 					Description: v.Description,
+					Type:        typeString(v.Type),
 					Unit:        v.Unit,
 				}
 			}
@@ -52,5 +57,18 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 				log.Printf("httpServer: %s%s -> serve fields", r.BasePath(), relativePath)
 			}
 		}
+	}
+}
+
+func typeString(rt dataflow.RegisterType) string {
+	switch rt {
+	case dataflow.StringRegister:
+		return "string"
+	case dataflow.SignedNumberRegister:
+		return "number"
+	case dataflow.UnsignedNumberRegister:
+		return "number"
+	default:
+		return ""
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-iotdevice/config"
-	"github.com/koestler/go-iotdevice/vedevices"
+	"github.com/koestler/go-iotdevice/device"
 	"log"
 	"net/http"
 	"net/url"
@@ -23,7 +23,7 @@ type Environment struct {
 	ProjectTitle       string
 	Views              []*config.ViewConfig
 	Auth               config.AuthConfig
-	DevicePoolInstance *vedevices.DevicePool
+	DevicePoolInstance *device.DevicePool
 }
 
 type Config interface {

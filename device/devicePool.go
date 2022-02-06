@@ -1,6 +1,8 @@
-package vedevices
+package device
 
-import "sync"
+import (
+	"sync"
+)
 
 type DevicePool struct {
 	Devices      map[string]*Device

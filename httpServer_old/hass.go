@@ -3,7 +3,7 @@ package httpServer
 import (
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/mqttClient"
-	"github.com/koestler/go-iotdevice/vedevices"
+	"github.com/koestler/go-iotdevice/victron"
 	"net/http"
 	"strings"
 )
@@ -31,7 +31,7 @@ type hassSensor struct {
 func HandleHassMqttSensorsYaml(env *Environment, w http.ResponseWriter, r *http.Request) Error {
 	configs := make([]hassSensor, 0)
 	for _, device := range env.Devices {
-		registers := vedevices.RegisterFactoryByProduct(device.DeviceId)
+		registers := victron.RegisterFactoryByProduct(device.DeviceId)
 		if registers == nil {
 			continue
 		}

@@ -10,9 +10,9 @@ func SinkLog(prefix string, input <-chan Value) {
 			log.Printf(
 				"%s: %s: %s = %v",
 				prefix,
-				value.DeviceName,
-				value.Name,
-				value.Value,
+				value.DeviceName(),
+				value.Register().Name(),
+				value.String(),
 			)
 		}
 	}()

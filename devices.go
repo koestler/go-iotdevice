@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/vedevices"
+	"github.com/koestler/go-iotdevice/device"
 	"github.com/pkg/errors"
 	"log"
 )
@@ -12,8 +12,8 @@ func runDevices(
 	cfg *config.Config,
 	target dataflow.Fillable,
 	initiateShutdown chan<- error,
-) *vedevices.DevicePool {
-	devicePoolInstance := vedevices.RunPool()
+) *device.DevicePool {
+	devicePoolInstance := device.RunPool()
 
 	countStarted := 0
 
@@ -27,7 +27,7 @@ func runDevices(
 			)
 		}
 
-		if device, err := vedevices.RunDevice(cfgDev, target); err != nil {
+		if device, err := device.RunDevice(cfgDev, target); err != nil {
 			log.Printf("deviceClient[%s]: start failed: %s", cfgDev.Name(), err)
 		} else {
 			devicePoolInstance.AddDevice(device)

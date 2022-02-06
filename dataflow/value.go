@@ -1,33 +1,42 @@
 package dataflow
 
-type Value struct {
-	DeviceName    string
-	Name          string
-	Value         float64
-	Unit          string
-	RoundDecimals int
+import "fmt"
+
+type Value interface {
+	DeviceName() string
+	Register() Register
+	String() string
 }
 
 type ValueMap map[string]Value
 
-type ValueEssential struct {
-	Value float64
-	Unit  string
+type RegisterValue struct {
+	deviceName string
+	register   Register
 }
 
-type ValueEssentialMap map[string]ValueEssential
-
-func (valueMap ValueMap) ConvertToEssential() (valueEssentialMap ValueEssentialMap) {
-	valueEssentialMap = make(ValueEssentialMap, len(valueMap))
-	for i, v := range valueMap {
-		valueEssentialMap[i] = v.ConvertToEssential()
-	}
-	return
+func (v RegisterValue) DeviceName() string {
+	return v.deviceName
 }
 
-func (value Value) ConvertToEssential() ValueEssential {
-	return ValueEssential{
-		Value: value.Value,
-		Unit:  value.Unit,
-	}
+func (v RegisterValue) Register() Register {
+	return v.register
+}
+
+type NumericRegisterValue struct {
+	RegisterValue
+	value float64
+}
+
+func (v NumericRegisterValue) String() string {
+	return fmt.Sprintf("%f", v.value)
+}
+
+type StringRegisterValue struct {
+	RegisterValue
+	value string
+}
+
+func (v StringRegisterValue) String() string {
+	return v.value
 }

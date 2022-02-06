@@ -1,7 +1,11 @@
-package vedevices
+package victron
+
+import (
+	"github.com/koestler/go-iotdevice/dataflow"
+)
 
 // todo: understand the enums
-var RegisterListSolarBatterySettings = Registers{
+var RegisterListSolarBatterySettings = dataflow.Registers{
 	/*
 		Register{
 			Name:          "AutomaticEqualizationMode",
@@ -97,7 +101,7 @@ var RegisterListSolarBatterySettings = Registers{
 	*/
 }
 
-var RegisterListSolarChargerData = Registers{
+var RegisterListSolarChargerData = dataflow.Registers{
 	/*
 		Register{
 			Name:          "ChargerMaximumCurrent",
@@ -219,7 +223,7 @@ var RegisterListSolarChargerData = Registers{
 	*/
 }
 
-var RegisterListSolarPanelData = Registers{
+var RegisterListSolarPanelData = dataflow.Registers{
 	/*
 		Register{
 			Name:          "PanelPower",
@@ -257,7 +261,7 @@ var RegisterListSolarPanelData = Registers{
 	*/
 }
 
-var RegisterListSolar = mergeRegisters(
+var RegisterListSolar = dataflow.MergeRegisters(
 	RegisterListSolarBatterySettings,
 	RegisterListSolarChargerData,
 	RegisterListSolarPanelData,
