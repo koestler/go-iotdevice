@@ -96,7 +96,7 @@ func (c *Device) RunRandom(output chan dataflow.Value, registers Registers) (err
 						Name:          register.Name,
 						Value:         1e2 * rand.Float64() * register.Factor,
 						Unit:          register.Unit,
-						RoundDecimals: register.RoundDecimals,
+						RoundDecimals: 3,
 					}
 				}
 			}
@@ -170,7 +170,7 @@ func (c *Device) RunVedirect(output chan dataflow.Value) (err error) {
 							Name:          register.Name,
 							Value:         numericValue.Value,
 							Unit:          numericValue.Unit,
-							RoundDecimals: register.RoundDecimals,
+							RoundDecimals: 3,
 						}
 					}
 				}

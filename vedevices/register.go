@@ -14,24 +14,33 @@ type NumericValue struct {
 
 type Registers []Register
 
+type RegisterType int
+
+const (
+	StringRegister RegisterType = iota
+	SignedNumberRegister
+	UnsignedNumberRegister
+)
+
 type Register struct {
-	Name          string
-	Description   string
-	Address       uint16
-	Factor        float64
-	Unit          string
-	Signed        bool
-	RoundDecimals int
+	Category    string
+	Name        string
+	Description string
+	Address     uint16
+	Type        RegisterType
+	Factor      float64
+	Unit        string
 }
 
 func (reg Register) RecvNumeric(vd *vedirect.Vedirect) (result NumericValue, err error) {
 	var value float64
 
-	if reg.Signed {
+	switch reg.Type {
+	case SignedNumberRegister:
 		var intValue int64
 		intValue, err = vd.VeCommandGetInt(reg.Address)
 		value = float64(intValue)
-	} else {
+	case UnsignedNumberRegister:
 		var intValue uint64
 		intValue, err = vd.VeCommandGetUint(reg.Address)
 		value = float64(intValue)
@@ -73,4 +82,24 @@ func mergeRegisters(maps ...Registers) (output Registers) {
 		}
 	}
 	return output
+}
+
+func registerExcluded(exclude []string, r Register) bool {
+	for _, e := range exclude {
+		if e == r.Name {
+			return true
+		}
+	}
+	return false
+}
+
+func filterRegisters(input Registers, exclude []string) (output Registers) {
+	output = make(Registers, 0, len(input))
+	for _, r := range input {
+		if registerExcluded(exclude, r) {
+			continue
+		}
+		output = append(output, r)
+	}
+	return
 }

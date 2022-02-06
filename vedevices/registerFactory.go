@@ -245,17 +245,17 @@ func RegisterFactoryByProduct(product vedirect.VeProduct) Registers {
 	case vedirect.VeProductPhoenixSmartIP43Charger24_16_3:
 		return RegisterPhoenixSmartCharger
 	case vedirect.VeProductBMV712Smart:
-		return RegisterListBmv702
+		return RegisterListBmv712
 	case vedirect.VeProductBMV710HSmart:
-		return RegisterListBmv702
+		return RegisterListBmv712
 	case vedirect.VeProductBMV712SmartRev2:
-		return RegisterListBmv702
+		return RegisterListBmv712
 	case vedirect.VeProductSmartShunt500A_50mV:
-		return RegisterListBmv702
+		return RegisterListBmv712
 	case vedirect.VeProductSmartShunt1000A_50mV:
-		return RegisterListBmv702
+		return RegisterListBmv712
 	case vedirect.VeProductSmartShunt2000A_50mV:
-		return RegisterListBmv702
+		return RegisterListBmv712
 	}
 	return nil
 }

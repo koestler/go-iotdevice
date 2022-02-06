@@ -22,7 +22,7 @@ Devices:
     Kind: RandomBmv
   2-bmv:
     Kind: Vedirect
-    Device: /dev/ttyUSB0
+    Device: /dev/ttyUSB1
     LogDebug: True
 
 Views:
