@@ -5,7 +5,7 @@ type State map[string]ValueMap
 type ValueStorageInstance struct {
 	// this represents the state of the storage instance and must only be access by the main go routine
 
-	// state: 1. dimension: Device, 2. dimension: register.Name
+	// state: 1. dimension: eevice.Name, 2. dimension: register.Name
 	state         State
 	subscriptions []subscription
 
@@ -16,8 +16,8 @@ type ValueStorageInstance struct {
 }
 
 type Filter struct {
-	Devices    map[string]bool
-	ValueNames map[string]bool
+	Devices       map[string]bool
+	RegisterNames map[string]bool
 }
 
 type subscription struct {
@@ -71,12 +71,12 @@ func (instance *ValueStorageInstance) handleNewReadStateRequest(newReadStateRequ
 
 		response[deviceName] = make(ValueMap)
 
-		for valueName, value := range deviceState {
-			if !filterByValueName(filter, valueName) {
+		for registerName, value := range deviceState {
+			if !filterByRegisterName(filter, registerName) {
 				continue
 			}
 
-			response[deviceName][valueName] = value
+			response[deviceName][registerName] = value
 		}
 	}
 
@@ -116,8 +116,8 @@ func (instance *ValueStorageInstance) GetMap(filter Filter) (result ValueMap) {
 	state := instance.GetState(filter)
 
 	for _, deviceState := range state {
-		for valueName, value := range deviceState {
-			result[valueName] = value
+		for registerName, value := range deviceState {
+			result[registerName] = value
 		}
 	}
 
@@ -164,19 +164,19 @@ func filterByDevice(filter *Filter, deviceName string) bool {
 	return ok && filter.Devices[deviceName]
 }
 
-func filterByValueName(filter *Filter, valueName string) bool {
+func filterByRegisterName(filter *Filter, registerName string) bool {
 	// list is empty -> every device is ok
-	if len(filter.ValueNames) < 1 {
+	if len(filter.RegisterNames) < 1 {
 		return true
 	}
 
 	// only ok if present and true
-	_, ok := filter.ValueNames[valueName]
-	return ok && filter.ValueNames[valueName]
+	_, ok := filter.RegisterNames[registerName]
+	return ok && filter.RegisterNames[registerName]
 }
 
 func filterValue(filter *Filter, value Value) bool {
-	return filterByDevice(filter, value.DeviceName()) && filterByValueName(filter, value.Register().Name())
+	return filterByDevice(filter, value.DeviceName()) && filterByRegisterName(filter, value.Register().Name())
 }
 
 func (subscription subscription) forward(newValue Value) {

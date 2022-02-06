@@ -15,7 +15,7 @@ type VictronDeviceStruct struct {
 }
 
 func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.Value) (device device.Device, err error) {
-	device = VictronDeviceStruct{
+	device = &VictronDeviceStruct{
 		DeviceStruct: deviceStruct,
 	}
 	cfg := device.Config()
@@ -51,6 +51,7 @@ func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.
 	if registers == nil {
 		return nil, fmt.Errorf("no registers found for deviceId=%x", deviceId)
 	}
+	device.SetRegisters(registers)
 
 	// start victron reader
 	go func() {
@@ -93,7 +94,7 @@ func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.
 							output <- dataflow.NewNumericRegisterValue(
 								deviceStruct.Config().Name(),
 								register,
-								value,
+								value*numberRegister.Factor(),
 							)
 						}
 					}

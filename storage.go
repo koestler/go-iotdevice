@@ -1,17 +1,21 @@
 package main
 
 import (
+	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"log"
 )
 
-type Storages struct {
-	raw *dataflow.ValueStorageInstance
-}
-
-func runStorageAndDataFlow() Storages {
-	log.Printf("storage: setup rawStorage")
-	return Storages{
-		raw: dataflow.ValueStorageCreate(),
+func runStorage(cfg *config.Config) *dataflow.ValueStorageInstance {
+	if cfg.LogWorkerStart() {
+		log.Printf("storage: setup rawStorage")
 	}
+
+	storageInstance := dataflow.ValueStorageCreate()
+
+	if cfg.LogDebug() {
+		dataflow.SinkLog("storage", storageInstance.Drain())
+	}
+
+	return storageInstance
 }

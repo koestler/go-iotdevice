@@ -89,14 +89,14 @@ func main() {
 		}
 
 		// start storage
-		storages := runStorageAndDataFlow()
+		storage := runStorage(cfg)
 
 		// start devices
-		devicePoolInstance := runDevices(cfg, storages.raw, initiateShutdown)
+		devicePoolInstance := runDevices(cfg, storage, initiateShutdown)
 		defer devicePoolInstance.Shutdown()
 
 		// start http server
-		httpServerInstance := runHttpServer(cfg, devicePoolInstance)
+		httpServerInstance := runHttpServer(cfg, devicePoolInstance, storage)
 		defer httpServerInstance.Shutdown()
 
 		// start mqtt clients

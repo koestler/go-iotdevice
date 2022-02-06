@@ -5,6 +5,7 @@ import (
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-iotdevice/config"
+	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"log"
 	"net/http"
@@ -24,6 +25,7 @@ type Environment struct {
 	Views              []*config.ViewConfig
 	Auth               config.AuthConfig
 	DevicePoolInstance *device.DevicePool
+	Storage            *dataflow.ValueStorageInstance
 }
 
 type Config interface {
@@ -93,4 +95,5 @@ func addApiV1Routes(r *gin.Engine, config Config, env *Environment) {
 	setupConfig(v0, env)
 	setupLogin(v0, env)
 	setupRegisters(v0, env)
+	setupValues(v0, env)
 }

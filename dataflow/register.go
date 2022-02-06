@@ -32,7 +32,7 @@ type RegisterStruct struct {
 	address     uint16
 }
 
-type StringRegisterStruct struct {
+type TextRegisterStruct struct {
 	RegisterStruct
 }
 
@@ -43,8 +43,8 @@ type NumberRegisterStruct struct {
 	unit   *string
 }
 
-func CreateStringRegisterStruct(category, name, description string, address uint16) StringRegisterStruct {
-	return StringRegisterStruct{
+func CreateTextRegisterStruct(category, name, description string, address uint16) TextRegisterStruct {
+	return TextRegisterStruct{
 		RegisterStruct{
 			category:    category,
 			name:        name,
@@ -95,7 +95,7 @@ func (r RegisterStruct) Address() uint16 {
 	return r.address
 }
 
-func (r StringRegisterStruct) Unit() *string {
+func (r TextRegisterStruct) Unit() *string {
 	return nil
 }
 
@@ -111,7 +111,7 @@ func (r NumberRegisterStruct) Signed() bool {
 	return r.signed
 }
 
-func (r StringRegisterStruct) Type() RegisterType {
+func (r TextRegisterStruct) Type() RegisterType {
 	return StringRegister
 }
 

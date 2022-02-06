@@ -18,6 +18,7 @@ type Config interface {
 type Device interface {
 	Config() Config
 	Registers() dataflow.Registers
+	SetRegisters(registers dataflow.Registers)
 	Shutdown()
 }
 
@@ -69,6 +70,10 @@ func (c DeviceStruct) Config() Config {
 func (c DeviceStruct) Registers() dataflow.Registers {
 	return c.registers
 }
+func (c *DeviceStruct) SetRegisters(registers dataflow.Registers) {
+	c.registers = registers
+}
+
 func (c DeviceStruct) Shutdown() {
 	close(c.shutdown)
 	<-c.closed

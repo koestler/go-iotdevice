@@ -29,7 +29,18 @@ type NumericRegisterValue struct {
 }
 
 func (v NumericRegisterValue) String() string {
-	return fmt.Sprintf("%f", v.value)
+	var unit string
+	if unitP := v.Register().Unit(); unitP != nil {
+		unit = *unitP
+	} else {
+		unit = ""
+	}
+
+	return fmt.Sprintf("%s=%f%s", v.Register().Name(), v.value, unit)
+}
+
+func (v NumericRegisterValue) Value() float64 {
+	return v.value
 }
 
 func NewNumericRegisterValue(deviceName string, register Register, value float64) NumericRegisterValue {
@@ -42,11 +53,25 @@ func NewNumericRegisterValue(deviceName string, register Register, value float64
 	}
 }
 
-type StringRegisterValue struct {
+type TextRegisterValue struct {
 	RegisterValue
 	value string
 }
 
-func (v StringRegisterValue) String() string {
+func (v TextRegisterValue) String() string {
+	return fmt.Sprintf("%s=%s", v.Register().Name(), v.value)
+}
+
+func (v TextRegisterValue) Value() string {
 	return v.value
+}
+
+func NewTextRegisterValue(deviceName string, register Register, value string) TextRegisterValue {
+	return TextRegisterValue{
+		RegisterValue: RegisterValue{
+			deviceName: deviceName,
+			register:   register,
+		},
+		value: value,
+	}
 }

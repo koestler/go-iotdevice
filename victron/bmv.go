@@ -23,19 +23,19 @@ var RegisterListBmvProduct = dataflow.Registers{
 		1,
 		"",
 	),
-	dataflow.CreateStringRegisterStruct(
+	dataflow.CreateTextRegisterStruct(
 		"Product",
 		"SerialNumber",
 		"Serial number",
 		0x010A,
 	),
-	dataflow.CreateStringRegisterStruct(
+	dataflow.CreateTextRegisterStruct(
 		"Product",
 		"ModelName",
 		"Model name",
 		0x010B,
 	),
-	dataflow.CreateStringRegisterStruct(
+	dataflow.CreateTextRegisterStruct(
 		"Product",
 		"Description",
 		"Description",

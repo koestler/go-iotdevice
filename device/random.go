@@ -44,6 +44,12 @@ func CreateRandomDeviceFactory(registers dataflow.Registers) Creator {
 								register,
 								value,
 							)
+						} else if _, ok := register.(dataflow.TextRegisterStruct); ok {
+							output <- dataflow.NewTextRegisterValue(
+								deviceStruct.Config().Name(),
+								register,
+								randomString(8),
+							)
 						}
 					}
 				}
@@ -53,4 +59,15 @@ func CreateRandomDeviceFactory(registers dataflow.Registers) Creator {
 		return &deviceStruct, nil
 	}
 
+}
+
+func randomString(n int) string {
+	const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
+	ret := make([]byte, n)
+	for i := 0; i < n; i++ {
+		num := rand.Intn(len(letters))
+		ret[i] = letters[num]
+	}
+
+	return string(ret)
 }
