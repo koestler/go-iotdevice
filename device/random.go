@@ -1,54 +1,56 @@
 package device
 
 import (
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"log"
 	"math/rand"
 	"time"
 )
 
-func CreateRandom(deviceStruct DeviceStruct, output chan dataflow.Value) (device Device, err error) {
-	cfg := deviceStruct.Config()
+func CreateRandomDeviceFactory(registers dataflow.Registers) Creator {
+	return func(deviceStruct DeviceStruct, output chan dataflow.Value) (device Device, err error) {
+		// store given registers
+		deviceStruct.registers = registers
 
-	if cfg.LogDebug() {
-		log.Printf("device[%s]: start random source", cfg.Name())
-	}
+		cfg := deviceStruct.Config()
 
-	// start source go routine
-	go func() {
-		defer close(deviceStruct.closed)
-		defer close(output)
+		if cfg.LogDebug() {
+			log.Printf("device[%s]: start random source", cfg.Name())
+		}
 
-		ticker := time.NewTicker(time.Second)
+		// start source go routine
+		go func() {
+			defer close(deviceStruct.GetClosedChan())
+			defer close(output)
 
-		for {
-			select {
-			case <-deviceStruct.shutdown:
-				return
-			case <-ticker.C:
-				for _, register := range deviceStruct.Registers() {
-					if signedNumberRegister, ok := register.(dataflow.SignedNumberRegisterStruct); ok {
-						output <- dataflow.NewNumericRegisterValue(
-							deviceStruct.Config().Name(),
-							register,
-							1e2*(rand.Float64()-0.5)*2*signedNumberRegister.Factor(),
-						)
-					} else if unsignedNumberRegister, ok := register.(dataflow.UnsignedNumberRegisterStruct); ok {
-						output <- dataflow.NewNumericRegisterValue(
-							deviceStruct.Config().Name(),
-							register,
-							1e2*rand.Float64()*unsignedNumberRegister.Factor(),
-						)
+			ticker := time.NewTicker(time.Second)
+
+			for {
+				select {
+				case <-deviceStruct.GetShutdownChan():
+					return
+				case <-ticker.C:
+					for _, register := range deviceStruct.Registers() {
+						if numberRegister, ok := register.(dataflow.NumberRegisterStruct); ok {
+							var value float64
+							if numberRegister.Signed() {
+								value = 1e2 * (rand.Float64() - 0.5) * 2 * numberRegister.Factor()
+							} else {
+								value = 1e2 * rand.Float64() * numberRegister.Factor()
+							}
+
+							output <- dataflow.NewNumericRegisterValue(
+								deviceStruct.Config().Name(),
+								register,
+								value,
+							)
+						}
 					}
 				}
 			}
-		}
-	}()
+		}()
 
-	return &deviceStruct, nil
-}
+		return &deviceStruct, nil
+	}
 
-func init() {
-	RegisterCreator(config.RandomBmvKind, CreateRandom)
 }

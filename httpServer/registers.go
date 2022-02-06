@@ -64,9 +64,7 @@ func typeString(rt dataflow.RegisterType) string {
 	switch rt {
 	case dataflow.StringRegister:
 		return "string"
-	case dataflow.SignedNumberRegister:
-		return "number"
-	case dataflow.UnsignedNumberRegister:
+	case dataflow.NumberRegister:
 		return "number"
 	default:
 		return ""

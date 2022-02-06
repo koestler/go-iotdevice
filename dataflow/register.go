@@ -13,8 +13,7 @@ type RegisterType int
 
 const (
 	StringRegister RegisterType = iota
-	SignedNumberRegister
-	UnsignedNumberRegister
+	NumberRegister
 )
 
 type Register interface {
@@ -33,6 +32,53 @@ type RegisterStruct struct {
 	address     uint16
 }
 
+type StringRegisterStruct struct {
+	RegisterStruct
+}
+
+type NumberRegisterStruct struct {
+	RegisterStruct
+	signed bool
+	factor float64
+	unit   *string
+}
+
+func CreateStringRegisterStruct(category, name, description string, address uint16) StringRegisterStruct {
+	return StringRegisterStruct{
+		RegisterStruct{
+			category:    category,
+			name:        name,
+			description: description,
+			address:     address,
+		},
+	}
+}
+
+func CreateNumberRegisterStruct(
+	category, name, description string,
+	address uint16,
+	signed bool,
+	factor float64,
+	unit string,
+) NumberRegisterStruct {
+	var u *string = nil
+	if len(unit) > 0 {
+		u = &unit
+	}
+
+	return NumberRegisterStruct{
+		RegisterStruct: RegisterStruct{
+			category:    category,
+			name:        name,
+			description: description,
+			address:     address,
+		},
+		signed: signed,
+		factor: factor,
+		unit:   u,
+	}
+}
+
 func (r RegisterStruct) Category() string {
 	return r.category
 }
@@ -49,22 +95,8 @@ func (r RegisterStruct) Address() uint16 {
 	return r.address
 }
 
-type StringRegisterStruct struct {
-	RegisterStruct
-}
-
-func (r StringRegisterStruct) Type() RegisterType {
-	return StringRegister
-}
-
 func (r StringRegisterStruct) Unit() *string {
 	return nil
-}
-
-type NumberRegisterStruct struct {
-	RegisterStruct
-	factor float64
-	unit   *string
 }
 
 func (r NumberRegisterStruct) Factor() float64 {
@@ -75,20 +107,16 @@ func (r NumberRegisterStruct) Unit() *string {
 	return r.unit
 }
 
-type SignedNumberRegisterStruct struct {
-	NumberRegisterStruct
+func (r NumberRegisterStruct) Signed() bool {
+	return r.signed
 }
 
-func (r SignedNumberRegisterStruct) Type() RegisterType {
-	return SignedNumberRegister
+func (r StringRegisterStruct) Type() RegisterType {
+	return StringRegister
 }
 
-type UnsignedNumberRegisterStruct struct {
-	NumberRegisterStruct
-}
-
-func (r UnsignedNumberRegisterStruct) Type() RegisterType {
-	return UnsignedNumberRegister
+func (r NumberRegisterStruct) Type() RegisterType {
+	return NumberRegister
 }
 
 func MergeRegisters(maps ...Registers) (output Registers) {

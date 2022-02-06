@@ -4,6 +4,7 @@ import (
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
+	"github.com/koestler/go-iotdevice/victron"
 	"github.com/pkg/errors"
 	"log"
 )
@@ -14,6 +15,11 @@ func runDevices(
 	initiateShutdown chan<- error,
 ) *device.DevicePool {
 	devicePoolInstance := device.RunPool()
+
+	// register creators
+	device.RegisterCreator(config.RandomBmvKind, device.CreateRandomDeviceFactory(victron.RegisterListBmv712))
+	device.RegisterCreator(config.RandomSolarKind, device.CreateRandomDeviceFactory(victron.RegisterListSolar))
+	device.RegisterCreator(config.VedirectKind, victron.CreateVictronDevice)
 
 	countStarted := 0
 

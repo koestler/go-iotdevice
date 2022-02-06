@@ -23,7 +23,7 @@ type Device interface {
 
 type Creator func(deviceStruct DeviceStruct, output chan dataflow.Value) (device Device, err error)
 
-var creators map[config.DeviceKind]Creator
+var creators = make(map[config.DeviceKind]Creator)
 
 func RegisterCreator(kind config.DeviceKind, creator Creator) {
 	creators[kind] = creator
@@ -63,14 +63,22 @@ func RunDevice(cfg Config, target dataflow.Fillable) (device Device, err error) 
 
 }
 
-func (c *DeviceStruct) Config() Config {
+func (c DeviceStruct) Config() Config {
 	return c.cfg
 }
-func (c *DeviceStruct) Registers() dataflow.Registers {
+func (c DeviceStruct) Registers() dataflow.Registers {
 	return c.registers
 }
-func (c *DeviceStruct) Shutdown() {
+func (c DeviceStruct) Shutdown() {
 	close(c.shutdown)
 	<-c.closed
 	log.Printf("device[%s]: shutdown completed", c.cfg.Name())
+}
+
+func (c DeviceStruct) GetShutdownChan() chan struct{} {
+	return c.shutdown
+}
+
+func (c DeviceStruct) GetClosedChan() chan struct{} {
+	return c.closed
 }

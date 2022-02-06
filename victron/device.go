@@ -9,42 +9,52 @@ import (
 	"time"
 )
 
-func RunVictron(c *device.Device, output chan dataflow.Value) (err error) {
-	log.Printf("device[%s]: start vedirect source", c.Config().Name())
+type VictronDeviceStruct struct {
+	device.DeviceStruct
+	deviceId vedirect.VeProduct
+}
+
+func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.Value) (device device.Device, err error) {
+	device = VictronDeviceStruct{
+		DeviceStruct: deviceStruct,
+	}
+	cfg := device.Config()
+
+	log.Printf("device[%s]: start vedirect source", cfg.Name())
 
 	// open vedirect device
-	vd, err := vedirect.Open(c.cfg.Device(), c.cfg.LogComDebug())
+	vd, err := vedirect.Open(cfg.Device(), cfg.LogComDebug())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// send ping
 	if err := vd.VeCommandPing(); err != nil {
-		return fmt.Errorf("ping failed: %s", err)
+		return nil, fmt.Errorf("ping failed: %s", err)
 	}
 
 	// get deviceId
 	deviceId, err := vd.VeCommandDeviceId()
 	if err != nil {
-		return fmt.Errorf("cannot get DeviceId: %s", err)
+		return nil, fmt.Errorf("cannot get DeviceId: %s", err)
 	}
 
 	deviceString := deviceId.String()
 	if len(deviceString) < 1 {
-		return fmt.Errorf("unknown deviceId=%x", err)
+		return nil, fmt.Errorf("unknown deviceId=%x", err)
 	}
 
-	log.Printf("device[%s]: source: connect to %s", c.cfg.Name(), deviceString)
+	log.Printf("device[%s]: source: connect to %s", cfg.Name(), deviceString)
 
 	// get relevant registers
-	registers := victron.RegisterFactoryByProduct(deviceId)
+	registers := RegisterFactoryByProduct(deviceId)
 	if registers == nil {
-		return fmt.Errorf("no registers found for deviceId=%x", deviceId)
+		return nil, fmt.Errorf("no registers found for deviceId=%x", deviceId)
 	}
 
 	// start victron reader
 	go func() {
-		defer close(c.closed)
+		defer close(deviceStruct.GetClosedChan())
 		defer close(output)
 
 		// flush buffer
@@ -54,67 +64,51 @@ func RunVictron(c *device.Device, output chan dataflow.Value) (err error) {
 
 		for {
 			select {
-			case <-c.shutdown:
+			case <-deviceStruct.GetShutdownChan():
 				return
 			case <-ticker.C:
 				start := time.Now()
 
 				if err := vd.VeCommandPing(); err != nil {
-					log.Printf("device[%s]: source: VeCommandPing failed: %v", c.cfg.Name(), err)
+					log.Printf("device[%s]: source: VeCommandPing failed: %v", cfg.Name(), err)
 					continue
 				}
 
 				for _, register := range registers {
-					if numericValue, err := getRegister(vd, register); err != nil {
-						log.Printf("device[%s]: victron.RecvNumeric failed: %v", c.cfg.Name(), err)
-					} else {
-						output <- dataflow.Value{
-							DeviceName:    c.cfg.Name(),
-							Name:          register.Name,
-							Value:         numericValue.Value,
-							Unit:          numericValue.Unit,
-							RoundDecimals: 3,
+					if numberRegister, ok := register.(dataflow.NumberRegisterStruct); ok {
+						var value float64
+						if numberRegister.Signed() {
+							var intValue int64
+							intValue, err = vd.VeCommandGetInt(register.Address())
+							value = float64(intValue)
+						} else {
+							var intValue uint64
+							intValue, err = vd.VeCommandGetUint(register.Address())
+							value = float64(intValue)
+						}
+
+						if err != nil {
+							log.Printf("device[%s]: victron.RecvNumeric failed: %v", cfg.Name(), err)
+						} else {
+							output <- dataflow.NewNumericRegisterValue(
+								deviceStruct.Config().Name(),
+								register,
+								value,
+							)
 						}
 					}
 				}
 
-				if c.cfg.LogDebug() {
+				if cfg.LogDebug() {
 					log.Printf(
 						"device[%s]: registers fetched, took=%.3fs",
-						c.cfg.Name(),
+						cfg.Name(),
 						time.Since(start).Seconds(),
 					)
 				}
 			}
 		}
 	}()
-
-	return
-}
-
-func getRegister(vd *vedirect.Vedirect, reg dataflow.Register) (result NumericValue, err error) {
-	var value float64
-
-	switch reg.Type {
-	case dataflow.SignedNumberRegister:
-		var intValue int64
-		intValue, err = vd.VeCommandGetInt(reg.Address)
-		value = float64(intValue)
-	case dataflow.UnsignedNumberRegister:
-		var intValue uint64
-		intValue, err = vd.VeCommandGetUint(reg.Address)
-		value = float64(intValue)
-	}
-
-	if err != nil {
-		log.Printf("victron.RecvNumeric failed: %v", err)
-		return
-	}
-
-	result = NumericValue{
-		Value: value * reg.Factor,
-		Unit:  reg.Unit,
-	}
 
 	return
 }
