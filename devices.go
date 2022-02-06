@@ -35,7 +35,7 @@ func runDevices(
 			if cfg.LogWorkerStart() {
 				log.Printf(
 					"deviceClient[%s]: started",
-					device.Name(),
+					device.Config().Name(),
 				)
 			}
 		}

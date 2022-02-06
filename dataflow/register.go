@@ -23,6 +23,7 @@ type Register interface {
 	Description() string
 	Address() uint16
 	Type() RegisterType
+	Unit() *string
 }
 
 type RegisterStruct struct {
@@ -56,10 +57,22 @@ func (r StringRegisterStruct) Type() RegisterType {
 	return StringRegister
 }
 
+func (r StringRegisterStruct) Unit() *string {
+	return nil
+}
+
 type NumberRegisterStruct struct {
 	RegisterStruct
 	factor float64
-	unit   string
+	unit   *string
+}
+
+func (r NumberRegisterStruct) Factor() float64 {
+	return r.factor
+}
+
+func (r NumberRegisterStruct) Unit() *string {
+	return r.unit
 }
 
 type SignedNumberRegisterStruct struct {

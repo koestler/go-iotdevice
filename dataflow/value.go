@@ -32,6 +32,16 @@ func (v NumericRegisterValue) String() string {
 	return fmt.Sprintf("%f", v.value)
 }
 
+func NewNumericRegisterValue(deviceName string, register Register, value float64) NumericRegisterValue {
+	return NumericRegisterValue{
+		RegisterValue: RegisterValue{
+			deviceName: deviceName,
+			register:   register,
+		},
+		value: value,
+	}
+}
+
 type StringRegisterValue struct {
 	RegisterValue
 	value string
