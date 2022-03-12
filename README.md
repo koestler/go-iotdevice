@@ -6,6 +6,12 @@ In addition, a http endpoint and a web-frontend is provided to show the values.
 
 ## Development
 
+### Run locally
+#### Install swag
+```bash
+go install github.com/swaggo/swag/cmd/swag@latest
+```
+
 ### Compile and run inside docker
 ```bash
 docker build -f docker/Dockerfile -t go-iotdevice .
