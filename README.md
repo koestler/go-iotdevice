@@ -10,6 +10,7 @@ In addition, a http endpoint and a web-frontend is provided to show the values.
 #### Install swag
 ```bash
 go install github.com/swaggo/swag/cmd/swag@latest
+go generate && go build && ./go-iotdevice
 ```
 
 ### Compile and run inside docker
