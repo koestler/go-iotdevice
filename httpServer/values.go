@@ -3,7 +3,9 @@ package httpServer
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/pkg/errors"
 	"log"
+	"net/http"
 )
 
 type valueResponse interface{}
@@ -34,6 +36,12 @@ func setupValues(r *gin.RouterGroup, env *Environment) {
 			// the follow line uses a loop variable; it must be outside the closure
 			deviceFilter := dataflow.Filter{Devices: map[string]bool{deviceName: true}}
 			r.GET(relativePath, func(c *gin.Context) {
+				// check authorization
+				if !isViewAuthenticated(view, c) {
+					jsonErrorResponse(c, http.StatusForbidden, errors.New("User is not allowed here"))
+					return
+				}
+
 				values := env.Storage.GetMap(deviceFilter)
 				response := make(map[string]valueResponse, len(values))
 				for registerName, value := range values {

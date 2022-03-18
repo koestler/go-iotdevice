@@ -51,3 +51,16 @@ func authJwtMiddleware(env *Environment) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func isViewAuthenticated(view *config.ViewConfig, c *gin.Context) bool {
+	if view.IsPublic() {
+		return true
+	}
+
+	user := c.GetString("AuthUser")
+	if len(user) < 1 {
+		return false
+	}
+
+	return view.IsAllowed(user)
+}

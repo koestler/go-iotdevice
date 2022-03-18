@@ -3,7 +3,9 @@ package httpServer
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/pkg/errors"
 	"log"
+	"net/http"
 )
 
 type registerResponse struct {
@@ -31,7 +33,6 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 	for _, v := range env.Views {
 		view := v
 		for _, deviceName := range view.DeviceNames() {
-
 			device := env.DevicePoolInstance.GetDevice(deviceName)
 			if device == nil {
 				continue
@@ -39,6 +40,12 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 
 			relativePath := "registers/" + view.Name() + "/" + deviceName + ".json"
 			r.GET(relativePath, func(c *gin.Context) {
+				// check authorization
+				if !isViewAuthenticated(view, c) {
+					jsonErrorResponse(c, http.StatusForbidden, errors.New("User is not allowed here"))
+					return
+				}
+
 				registers := device.Registers()
 				response := make([]registerResponse, len(registers))
 				for i, v := range registers {
