@@ -6,10 +6,7 @@ import (
 	"log"
 )
 
-type valueResponse struct {
-	NumericValue *float64 `json:"numericValue,omitempty" example:"42.3"`
-	TextValue    *string  `json:"textValue,omitempty" example:"foobar"`
-}
+type valueResponse interface{}
 
 // setupValues godoc
 // @Summary Outputs the latest values of all the fields of a device.
@@ -41,15 +38,9 @@ func setupValues(r *gin.RouterGroup, env *Environment) {
 				response := make(map[string]valueResponse, len(values))
 				for registerName, value := range values {
 					if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
-						v := numeric.Value()
-						response[registerName] = valueResponse{
-							NumericValue: &v,
-						}
+						response[registerName] = numeric.Value()
 					} else if text, ok := value.(dataflow.TextRegisterValue); ok {
-						v := text.Value()
-						response[registerName] = valueResponse{
-							TextValue: &v,
-						}
+						response[registerName] = text.Value()
 					}
 
 				}
