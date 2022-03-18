@@ -55,7 +55,7 @@ var RegisterListBmvProduct = dataflow.Registers{
 
 var RegisterListBmvMonitor = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
-		"Monitor",
+		"Essential",
 		"MainVoltage",
 		"Main Voltage",
 		0xED8D,
@@ -73,7 +73,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		"V",
 	),
 	dataflow.CreateNumberRegisterStruct(
-		"Monitor",
+		"Essential",
 		"Current",
 		"Current",
 		0xED8F,
@@ -91,7 +91,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		"A",
 	),
 	dataflow.CreateNumberRegisterStruct(
-		"Monitor",
+		"Essential",
 		"Power",
 		"Power",
 		0xED8E,
@@ -107,7 +107,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		0.1,
 		"Ah",
 	), dataflow.CreateNumberRegisterStruct(
-		"Monitor",
+		"Essential",
 		"SOC",
 		"State Of Charge",
 		0x0FFF,
