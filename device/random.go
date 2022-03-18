@@ -34,9 +34,9 @@ func CreateRandomDeviceFactory(registers dataflow.Registers) Creator {
 						if numberRegister, ok := register.(dataflow.NumberRegisterStruct); ok {
 							var value float64
 							if numberRegister.Signed() {
-								value = 1e2 * (rand.Float64() - 0.5) * 2 * numberRegister.Factor()
+								value = 1e2 * (rand.Float64() - 0.5) * 2 / float64(numberRegister.Factor())
 							} else {
-								value = 1e2 * rand.Float64() * numberRegister.Factor()
+								value = 1e2 * rand.Float64() / float64(numberRegister.Factor())
 							}
 
 							output <- dataflow.NewNumericRegisterValue(

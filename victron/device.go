@@ -94,7 +94,7 @@ func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.
 							output <- dataflow.NewNumericRegisterValue(
 								deviceStruct.Config().Name(),
 								register,
-								value*numberRegister.Factor(),
+								value/float64(numberRegister.Factor()),
 							)
 						}
 					}

@@ -39,7 +39,7 @@ type TextRegisterStruct struct {
 type NumberRegisterStruct struct {
 	RegisterStruct
 	signed bool
-	factor float64
+	factor int
 	unit   *string
 }
 
@@ -58,7 +58,7 @@ func CreateNumberRegisterStruct(
 	category, name, description string,
 	address uint16,
 	signed bool,
-	factor float64,
+	factor int,
 	unit string,
 ) NumberRegisterStruct {
 	var u *string = nil
@@ -99,7 +99,7 @@ func (r TextRegisterStruct) Unit() *string {
 	return nil
 }
 
-func (r NumberRegisterStruct) Factor() float64 {
+func (r NumberRegisterStruct) Factor() int {
 	return r.factor
 }
 
