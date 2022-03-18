@@ -48,7 +48,7 @@ func (instance *ValueStorageInstance) handleNewValue(newValue Value) {
 	if _, ok := instance.state[newValue.DeviceName()]; !ok {
 		instance.state[newValue.DeviceName()] = make(ValueMap)
 	}
-	if currentValue, ok := instance.state[newValue.DeviceName()][newValue.Register().Name()]; !ok || currentValue != newValue {
+	if currentValue, ok := instance.state[newValue.DeviceName()][newValue.Register().Name()]; !ok || !currentValue.Equals(newValue) {
 		// copy the input value to all subscribed output channels
 		for _, subscription := range instance.subscriptions {
 			subscription.forward(newValue)

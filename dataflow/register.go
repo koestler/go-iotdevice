@@ -14,6 +14,7 @@ type RegisterType int
 const (
 	StringRegister RegisterType = iota
 	NumberRegister
+	EnumRegister
 )
 
 type Register interface {
@@ -41,6 +42,11 @@ type NumberRegisterStruct struct {
 	signed bool
 	factor int
 	unit   *string
+}
+
+type EnumRegisterStruct struct {
+	RegisterStruct
+	enum map[int]string
 }
 
 func CreateTextRegisterStruct(category, name, description string, address uint16) TextRegisterStruct {
@@ -79,6 +85,18 @@ func CreateNumberRegisterStruct(
 	}
 }
 
+func CreateEnumRegisterStruct(category, name, description string, address uint16, enum map[int]string) EnumRegisterStruct {
+	return EnumRegisterStruct{
+		RegisterStruct: RegisterStruct{
+			category:    category,
+			name:        name,
+			description: description,
+			address:     address,
+		},
+		enum: enum,
+	}
+}
+
 func (r RegisterStruct) Category() string {
 	return r.category
 }
@@ -99,6 +117,10 @@ func (r TextRegisterStruct) Unit() *string {
 	return nil
 }
 
+func (r EnumRegisterStruct) Unit() *string {
+	return nil
+}
+
 func (r NumberRegisterStruct) Factor() int {
 	return r.factor
 }
@@ -111,12 +133,20 @@ func (r NumberRegisterStruct) Signed() bool {
 	return r.signed
 }
 
+func (r EnumRegisterStruct) Enum() map[int]string {
+	return r.enum
+}
+
 func (r TextRegisterStruct) Type() RegisterType {
 	return StringRegister
 }
 
 func (r NumberRegisterStruct) Type() RegisterType {
 	return NumberRegister
+}
+
+func (r EnumRegisterStruct) Type() RegisterType {
+	return EnumRegister
 }
 
 func MergeRegisters(maps ...Registers) (output Registers) {

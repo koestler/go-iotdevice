@@ -6,6 +6,7 @@ type Value interface {
 	DeviceName() string
 	Register() Register
 	String() string
+	Equals(comp Value) bool
 }
 
 type ValueMap map[string]Value
@@ -43,6 +44,14 @@ func (v NumericRegisterValue) Value() float64 {
 	return v.value
 }
 
+func (v NumericRegisterValue) Equals(comp Value) bool {
+	b, ok := comp.(NumericRegisterValue)
+	if !ok {
+		return false
+	}
+	return b.Register().Name() == b.Register().Name() && v.value == b.value
+}
+
 func NewNumericRegisterValue(deviceName string, register Register, value float64) NumericRegisterValue {
 	return NumericRegisterValue{
 		RegisterValue: RegisterValue{
@@ -64,6 +73,14 @@ func (v TextRegisterValue) String() string {
 
 func (v TextRegisterValue) Value() string {
 	return v.value
+}
+
+func (v TextRegisterValue) Equals(comp Value) bool {
+	b, ok := comp.(TextRegisterValue)
+	if !ok {
+		return false
+	}
+	return b.Register().Name() == b.Register().Name() && v.value == b.value
 }
 
 func NewTextRegisterValue(deviceName string, register Register, value string) TextRegisterValue {

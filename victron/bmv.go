@@ -146,15 +146,15 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		true,
 		10,
 		"%",
-	), dataflow.CreateNumberRegisterStruct(
+	), dataflow.CreateEnumRegisterStruct(
 		"Monitor",
 		"SynchronizationState",
 		"Synchronization state",
 		0xEEB6,
-		false,
-		1,
-		"1",
-		// todo: decode this enum
+		map[int]string{
+			0: "false",
+			1: "true",
+		},
 	),
 }
 

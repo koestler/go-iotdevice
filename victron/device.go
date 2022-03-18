@@ -109,6 +109,24 @@ func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.
 								value,
 							)
 						}
+					} else if enumRegister, ok := register.(dataflow.EnumRegisterStruct); ok {
+						var intValue uint64
+						intValue, err = vd.VeCommandGetUint(register.Address())
+
+						if err != nil {
+							log.Printf("device[%s]: fetching enum register failed: %v", cfg.Name(), err)
+						} else {
+							enum := enumRegister.Enum()
+							text := "null"
+							if v, ok := enum[int(intValue)]; ok {
+								text = v
+							}
+							output <- dataflow.NewTextRegisterValue(
+								deviceStruct.Config().Name(),
+								register,
+								text,
+							)
+						}
 					}
 				}
 
