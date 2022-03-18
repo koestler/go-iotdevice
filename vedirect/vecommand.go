@@ -261,6 +261,21 @@ func (vd *Vedirect) VeCommandGetInt(address uint16) (value int64, err error) {
 	return
 }
 
+func (vd *Vedirect) VeCommandGetString(address uint16) (value string, err error) {
+	vd.debugPrintf("vedirect: VeCommandGetString begin")
+
+	rawValue, err := vd.VeCommandGet(address)
+	if err != nil {
+		vd.debugPrintf("vedirect: VeCommandGetString end err=%v", err)
+		return
+	}
+
+	value = string(bytes.TrimRightFunc(rawValue, func(r rune) bool { return r == 0 }))
+
+	vd.debugPrintf("vedirect: VeCommandGetString end value=%v", value)
+	return
+}
+
 func (vd *Vedirect) RecvVeResponse() (data []byte, err error) {
 	vd.debugPrintf("vedirect: RecvVeResponse begin")
 

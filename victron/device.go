@@ -89,12 +89,24 @@ func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.
 						}
 
 						if err != nil {
-							log.Printf("device[%s]: victron.RecvNumeric failed: %v", cfg.Name(), err)
+							log.Printf("device[%s]: fetching number register failed: %v", cfg.Name(), err)
 						} else {
 							output <- dataflow.NewNumericRegisterValue(
 								deviceStruct.Config().Name(),
 								register,
 								value/float64(numberRegister.Factor()),
+							)
+						}
+					} else if _, ok := register.(dataflow.TextRegisterStruct); ok {
+						value, err := vd.VeCommandGetString(register.Address())
+
+						if err != nil {
+							log.Printf("device[%s]: fetching text register failed: %v", cfg.Name(), err)
+						} else {
+							output <- dataflow.NewTextRegisterValue(
+								deviceStruct.Config().Name(),
+								register,
+								value,
 							)
 						}
 					}
