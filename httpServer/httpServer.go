@@ -91,9 +91,10 @@ func (s *HttpServer) Shutdown() {
 }
 
 func addApiV1Routes(r *gin.Engine, config Config, env *Environment) {
-	v0 := r.Group("/api/v1/")
-	setupConfig(v0, env)
-	setupLogin(v0, env)
-	setupRegisters(v0, env)
-	setupValues(v0, env)
+	v1 := r.Group("/api/v1/")
+	setupConfig(v1, env)
+	setupLogin(v1, env)
+	setupRegisters(v1, env)
+	setupValuesJson(v1, env)
+	setupValuesWs(v1, env)
 }

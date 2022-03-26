@@ -7,22 +7,17 @@ type ValueStorageInstance struct {
 
 	// state: 1. dimension: eevice.Name, 2. dimension: register.Name
 	state         State
-	subscriptions []subscription
+	subscriptions map[*Subscription]struct{}
 
 	// communication channels to/from the main go routine
 	inputChannel            chan Value
-	subscriptionChannel     chan *subscription
+	subscriptionChannel     chan *Subscription
 	readStateRequestChannel chan *readStateRequest
 }
 
 type Filter struct {
 	Devices       map[string]bool
 	RegisterNames map[string]bool
-}
-
-type subscription struct {
-	outputChannel chan Value
-	filter        Filter
 }
 
 type readStateRequest struct {
@@ -36,7 +31,7 @@ func (instance *ValueStorageInstance) mainStorageRoutine() {
 		case newValue := <-instance.inputChannel:
 			instance.handleNewValue(newValue)
 		case newSubscription := <-instance.subscriptionChannel:
-			instance.subscriptions = append(instance.subscriptions, *newSubscription)
+			instance.subscriptions[newSubscription] = struct{}{}
 		case newReadStateRequest := <-instance.readStateRequestChannel:
 			instance.handleNewReadStateRequest(newReadStateRequest)
 		}
@@ -50,8 +45,15 @@ func (instance *ValueStorageInstance) handleNewValue(newValue Value) {
 	}
 	if currentValue, ok := instance.state[newValue.DeviceName()][newValue.Register().Name()]; !ok || !currentValue.Equals(newValue) {
 		// copy the input value to all subscribed output channels
-		for _, subscription := range instance.subscriptions {
-			subscription.forward(newValue)
+		for subscription, _ := range instance.subscriptions {
+			// check if Subscription was shut down
+			select {
+			case <-subscription.shutdownChannel:
+				delete(instance.subscriptions, subscription)
+			default:
+				// Subscription was not shut down -> forward new value
+				subscription.forward(newValue)
+			}
 		}
 
 		// and save the new state
@@ -86,8 +88,9 @@ func (instance *ValueStorageInstance) handleNewReadStateRequest(newReadStateRequ
 func ValueStorageCreate() (valueStorageInstance *ValueStorageInstance) {
 	valueStorageInstance = &ValueStorageInstance{
 		state:                   make(State),
+		subscriptions:           make(map[*Subscription]struct{}),
 		inputChannel:            make(chan Value, 32), // input channel is buffered
-		subscriptionChannel:     make(chan *subscription),
+		subscriptionChannel:     make(chan *Subscription),
 		readStateRequestChannel: make(chan *readStateRequest),
 	}
 
@@ -95,6 +98,12 @@ func ValueStorageCreate() (valueStorageInstance *ValueStorageInstance) {
 	go valueStorageInstance.mainStorageRoutine()
 
 	return
+}
+
+func (instance *ValueStorageInstance) Shutdown() {
+	for subscription, _ := range instance.subscriptions {
+		subscription.Shutdown()
+	}
 }
 
 func (instance *ValueStorageInstance) GetState(filter Filter) State {
@@ -133,57 +142,18 @@ func (instance *ValueStorageInstance) Fill(input <-chan Value) {
 	}()
 }
 
-func (instance *ValueStorageInstance) Drain() <-chan Value {
+func (instance *ValueStorageInstance) Drain() Subscription {
 	return instance.Subscribe(Filter{})
 }
 
-func (instance *ValueStorageInstance) Subscribe(filter Filter) <-chan Value {
-	output := make(chan Value)
-
-	instance.subscriptionChannel <- &subscription{
-		outputChannel: output,
-		filter:        filter,
+func (instance *ValueStorageInstance) Subscribe(filter Filter) Subscription {
+	s := Subscription{
+		shutdownChannel: make(chan struct{}),
+		outputChannel:   make(chan Value, 32),
+		filter:          filter,
 	}
 
-	return output
-}
+	instance.subscriptionChannel <- &s
 
-func (instance *ValueStorageInstance) Append(fillable Fillable) Fillable {
-	fillable.Fill(instance.Drain())
-	return fillable
-}
-
-func filterByDevice(filter *Filter, deviceName string) bool {
-	// list is empty -> every device is ok
-	if len(filter.Devices) < 1 {
-		return true
-	}
-
-	// only ok if present and true
-	_, ok := filter.Devices[deviceName]
-	return ok && filter.Devices[deviceName]
-}
-
-func filterByRegisterName(filter *Filter, registerName string) bool {
-	// list is empty -> every device is ok
-	if len(filter.RegisterNames) < 1 {
-		return true
-	}
-
-	// only ok if present and true
-	_, ok := filter.RegisterNames[registerName]
-	return ok && filter.RegisterNames[registerName]
-}
-
-func filterValue(filter *Filter, value Value) bool {
-	return filterByDevice(filter, value.DeviceName()) && filterByRegisterName(filter, value.Register().Name())
-}
-
-func (subscription subscription) forward(newValue Value) {
-	filter := subscription.filter
-
-	if filterValue(&filter, newValue) {
-		// forward value
-		subscription.outputChannel <- newValue
-	}
+	return s
 }

@@ -90,6 +90,7 @@ func main() {
 
 		// start storage
 		storage := runStorage(cfg)
+		defer storage.Shutdown()
 
 		// start devices
 		devicePoolInstance := runDevices(cfg, storage, initiateShutdown)
