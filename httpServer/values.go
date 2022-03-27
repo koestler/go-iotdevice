@@ -67,6 +67,10 @@ func compile1DResponse(values dataflow.ValueMap) (response map[string]valueRespo
 	return
 }
 
+type authMessage struct {
+	AuthToken string `json:"authToken"`
+}
+
 // setupValuesWs godoc
 // @Summary Websocket that sends all values initially and sends updates of changed values subsequently.
 // @ID valuesWs
@@ -85,11 +89,11 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 
 		// the follow line uses a loop variable; it must be outside the closure
 		r.GET(relativePath, func(c *gin.Context) {
-			// check authorization
-			if !isViewAuthenticated(view, c) {
-				log.Printf("httpServer: %s%s: permission denied", r.BasePath(), relativePath)
-				jsonErrorResponse(c, http.StatusForbidden, errors.New("User is not allowed here"))
-				return
+			authenticated := make(chan bool, 1)
+
+			// no authentication needed for public views
+			if view.IsPublic() {
+				authenticated <- true
 			}
 
 			conn, _, _, err := ws.UpgradeHTTP(c.Request, c.Writer)
@@ -100,24 +104,38 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 				}
 				return
 			}
-			log.Printf("httpServer: %s%s: websocket connection established", r.BasePath(), relativePath)
+			log.Printf("httpServer: %s%s: connection established to %s", r.BasePath(), relativePath, c.ClientIP())
 
 			subscription := env.Storage.Subscribe(deviceFilter)
 
 			go func() {
 				defer subscription.Shutdown()
 				defer conn.Close()
+				defer close(authenticated)
+				defer log.Printf("httpServer: %s%s: connection closed to %s", r.BasePath(), relativePath, c.ClientIP())
+
+				authenticationCompleted := view.IsPublic()
+
 				for {
 					msg, op, err := wsutil.ReadClientData(conn)
 					if op == ws.OpClose {
-						log.Printf("httpServer: %s%s: close connection", r.BasePath(), relativePath)
 						return
 					}
 					if err != nil {
-						log.Printf("httpServer: %s%s: error during read: %s", r.BasePath(), relativePath, err)
 						return
-					} else {
+					}
+					if env.Config.LogDebug() {
 						log.Printf("httpServer: %s%s: message received: %s", r.BasePath(), relativePath, msg)
+					}
+					if !authenticationCompleted {
+						var authMsg authMessage
+						if err := json.Unmarshal(msg, &authMsg); err == nil {
+							if user, err := checkToken(authMsg.AuthToken, env.Auth.JwtSecret()); err == nil {
+								log.Printf("httpServer: %s%s: user=%s authenticated", r.BasePath(), relativePath, user)
+								authenticated <- isViewAuthenticatedByUser(view, user)
+								authenticationCompleted = true
+							}
+						}
 					}
 				}
 			}()
@@ -125,6 +143,12 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 			go func() {
 				writer := wsutil.NewWriter(conn, ws.StateServerSide, ws.OpText)
 				encoder := json.NewEncoder(writer)
+
+				// wait for authentication
+				if !<-authenticated {
+					// authentication failed, do not send anything
+					return
+				}
 
 				// send all values after initial connect
 				{

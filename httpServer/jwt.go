@@ -28,36 +28,47 @@ func createJwtToken(config config.AuthConfig, user string) (tokenStr string, err
 
 func authJwtMiddleware(env *Environment) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// extract jwt toke from authorization header if present
+		// extract jwt token from authorization header if present
 		tokenStr := c.GetHeader("Authorization")
 		if len(tokenStr) < 1 {
 			c.Next()
 			return
 		}
 
-		// decode jwt token
-		claims := &jwtClaims{}
-		tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-			return env.Auth.JwtSecret(), nil
-		})
-		if err != nil || !tkn.Valid {
-			jsonErrorResponse(c, http.StatusUnauthorized, errors.New("error while parsing token"))
+		if user, err := checkToken(tokenStr, env.Auth.JwtSecret()); err != nil {
+			jsonErrorResponse(c, http.StatusUnauthorized, errors.New("invalid jwt token"))
 			c.Abort()
-			return
+		} else {
+			// continue; if user is set this means a valid token is present
+			c.Set("AuthUser", user)
+			c.Next()
 		}
-
-		// continue; if user is set this means a valid token is present
-		c.Set("AuthUser", claims.User)
-		c.Next()
 	}
 }
 
+func checkToken(tokenStr string, jwtSecret []byte) (user string, err error) {
+	// decode jwt token
+	claims := &jwtClaims{}
+	tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+	if err != nil {
+		return "", err
+	}
+	if !tkn.Valid {
+		return "", errors.New("invalid token")
+	}
+	return claims.User, nil
+}
+
 func isViewAuthenticated(view *config.ViewConfig, c *gin.Context) bool {
+	return isViewAuthenticatedByUser(view, c.GetString("AuthUser"))
+}
+
+func isViewAuthenticatedByUser(view *config.ViewConfig, user string) bool {
 	if view.IsPublic() {
 		return true
 	}
-
-	user := c.GetString("AuthUser")
 	if len(user) < 1 {
 		return false
 	}
