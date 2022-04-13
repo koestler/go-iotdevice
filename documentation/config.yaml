@@ -41,3 +41,5 @@ Views:
     Devices:
       - Name: 2-bmv
         Title: Battery Two
+    AllowedUsers:
+      - tester
