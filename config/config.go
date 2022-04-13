@@ -456,33 +456,30 @@ func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewC
 	return
 }
 
-func (c viewDeviceConfigReadMap) TransformAndValidate(devices []*DeviceConfig) (ret []*ViewDeviceConfig, err []error) {
+func (c viewDeviceConfigReadList) TransformAndValidate(devices []*DeviceConfig) (ret []*ViewDeviceConfig, err []error) {
 	if len(c) < 1 {
 		return ret, []error{fmt.Errorf("Devices section must no be empty.")}
 	}
 
 	ret = make([]*ViewDeviceConfig, len(c))
-	j := 0
-	for name, device := range c {
-		r, e := device.TransformAndValidate(name, devices)
-		ret[j] = &r
+	for i, device := range c {
+		r, e := device.TransformAndValidate(devices)
+		ret[i] = &r
 		err = append(err, e...)
-		j++
 	}
 	return
 
 }
 
 func (c viewDeviceConfigRead) TransformAndValidate(
-	name string,
 	devices []*DeviceConfig,
 ) (ret ViewDeviceConfig, err []error) {
-	if !deviceExists(name, devices) {
-		err = append(err, fmt.Errorf("Device='%s' is not defined", name))
+	if !deviceExists(c.Name, devices) {
+		err = append(err, fmt.Errorf("Device='%s' is not defined", c.Name))
 	}
 
 	ret = ViewDeviceConfig{
-		name:   name,
+		name:   c.Name,
 		title:  c.Title,
 		fields: c.Fields,
 	}

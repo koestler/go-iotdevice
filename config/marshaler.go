@@ -85,6 +85,7 @@ func (c DeviceConfig) convertToRead() deviceConfigRead {
 
 func (c ViewDeviceConfig) convertToRead() viewDeviceConfigRead {
 	return viewDeviceConfigRead{
+		Name:   c.name,
 		Title:  c.title,
 		Fields: c.fields,
 	}
@@ -94,10 +95,10 @@ func (c ViewConfig) convertToRead() viewConfigRead {
 	return viewConfigRead{
 		Name:  c.name,
 		Title: c.title,
-		Devices: func() viewDeviceConfigReadMap {
-			views := make(viewDeviceConfigReadMap, len(c.devices))
-			for _, c := range c.devices {
-				views[c.name] = c.convertToRead()
+		Devices: func() viewDeviceConfigReadList {
+			views := make(viewDeviceConfigReadList, len(c.devices))
+			for i, c := range c.devices {
+				views[i] = c.convertToRead()
 			}
 			return views
 		}(),

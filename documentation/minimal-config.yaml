@@ -11,5 +11,5 @@ Views:
   - Name: all
     Title: Alles
     Devices:
-      0-solar:
-        title: Solar Charger
+      - Name: 0-solar
+        Title: Solar Charger

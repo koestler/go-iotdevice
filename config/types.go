@@ -129,18 +129,19 @@ type deviceConfigRead struct {
 type deviceConfigReadMap map[string]deviceConfigRead
 
 type viewDeviceConfigRead struct {
+	Name   string   `yaml:"Name"`
 	Title  string   `yaml:"Title"`
 	Fields []string `yaml:"Fields"`
 }
 
-type viewDeviceConfigReadMap map[string]viewDeviceConfigRead
+type viewDeviceConfigReadList []viewDeviceConfigRead
 
 type viewConfigRead struct {
-	Name         string                  `yaml:"Name"`
-	Title        string                  `yaml:"Title"`
-	Devices      viewDeviceConfigReadMap `yaml:"Devices"`
-	AllowedUsers []string                `yaml:"AllowedUsers"`
-	Hidden       *bool                   `yaml:"Hidden"`
+	Name         string                   `yaml:"Name"`
+	Title        string                   `yaml:"Title"`
+	Devices      viewDeviceConfigReadList `yaml:"Devices"`
+	AllowedUsers []string                 `yaml:"AllowedUsers"`
+	Hidden       *bool                    `yaml:"Hidden"`
 }
 
 type viewConfigReadList []viewConfigRead

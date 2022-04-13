@@ -29,19 +29,15 @@ Views:
   - Name: public
     Title: Simple
     Devices:
-      #0-solar:
+      #- Name: 0-solar
       #  Title: Solar Charger
-      1-bmv:
+      - Name: 1-bmv
         Title: Battery One
-      2-bmv:
+      - Name: 2-bmv
         Title: Battery Two
 
   - Name: private
     Title: Details
     Devices:
-      #0-solar:
-      #  Title: Solar Charger
-      #1-bmv:
-      #  Title: Battery One
-      2-bmv:
+      - Name: 2-bmv
         Title: Battery Two
