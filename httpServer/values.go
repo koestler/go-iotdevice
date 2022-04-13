@@ -45,7 +45,7 @@ func setupValuesJson(r *gin.RouterGroup, env *Environment) {
 					jsonErrorResponse(c, http.StatusForbidden, errors.New("User is not allowed here"))
 					return
 				}
-				values := env.Storage.GetMap(deviceFilter)
+				values := env.Storage.GetSlice(deviceFilter)
 				jsonGetResponse(c, compile1DResponse(values))
 			})
 			if env.Config.LogConfig() {
@@ -55,13 +55,13 @@ func setupValuesJson(r *gin.RouterGroup, env *Environment) {
 	}
 }
 
-func compile1DResponse(values dataflow.ValueMap) (response map[string]valueResponse) {
+func compile1DResponse(values []dataflow.Value) (response map[string]valueResponse) {
 	response = make(map[string]valueResponse, len(values))
-	for registerName, value := range values {
+	for _, value := range values {
 		if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
-			response[registerName] = numeric.Value()
+			response[value.Register().Name()] = numeric.Value()
 		} else if text, ok := value.(dataflow.TextRegisterValue); ok {
-			response[registerName] = text.Value()
+			response[value.Register().Name()] = text.Value()
 		}
 	}
 	return
@@ -152,7 +152,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 
 				// send all values after initial connect
 				{
-					values := env.Storage.GetMap(deviceFilter)
+					values := env.Storage.GetSlice(deviceFilter)
 					response := compile2DResponse(values)
 					if err := wsSendResponse(writer, encoder, response); err != nil {
 						log.Printf("httpServer: %s%s: error while sending initial values: %s", r.BasePath(), relativePath, err)
@@ -205,7 +205,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 	}
 }
 
-func compile2DResponse(values dataflow.ValueMap) (response map[string]map[string]valueResponse) {
+func compile2DResponse(values []dataflow.Value) (response map[string]map[string]valueResponse) {
 	response = make(map[string]map[string]valueResponse, 1)
 	for _, value := range values {
 		append2DResponseValue(response, value)

@@ -119,17 +119,21 @@ func (instance *ValueStorageInstance) GetState(filter Filter) State {
 	return <-request.response
 }
 
-func (instance *ValueStorageInstance) GetMap(filter Filter) (result ValueMap) {
-	result = make(ValueMap)
-
+func (instance *ValueStorageInstance) GetSlice(filter Filter) (result []Value) {
 	state := instance.GetState(filter)
 
+	// create result slice of correct capacity
+	cap := 0
 	for _, deviceState := range state {
-		for registerName, value := range deviceState {
-			result[registerName] = value
+		cap += len(deviceState)
+	}
+	result = make([]Value, 0, cap)
+
+	for _, deviceState := range state {
+		for _, value := range deviceState {
+			result = append(result, value)
 		}
 	}
-
 	return
 }
 
