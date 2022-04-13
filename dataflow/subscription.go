@@ -7,7 +7,6 @@ type Subscription struct {
 }
 
 func (s *Subscription) Shutdown() {
-	close(s.outputChannel)
 	close(s.shutdownChannel)
 }
 
