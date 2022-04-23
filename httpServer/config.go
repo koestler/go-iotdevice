@@ -16,6 +16,7 @@ type viewResponse struct {
 	Name     string               `json:"name" example:"public"`
 	Title    string               `json:"title" example:"Outlook"`
 	Devices  []deviceViewResponse `json:"devices"`
+	Autoplay bool                 `json:"autoplay" example:"True"`
 	IsPublic bool                 `json:"isPublic" example:"False"`
 	Hidden   bool                 `json:"hidden" example:"False"`
 }
@@ -57,6 +58,7 @@ func setupConfig(r *gin.RouterGroup, env *Environment) {
 					}
 					return
 				}(v.Devices()),
+				Autoplay: v.Autoplay(),
 				IsPublic: v.IsPublic(),
 				Hidden:   v.Hidden(),
 			})

@@ -445,6 +445,10 @@ func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewC
 		}
 	}
 
+	if c.Autoplay != nil && *c.Autoplay {
+		ret.autoplay = true
+	}
+
 	for _, user := range c.AllowedUsers {
 		ret.allowedUsers[user] = struct{}{}
 	}

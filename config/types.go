@@ -63,6 +63,7 @@ type ViewConfig struct {
 	name         string              // mandatory: A technical name used in the URLs
 	title        string              // mandatory: a nice title for the frontend
 	devices      []*ViewDeviceConfig // mandatory: a list of deviceClient names
+	autoplay     bool                // optional: default false
 	allowedUsers map[string]struct{} // optional: if empty: view is public; otherwise only allowed to listed users
 	hidden       bool                // optional: if true, view is not shown in menu unless logged in
 }
@@ -140,6 +141,7 @@ type viewConfigRead struct {
 	Name         string                   `yaml:"Name"`
 	Title        string                   `yaml:"Title"`
 	Devices      viewDeviceConfigReadList `yaml:"Devices"`
+	Autoplay     *bool                    `yaml:"Autoplay"`
 	AllowedUsers []string                 `yaml:"AllowedUsers"`
 	Hidden       *bool                    `yaml:"Hidden"`
 }

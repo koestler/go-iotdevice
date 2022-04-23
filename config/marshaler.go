@@ -102,6 +102,7 @@ func (c ViewConfig) convertToRead() viewConfigRead {
 			}
 			return views
 		}(),
+		Autoplay:     &c.autoplay,
 		AllowedUsers: mapKeys(c.allowedUsers),
 		Hidden:       &c.hidden,
 	}

@@ -177,6 +177,10 @@ func (c ViewConfig) DeviceNames() []string {
 	return names
 }
 
+func (c ViewConfig) Autoplay() bool {
+	return c.autoplay
+}
+
 func (c ViewConfig) IsAllowed(user string) bool {
 	_, ok := c.allowedUsers[user]
 	return ok
