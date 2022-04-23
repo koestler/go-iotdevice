@@ -22,6 +22,7 @@ type Register interface {
 	Name() string
 	Description() string
 	Address() uint16
+	Static() bool
 	Type() RegisterType
 	Unit() *string
 }
@@ -31,6 +32,7 @@ type RegisterStruct struct {
 	name        string
 	description string
 	address     uint16
+	static      bool
 }
 
 type TextRegisterStruct struct {
@@ -49,13 +51,14 @@ type EnumRegisterStruct struct {
 	enum map[int]string
 }
 
-func CreateTextRegisterStruct(category, name, description string, address uint16) TextRegisterStruct {
+func CreateTextRegisterStruct(category, name, description string, address uint16, static bool) TextRegisterStruct {
 	return TextRegisterStruct{
 		RegisterStruct{
 			category:    category,
 			name:        name,
 			description: description,
 			address:     address,
+			static:      static,
 		},
 	}
 }
@@ -63,6 +66,7 @@ func CreateTextRegisterStruct(category, name, description string, address uint16
 func CreateNumberRegisterStruct(
 	category, name, description string,
 	address uint16,
+	static bool,
 	signed bool,
 	factor int,
 	unit string,
@@ -78,6 +82,7 @@ func CreateNumberRegisterStruct(
 			name:        name,
 			description: description,
 			address:     address,
+			static:      static,
 		},
 		signed: signed,
 		factor: factor,
@@ -85,13 +90,14 @@ func CreateNumberRegisterStruct(
 	}
 }
 
-func CreateEnumRegisterStruct(category, name, description string, address uint16, enum map[int]string) EnumRegisterStruct {
+func CreateEnumRegisterStruct(category, name, description string, address uint16, static bool, enum map[int]string) EnumRegisterStruct {
 	return EnumRegisterStruct{
 		RegisterStruct: RegisterStruct{
 			category:    category,
 			name:        name,
 			description: description,
 			address:     address,
+			static:      static,
 		},
 		enum: enum,
 	}
@@ -111,6 +117,10 @@ func (r RegisterStruct) Description() string {
 
 func (r RegisterStruct) Address() uint16 {
 	return r.address
+}
+
+func (r RegisterStruct) Static() bool {
+	return r.static
 }
 
 func (r TextRegisterStruct) Unit() *string {
