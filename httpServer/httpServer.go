@@ -97,4 +97,5 @@ func addApiV1Routes(r *gin.Engine, config Config, env *Environment) {
 	setupRegisters(v1, env)
 	setupValuesJson(v1, env)
 	setupValuesWs(v1, env)
+	setupHassYaml(v1, env)
 }
