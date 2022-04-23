@@ -60,7 +60,7 @@ func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.
 
 		// flush buffer
 		vd.RecvFlush()
-		fetchStatic := true
+		fetchStaticCounter := 0
 
 		ticker := time.NewTicker(100 * time.Millisecond)
 
@@ -77,8 +77,8 @@ func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.
 				}
 
 				for _, register := range registers {
-					// only fetch static registers once
-					if register.Static() && !fetchStatic {
+					// only fetch static registers seldomly
+					if register.Static() && (fetchStaticCounter%60 != 0) {
 						continue
 					}
 
@@ -136,7 +136,7 @@ func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.
 					}
 				}
 
-				fetchStatic = false
+				fetchStaticCounter++
 
 				if cfg.LogDebug() {
 					log.Printf(
