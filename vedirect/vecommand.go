@@ -12,7 +12,7 @@ import (
 
 func computeChecksum(cmd byte, data []byte) (checksum byte) {
 	checksum = byte(0x55)
-	checksum -= byte(cmd)
+	checksum -= cmd
 	for _, v := range data {
 		checksum -= v
 	}
