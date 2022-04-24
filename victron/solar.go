@@ -8,7 +8,7 @@ var RegisterListSolarProduct = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Product",
 		"ProductId",
-		"Product Id",
+		"Product id",
 		0x0100,
 		true,
 		false,
@@ -18,7 +18,7 @@ var RegisterListSolarProduct = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Product",
 		"GroupId",
-		"Group Id",
+		"Group id",
 		0x0104,
 		true,
 		false,
@@ -153,7 +153,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 	dataflow.CreateEnumRegisterStruct(
 		"Settings",
 		"BatteryType",
-		"Battery Type",
+		"Battery type",
 		0xEDF1,
 		false,
 		map[int]string{
@@ -191,7 +191,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Settings",
 		"BatteryTemperature",
-		"Battery Temperature",
+		"Battery temperature",
 		0xEDEC,
 		true,
 		false,
@@ -201,7 +201,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 	dataflow.CreateEnumRegisterStruct(
 		"Settings",
 		"BatteryVoltageSetting",
-		"Battery Voltage Setting",
+		"Battery voltage setting",
 		0xEDEA,
 		false,
 		map[int]string{
@@ -257,7 +257,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Settings",
 		"EqualisationCurrentLevel",
-		"Equalisation Current Level",
+		"Equalisation current level",
 		0xEDE4,
 		true,
 		false,
@@ -267,7 +267,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Settings",
 		"EqualisationDuration",
-		"Equalisation Duration",
+		"Equalisation duration",
 		0xEDE3,
 		true,
 		false,
@@ -277,7 +277,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Settings",
 		"Ree-bulk voltage offset",
-		"Equalisation Duration",
+		"Equalisation duration",
 		0xED2E,
 		true,
 		false,
@@ -287,7 +287,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Settings",
 		"BatteryLowTemperatureLevel",
-		"Battery Low Temperature Level",
+		"Battery low temperature level",
 		0xEDE0,
 		true,
 		true,
@@ -350,7 +350,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Charger",
 		"ChargerInternalTemperature",
-		"Charger Internal Temperature",
+		"Charger internal temperature",
 		0xEDDB,
 		false,
 		true,
@@ -360,7 +360,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 	dataflow.CreateEnumRegisterStruct(
 		"Generic",
 		"ChargerErrorCode",
-		"Charger Error",
+		"Charger error",
 		0xEDDA,
 		false,
 		map[int]string{
@@ -398,7 +398,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Essential",
 		"ChargerVoltage",
-		"Charger Voltage",
+		"Charger voltage",
 		0xEDD5,
 		false,
 		false,
@@ -409,7 +409,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Essential",
 		"YieldToday",
-		"Yield Today",
+		"Yield today",
 		0xEDD3,
 		false,
 		false,
@@ -419,7 +419,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Charger",
 		"MaximumPowerToday",
-		"Maximum Power Today",
+		"Maximum power today",
 		0xEDD2,
 		false,
 		false,
@@ -429,7 +429,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Charger",
 		"YieldYesterday",
-		"Yield Yesterday",
+		"Yield yesterday",
 		0xEDD1,
 		false,
 		false,
@@ -439,7 +439,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Charger",
 		"MaximumPowerYesterday",
-		"Maximum Power Yesterday",
+		"Maximum power yesterday",
 		0xEDD0,
 		false,
 		false,
@@ -457,7 +457,7 @@ var RegisterListSolarPanelData = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Essential",
 		"PanelPower",
-		"Panel Power",
+		"Panel power",
 		0xEDBC,
 		false,
 		false,
@@ -467,7 +467,7 @@ var RegisterListSolarPanelData = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Panel",
 		"PanelVoltage",
-		"Panel Voltage",
+		"Panel voltage",
 		0xEDBB,
 		false,
 		false,
@@ -477,7 +477,7 @@ var RegisterListSolarPanelData = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Panel",
 		"PanelCurrent",
-		"Panel Current",
+		"Panel current",
 		0xEDBD,
 		false,
 		false,
@@ -487,7 +487,7 @@ var RegisterListSolarPanelData = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Panel",
 		"PanelMaximumVoltage",
-		"Panel Maximum Voltage",
+		"Panel maximum voltage",
 		0xEDB8,
 		true,
 		false,
@@ -497,7 +497,7 @@ var RegisterListSolarPanelData = dataflow.Registers{
 	dataflow.CreateEnumRegisterStruct(
 		"Panel",
 		"TrackerMode",
-		"Tracker Mode",
+		"Tracker mode",
 		0xEDB3,
 		false,
 		map[int]string{

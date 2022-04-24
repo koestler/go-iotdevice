@@ -8,7 +8,7 @@ var RegisterListBmvProduct = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Product",
 		"ProductId",
-		"Product Id",
+		"Product id",
 		0x0100,
 		true,
 		false,
@@ -63,7 +63,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Essential",
 		"MainVoltage",
-		"Main Voltage",
+		"Main voltage",
 		0xED8D,
 		false,
 		true,
@@ -73,7 +73,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
 		"Monitor",
 		"AuxVoltage",
-		"Aux (starter) Voltage",
+		"Aux (starter) voltage",
 		0xED7D,
 		false,
 		false,
@@ -102,7 +102,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 	), dataflow.CreateNumberRegisterStruct(
 		"Monitor",
 		"Consumed",
-		"Consumed Ah",
+		"Consumed",
 		0xEEFF,
 		false,
 		true,
@@ -111,7 +111,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 	), dataflow.CreateNumberRegisterStruct(
 		"Essential",
 		"SOC",
-		"State Of Charge",
+		"State of charge",
 		0x0FFF,
 		false,
 		false,
@@ -215,7 +215,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 	), dataflow.CreateNumberRegisterStruct(
 		"Historic",
 		"CumulativeAmpHours",
-		"Cumulative Amp Hours",
+		"Cumulative amp hours",
 		0x0305,
 		false,
 		true,
@@ -224,7 +224,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 	), dataflow.CreateNumberRegisterStruct(
 		"Historic",
 		"MainVoltageMinimum",
-		"Minimum Voltage",
+		"Minimum voltage",
 		0x0306,
 		false,
 		false,
@@ -233,7 +233,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 	), dataflow.CreateNumberRegisterStruct(
 		"Historic",
 		"MainVoltageMaximum",
-		"Maximum Voltage",
+		"Maximum voltage",
 		0x0307,
 		false,
 		false,
@@ -260,7 +260,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 	), dataflow.CreateNumberRegisterStruct(
 		"Historic",
 		"NumberOfLowMainVoltageAlarms",
-		"Number of Low Voltage Alarms",
+		"Number of low voltage alarms",
 		0x030A,
 		false,
 		false,
@@ -269,7 +269,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 	), dataflow.CreateNumberRegisterStruct(
 		"Historic",
 		"NumberOfHighMainVoltageAlarms",
-		"Number of High Voltage Alarms",
+		"Number of high voltage alarms",
 		0x030B,
 		false,
 		false,
@@ -278,7 +278,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 	), dataflow.CreateNumberRegisterStruct(
 		"Historic",
 		"AuxVoltageMinimum",
-		"Minimum Starter Voltage",
+		"Minimum starter voltage",
 		0x030E,
 		false,
 		true,
@@ -287,7 +287,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 	), dataflow.CreateNumberRegisterStruct(
 		"Historic",
 		"AuxVoltageMaximum",
-		"Maximum Starter Voltage",
+		"Maximum starter voltage",
 		0x030F,
 		false,
 		true,
