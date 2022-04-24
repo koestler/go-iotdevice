@@ -1,16 +1,17 @@
 package vedirect
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"github.com/tarm/serial"
-	"io"
 	"log"
 	"time"
 )
 
 type Vedirect struct {
 	ioPort         *serial.Port
+	reader         *bufio.Reader
 	logDebug       bool
 	logDebugIndent int
 }
@@ -35,7 +36,7 @@ func Open(portName string, logDebug bool) (*Vedirect, error) {
 		log.Printf("vedirect: Open succeeded portName=%v, ioPort=%v", portName, ioHandle)
 	}
 
-	return &Vedirect{ioHandle, logDebug, 0}, nil
+	return &Vedirect{ioHandle, bufio.NewReader(ioHandle), logDebug, 0}, nil
 }
 
 func (vd *Vedirect) Close() (err error) {
@@ -73,40 +74,11 @@ func (vd *Vedirect) RecvFlush() {
 	vd.debugPrintf("vedirect: RecvFlush end")
 }
 
-func (vd *Vedirect) RecvUntil(needle byte, maxLength int) (data []byte, err error) {
-	vd.debugPrintf("vedirect: RecvUntil begin needle=%c maxLength=%v", needle, maxLength)
-
-	b := make([]byte, 1)
-	data = make([]byte, 0, maxLength)
-
-	for i := 0; i <= maxLength; i += 1 {
-		n, err := vd.read(b)
-
-		if err != nil {
-			vd.debugPrintf("vedirect: RecvUntil end err=%v", err)
-			return nil, err
-		}
-
-		if err == io.EOF || n < 1 {
-			// no answer yet -> wait
-			continue
-		}
-
-		if n == 1 && b[0] == needle {
-			vd.debugPrintf("vedirect: RecvUntil end data=%s size=%v", data, len(data))
-			return data, nil
-		}
-
-		data = append(data, b[0])
+func (vd *Vedirect) RecvUntil(needle byte) (data []byte, err error) {
+	vd.debugPrintf("vedirect: RecvUntil begin needle=%c", needle)
+	data, err = vd.reader.ReadBytes(needle)
+	if err == nil {
+		data = data[:len(data)-1] // exclude delimiter
 	}
-
-	vd.debugPrintf("vedirect: RecvUntil end gave up after reaching maxLength=%v, data=%s size=%v",
-		maxLength, data, len(data))
-
-	err = errors.New(
-		fmt.Sprintf("vedirect: RecvUntil end gave up after reaching maxLength=%v", maxLength),
-	)
-
-	vd.debugPrintf("vedirect: RecvUntil end err=%v", err)
-	return nil, err
+	return
 }

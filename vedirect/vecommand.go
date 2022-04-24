@@ -281,14 +281,14 @@ func (vd *Vedirect) RecvVeResponse() (data []byte, err error) {
 
 	for {
 		// search start marker
-		_, err = vd.RecvUntil(':', 1024)
+		_, err = vd.RecvUntil(':')
 		if err != nil {
 			vd.debugPrintf("vedirect: RecvVeResponse end err=%v", err)
 			return nil, err
 		}
 
 		// search end marker
-		data, err = vd.RecvUntil('\n', 1024)
+		data, err = vd.RecvUntil('\n')
 		if err != nil {
 			vd.debugPrintf("vedirect: RecvVeResponse end err=%v", err)
 			return nil, err
