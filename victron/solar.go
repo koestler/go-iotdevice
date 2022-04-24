@@ -56,7 +56,7 @@ var RegisterListSolarGeneric = dataflow.Registers{
 		},
 	),
 	dataflow.CreateEnumRegisterStruct(
-		"Generic",
+		"Essential",
 		"DeviceState",
 		"Device state",
 		0x0201,
@@ -276,8 +276,8 @@ var RegisterListSolarSettings = dataflow.Registers{
 	),
 	dataflow.CreateNumberRegisterStruct(
 		"Settings",
-		"Ree-bulk voltage offset",
-		"Equalisation duration",
+		"ReBulkVoltageOffset",
+		"Re-bulk voltage offset",
 		0xED2E,
 		true,
 		false,
