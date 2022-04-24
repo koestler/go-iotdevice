@@ -113,6 +113,26 @@ func RegisterFactoryByProduct(product vedirect.VeProduct) dataflow.Registers {
 		return RegisterListSolar
 	case vedirect.VeProductBlueSolarMPPT150_70rev2:
 		return RegisterListSolar
+	case vedirect.VeProductBlueSolarMPPT150_45rev3:
+		return RegisterListSolar
+	case vedirect.VeProductSmatrtSolarMPPT150_45rev3:
+		return RegisterListSolar
+	case vedirect.VeProductSmartSolarMPPT70_10rev2:
+		return RegisterListSolar
+	case vedirect.VeProductSmartSolarMPPT75_15rev2:
+		return RegisterListSolar
+	case vedirect.VeProductBlueSolarMPPT100_30rev3:
+		return RegisterListSolar
+	case vedirect.VeProductBlueSolarMPPT100_50rev3:
+		return RegisterListSolar
+	case vedirect.VeProductBlueSolarMPPT150_35rev3:
+		return RegisterListSolar
+	case vedirect.VeProductBlueSolarMPPT75_10rev2:
+		return RegisterListSolar
+	case vedirect.VeProductBlueSolarMPPT75_15rev2:
+		return RegisterListSolar
+	case vedirect.VeProductBlueSolarMPPT100_15rev2:
+		return RegisterListSolar
 	case vedirect.VeProductSmartSolarMPPTVECan150_70:
 		return RegisterListSolar
 	case vedirect.VeProductSmartSolarMPPTVECan150_45:
@@ -150,6 +170,8 @@ func RegisterFactoryByProduct(product vedirect.VeProduct) dataflow.Registers {
 	case vedirect.VeProductSmartSolarMPPTVECan250_100rev2:
 		return RegisterListSolar
 	case vedirect.VeProductSmartSolarMPPTVECan250_85rev2:
+		return RegisterListSolar
+	case vedirect.VeProductBlueSolarMPPTVECan150_100rev2:
 		return RegisterListSolar
 	case vedirect.VeProductPhoenixInverter12V250VA230V:
 		return RegisterPhoenixInverter

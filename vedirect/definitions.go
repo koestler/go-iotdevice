@@ -109,6 +109,16 @@ const (
 	VeProductBlueSolarMPPT150_45rev2          VeProduct = 0xA06F
 	VeProductBlueSolarMPPT150_60rev2          VeProduct = 0xA070
 	VeProductBlueSolarMPPT150_70rev2          VeProduct = 0xA071
+	VeProductBlueSolarMPPT150_45rev3          VeProduct = 0xA072
+	VeProductSmatrtSolarMPPT150_45rev3        VeProduct = 0xA073
+	VeProductSmartSolarMPPT70_10rev2          VeProduct = 0xA074
+	VeProductSmartSolarMPPT75_15rev2          VeProduct = 0xA075
+	VeProductBlueSolarMPPT100_30rev3          VeProduct = 0xA076
+	VeProductBlueSolarMPPT100_50rev3          VeProduct = 0xA077
+	VeProductBlueSolarMPPT150_35rev3          VeProduct = 0xA078
+	VeProductBlueSolarMPPT75_10rev2           VeProduct = 0xA079
+	VeProductBlueSolarMPPT75_15rev2           VeProduct = 0xA07A
+	VeProductBlueSolarMPPT100_15rev2          VeProduct = 0xA07B
 	VeProductSmartSolarMPPTVECan150_70        VeProduct = 0xA102
 	VeProductSmartSolarMPPTVECan150_45        VeProduct = 0xA103
 	VeProductSmartSolarMPPTVECan150_60        VeProduct = 0xA104
@@ -128,6 +138,7 @@ const (
 	VeProductSmartSolarMPPTVECan250_70rev2    VeProduct = 0xA114
 	VeProductSmartSolarMPPTVECan250_100rev2   VeProduct = 0xA115
 	VeProductSmartSolarMPPTVECan250_85rev2    VeProduct = 0xA116
+	VeProductBlueSolarMPPTVECan150_100rev2    VeProduct = 0xA117
 	VeProductPhoenixInverter12V250VA230V      VeProduct = 0xA231
 	VeProductPhoenixInverter24V250VA230V      VeProduct = 0xA232
 	VeProductPhoenixInverter48V250VA230V      VeProduct = 0xA234
