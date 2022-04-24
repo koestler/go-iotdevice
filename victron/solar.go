@@ -294,16 +294,19 @@ var RegisterListSolarSettings = dataflow.Registers{
 		100,
 		"C",
 	),
-	dataflow.CreateNumberRegisterStruct(
-		"Settings",
-		"VoltageCompensation",
-		"Voltage compensation",
-		0xEDCA,
-		true,
-		false,
-		100,
-		"V",
-	),
+	/*
+		// todo: fetch depending on firmware version
+		dataflow.CreateNumberRegisterStruct(
+			"Settings",
+			"VoltageCompensation",
+			"Voltage compensation",
+			0xEDCA,
+			true,
+			false,
+			100,
+			"V",
+		),
+	*/
 }
 
 var RegisterListSolarChargerData = dataflow.Registers{
