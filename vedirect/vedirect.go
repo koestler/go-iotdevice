@@ -3,13 +3,14 @@ package vedirect
 import (
 	"errors"
 	"fmt"
-	"github.com/jacobsa/go-serial/serial"
+	"github.com/tarm/serial"
 	"io"
 	"log"
+	"time"
 )
 
 type Vedirect struct {
-	ioHandle       io.ReadWriteCloser
+	ioPort         *serial.Port
 	logDebug       bool
 	logDebugIndent int
 }
@@ -19,22 +20,19 @@ func Open(portName string, logDebug bool) (*Vedirect, error) {
 		log.Printf("vedirect: Open portName=%v", portName)
 	}
 
-	options := serial.OpenOptions{
-		PortName:              portName,
-		BaudRate:              19200,
-		DataBits:              8,
-		StopBits:              1,
-		MinimumReadSize:       4,
-		InterCharacterTimeout: 100,
+	options := serial.Config{
+		Name:        portName,
+		Baud:        19200,
+		ReadTimeout: time.Millisecond * 500,
 	}
 
-	ioHandle, err := serial.Open(options)
+	ioHandle, err := serial.OpenPort(&options)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("cannot open port: %v", portName))
 	}
 
 	if logDebug {
-		log.Printf("vedirect: Open succeeded portName=%v, ioHandle=%v", portName, ioHandle)
+		log.Printf("vedirect: Open succeeded portName=%v, ioPort=%v", portName, ioHandle)
 	}
 
 	return &Vedirect{ioHandle, logDebug, 0}, nil
@@ -42,13 +40,13 @@ func Open(portName string, logDebug bool) (*Vedirect, error) {
 
 func (vd *Vedirect) Close() (err error) {
 	vd.debugPrintf("vedirect: Close begin")
-	err = vd.ioHandle.Close()
+	err = vd.ioPort.Close()
 	vd.debugPrintf("vedirect: Close end err=%v", err)
 	return
 }
 
 func (vd *Vedirect) read(b []byte) (n int, err error) {
-	n, err = vd.ioHandle.Read(b)
+	n, err = vd.ioPort.Read(b)
 	if err != nil {
 		log.Printf("vedirect: Read error: %v\n", err)
 	}
@@ -57,7 +55,7 @@ func (vd *Vedirect) read(b []byte) (n int, err error) {
 
 func (vd *Vedirect) Write(b []byte) (n int, err error) {
 	vd.debugPrintf("vedirect: Write b=%s len=%v", b, len(b))
-	n, err = vd.ioHandle.Write(b)
+	n, err = vd.ioPort.Write(b)
 	if err != nil {
 		log.Printf("vedirect: Write error: %v\n", err)
 		return 0, err
@@ -68,20 +66,11 @@ func (vd *Vedirect) Write(b []byte) (n int, err error) {
 func (vd *Vedirect) RecvFlush() {
 	vd.debugPrintf("vedirect: RecvFlush begin")
 
-	nBuff := 64
-	b := make([]byte, nBuff)
-	flushed := 0
-
-	for {
-		n, err := vd.ioHandle.Read(b)
-		flushed += n
-
-		if err == io.EOF || n < nBuff {
-			// n < nBuff: read buffer empty -> we are done
-			vd.debugPrintf("vedirect: RecvFlush end flushed=%v", flushed)
-			return
-		}
+	if err := vd.ioPort.Flush(); err != nil {
+		vd.debugPrintf("vedirect: RecvFlush end err=%v", err)
 	}
+
+	vd.debugPrintf("vedirect: RecvFlush end")
 }
 
 func (vd *Vedirect) RecvUntil(needle byte, maxLength int) (data []byte, err error) {

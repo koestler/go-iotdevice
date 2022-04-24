@@ -198,7 +198,7 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 
 	// fetch response using multiple tries to
 	// deal with old data in the tx buffer of the ve device and our rx buffer
-	const numbTries = 16
+	const numbTries = 8
 	for try := 0; try < numbTries; try++ {
 		var rawValues []byte
 		rawValues, err = vd.VeCommand(VeCommandGet, address)

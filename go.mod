@@ -6,13 +6,14 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/gin-contrib/gzip v0.0.5
 	github.com/gin-gonic/gin v1.7.7
+	github.com/gobwas/ws v1.1.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/jacobsa/go-serial v0.0.0-20180131005756-15cf729a72d4
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/swaggo/files v0.0.0-20210815190702-a29dd2bc99b2
 	github.com/swaggo/gin-swagger v1.3.3
 	github.com/swaggo/swag v1.8.0
+	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07
 	github.com/tg123/go-htpasswd v1.2.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	gopkg.in/yaml.v2 v2.4.0
@@ -33,7 +34,6 @@ require (
 	github.com/go-playground/validator/v10 v10.4.1 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
-	github.com/gobwas/ws v1.1.0 // indirect
 	github.com/golang/protobuf v1.3.3 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
