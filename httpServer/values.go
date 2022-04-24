@@ -162,8 +162,8 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 
 				// send updates
 				{
-					// rate limit number of sent messages to one message every 100ms
-					tickerDuration := 100 * time.Millisecond
+					// rate limit number of sent messages to 4 per second
+					tickerDuration := 250 * time.Millisecond
 					ticker := time.NewTicker(tickerDuration)
 					tickerRunning := true
 					valuesC := subscription.GetOutput()
