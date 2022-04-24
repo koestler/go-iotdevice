@@ -99,12 +99,13 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 
 	// extract and check command
 	var response VeResponse
-	if s, err := strconv.ParseUint(string(responseData[0]), 16, 8); err != nil {
-		err = errors.New(fmt.Sprintf("cannot parse response, s=%v, err=%v", s, err))
+	s := string(responseData[0])
+	if i, err := strconv.ParseUint(s, 16, 8); err != nil {
+		err = errors.New(fmt.Sprintf("cannot parse response, address=%x, s=%v, err=%v", address, s, err))
 		vd.debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	} else {
-		response = VeResponse(s)
+		response = VeResponse(i)
 	}
 
 	expectedResponse := ResponseForCommand(command)
