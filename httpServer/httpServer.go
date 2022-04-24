@@ -52,7 +52,6 @@ func Run(env *Environment) (httpServer *HttpServer) {
 		engine.Use(gin.Logger())
 	}
 	engine.Use(gin.Recovery())
-	engine.Use(gzip.Gzip(gzip.BestCompression))
 	engine.Use(authJwtMiddleware(env))
 
 	if config.EnableDocs() {
@@ -92,10 +91,13 @@ func (s *HttpServer) Shutdown() {
 
 func addApiV1Routes(r *gin.Engine, config Config, env *Environment) {
 	v1 := r.Group("/api/v1/")
+	v1.Use(gzip.Gzip(gzip.BestCompression))
 	setupConfig(v1, env)
 	setupLogin(v1, env)
 	setupRegisters(v1, env)
 	setupValuesJson(v1, env)
-	setupValuesWs(v1, env)
 	setupHassYaml(v1, env)
+
+	v1Ws := r.Group("/api/v1/")
+	setupValuesWs(v1Ws, env)
 }
