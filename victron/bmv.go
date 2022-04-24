@@ -315,8 +315,8 @@ var RegisterListBmvHistoric = dataflow.Registers{
 }
 
 var RegisterListBmv = dataflow.MergeRegisters(
-	RegisterListBmvProduct,
 	RegisterListBmvMonitor,
+	RegisterListBmvProduct,
 	RegisterListBmvHistoric,
 )
 

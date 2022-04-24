@@ -509,9 +509,9 @@ var RegisterListSolarPanelData = dataflow.Registers{
 }
 
 var RegisterListSolar = dataflow.MergeRegisters(
+	RegisterListSolarPanelData,
+	RegisterListSolarChargerData,
 	RegisterListSolarProduct,
 	RegisterListSolarGeneric,
-	RegisterListSolarChargerData,
-	RegisterListSolarPanelData,
 	RegisterListSolarSettings,
 )
