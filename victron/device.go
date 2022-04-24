@@ -58,18 +58,17 @@ func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.
 		defer close(deviceStruct.GetClosedChan())
 		defer close(output)
 
-		// flush buffer
-		vd.RecvFlush()
 		fetchStaticCounter := 0
-
 		ticker := time.NewTicker(100 * time.Millisecond)
-
 		for {
 			select {
 			case <-deviceStruct.GetShutdownChan():
 				return
 			case <-ticker.C:
 				start := time.Now()
+
+				// flush async data
+				vd.RecvFlush()
 
 				if err := vd.VeCommandPing(); err != nil {
 					log.Printf("device[%s]: source: VeCommandPing failed: %v", cfg.Name(), err)
