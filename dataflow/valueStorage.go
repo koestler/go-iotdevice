@@ -89,9 +89,9 @@ func ValueStorageCreate() (valueStorageInstance *ValueStorageInstance) {
 	valueStorageInstance = &ValueStorageInstance{
 		state:                   make(State),
 		subscriptions:           make(map[*Subscription]struct{}),
-		inputChannel:            make(chan Value, 32), // input channel is buffered
+		inputChannel:            make(chan Value, 128), // input channel is buffered
 		subscriptionChannel:     make(chan *Subscription),
-		readStateRequestChannel: make(chan *readStateRequest),
+		readStateRequestChannel: make(chan *readStateRequest, 16),
 	}
 
 	// start main go routine
@@ -153,7 +153,7 @@ func (instance *ValueStorageInstance) Drain() Subscription {
 func (instance *ValueStorageInstance) Subscribe(filter Filter) Subscription {
 	s := Subscription{
 		shutdownChannel: make(chan struct{}),
-		outputChannel:   make(chan Value, 32),
+		outputChannel:   make(chan Value, 128),
 		filter:          filter,
 	}
 

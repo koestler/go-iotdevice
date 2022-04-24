@@ -43,7 +43,7 @@ type DeviceStruct struct {
 
 func RunDevice(cfg Config, target dataflow.Fillable) (device Device, err error) {
 	// setup output chain
-	output := make(chan dataflow.Value, 32)
+	output := make(chan dataflow.Value, len(device.Registers()))
 	source := dataflow.CreateSource(output)
 	// pipe all data to next stage
 	source.Append(target)
