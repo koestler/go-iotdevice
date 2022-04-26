@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"log"
 	"net/http"
+	"time"
 )
 
 type registerResponse struct {
@@ -57,7 +58,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 						Unit:        v.Unit(),
 					}
 				}
-				setCacheControlPublic(c, 10)
+				setCacheControlPublic(c, 10 * time.Second)
 				jsonGetResponse(c, response)
 			})
 			if env.Config.LogConfig() {
