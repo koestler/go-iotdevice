@@ -24,8 +24,7 @@ RUN groupadd -g 1000 app && \
 RUN chown app:app /go-iotdevice
 
 # use already compiled frontend
-FROM koestler/js-iotdevice:v1.1.0 AS js-builder
-# todo: swtich version from latest to v1
+FROM koestler/js-iotdevice:v1.2.0 AS js-builder
 
 # build final image
 FROM scratch
