@@ -13,6 +13,8 @@ type ValueStorageInstance struct {
 	inputChannel            chan Value
 	subscriptionChannel     chan *Subscription
 	readStateRequestChannel chan *readStateRequest
+
+	shutdown chan struct{}
 }
 
 type Filter struct {
@@ -28,6 +30,8 @@ type readStateRequest struct {
 func (instance *ValueStorageInstance) mainStorageRoutine() {
 	for {
 		select {
+		case <-instance.shutdown:
+			return
 		case newValue := <-instance.inputChannel:
 			instance.handleNewValue(newValue)
 		case newSubscription := <-instance.subscriptionChannel:
@@ -92,6 +96,7 @@ func ValueStorageCreate() (valueStorageInstance *ValueStorageInstance) {
 		inputChannel:            make(chan Value, 128), // input channel is buffered
 		subscriptionChannel:     make(chan *Subscription),
 		readStateRequestChannel: make(chan *readStateRequest, 16),
+		shutdown:                make(chan struct{}),
 	}
 
 	// start main go routine
@@ -101,9 +106,7 @@ func ValueStorageCreate() (valueStorageInstance *ValueStorageInstance) {
 }
 
 func (instance *ValueStorageInstance) Shutdown() {
-	for subscription := range instance.subscriptions {
-		subscription.Shutdown()
-	}
+	close(instance.shutdown)
 }
 
 func (instance *ValueStorageInstance) GetState(filter Filter) State {
