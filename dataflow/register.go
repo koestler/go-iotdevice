@@ -1,12 +1,5 @@
 package dataflow
 
-type NumericValues map[string]NumericValue
-
-type NumericValue struct {
-	Value float64
-	Unit  string
-}
-
 type Registers []Register
 
 type RegisterType int
