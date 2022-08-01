@@ -45,6 +45,7 @@ func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.
 	}
 
 	log.Printf("device[%s]: source: connect to %s", cfg.Name(), deviceString)
+	device.SetModel(deviceString)
 
 	// get relevant registers
 	registers := RegisterFactoryByProduct(deviceId)
@@ -134,6 +135,8 @@ func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.
 						}
 					}
 				}
+
+				device.SetLastFetchedNow()
 
 				fetchStaticCounter++
 

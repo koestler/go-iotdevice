@@ -49,6 +49,7 @@ func (p *DevicePool) GetDeviceNames() []string {
 	i := 0
 	for deviceName := range p.Devices {
 		ret[i] = deviceName
+		i += 1
 	}
 	return ret
 }

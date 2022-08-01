@@ -5,6 +5,8 @@ import (
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"log"
+	"sync"
+	"time"
 )
 
 type Config interface {
@@ -17,8 +19,12 @@ type Config interface {
 
 type Device interface {
 	Config() Config
-	Registers() dataflow.Registers
+	GetRegisters() dataflow.Registers
 	SetRegisters(registers dataflow.Registers)
+	SetLastFetchedNow()
+	GetLastFetched() time.Time
+	SetModel(model string)
+	GetModel() string
 	Shutdown()
 }
 
@@ -34,8 +40,14 @@ type DeviceStruct struct {
 	// configuration
 	cfg Config
 
-	source    *dataflow.Source
-	registers dataflow.Registers
+	source *dataflow.Source
+
+	registers        dataflow.Registers
+	registersMutex   sync.RWMutex
+	lastFetched      time.Time
+	lastFetchedMutex sync.RWMutex
+	model            string
+	modelMutex       sync.RWMutex
 
 	shutdown chan struct{}
 	closed   chan struct{}
@@ -63,28 +75,57 @@ func RunDevice(cfg Config, target dataflow.Fillable) (device Device, err error) 
 	return nil, fmt.Errorf("unknown kind: %s", cfg.Kind().String())
 }
 
-func (c DeviceStruct) Config() Config {
+func (c *DeviceStruct) Config() Config {
 	return c.cfg
 }
 
-func (c DeviceStruct) Registers() dataflow.Registers {
-	return c.registers
-}
-
 func (c *DeviceStruct) SetRegisters(registers dataflow.Registers) {
+	c.registersMutex.Lock()
+	defer c.registersMutex.Unlock()
+
 	c.registers = registers
 }
 
-func (c DeviceStruct) Shutdown() {
+func (c *DeviceStruct) GetRegisters() dataflow.Registers {
+	c.registersMutex.RLock()
+	defer c.registersMutex.RUnlock()
+	return c.registers
+}
+
+func (c *DeviceStruct) SetLastFetchedNow() {
+	c.lastFetchedMutex.Lock()
+	defer c.lastFetchedMutex.Unlock()
+	c.lastFetched = time.Now()
+}
+
+func (c *DeviceStruct) GetLastFetched() time.Time {
+	c.lastFetchedMutex.RLock()
+	defer c.lastFetchedMutex.RUnlock()
+	return c.lastFetched
+}
+
+func (c *DeviceStruct) SetModel(model string) {
+	c.modelMutex.Lock()
+	defer c.modelMutex.Unlock()
+	c.model = model
+}
+
+func (c *DeviceStruct) GetModel() string {
+	c.modelMutex.RLock()
+	defer c.modelMutex.RUnlock()
+	return c.model
+}
+
+func (c *DeviceStruct) Shutdown() {
 	close(c.shutdown)
 	<-c.closed
 	log.Printf("device[%s]: shutdown completed", c.cfg.Name())
 }
 
-func (c DeviceStruct) GetShutdownChan() chan struct{} {
+func (c *DeviceStruct) GetShutdownChan() chan struct{} {
 	return c.shutdown
 }
 
-func (c DeviceStruct) GetClosedChan() chan struct{} {
+func (c *DeviceStruct) GetClosedChan() chan struct{} {
 	return c.closed
 }

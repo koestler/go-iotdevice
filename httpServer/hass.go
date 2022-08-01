@@ -54,7 +54,7 @@ func setupHassYaml(r *gin.RouterGroup, env *Environment) {
 			sensors := make([]hassSensor, 0, 128)
 			for _, deviceName := range view.DeviceNames() {
 				device := env.DevicePoolInstance.GetDevice(deviceName)
-				for _, register := range device.Registers() {
+				for _, register := range device.GetRegisters() {
 					sensors = append(sensors, registerToHassSensor(deviceName, register))
 				}
 

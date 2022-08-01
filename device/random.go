@@ -30,7 +30,7 @@ func CreateRandomDeviceFactory(registers dataflow.Registers) Creator {
 				case <-deviceStruct.GetShutdownChan():
 					return
 				case <-ticker.C:
-					for _, register := range deviceStruct.Registers() {
+					for _, register := range deviceStruct.GetRegisters() {
 						if numberRegister, ok := register.(dataflow.NumberRegisterStruct); ok {
 							var value float64
 							if numberRegister.Signed() {
@@ -52,6 +52,7 @@ func CreateRandomDeviceFactory(registers dataflow.Registers) Creator {
 							)
 						}
 					}
+					device.SetLastFetchedNow()
 				}
 			}
 		}()
