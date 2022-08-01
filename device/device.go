@@ -67,9 +67,11 @@ func RunDevice(cfg Config, target dataflow.Fillable) (device Device, err error) 
 func (c DeviceStruct) Config() Config {
 	return c.cfg
 }
+
 func (c DeviceStruct) Registers() dataflow.Registers {
 	return c.registers
 }
+
 func (c *DeviceStruct) SetRegisters(registers dataflow.Registers) {
 	c.registers = registers
 }

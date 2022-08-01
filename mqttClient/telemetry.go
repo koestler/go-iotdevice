@@ -1,10 +1,8 @@
 package mqttClient
 
 import (
-	"encoding/json"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"strings"
-	"time"
 )
 
 type TelemetryMessage struct {
@@ -12,35 +10,51 @@ type TelemetryMessage struct {
 	NextTele string
 	TimeZone string
 	Model    string
-	Values   dataflow.ValueEssentialMap
+	Values   []interface{}
 }
 
-func transmitTelemetry(
-	storage *dataflow.ValueStorageInstance,
-	filter dataflow.Filter,
-	interval time.Duration,
-	mqttClient *MqttClient,
-) {
-	go func() {
-		cfg := mqttClient.config
+type NumericTelemetryValue struct {
+	Value float64
+	Unit  string
+}
 
-		for now := range time.Tick(interval) {
-			for device, deviceState := range storage.GetState(filter) {
-				topic := replaceTemplate(cfg.TelemetryTopic, cfg)
-				topic = strings.Replace(topic, "%DeviceName%", device.Name, 1)
+type TextTelemetryValue struct {
+	Value string
+}
 
-				payload := TelemetryMessage{
-					Time:     timeToString(now.UTC()),
-					NextTele: timeToString(now.Add(interval)),
-					TimeZone: "UTC",
-					Model:    device.Model,
-					Values:   deviceState.ConvertToEssential(),
-				}
+func convertValuesToTelemetryValues(values []dataflow.Value) (ret []interface{}) {
+	ret = make([]interface{}, len(values))
 
-				if b, err := json.Marshal(payload); err == nil {
-					mqttClient.client.Publish(topic, cfg.Qos, cfg.TelemetryRetain, b)
-				}
+	i := 0
+	for _, value := range values {
+		if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
+			ret[i] = NumericTelemetryValue{
+				Value: numeric.Value(),
+				Unit: func() string {
+					if u := numeric.Register().Unit(); u != nil {
+						return *u
+					}
+					return ""
+				}(),
 			}
+			i += 1
+		} else if text, ok := value.(dataflow.TextRegisterValue); ok {
+			ret[i] = TextTelemetryValue{
+				Value: text.Value(),
+			}
+			i += 1
 		}
-	}()
+	}
+
+	return
+}
+
+func getTelemetryTopic(
+	cfg Config,
+	deviceName string,
+) string {
+	topic := replaceTemplate(cfg.TelemetryTopic(), cfg)
+	// replace Device/Value specific placeholders
+	topic = strings.Replace(topic, "%DeviceName%", deviceName, 1)
+	return topic
 }

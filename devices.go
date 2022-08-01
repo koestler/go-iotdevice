@@ -13,8 +13,8 @@ func runDevices(
 	cfg *config.Config,
 	target dataflow.Fillable,
 	initiateShutdown chan<- error,
-) *device.DevicePool {
-	devicePoolInstance := device.RunPool()
+) (devicePoolInstance *device.DevicePool) {
+	devicePoolInstance = device.RunPool()
 
 	// register creators
 	device.RegisterCreator(config.RandomBmvKind, device.CreateRandomDeviceFactory(victron.RegisterListBmv712))
@@ -51,5 +51,5 @@ func runDevices(
 		initiateShutdown <- errors.New("no cfgDev was started")
 	}
 
-	return devicePoolInstance
+	return
 }

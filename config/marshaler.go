@@ -66,13 +66,14 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 		Qos:                &c.qos,
 		TopicPrefix:        &c.topicPrefix,
 		AvailabilityEnable: &c.availabilityEnable,
+		AvailabilityTopic:  &c.availabilityTopic,
 		TelemetryInterval:  c.telemetryInterval.String(),
 		TelemetryTopic:     &c.telemetryTopic,
 		TelemetryRetain:    &c.telemetryRetain,
 		RealtimeEnable:     &c.realtimeEnable,
 		RealtimeTopic:      &c.realtimeTopic,
 		RealtimeRetain:     &c.realtimeRetain,
-		LogMessages:        &c.logMessages,
+		LogDebug:           &c.logDebug,
 	}
 }
 

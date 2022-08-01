@@ -101,10 +101,8 @@ func main() {
 		defer httpServerInstance.Shutdown()
 
 		// start mqtt clients
-		//mqttClientInstances := runMqttClient(cfg, initiateShutdown)
-		//for _, client := range mqttClientInstances {
-		//	defer client.Shutdown()
-		//}
+		clientPoolInstance := runMqttClient(cfg, devicePoolInstance, storage)
+		defer clientPoolInstance.Shutdown()
 
 		// setup SIGTERM, SIGINT handlers
 		gracefulStop := make(chan os.Signal)

@@ -1,83 +1,186 @@
 package mqttClient
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/eclipse/paho.mqtt.golang"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/device"
 	"log"
 	"os"
 	"strings"
 	"time"
 )
 
-type MqttClient struct {
-	config *config.MqttClientConfig
-	client mqtt.Client
+type Config interface {
+	Name() string
+	Broker() string
+	User() string
+	Password() string
+	ClientId() string
+	Qos() byte
+	TopicPrefix() string
+	AvailabilityEnable() bool
+	AvailabilityTopic() string
+	TelemetryInterval() time.Duration
+	TelemetryTopic() string
+	TelemetryRetain() bool
+	RealtimeEnable() bool
+	RealtimeTopic() string
+	RealtimeRetain() bool
+	LogDebug() bool
 }
 
-func Run(config *config.MqttClientConfig, storage *dataflow.ValueStorageInstance) (mqttClient *MqttClient) {
+type Client interface {
+	Config() Config
+	Shutdown()
+}
+
+type ClientStruct struct {
+	cfg        Config
+	mqttClient mqtt.Client
+	shutdown   chan struct{}
+}
+
+func RunClient(
+	cfg Config,
+	devicePoolInstance *device.DevicePool,
+	storage *dataflow.ValueStorageInstance,
+) (client Client, err error) {
 	// configure client and start connection
-	opts := mqtt.NewClientOptions().AddBroker(config.Broker).SetClientID(config.ClientId)
-	if len(config.User) > 0 {
-		opts.SetUsername(config.User)
+	opts := mqtt.NewClientOptions().AddBroker(cfg.Broker()).SetClientID(cfg.ClientId())
+	if len(cfg.User()) > 0 {
+		opts.SetUsername(cfg.User())
 	}
-	if len(config.Password) > 0 {
-		opts.SetPassword(config.Password)
+	if len(cfg.Password()) > 0 {
+		opts.SetPassword(cfg.Password())
 	}
 
-	availableTopic := GetAvailableTopic(config)
-
-	if config.AvailableEnable {
-		opts.SetWill(availableTopic, "Offline", config.Qos, true)
+	if cfg.AvailabilityEnable() {
+		// public availability offline as will
+		opts.SetWill(GetAvailabilityTopic(cfg), "Offline", cfg.Qos(), true)
 	}
 
 	mqtt.ERROR = log.New(os.Stdout, "", 0)
-	if config.DebugLog {
+	if cfg.LogDebug() {
 		mqtt.DEBUG = log.New(os.Stdout, "", 0)
 	}
 
-	client := mqtt.NewClient(opts)
-	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		log.Fatal("mqttClient connect failed", token.Error())
+	mqttClient := mqtt.NewClient(opts)
+	if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
+		return nil, fmt.Errorf("connect failed: %s", token.Error())
 	}
-	log.Printf("mqttClient: connected to %v", config.Broker)
 
-	mqttClient = &MqttClient{
-		config: config,
-		client: client,
+	clientStruct := ClientStruct{
+		cfg:        cfg,
+		mqttClient: mqttClient,
+		shutdown:   make(chan struct{}),
 	}
 
 	// send Online
-	if config.AvailableEnable {
-		client.Publish(availableTopic, config.Qos, true, "Online")
+	if cfg.AvailabilityEnable() {
+		mqttClient.Publish(GetAvailabilityTopic(cfg), cfg.Qos(), true, "Online")
 	}
 
-	// setup empty filter (everything)
-	storageFilter := dataflow.Filter{}
-
 	// setup Realtime (send data as soon as it arrives) output
-	if config.RealtimeEnable {
+	if cfg.RealtimeEnable() {
 		// transmitRealtime values from data store and publish to mqtt broker
-		dataChan := storage.Subscribe(storageFilter)
-		log.Print("mqtttClient: start sending realtime stat messages")
-		transmitRealtime(dataChan, mqttClient)
+		go func() {
+			// setup empty filter (everything)
+			subscription := storage.Subscribe(dataflow.Filter{})
+
+			defer subscription.Shutdown()
+			for {
+				select {
+				case <-clientStruct.shutdown:
+					return
+				case value := <-subscription.GetOutput():
+					if !mqttClient.IsConnected() {
+						continue
+					}
+
+					if b, err := convertValueToRealtimeMessage(value); err == nil {
+						mqttClient.Publish(
+							getRealtimeTopic(
+								cfg,
+								value.DeviceName(),
+								value.Register().Name(),
+								value.Register().Unit(),
+							),
+							cfg.Qos(),
+							cfg.RealtimeRetain(),
+							b,
+						)
+					}
+				}
+			}
+		}()
+		log.Print("mqttClient[%s]: start sending realtime stat messages", cfg.Name())
 	}
 
 	// setup Telemetry support
-	if interval, err := time.ParseDuration(config.TelemetryInterval); err == nil && interval > 0 {
-		log.Printf("mqtttClient: start sending telemetry messages every %s", interval.String())
-		transmitTelemetry(storage, storageFilter, interval, mqttClient)
+	if interval := cfg.TelemetryInterval(); interval > 0 {
+		go func() {
+			ticker := time.NewTicker(interval)
+			for {
+				select {
+				case <-clientStruct.shutdown:
+					return
+				case <-ticker.C:
+					for _, deviceName := range devicePoolInstance.GetDeviceNames() {
+						deviceFilter := dataflow.Filter{Devices: map[string]bool{deviceName: true}}
+						values := storage.GetSlice(deviceFilter)
+
+						now := time.Now()
+						payload := TelemetryMessage{
+							Time:     timeToString(now.UTC()),
+							NextTele: timeToString(now.Add(interval)),
+							TimeZone: "UTC",
+							Values:   convertValuesToTelemetryValues(values),
+						}
+
+						if b, err := json.Marshal(payload); err == nil {
+							mqttClient.Publish(
+								getTelemetryTopic(cfg, deviceName),
+								cfg.Qos(),
+								cfg.TelemetryRetain(),
+								b,
+							)
+						}
+					}
+				}
+			}
+		}()
+
+		log.Printf("mqttClient[%s]: start sending telemetry messages every %s", cfg.Name(), interval.String())
+
 	}
 
-	return
+	return &clientStruct, nil
 }
 
-func GetAvailableTopic(cfg *config.MqttClientConfig) string {
-	return replaceTemplate(cfg.AvailableTopic, cfg)
+func (c ClientStruct) Config() Config {
+	return c.cfg
 }
 
-func replaceTemplate(template string, config *config.MqttClientConfig) (r string) {
-	r = strings.Replace(template, "%Prefix%", config.TopicPrefix, 1)
-	r = strings.Replace(r, "%ClientId%", config.ClientId, 1)
+func (c ClientStruct) Shutdown() {
+	close(c.shutdown)
+
+	// public availability offline
+	if c.cfg.AvailabilityEnable() {
+		c.mqttClient.Publish(GetAvailabilityTopic(c.cfg), c.cfg.Qos(), true, "Offline")
+	}
+
+	c.mqttClient.Disconnect(1000)
+	log.Printf("mqttClient[%s]: shutdown completed", c.cfg.Name())
+}
+
+func GetAvailabilityTopic(cfg Config) string {
+	return replaceTemplate(cfg.AvailabilityTopic(), cfg)
+}
+
+func replaceTemplate(template string, cfg Config) (r string) {
+	r = strings.Replace(template, "%Prefix%", cfg.TopicPrefix(), 1)
+	r = strings.Replace(r, "%ClientId%", cfg.ClientId(), 1)
 	return
 }

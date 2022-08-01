@@ -10,7 +10,7 @@ type Config struct {
 	version        int                 `yaml:"Version"`        // must be 0
 	projectTitle   string              `yaml:"ProjectTitle"`   // optional: default go-iotdevice
 	auth           AuthConfig          `yaml:"Auth"`           // optional: default Disabled
-	mqttClients    []*MqttClientConfig `yaml:"MqttClient"`     // mandatory: at least 1 must be defined
+	mqttClients    []*MqttClientConfig `yaml:"MqttClients"`    // mandatory: at least 1 must be defined
 	devices        []*DeviceConfig     `yaml:"Devices"`        // mandatory: at least 1 must be defined
 	views          []*ViewConfig       `yaml:"Views"`          // mandatory: at least 1 must be defined
 	httpServer     HttpServerConfig    `yaml:"HttpServer"`     // optional: default Disabled
@@ -35,14 +35,14 @@ type MqttClientConfig struct {
 	qos                byte          // optional: default 1, must be 0, 1, 2
 	topicPrefix        string        // optional: ""
 	availabilityEnable bool          // optional: default true
-	availabilityTopic  string        // optional: default %Prefix%tele/%clientId%/LWT
+	availabilityTopic  string        // optional: default %Prefix%tele/%ClientId%/LWT
 	telemetryInterval  time.Duration // optional: "10s"
 	telemetryTopic     string        // optional: "%Prefix%tele/ve/%DeviceName%"
 	telemetryRetain    bool          // optional: default false
 	realtimeEnable     bool          // optional: default false
 	realtimeTopic      string        // optional: default "%Prefix%stat/ve/%DeviceName%/%ValueName%"
 	realtimeRetain     bool          // optional: default true
-	logMessages        bool          // optional: default false
+	logDebug           bool          // optional: default false
 }
 
 type DeviceConfig struct {
@@ -115,7 +115,7 @@ type mqttClientConfigRead struct {
 	RealtimeEnable     *bool   `yaml:"RealtimeEnable"`
 	RealtimeTopic      *string `yaml:"RealtimeTopic"`
 	RealtimeRetain     *bool   `yaml:"RealtimeRetain"`
-	LogMessages        *bool   `yaml:"LogMessages"`
+	LogDebug           *bool   `yaml:"LogDebug"`
 }
 
 type mqttClientConfigReadMap map[string]mqttClientConfigRead

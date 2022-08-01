@@ -3,7 +3,7 @@ module github.com/koestler/go-iotdevice
 go 1.18
 
 require (
-	github.com/eclipse/paho.mqtt.golang v1.3.5
+	github.com/eclipse/paho.mqtt.golang v1.4.1
 	github.com/gin-contrib/gzip v0.0.5
 	github.com/gin-gonic/gin v1.8.1
 	github.com/gobwas/ws v1.1.0

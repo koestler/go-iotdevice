@@ -121,8 +121,8 @@ func (c MqttClientConfig) RealtimeRetain() bool {
 	return c.realtimeRetain
 }
 
-func (c MqttClientConfig) LogMessages() bool {
-	return c.logMessages
+func (c MqttClientConfig) LogDebug() bool {
+	return c.logDebug
 }
 
 func (c DeviceConfig) Name() string {

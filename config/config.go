@@ -286,13 +286,13 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 
 	if c.AvailabilityTopic == nil {
 		// use default
-		ret.availabilityTopic = "%Prefix%tele/%clientId%/LWT"
+		ret.availabilityTopic = "%Prefix%tele/%ClientId%/LWT"
 	} else {
 		ret.availabilityTopic = *c.AvailabilityTopic
 	}
 
 	if len(c.TelemetryInterval) < 1 {
-		// use default 10min
+		// use default 10s
 		ret.telemetryInterval = 10 * time.Second
 	} else if telemetryInterval, e := time.ParseDuration(c.TelemetryInterval); e != nil {
 		err = append(err, fmt.Errorf("HttpServerConfig->TelemetryInterval='%s' parse error: %s", c.TelemetryInterval, e))
@@ -332,8 +332,8 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.realtimeRetain = *c.RealtimeRetain
 	}
 
-	if c.LogMessages != nil && *c.LogMessages {
-		ret.logMessages = true
+	if c.LogDebug != nil && *c.LogDebug {
+		ret.logDebug = true
 	}
 
 	return
@@ -352,7 +352,7 @@ func (c deviceConfigReadMap) getOrderedKeys() (ret []string) {
 
 func (c deviceConfigReadMap) TransformAndValidate() (ret []*DeviceConfig, err []error) {
 	if len(c) < 1 {
-		return ret, []error{fmt.Errorf("Devices section must no be empty")}
+		return ret, []error{fmt.Errorf("Clients section must no be empty")}
 	}
 
 	ret = make([]*DeviceConfig, len(c))
@@ -462,7 +462,7 @@ func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewC
 
 func (c viewDeviceConfigReadList) TransformAndValidate(devices []*DeviceConfig) (ret []*ViewDeviceConfig, err []error) {
 	if len(c) < 1 {
-		return ret, []error{fmt.Errorf("Devices section must no be empty.")}
+		return ret, []error{fmt.Errorf("Clients section must no be empty.")}
 	}
 
 	ret = make([]*ViewDeviceConfig, len(c))

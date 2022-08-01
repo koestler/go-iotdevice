@@ -37,7 +37,7 @@ func setupValuesJson(r *gin.RouterGroup, env *Environment) {
 
 			relativePath := "values/" + view.Name() + "/" + deviceName + ".json"
 
-			// the follow line uses a loop variable; it must be outside the closure
+			// the following line uses a loop variable; it must be outside the closure
 			deviceFilter := dataflow.Filter{Devices: map[string]bool{deviceName: true}}
 			r.GET(relativePath, func(c *gin.Context) {
 				// check authorization

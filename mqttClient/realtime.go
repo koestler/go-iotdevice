@@ -2,67 +2,60 @@ package mqttClient
 
 import (
 	"encoding/json"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"strings"
 	"time"
 )
 
-type RealtimeMessage struct {
+type NumericRealtimeMessage struct {
 	Time  string
 	Value float64
 	Unit  string
 }
 
-func convertValueToRealtimeMessage(value dataflow.Value) RealtimeMessage {
-	return RealtimeMessage{
-		Time:  timeToString(time.Now()),
-		Value: value.Value,
-		Unit:  value.Unit,
-	}
+type TextRealtimeMessage struct {
+	Time  string
+	Value string
 }
 
-func GetRealtimeTopic(
-	cfg *config.MqttClientConfig,
+func convertValueToRealtimeMessage(value dataflow.Value) ([]byte, error) {
+	now := timeToString(time.Now())
+	var v interface{}
+	if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
+		v = NumericRealtimeMessage{
+			Time:  now,
+			Value: numeric.Value(),
+			Unit: func() string {
+				if u := numeric.Register().Unit(); u != nil {
+					return *u
+				}
+				return ""
+			}(),
+		}
+	} else if text, ok := value.(dataflow.TextRegisterValue); ok {
+		v = TextRealtimeMessage{
+			Time:  now,
+			Value: text.Value(),
+		}
+	}
+
+	return json.Marshal(v)
+}
+
+func getRealtimeTopic(
+	cfg Config,
 	deviceName string,
-	deviceModel string,
 	valueName string,
-	valueUnit string,
+	valueUnit *string,
 ) string {
-	topic := replaceTemplate(cfg.RealtimeTopic, cfg)
-	// replace Device/Value specific palceholders
+	topic := replaceTemplate(cfg.RealtimeTopic(), cfg)
+	// replace Device/Value specific placeholders
 
 	topic = strings.Replace(topic, "%DeviceName%", deviceName, 1)
-	topic = strings.Replace(topic, "%DeviceModel%", deviceModel, 1)
 	topic = strings.Replace(topic, "%ValueName%", valueName, 1)
-	topic = strings.Replace(topic, "%ValueUnit%", valueUnit, 1)
+	if valueUnit != nil {
+		topic = strings.Replace(topic, "%ValueUnit%", *valueUnit, 1)
+	}
 
 	return topic
-}
-
-func transmitRealtime(input <-chan dataflow.Value, mqttClient *MqttClient) {
-	go func() {
-		cfg := mqttClient.config
-
-		for value := range input {
-			if !mqttClient.client.IsConnected() {
-				continue
-			}
-
-			if b, err := json.Marshal(convertValueToRealtimeMessage(value)); err == nil {
-				mqttClient.client.Publish(
-					GetRealtimeTopic(
-						cfg,
-						value.Device.Name,
-						value.Device.Model,
-						value.Name,
-						value.Unit,
-					),
-					cfg.Qos,
-					cfg.RealtimeRetain,
-					b,
-				)
-			}
-		}
-	}()
 }
