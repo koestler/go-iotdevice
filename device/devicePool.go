@@ -42,14 +42,12 @@ func (p *DevicePool) GetDevice(deviceName string) Device {
 	return p.Devices[deviceName]
 }
 
-func (p *DevicePool) GetDeviceNames() []string {
+func (p *DevicePool) GetDevices() map[string]Device {
 	p.DevicesMutex.RLock()
 	defer p.DevicesMutex.RUnlock()
-	ret := make([]string, len(p.Devices))
-	i := 0
-	for deviceName := range p.Devices {
-		ret[i] = deviceName
-		i += 1
+	ret := make(map[string]Device, len(p.Devices))
+	for deviceName, device := range p.Devices {
+		ret[deviceName] = device
 	}
 	return ret
 }

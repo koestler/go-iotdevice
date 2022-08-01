@@ -21,8 +21,8 @@ type Device interface {
 	Config() Config
 	GetRegisters() dataflow.Registers
 	SetRegisters(registers dataflow.Registers)
-	SetLastFetchedNow()
-	GetLastFetched() time.Time
+	SetLastUpdatedNow()
+	GetLastUpdated() time.Time
 	SetModel(model string)
 	GetModel() string
 	Shutdown()
@@ -44,8 +44,8 @@ type DeviceStruct struct {
 
 	registers        dataflow.Registers
 	registersMutex   sync.RWMutex
-	lastFetched      time.Time
-	lastFetchedMutex sync.RWMutex
+	lastUpdated      time.Time
+	lastUpdatedMutex sync.RWMutex
 	model            string
 	modelMutex       sync.RWMutex
 
@@ -92,16 +92,16 @@ func (c *DeviceStruct) GetRegisters() dataflow.Registers {
 	return c.registers
 }
 
-func (c *DeviceStruct) SetLastFetchedNow() {
-	c.lastFetchedMutex.Lock()
-	defer c.lastFetchedMutex.Unlock()
-	c.lastFetched = time.Now()
+func (c *DeviceStruct) SetLastUpdatedNow() {
+	c.lastUpdatedMutex.Lock()
+	defer c.lastUpdatedMutex.Unlock()
+	c.lastUpdated = time.Now()
 }
 
-func (c *DeviceStruct) GetLastFetched() time.Time {
-	c.lastFetchedMutex.RLock()
-	defer c.lastFetchedMutex.RUnlock()
-	return c.lastFetched
+func (c *DeviceStruct) GetLastUpdated() time.Time {
+	c.lastUpdatedMutex.RLock()
+	defer c.lastUpdatedMutex.RUnlock()
+	return c.lastUpdated
 }
 
 func (c *DeviceStruct) SetModel(model string) {

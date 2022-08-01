@@ -52,7 +52,7 @@ func CreateRandomDeviceFactory(registers dataflow.Registers) Creator {
 							)
 						}
 					}
-					device.SetLastFetchedNow()
+					device.SetLastUpdatedNow()
 				}
 			}
 		}()

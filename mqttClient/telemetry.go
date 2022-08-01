@@ -6,11 +6,11 @@ import (
 )
 
 type TelemetryMessage struct {
-	Time     string
-	NextTele string
-	TimeZone string
-	Model    string
-	Values   []interface{}
+	Time                   string
+	NextTelemetry          string
+	Model                  string
+	SecondsSinceLastUpdate float64
+	Values                 map[string]interface{}
 }
 
 type NumericTelemetryValue struct {
@@ -22,13 +22,12 @@ type TextTelemetryValue struct {
 	Value string
 }
 
-func convertValuesToTelemetryValues(values []dataflow.Value) (ret []interface{}) {
-	ret = make([]interface{}, len(values))
+func convertValuesToTelemetryValues(values []dataflow.Value) (ret map[string]interface{}) {
+	ret = make(map[string]interface{}, len(values))
 
-	i := 0
 	for _, value := range values {
 		if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
-			ret[i] = NumericTelemetryValue{
+			ret[value.Register().Name()] = NumericTelemetryValue{
 				Value: numeric.Value(),
 				Unit: func() string {
 					if u := numeric.Register().Unit(); u != nil {
@@ -37,12 +36,10 @@ func convertValuesToTelemetryValues(values []dataflow.Value) (ret []interface{})
 					return ""
 				}(),
 			}
-			i += 1
 		} else if text, ok := value.(dataflow.TextRegisterValue); ok {
-			ret[i] = TextTelemetryValue{
+			ret[value.Register().Name()] = TextTelemetryValue{
 				Value: text.Value(),
 			}
-			i += 1
 		}
 	}
 

@@ -136,7 +136,7 @@ func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.
 					}
 				}
 
-				device.SetLastFetchedNow()
+				device.SetLastUpdatedNow()
 
 				fetchStaticCounter++
 

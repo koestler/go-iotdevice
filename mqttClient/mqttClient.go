@@ -127,16 +127,17 @@ func RunClient(
 				case <-clientStruct.shutdown:
 					return
 				case <-ticker.C:
-					for _, deviceName := range devicePoolInstance.GetDeviceNames() {
+					for deviceName, dev := range devicePoolInstance.GetDevices() {
 						deviceFilter := dataflow.Filter{Devices: map[string]bool{deviceName: true}}
 						values := storage.GetSlice(deviceFilter)
 
 						now := time.Now()
 						payload := TelemetryMessage{
-							Time:     timeToString(now.UTC()),
-							NextTele: timeToString(now.Add(interval)),
-							TimeZone: "UTC",
-							Values:   convertValuesToTelemetryValues(values),
+							Time:                   timeToString(now),
+							NextTelemetry:          timeToString(now.Add(interval)),
+							Model:                  dev.GetModel(),
+							SecondsSinceLastUpdate: now.Sub(dev.GetLastUpdated()).Seconds(),
+							Values:                 convertValuesToTelemetryValues(values),
 						}
 
 						if b, err := json.Marshal(payload); err == nil {
