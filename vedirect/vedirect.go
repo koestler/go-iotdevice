@@ -75,7 +75,7 @@ func (vd *Vedirect) RecvFlush() {
 }
 
 func (vd *Vedirect) RecvUntil(needle byte) (data []byte, err error) {
-	vd.debugPrintf("vedirect: RecvUntil begin needle=%c", needle)
+	vd.debugPrintf("vedirect: RecvUntil needle=%c", needle)
 	data, err = vd.reader.ReadBytes(needle)
 	if err == nil {
 		data = data[:len(data)-1] // exclude delimiter
