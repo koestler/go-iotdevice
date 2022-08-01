@@ -5,7 +5,7 @@ type State map[string]ValueMap
 type ValueStorageInstance struct {
 	// this represents the state of the storage instance and must only be access by the main go routine
 
-	// state: 1. dimension: eevice.Name, 2. dimension: register.Name
+	// state: 1. dimension: device.Name, 2. dimension: register.Name
 	state         State
 	subscriptions map[*Subscription]struct{}
 
