@@ -115,7 +115,7 @@ func RunClient(
 				}
 			}
 		}()
-		log.Print("mqttClient[%s]: start sending realtime stat messages", cfg.Name())
+		log.Printf("mqttClient[%s]: start sending realtime stat messages", cfg.Name())
 	}
 
 	// setup Telemetry support

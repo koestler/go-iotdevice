@@ -58,7 +58,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 						Unit:        v.Unit(),
 					}
 				}
-				setCacheControlPublic(c, 10 * time.Second)
+				setCacheControlPublic(c, 10*time.Second)
 				jsonGetResponse(c, response)
 			})
 			if env.Config.LogConfig() {

@@ -33,15 +33,15 @@ func runDevices(
 			)
 		}
 
-		if device, err := device.RunDevice(cfgDev, target); err != nil {
+		if dev, err := device.RunDevice(cfgDev, target); err != nil {
 			log.Printf("deviceClient[%s]: start failed: %s", cfgDev.Name(), err)
 		} else {
-			devicePoolInstance.AddDevice(device)
+			devicePoolInstance.AddDevice(dev)
 			countStarted += 1
 			if cfg.LogWorkerStart() {
 				log.Printf(
 					"deviceClient[%s]: started",
-					device.Config().Name(),
+					dev.Config().Name(),
 				)
 			}
 		}

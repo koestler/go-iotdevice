@@ -44,29 +44,29 @@ type Config interface {
 }
 
 func Run(env *Environment) (httpServer *HttpServer) {
-	config := env.Config
+	cfg := env.Config
 
 	gin.SetMode("release")
 	engine := gin.New()
-	if config.LogRequests() {
+	if cfg.LogRequests() {
 		engine.Use(gin.Logger())
 	}
 	engine.Use(gin.Recovery())
 	engine.Use(authJwtMiddleware(env))
 
-	if config.EnableDocs() {
-		setupSwaggerDocs(engine, config)
+	if cfg.EnableDocs() {
+		setupSwaggerDocs(engine, cfg)
 	}
-	addApiV1Routes(engine, config, env)
-	setupFrontend(engine, config)
+	addApiV1Routes(engine, cfg, env)
+	setupFrontend(engine, cfg)
 
 	server := &http.Server{
-		Addr:    config.Bind() + ":" + strconv.Itoa(config.Port()),
+		Addr:    cfg.Bind() + ":" + strconv.Itoa(cfg.Port()),
 		Handler: engine,
 	}
 
 	go func() {
-		if config.LogDebug() {
+		if cfg.LogDebug() {
 			log.Printf("httpServer: listening on %v", server.Addr)
 		}
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
@@ -75,7 +75,7 @@ func Run(env *Environment) (httpServer *HttpServer) {
 	}()
 
 	return &HttpServer{
-		config: config,
+		config: cfg,
 		server: server,
 	}
 }

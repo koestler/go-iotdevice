@@ -45,7 +45,7 @@ func (instance *ValueStorageInstance) handleNewValue(newValue Value) {
 	}
 	if currentValue, ok := instance.state[newValue.DeviceName()][newValue.Register().Name()]; !ok || !currentValue.Equals(newValue) {
 		// copy the input value to all subscribed output channels
-		for subscription, _ := range instance.subscriptions {
+		for subscription := range instance.subscriptions {
 			// check if Subscription was shut down
 			select {
 			case <-subscription.shutdownChannel:
@@ -101,7 +101,7 @@ func ValueStorageCreate() (valueStorageInstance *ValueStorageInstance) {
 }
 
 func (instance *ValueStorageInstance) Shutdown() {
-	for subscription, _ := range instance.subscriptions {
+	for subscription := range instance.subscriptions {
 		subscription.Shutdown()
 	}
 }
@@ -123,11 +123,11 @@ func (instance *ValueStorageInstance) GetSlice(filter Filter) (result []Value) {
 	state := instance.GetState(filter)
 
 	// create result slice of correct capacity
-	cap := 0
+	capacity := 0
 	for _, deviceState := range state {
-		cap += len(deviceState)
+		capacity += len(deviceState)
 	}
-	result = make([]Value, 0, cap)
+	result = make([]Value, 0, capacity)
 
 	for _, deviceState := range state {
 		for _, value := range deviceState {

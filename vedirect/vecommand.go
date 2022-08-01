@@ -180,7 +180,7 @@ func littleEndianBytesToInt(input []byte) (res int64) {
 	case 8:
 		var v int64
 		err = binary.Read(buf, binary.LittleEndian, &v)
-		res = int64(v)
+		res = v
 	default:
 		log.Printf("vecommand: littleEndianBytesToInt: unhandled length=%v, input=%x", length, input)
 		return 0

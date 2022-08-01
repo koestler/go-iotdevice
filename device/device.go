@@ -61,7 +61,6 @@ func RunDevice(cfg Config, target dataflow.Fillable) (device Device, err error) 
 	}
 
 	return nil, fmt.Errorf("unknown kind: %s", cfg.Kind().String())
-
 }
 
 func (c DeviceStruct) Config() Config {
