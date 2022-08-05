@@ -58,7 +58,7 @@ func RunClient(
 
 	if cfg.AvailabilityEnable() {
 		// public availability offline as will
-		opts.SetWill(GetAvailabilityTopic(cfg), "Offline", cfg.Qos(), true)
+		opts.SetWill(GetAvailabilityTopic(cfg), "offline", cfg.Qos(), true)
 	}
 
 	mqtt.ERROR = log.New(os.Stdout, "", 0)
@@ -79,7 +79,7 @@ func RunClient(
 
 	// send Online
 	if cfg.AvailabilityEnable() {
-		mqttClient.Publish(GetAvailabilityTopic(cfg), cfg.Qos(), true, "Online")
+		mqttClient.Publish(GetAvailabilityTopic(cfg), cfg.Qos(), true, "online")
 	}
 
 	// setup Realtime (send data as soon as it arrives) output

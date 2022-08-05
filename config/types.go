@@ -35,7 +35,7 @@ type MqttClientConfig struct {
 	qos                byte          // optional: default 1, must be 0, 1, 2
 	topicPrefix        string        // optional: ""
 	availabilityEnable bool          // optional: default true
-	availabilityTopic  string        // optional: default %Prefix%tele/%ClientId%/LWT
+	availabilityTopic  string        // optional: default %Prefix%tele/%ClientId%/status
 	telemetryInterval  time.Duration // optional: "10s"
 	telemetryTopic     string        // optional: "%Prefix%tele/%DeviceName%/state"
 	telemetryRetain    bool          // optional: default false
