@@ -303,7 +303,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	}
 
 	if c.TelemetryTopic == nil {
-		ret.telemetryTopic = "%Prefix%tele/iot-device/%DeviceName%/state"
+		ret.telemetryTopic = "%Prefix%tele/go-iotdevice/%DeviceName%/state"
 	} else {
 		ret.telemetryTopic = *c.TelemetryTopic
 	}
@@ -321,7 +321,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	}
 
 	if c.RealtimeTopic == nil {
-		ret.realtimeTopic = "%Prefix%stat/iot-device/%DeviceName%/%ValueName%"
+		ret.realtimeTopic = "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%"
 	} else {
 		ret.realtimeTopic = *c.RealtimeTopic
 	}
