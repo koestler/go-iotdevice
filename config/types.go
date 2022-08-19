@@ -37,10 +37,10 @@ type MqttClientConfig struct {
 	availabilityEnable bool          // optional: default true
 	availabilityTopic  string        // optional: default %Prefix%tele/%ClientId%/status
 	telemetryInterval  time.Duration // optional: "10s"
-	telemetryTopic     string        // optional: "%Prefix%tele/%DeviceName%/state"
+	telemetryTopic     string        // optional: "%Prefix%tele/iot-device/%DeviceName%/state"
 	telemetryRetain    bool          // optional: default false
 	realtimeEnable     bool          // optional: default false
-	realtimeTopic      string        // optional: default "%Prefix%stat/%DeviceName%/%ValueName%"
+	realtimeTopic      string        // optional: default "%Prefix%stat/iot-device/%DeviceName%/%ValueName%"
 	realtimeRetain     bool          // optional: default true
 	logDebug           bool          // optional: default false
 }
