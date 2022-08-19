@@ -137,7 +137,8 @@ func RunClient(
 							NextTelemetry:          timeToString(now.Add(interval)),
 							Model:                  dev.GetModel(),
 							SecondsSinceLastUpdate: now.Sub(dev.GetLastUpdated()).Seconds(),
-							Values:                 convertValuesToTelemetryValues(values),
+							NumericValues:          convertValuesToNumericTelemetryValues(values),
+							TextValues:             convertValuesToTextTelemetryValues(values),
 						}
 
 						if b, err := json.Marshal(payload); err == nil {

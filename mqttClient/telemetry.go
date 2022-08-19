@@ -10,7 +10,8 @@ type TelemetryMessage struct {
 	NextTelemetry          string
 	Model                  string
 	SecondsSinceLastUpdate float64
-	Values                 map[string]interface{}
+	NumericValues          map[string]NumericTelemetryValue
+	TextValues             map[string]TextTelemetryValue
 }
 
 type NumericTelemetryValue struct {
@@ -22,8 +23,8 @@ type TextTelemetryValue struct {
 	Value string
 }
 
-func convertValuesToTelemetryValues(values []dataflow.Value) (ret map[string]interface{}) {
-	ret = make(map[string]interface{}, len(values))
+func convertValuesToNumericTelemetryValues(values []dataflow.Value) (ret map[string]NumericTelemetryValue) {
+	ret = make(map[string]NumericTelemetryValue, len(values))
 
 	for _, value := range values {
 		if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
@@ -36,7 +37,17 @@ func convertValuesToTelemetryValues(values []dataflow.Value) (ret map[string]int
 					return ""
 				}(),
 			}
-		} else if text, ok := value.(dataflow.TextRegisterValue); ok {
+		}
+	}
+
+	return
+}
+
+func convertValuesToTextTelemetryValues(values []dataflow.Value) (ret map[string]TextTelemetryValue) {
+	ret = make(map[string]TextTelemetryValue, len(values))
+
+	for _, value := range values {
+		if text, ok := value.(dataflow.TextRegisterValue); ok {
 			ret[value.Register().Name()] = TextTelemetryValue{
 				Value: text.Value(),
 			}
