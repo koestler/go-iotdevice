@@ -204,7 +204,9 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 		var rawValues []byte
 		rawValues, err = vd.VeCommand(VeCommandGet, address)
 		if err != nil {
-			log.Printf("vedirect: VeCommandGet(address=%x) retry try=%v err=%v", address, try, err)
+			if try > 0 {
+				log.Printf("vedirect: VeCommandGet(address=%x) retry try=%v err=%v", address, try, err)
+			}
 			continue
 		}
 
