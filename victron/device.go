@@ -6,6 +6,7 @@ import (
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/vedirect"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -112,7 +113,7 @@ func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.
 							output <- dataflow.NewTextRegisterValue(
 								deviceStruct.Config().Name(),
 								register,
-								value,
+								strings.TrimSpace(value),
 							)
 						}
 					} else if enumRegister, ok := register.(dataflow.EnumRegisterStruct); ok {
