@@ -38,14 +38,14 @@ func setupValuesJson(r *gin.RouterGroup, env *Environment) {
 			relativePath := "values/" + view.Name() + "/" + deviceName + ".json"
 
 			// the following line uses a loop variable; it must be outside the closure
-			deviceFilter := dataflow.Filter{Devices: map[string]bool{deviceName: true}}
+			filter := getFilter([]string{deviceName}, v.SkipFields(), v.SkipCategories())
 			r.GET(relativePath, func(c *gin.Context) {
 				// check authorization
 				if !isViewAuthenticated(view, c) {
 					jsonErrorResponse(c, http.StatusForbidden, errors.New("User is not allowed here"))
 					return
 				}
-				values := env.Storage.GetSlice(deviceFilter)
+				values := env.Storage.GetSlice(filter)
 				jsonGetResponse(c, compile1DResponse(values))
 			})
 			if env.Config.LogConfig() {
@@ -85,7 +85,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 	for _, v := range env.Views {
 		view := v
 		relativePath := "values/" + view.Name() + "/ws"
-		deviceFilter := getDeviceFilter(view.DeviceNames())
+		filter := getFilter(view.DeviceNames(), view.SkipFields(), view.SkipCategories())
 
 		// the follow line uses a loop variable; it must be outside the closure
 		r.GET(relativePath, func(c *gin.Context) {
@@ -106,7 +106,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 			}
 			log.Printf("httpServer: %s%s: connection established to %s", r.BasePath(), relativePath, c.ClientIP())
 
-			subscription := env.Storage.Subscribe(deviceFilter)
+			subscription := env.Storage.Subscribe(filter)
 
 			go func() {
 				defer subscription.Shutdown()
@@ -152,7 +152,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 
 				// send all values after initial connect
 				{
-					values := env.Storage.GetSlice(deviceFilter)
+					values := env.Storage.GetSlice(filter)
 					response := compile2DResponse(values)
 					if err := wsSendResponse(writer, encoder, response); err != nil {
 						log.Printf("httpServer: %s%s: error while sending initial values: %s", r.BasePath(), relativePath, err)
@@ -228,12 +228,27 @@ func append2DResponseValue(response map[string]map[string]valueResponse, value d
 	}
 }
 
-func getDeviceFilter(deviceNames []string) dataflow.Filter {
-	devices := make(map[string]bool, len(deviceNames))
-	for _, deviceName := range deviceNames {
-		devices[deviceName] = true
+func getFilter(deviceNames, skipFields, skipCategories []string) dataflow.Filter {
+	includeDevices := make(map[string]bool, len(deviceNames))
+	for _, id := range deviceNames {
+		includeDevices[id] = true
 	}
-	return dataflow.Filter{Devices: devices}
+
+	skipRegisterNames := make(map[string]bool, len(skipFields))
+	for _, id := range skipFields {
+		skipRegisterNames[id] = true
+	}
+
+	skipRegisterCategories := make(map[string]bool, len(skipCategories))
+	for _, id := range skipCategories {
+		skipRegisterCategories[id] = true
+	}
+
+	return dataflow.Filter{
+		IncludeDevices:         includeDevices,
+		SkipRegisterNames:      skipRegisterNames,
+		SkipRegisterCategories: skipRegisterCategories,
+	}
 }
 
 func wsSendResponse(writer *wsutil.Writer, encoder *json.Encoder, response map[string]map[string]valueResponse) error {

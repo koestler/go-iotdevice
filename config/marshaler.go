@@ -90,10 +90,8 @@ func (c DeviceConfig) convertToRead() deviceConfigRead {
 
 func (c ViewDeviceConfig) convertToRead() viewDeviceConfigRead {
 	return viewDeviceConfigRead{
-		Name:           c.name,
-		Title:          c.title,
-		SkipFields:     c.skipFields,
-		SkipCategories: c.skipCategories,
+		Name:  c.name,
+		Title: c.title,
 	}
 }
 
@@ -108,9 +106,11 @@ func (c ViewConfig) convertToRead() viewConfigRead {
 			}
 			return views
 		}(),
-		Autoplay:     &c.autoplay,
-		AllowedUsers: mapKeys(c.allowedUsers),
-		Hidden:       &c.hidden,
+		Autoplay:       &c.autoplay,
+		AllowedUsers:   mapKeys(c.allowedUsers),
+		Hidden:         &c.hidden,
+		SkipFields:     c.skipFields,
+		SkipCategories: c.skipCategories,
 	}
 }
 

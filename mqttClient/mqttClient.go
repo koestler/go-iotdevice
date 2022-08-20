@@ -128,7 +128,7 @@ func RunClient(
 					return
 				case <-ticker.C:
 					for deviceName, dev := range devicePoolInstance.GetDevices() {
-						deviceFilter := dataflow.Filter{Devices: map[string]bool{deviceName: true}}
+						deviceFilter := dataflow.Filter{IncludeDevices: map[string]bool{deviceName: true}}
 						values := storage.GetSlice(deviceFilter)
 
 						now := time.Now()
@@ -155,7 +155,6 @@ func RunClient(
 		}()
 
 		log.Printf("mqttClient[%s]: start sending telemetry messages every %s", cfg.Name(), interval.String())
-
 	}
 
 	return &clientStruct, nil

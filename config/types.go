@@ -56,19 +56,19 @@ type DeviceConfig struct {
 }
 
 type ViewDeviceConfig struct {
-	name           string   // defined automatically by map key
-	title          string   // mandatory: a nice title for the frontend
-	skipFields     []string // optional: a list of fields that are not shown
-	skipCategories []string // optional: a list of categories that are not shown
+	name  string // defined automatically by map key
+	title string // mandatory: a nice title for the frontend
 }
 
 type ViewConfig struct {
-	name         string              // mandatory: A technical name used in the URLs
-	title        string              // mandatory: a nice title for the frontend
-	devices      []*ViewDeviceConfig // mandatory: a list of deviceClient names
-	autoplay     bool                // optional: default false
-	allowedUsers map[string]struct{} // optional: if empty: view is public; otherwise only allowed to listed users
-	hidden       bool                // optional: if true, view is not shown in menu unless logged in
+	name           string              // mandatory: A technical name used in the URLs
+	title          string              // mandatory: a nice title for the frontend
+	devices        []*ViewDeviceConfig // mandatory: a list of deviceClient names
+	autoplay       bool                // optional: default false
+	allowedUsers   map[string]struct{} // optional: if empty: view is public; otherwise only allowed to listed users
+	hidden         bool                // optional: if true, view is not shown in menu unless logged in
+	skipFields     []string            // optional: a list of fields that are not shown
+	skipCategories []string            // optional: a list of categories that are not shown
 }
 
 type HttpServerConfig struct {
@@ -135,21 +135,21 @@ type deviceConfigRead struct {
 type deviceConfigReadMap map[string]deviceConfigRead
 
 type viewDeviceConfigRead struct {
-	Name           string   `yaml:"Name"`
-	Title          string   `yaml:"Title"`
-	SkipFields     []string `yaml:"SkipFields"`
-	SkipCategories []string `yaml:"SkipCategories"`
+	Name  string `yaml:"Name"`
+	Title string `yaml:"Title"`
 }
 
 type viewDeviceConfigReadList []viewDeviceConfigRead
 
 type viewConfigRead struct {
-	Name         string                   `yaml:"Name"`
-	Title        string                   `yaml:"Title"`
-	Devices      viewDeviceConfigReadList `yaml:"Devices"`
-	Autoplay     *bool                    `yaml:"Autoplay"`
-	AllowedUsers []string                 `yaml:"AllowedUsers"`
-	Hidden       *bool                    `yaml:"Hidden"`
+	Name           string                   `yaml:"Name"`
+	Title          string                   `yaml:"Title"`
+	Devices        viewDeviceConfigReadList `yaml:"Devices"`
+	Autoplay       *bool                    `yaml:"Autoplay"`
+	AllowedUsers   []string                 `yaml:"AllowedUsers"`
+	Hidden         *bool                    `yaml:"Hidden"`
+	SkipFields     []string                 `yaml:"SkipFields"`
+	SkipCategories []string                 `yaml:"SkipCategories"`
 }
 
 type viewConfigReadList []viewConfigRead

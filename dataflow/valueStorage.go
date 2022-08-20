@@ -18,8 +18,9 @@ type ValueStorageInstance struct {
 }
 
 type Filter struct {
-	Devices       map[string]bool
-	RegisterNames map[string]bool
+	IncludeDevices         map[string]bool
+	SkipRegisterNames      map[string]bool
+	SkipRegisterCategories map[string]bool
 }
 
 type readStateRequest struct {
@@ -78,7 +79,7 @@ func (instance *ValueStorageInstance) handleNewReadStateRequest(newReadStateRequ
 		response[deviceName] = make(ValueMap)
 
 		for registerName, value := range deviceState {
-			if !filterByRegisterName(filter, registerName) {
+			if !filterByRegister(filter, value.Register()) {
 				continue
 			}
 

@@ -425,10 +425,12 @@ func (c viewConfigReadList) TransformAndValidate(devices []*DeviceConfig) (ret [
 
 func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewConfig, err []error) {
 	ret = ViewConfig{
-		name:         c.Name,
-		title:        c.Title,
-		allowedUsers: make(map[string]struct{}),
-		hidden:       false,
+		name:           c.Name,
+		title:          c.Title,
+		allowedUsers:   make(map[string]struct{}),
+		hidden:         false,
+		skipFields:     c.SkipFields,
+		skipCategories: c.SkipCategories,
 	}
 
 	if !nameMatcher.MatchString(ret.name) {
@@ -485,10 +487,8 @@ func (c viewDeviceConfigRead) TransformAndValidate(
 	}
 
 	ret = ViewDeviceConfig{
-		name:           c.Name,
-		title:          c.Title,
-		skipFields:     c.SkipFields,
-		skipCategories: c.SkipCategories,
+		name:  c.Name,
+		title: c.Title,
 	}
 
 	return
