@@ -54,7 +54,7 @@ func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.
 		return nil, fmt.Errorf("no registers found for deviceId=%x", deviceId)
 	}
 	// filter registers by skip list
-	registers = dataflow.FilterRegisters(registers, cfg.SkipFields())
+	registers = dataflow.FilterRegisters(registers, cfg.SkipFields(), cfg.SkipCategories())
 	device.SetRegisters(registers)
 
 	// start victron reader

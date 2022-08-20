@@ -14,6 +14,7 @@ type Config interface {
 	Kind() config.DeviceKind
 	Device() string
 	SkipFields() []string
+	SkipCategories() []string
 	LogDebug() bool
 	LogComDebug() bool
 }

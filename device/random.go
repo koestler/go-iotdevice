@@ -12,7 +12,7 @@ func CreateRandomDeviceFactory(registers dataflow.Registers) Creator {
 		cfg := deviceStruct.Config()
 
 		// filter registers by skip list
-		registers = dataflow.FilterRegisters(registers, cfg.SkipFields())
+		registers = dataflow.FilterRegisters(registers, cfg.SkipFields(), cfg.SkipCategories())
 
 		// store given registers
 		deviceStruct.registers = registers

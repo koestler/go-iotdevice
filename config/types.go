@@ -46,18 +46,20 @@ type MqttClientConfig struct {
 }
 
 type DeviceConfig struct {
-	name        string     // defined automatically by map key
-	kind        DeviceKind // mandatory: what connection protocol is used
-	device      string     // optional: the serial device eg. /dev/ttyVE0
-	skipFields  []string   // optional: a list of fields that shall be ignored (Eg. Temperature when no sensor is connected)
-	logDebug    bool       // optional: default False
-	logComDebug bool       // optional: default False
+	name           string     // defined automatically by map key
+	kind           DeviceKind // mandatory: what connection protocol is used
+	device         string     // optional: the serial device eg. /dev/ttyVE0
+	skipFields     []string   // optional: a list of fields that shall be ignored (Eg. Temperature when no sensor is connected)
+	skipCategories []string   // optional: a list of categories that shall be ignored (Eg. Historic)
+	logDebug       bool       // optional: default False
+	logComDebug    bool       // optional: default False
 }
 
 type ViewDeviceConfig struct {
-	name   string   // defined automatically by map key
-	title  string   // mandatory: a nice title for the frontend
-	fields []string // optional: a list of fields that are shown; if empty, all fields are shown
+	name           string   // defined automatically by map key
+	title          string   // mandatory: a nice title for the frontend
+	skipFields     []string // optional: a list of fields that are not shown
+	skipCategories []string // optional: a list of categories that are not shown
 }
 
 type ViewConfig struct {
@@ -122,19 +124,21 @@ type mqttClientConfigRead struct {
 type mqttClientConfigReadMap map[string]mqttClientConfigRead
 
 type deviceConfigRead struct {
-	Kind        string   `yaml:"Kind"`
-	Device      string   `yaml:"Device"`
-	SkipFields  []string `yaml:"SkipFields"`
-	LogDebug    *bool    `yaml:"LogDebug"`
-	LogComDebug *bool    `yaml:"LogComDebug"`
+	Kind           string   `yaml:"Kind"`
+	Device         string   `yaml:"Device"`
+	SkipFields     []string `yaml:"SkipFields"`
+	SkipCategories []string `yaml:"SkipCategories"`
+	LogDebug       *bool    `yaml:"LogDebug"`
+	LogComDebug    *bool    `yaml:"LogComDebug"`
 }
 
 type deviceConfigReadMap map[string]deviceConfigRead
 
 type viewDeviceConfigRead struct {
-	Name   string   `yaml:"Name"`
-	Title  string   `yaml:"Title"`
-	Fields []string `yaml:"Fields"`
+	Name           string   `yaml:"Name"`
+	Title          string   `yaml:"Title"`
+	SkipFields     []string `yaml:"SkipFields"`
+	SkipCategories []string `yaml:"SkipCategories"`
 }
 
 type viewDeviceConfigReadList []viewDeviceConfigRead

@@ -177,10 +177,13 @@ func MergeRegisters(maps ...Registers) (output Registers) {
 	return output
 }
 
-func FilterRegisters(input Registers, exclude []string) (output Registers) {
+func FilterRegisters(input Registers, excludeFields []string, excludeCategories []string) (output Registers) {
 	output = make(Registers, 0, len(input))
 	for _, r := range input {
-		if registerExcluded(exclude, r) {
+		if registerNameExcluded(excludeFields, r) {
+			continue
+		}
+		if registerCategoryExcluded(excludeCategories, r) {
 			continue
 		}
 		output = append(output, r)
@@ -188,9 +191,18 @@ func FilterRegisters(input Registers, exclude []string) (output Registers) {
 	return
 }
 
-func registerExcluded(exclude []string, r Register) bool {
+func registerNameExcluded(exclude []string, r Register) bool {
 	for _, e := range exclude {
 		if e == r.Name() {
+			return true
+		}
+	}
+	return false
+}
+
+func registerCategoryExcluded(exclude []string, r Register) bool {
+	for _, e := range exclude {
+		if e == r.Category() {
 			return true
 		}
 	}

@@ -141,6 +141,10 @@ func (c DeviceConfig) SkipFields() []string {
 	return c.skipFields
 }
 
+func (c DeviceConfig) SkipCategories() []string {
+	return c.skipCategories
+}
+
 func (c DeviceConfig) LogDebug() bool {
 	return c.logDebug
 }
@@ -157,8 +161,12 @@ func (c ViewDeviceConfig) Title() string {
 	return c.title
 }
 
-func (c ViewDeviceConfig) Fields() []string {
-	return c.fields
+func (c ViewDeviceConfig) SkipFields() []string {
+	return c.skipFields
+}
+
+func (c ViewDeviceConfig) SkipCategories() []string {
+	return c.skipCategories
 }
 
 func (c ViewConfig) Name() string {

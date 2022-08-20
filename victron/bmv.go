@@ -326,6 +326,7 @@ var RegisterListBmv712 = dataflow.FilterRegisters(
 		"ProductRevision",
 		"Description",
 	},
+	[]string{},
 )
 
 var RegisterListBmv702 = dataflow.FilterRegisters(
@@ -334,6 +335,7 @@ var RegisterListBmv702 = dataflow.FilterRegisters(
 		"ProductRevision",
 		"Description",
 	},
+	[]string{},
 )
 
 var RegisterListBmv700 = dataflow.FilterRegisters(
@@ -346,4 +348,5 @@ var RegisterListBmv700 = dataflow.FilterRegisters(
 		"AuxVoltageMinimum",
 		"AuxVoltageMaximum",
 	},
+	[]string{},
 )
