@@ -8,14 +8,14 @@ import (
 )
 
 type NumericRealtimeMessage struct {
-	Time  string
-	Value float64
-	Unit  string
+	Time         string
+	NumericValue float64
+	Unit         string
 }
 
 type TextRealtimeMessage struct {
-	Time  string
-	Value string
+	Time      string
+	TextValue string
 }
 
 func convertValueToRealtimeMessage(value dataflow.Value) ([]byte, error) {
@@ -23,8 +23,8 @@ func convertValueToRealtimeMessage(value dataflow.Value) ([]byte, error) {
 	var v interface{}
 	if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
 		v = NumericRealtimeMessage{
-			Time:  now,
-			Value: numeric.Value(),
+			Time:         now,
+			NumericValue: numeric.Value(),
 			Unit: func() string {
 				if u := numeric.Register().Unit(); u != nil {
 					return *u
@@ -34,8 +34,8 @@ func convertValueToRealtimeMessage(value dataflow.Value) ([]byte, error) {
 		}
 	} else if text, ok := value.(dataflow.TextRegisterValue); ok {
 		v = TextRealtimeMessage{
-			Time:  now,
-			Value: text.Value(),
+			Time:      now,
+			TextValue: text.Value(),
 		}
 	}
 
