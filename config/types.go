@@ -49,6 +49,7 @@ type DeviceConfig struct {
 	name        string     // defined automatically by map key
 	kind        DeviceKind // mandatory: what connection protocol is used
 	device      string     // optional: the serial device eg. /dev/ttyVE0
+	skipFields  []string   // optional: a list of fields that shall be ignored (Eg. Temperature when no sensor is connected)
 	logDebug    bool       // optional: default False
 	logComDebug bool       // optional: default False
 }
@@ -121,10 +122,11 @@ type mqttClientConfigRead struct {
 type mqttClientConfigReadMap map[string]mqttClientConfigRead
 
 type deviceConfigRead struct {
-	Kind        string `yaml:"Kind"`
-	Device      string `yaml:"Device"`
-	LogDebug    *bool  `yaml:"LogDebug"`
-	LogComDebug *bool  `yaml:"LogComDebug"`
+	Kind        string   `yaml:"Kind"`
+	Device      string   `yaml:"Device"`
+	SkipFields  []string `yaml:"SkipFields"`
+	LogDebug    *bool    `yaml:"LogDebug"`
+	LogComDebug *bool    `yaml:"LogComDebug"`
 }
 
 type deviceConfigReadMap map[string]deviceConfigRead

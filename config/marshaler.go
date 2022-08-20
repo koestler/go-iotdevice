@@ -79,8 +79,11 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 
 func (c DeviceConfig) convertToRead() deviceConfigRead {
 	return deviceConfigRead{
-		Device: c.device,
-		Kind:   c.kind.String(),
+		Kind:        c.kind.String(),
+		Device:      c.device,
+		SkipFields:  c.skipFields,
+		LogDebug:    &c.logDebug,
+		LogComDebug: &c.logComDebug,
 	}
 }
 

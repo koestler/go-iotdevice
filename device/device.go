@@ -13,6 +13,7 @@ type Config interface {
 	Name() string
 	Kind() config.DeviceKind
 	Device() string
+	SkipFields() []string
 	LogDebug() bool
 	LogComDebug() bool
 }

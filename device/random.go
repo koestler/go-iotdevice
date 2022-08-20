@@ -9,10 +9,13 @@ import (
 
 func CreateRandomDeviceFactory(registers dataflow.Registers) Creator {
 	return func(deviceStruct DeviceStruct, output chan dataflow.Value) (device Device, err error) {
+		cfg := deviceStruct.Config()
+
+		// filter registers by skip list
+		registers = dataflow.FilterRegisters(registers, cfg.SkipFields())
+
 		// store given registers
 		deviceStruct.registers = registers
-
-		cfg := deviceStruct.Config()
 
 		if cfg.LogDebug() {
 			log.Printf("device[%s]: start random source", cfg.Name())
@@ -30,7 +33,7 @@ func CreateRandomDeviceFactory(registers dataflow.Registers) Creator {
 				case <-deviceStruct.GetShutdownChan():
 					return
 				case <-ticker.C:
-					for _, register := range deviceStruct.GetRegisters() {
+					for _, register := range registers {
 						if numberRegister, ok := register.(dataflow.NumberRegisterStruct); ok {
 							var value float64
 							if numberRegister.Signed() {

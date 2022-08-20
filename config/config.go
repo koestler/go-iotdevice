@@ -368,9 +368,10 @@ func (c deviceConfigReadMap) TransformAndValidate() (ret []*DeviceConfig, err []
 
 func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, err []error) {
 	ret = DeviceConfig{
-		name:   name,
-		device: c.Device,
-		kind:   DeviceKindFromString(c.Kind),
+		name:       name,
+		kind:       DeviceKindFromString(c.Kind),
+		device:     c.Device,
+		skipFields: c.SkipFields,
 	}
 
 	if !nameMatcher.MatchString(ret.name) {

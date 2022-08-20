@@ -137,6 +137,10 @@ func (c DeviceConfig) Device() string {
 	return c.device
 }
 
+func (c DeviceConfig) SkipFields() []string {
+	return c.skipFields
+}
+
 func (c DeviceConfig) LogDebug() bool {
 	return c.logDebug
 }
