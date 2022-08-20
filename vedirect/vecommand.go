@@ -88,6 +88,7 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 	var responseData []byte
 	responseData, err = vd.RecvVeResponse()
 	if err != nil {
+		vd.debugPrintf("vedirect: VeCommand end err=%v", err)
 		return
 	}
 
