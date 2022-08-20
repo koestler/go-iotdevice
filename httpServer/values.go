@@ -38,7 +38,7 @@ func setupValuesJson(r *gin.RouterGroup, env *Environment) {
 			relativePath := "values/" + view.Name() + "/" + deviceName + ".json"
 
 			// the following line uses a loop variable; it must be outside the closure
-			filter := getFilter([]string{deviceName}, v.SkipFields(), v.SkipCategories())
+			filter := getFilter([]string{deviceName}, view.SkipFields(), view.SkipCategories())
 			r.GET(relativePath, func(c *gin.Context) {
 				// check authorization
 				if !isViewAuthenticated(view, c) {

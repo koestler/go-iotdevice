@@ -33,7 +33,7 @@ func filterByRegisterName(filter *Filter, register Register) bool {
 
 	// keep all but those that are present and false
 	v, ok := filter.SkipRegisterNames[register.Name()]
-	return !(ok && !v)
+	return !(ok && v)
 }
 
 func filterByRegisterCategory(filter *Filter, register Register) bool {
@@ -44,7 +44,7 @@ func filterByRegisterCategory(filter *Filter, register Register) bool {
 
 	// keep all but those that are present and false
 	v, ok := filter.SkipRegisterCategories[register.Category()]
-	return !(ok && !v)
+	return !(ok && v)
 }
 
 func filterByRegister(filter *Filter, register Register) bool {
