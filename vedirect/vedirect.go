@@ -24,7 +24,7 @@ func Open(portName string, logDebug bool) (*Vedirect, error) {
 	options := serial.Config{
 		Name:        portName,
 		Baud:        19200,
-		ReadTimeout: time.Millisecond * 500,
+		ReadTimeout: time.Millisecond * 200,
 	}
 
 	ioHandle, err := serial.OpenPort(&options)
@@ -68,8 +68,9 @@ func (vd *Vedirect) RecvFlush() {
 	vd.debugPrintf("vedirect: RecvFlush begin")
 
 	if err := vd.ioPort.Flush(); err != nil {
-		vd.debugPrintf("vedirect: RecvFlush end err=%v", err)
+		vd.debugPrintf("vedirect: RecvFlush err=%v", err)
 	}
+	vd.reader.Reset(vd.ioPort)
 
 	vd.debugPrintf("vedirect: RecvFlush end")
 }
