@@ -214,7 +214,9 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 		responseAddress := uint16(littleEndianBytesToUint(rawValues[0:2]))
 		if address != responseAddress {
 			err = errors.New(fmt.Sprintf("address != responseAddress, address=%x, responseAddress=%x", address, responseAddress))
-			log.Printf("vedirect: VeCommandGet(address=%x) retry try=%v err=%v", address, try, err)
+			if try > 0 {
+				log.Printf("vedirect: VeCommandGet(address=%x) retry try=%v err=%v", address, try, err)
+			}
 			continue
 		}
 
@@ -222,7 +224,9 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 		responseFlag := VeResponseFlag(littleEndianBytesToUint(rawValues[2:3]))
 		if VeResponseFlagOk != responseFlag {
 			err = errors.New(fmt.Sprintf("VeResponseFlagOk != responseFlag, responseFlag=%v", responseFlag))
-			log.Printf("vedirect: VeCommandGet(address=%x) retry try=%v err=%v", address, try, err)
+			if try > 0 {
+				log.Printf("vedirect: VeCommandGet(address=%x) retry try=%v err=%v", address, try, err)
+			}
 			continue
 		}
 
