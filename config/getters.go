@@ -117,6 +117,10 @@ func (c MqttClientConfig) RealtimeTopic() string {
 	return c.realtimeTopic
 }
 
+func (c MqttClientConfig) RealtimeQos() byte {
+	return c.realtimeQos
+}
+
 func (c MqttClientConfig) RealtimeRetain() bool {
 	return c.realtimeRetain
 }

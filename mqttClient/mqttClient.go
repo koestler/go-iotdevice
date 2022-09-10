@@ -27,6 +27,7 @@ type Config interface {
 	TelemetryRetain() bool
 	RealtimeEnable() bool
 	RealtimeTopic() string
+	RealtimeQos() byte
 	RealtimeRetain() bool
 	LogDebug() bool
 }
@@ -107,7 +108,7 @@ func RunClient(
 								value.Register().Name(),
 								value.Register().Unit(),
 							),
-							cfg.Qos(),
+							cfg.RealtimeQos(),
 							cfg.RealtimeRetain(),
 							b,
 						)
@@ -167,9 +168,9 @@ func (c ClientStruct) Config() Config {
 func (c ClientStruct) Shutdown() {
 	close(c.shutdown)
 
-	// public availability offline
+	// publish availability offline
 	if c.cfg.AvailabilityEnable() {
-		c.mqttClient.Publish(GetAvailabilityTopic(c.cfg), c.cfg.Qos(), true, "Offline")
+		c.mqttClient.Publish(GetAvailabilityTopic(c.cfg), c.cfg.Qos(), true, "offline")
 	}
 
 	c.mqttClient.Disconnect(1000)

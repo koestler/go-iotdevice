@@ -41,6 +41,7 @@ type MqttClientConfig struct {
 	telemetryRetain    bool          // optional: default false
 	realtimeEnable     bool          // optional: default false
 	realtimeTopic      string        // optional: default "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%"
+	realtimeQos        byte          // optional: default 0, must be 0, 1, 2
 	realtimeRetain     bool          // optional: default true
 	logDebug           bool          // optional: default false
 }
@@ -117,6 +118,7 @@ type mqttClientConfigRead struct {
 	TelemetryRetain    *bool   `yaml:"TelemetryRetain"`
 	RealtimeEnable     *bool   `yaml:"RealtimeEnable"`
 	RealtimeTopic      *string `yaml:"RealtimeTopic"`
+	RealtimeQos        *byte   `yaml:"RealtimeQos"`
 	RealtimeRetain     *bool   `yaml:"RealtimeRetain"`
 	LogDebug           *bool   `yaml:"LogDebug"`
 }

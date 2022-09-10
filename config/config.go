@@ -326,6 +326,14 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.realtimeTopic = *c.RealtimeTopic
 	}
 
+	if c.RealtimeQos == nil {
+		ret.realtimeQos = 0
+	} else if *c.RealtimeQos == 0 || *c.RealtimeQos == 1 || *c.RealtimeQos == 2 {
+		ret.realtimeQos = *c.RealtimeQos
+	} else {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->RealtimeQos=%d but must be 0, 1 or 2", name, *c.RealtimeQos))
+	}
+
 	if c.RealtimeRetain == nil {
 		ret.realtimeRetain = true
 	} else {

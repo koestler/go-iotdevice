@@ -72,6 +72,7 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 		TelemetryRetain:    &c.telemetryRetain,
 		RealtimeEnable:     &c.realtimeEnable,
 		RealtimeTopic:      &c.realtimeTopic,
+		RealtimeQos:        &c.realtimeQos,
 		RealtimeRetain:     &c.realtimeRetain,
 		LogDebug:           &c.logDebug,
 	}
