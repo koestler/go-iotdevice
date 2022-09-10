@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
@@ -261,7 +262,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		err = append(err, fmt.Errorf("MqttClientConfig->%s->Broker must not be empty", name))
 	}
 	if len(ret.clientId) < 1 {
-		ret.clientId = "go-iotdevice"
+		ret.clientId = "go-iotdevice-" + uuid.New().String()
 	}
 
 	if c.Qos == nil {

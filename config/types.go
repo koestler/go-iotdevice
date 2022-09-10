@@ -31,7 +31,7 @@ type MqttClientConfig struct {
 	broker             string        // mandatory
 	user               string        // optional: default empty
 	password           string        // optional: default empty
-	clientId           string        // optional: default go-iotdevice
+	clientId           string        // optional: default go-iotdevice-UUID
 	qos                byte          // optional: default 1, must be 0, 1, 2
 	topicPrefix        string        // optional: ""
 	availabilityEnable bool          // optional: default true
