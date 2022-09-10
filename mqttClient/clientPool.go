@@ -5,13 +5,13 @@ import (
 )
 
 type ClientPool struct {
-	Clients      map[string]Client
+	Clients      map[string]*Client
 	ClientsMutex sync.RWMutex
 }
 
 func RunPool() (pool *ClientPool) {
 	pool = &ClientPool{
-		Clients: make(map[string]Client),
+		Clients: make(map[string]*Client),
 	}
 	return
 }
@@ -24,7 +24,7 @@ func (p *ClientPool) Shutdown() {
 	}
 }
 
-func (p *ClientPool) AddClient(client Client) {
+func (p *ClientPool) AddClient(client *Client) {
 	p.ClientsMutex.Lock()
 	defer p.ClientsMutex.Unlock()
 	p.Clients[client.Config().Name()] = client
@@ -36,7 +36,7 @@ func (p *ClientPool) RemoveClient(client Client) {
 	delete(p.Clients, client.Config().Name())
 }
 
-func (p *ClientPool) GetClient(clientName string) Client {
+func (p *ClientPool) GetClient(clientName string) *Client {
 	p.ClientsMutex.RLock()
 	defer p.ClientsMutex.RUnlock()
 	return p.Clients[clientName]

@@ -12,6 +12,12 @@ import (
 	"time"
 )
 
+type Client struct {
+	cfg        Config
+	mqttClient mqtt.Client
+	shutdown   chan struct{}
+}
+
 type Config interface {
 	Name() string
 	Broker() string
@@ -32,33 +38,23 @@ type Config interface {
 	LogDebug() bool
 }
 
-type Client interface {
-	Config() Config
-	Shutdown()
-}
-
-type ClientStruct struct {
-	cfg        Config
-	mqttClient mqtt.Client
-	shutdown   chan struct{}
-}
-
 func RunClient(
 	cfg Config,
 	devicePoolInstance *device.DevicePool,
 	storage *dataflow.ValueStorageInstance,
-) (client Client, err error) {
+) (*Client, error) {
 	// configure client and start connection
 	opts := mqtt.NewClientOptions().
 		AddBroker(cfg.Broker()).
 		SetClientID(cfg.ClientId()).
 		SetOrderMatters(false).
 		SetCleanSession(true) // use clean, non-persistent session since we only publish
-	if len(cfg.User()) > 0 {
-		opts.SetUsername(cfg.User())
+
+	if user := cfg.User(); len(user) > 0 {
+		opts.SetUsername(user)
 	}
-	if len(cfg.Password()) > 0 {
-		opts.SetPassword(cfg.Password())
+	if password := cfg.Password(); len(password) > 0 {
+		opts.SetPassword(password)
 	}
 
 	if cfg.AvailabilityEnable() {
@@ -76,7 +72,7 @@ func RunClient(
 		return nil, fmt.Errorf("connect failed: %s", token.Error())
 	}
 
-	clientStruct := ClientStruct{
+	clientStruct := Client{
 		cfg:        cfg,
 		mqttClient: mqttClient,
 		shutdown:   make(chan struct{}),
@@ -165,11 +161,11 @@ func RunClient(
 	return &clientStruct, nil
 }
 
-func (c ClientStruct) Config() Config {
+func (c *Client) Config() Config {
 	return c.cfg
 }
 
-func (c ClientStruct) Shutdown() {
+func (c *Client) Shutdown() {
 	close(c.shutdown)
 
 	// publish availability offline
