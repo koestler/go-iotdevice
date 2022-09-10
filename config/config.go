@@ -278,12 +278,6 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.topicPrefix = *c.TopicPrefix
 	}
 
-	if c.AvailabilityEnable == nil {
-		ret.availabilityEnable = true
-	} else {
-		ret.availabilityEnable = *c.AvailabilityEnable
-	}
-
 	if c.AvailabilityTopic == nil {
 		// use default
 		ret.availabilityTopic = "%Prefix%tele/%ClientId%/status"

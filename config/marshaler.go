@@ -59,22 +59,21 @@ func (c AuthConfig) convertToRead() authConfigRead {
 
 func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 	return mqttClientConfigRead{
-		Broker:             c.broker,
-		User:               c.user,
-		Password:           c.password,
-		ClientId:           c.clientId,
-		Qos:                &c.qos,
-		TopicPrefix:        &c.topicPrefix,
-		AvailabilityEnable: &c.availabilityEnable,
-		AvailabilityTopic:  &c.availabilityTopic,
-		TelemetryInterval:  c.telemetryInterval.String(),
-		TelemetryTopic:     &c.telemetryTopic,
-		TelemetryRetain:    &c.telemetryRetain,
-		RealtimeEnable:     &c.realtimeEnable,
-		RealtimeTopic:      &c.realtimeTopic,
-		RealtimeQos:        &c.realtimeQos,
-		RealtimeRetain:     &c.realtimeRetain,
-		LogDebug:           &c.logDebug,
+		Broker:            c.broker,
+		User:              c.user,
+		Password:          c.password,
+		ClientId:          c.clientId,
+		Qos:               &c.qos,
+		TopicPrefix:       &c.topicPrefix,
+		AvailabilityTopic: &c.availabilityTopic,
+		TelemetryInterval: c.telemetryInterval.String(),
+		TelemetryTopic:    &c.telemetryTopic,
+		TelemetryRetain:   &c.telemetryRetain,
+		RealtimeEnable:    &c.realtimeEnable,
+		RealtimeTopic:     &c.realtimeTopic,
+		RealtimeQos:       &c.realtimeQos,
+		RealtimeRetain:    &c.realtimeRetain,
+		LogDebug:          &c.logDebug,
 	}
 }
 

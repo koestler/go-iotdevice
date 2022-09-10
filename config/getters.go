@@ -89,10 +89,6 @@ func (c MqttClientConfig) TopicPrefix() string {
 	return c.topicPrefix
 }
 
-func (c MqttClientConfig) AvailabilityEnable() bool {
-	return c.availabilityEnable
-}
-
 func (c MqttClientConfig) AvailabilityTopic() string {
 	return c.availabilityTopic
 }

@@ -27,23 +27,22 @@ type AuthConfig struct {
 }
 
 type MqttClientConfig struct {
-	name               string        // defined automatically by map key
-	broker             string        // mandatory
-	user               string        // optional: default empty
-	password           string        // optional: default empty
-	clientId           string        // optional: default go-iotdevice-UUID
-	qos                byte          // optional: default 1, must be 0, 1, 2
-	topicPrefix        string        // optional: ""
-	availabilityEnable bool          // optional: default true
-	availabilityTopic  string        // optional: default %Prefix%tele/%ClientId%/status
-	telemetryInterval  time.Duration // optional: "10s"
-	telemetryTopic     string        // optional: "%Prefix%tele/go-iotdevice/%DeviceName%/state"
-	telemetryRetain    bool          // optional: default false
-	realtimeEnable     bool          // optional: default false
-	realtimeTopic      string        // optional: default "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%"
-	realtimeQos        byte          // optional: default 0, must be 0, 1, 2
-	realtimeRetain     bool          // optional: default true
-	logDebug           bool          // optional: default false
+	name              string        // defined automatically by map key
+	broker            string        // mandatory
+	user              string        // optional: default empty
+	password          string        // optional: default empty
+	clientId          string        // optional: default go-iotdevice-UUID
+	qos               byte          // optional: default 1, must be 0, 1, 2
+	topicPrefix       string        // optional: ""
+	availabilityTopic string        // optional: default %Prefix%tele/%ClientId%/status
+	telemetryInterval time.Duration // optional: "10s"
+	telemetryTopic    string        // optional: "%Prefix%tele/go-iotdevice/%DeviceName%/state"
+	telemetryRetain   bool          // optional: default false
+	realtimeEnable    bool          // optional: default false
+	realtimeTopic     string        // optional: default "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%"
+	realtimeQos       byte          // optional: default 0, must be 0, 1, 2
+	realtimeRetain    bool          // optional: default true
+	logDebug          bool          // optional: default false
 }
 
 type DeviceConfig struct {
@@ -105,22 +104,21 @@ type authConfigRead struct {
 }
 
 type mqttClientConfigRead struct {
-	Broker             string  `yaml:"Broker"`
-	User               string  `yaml:"User"`
-	Password           string  `yaml:"Password"`
-	ClientId           string  `yaml:"ClientId"`
-	Qos                *byte   `yaml:"Qos"`
-	TopicPrefix        *string `yaml:"TopicPrefix"`
-	AvailabilityEnable *bool   `yaml:"AvailabilityEnable"`
-	AvailabilityTopic  *string `yaml:"AvailabilityTopic"`
-	TelemetryInterval  string  `yaml:"TelemetryInterval"`
-	TelemetryTopic     *string `yaml:"TelemetryTopic"`
-	TelemetryRetain    *bool   `yaml:"TelemetryRetain"`
-	RealtimeEnable     *bool   `yaml:"RealtimeEnable"`
-	RealtimeTopic      *string `yaml:"RealtimeTopic"`
-	RealtimeQos        *byte   `yaml:"RealtimeQos"`
-	RealtimeRetain     *bool   `yaml:"RealtimeRetain"`
-	LogDebug           *bool   `yaml:"LogDebug"`
+	Broker            string  `yaml:"Broker"`
+	User              string  `yaml:"User"`
+	Password          string  `yaml:"Password"`
+	ClientId          string  `yaml:"ClientId"`
+	Qos               *byte   `yaml:"Qos"`
+	TopicPrefix       *string `yaml:"TopicPrefix"`
+	AvailabilityTopic *string `yaml:"AvailabilityTopic"`
+	TelemetryInterval string  `yaml:"TelemetryInterval"`
+	TelemetryTopic    *string `yaml:"TelemetryTopic"`
+	TelemetryRetain   *bool   `yaml:"TelemetryRetain"`
+	RealtimeEnable    *bool   `yaml:"RealtimeEnable"`
+	RealtimeTopic     *string `yaml:"RealtimeTopic"`
+	RealtimeQos       *byte   `yaml:"RealtimeQos"`
+	RealtimeRetain    *bool   `yaml:"RealtimeRetain"`
+	LogDebug          *bool   `yaml:"LogDebug"`
 }
 
 type mqttClientConfigReadMap map[string]mqttClientConfigRead

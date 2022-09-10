@@ -26,7 +26,6 @@ type Config interface {
 	ClientId() string
 	Qos() byte
 	TopicPrefix() string
-	AvailabilityEnable() bool
 	AvailabilityTopic() string
 	TelemetryInterval() time.Duration
 	TelemetryTopic() string
@@ -57,9 +56,14 @@ func RunClient(
 		opts.SetPassword(password)
 	}
 
-	if cfg.AvailabilityEnable() {
-		// public availability offline as will
-		opts.SetWill(GetAvailabilityTopic(cfg), "offline", cfg.Qos(), true)
+	// setup availability topic using will
+	if availabilityTopic := getAvailabilityTopic(cfg); len(availabilityTopic) > 0 {
+		opts.SetWill(availabilityTopic, "offline", cfg.Qos(), true)
+
+		// publish availability after each connect
+		opts.SetOnConnectHandler(func(client mqtt.Client) {
+			client.Publish(availabilityTopic, cfg.Qos(), true, "online")
+		})
 	}
 
 	mqtt.ERROR = log.New(os.Stdout, "", 0)
@@ -76,11 +80,6 @@ func RunClient(
 		cfg:        cfg,
 		mqttClient: mqttClient,
 		shutdown:   make(chan struct{}),
-	}
-
-	// send Online
-	if cfg.AvailabilityEnable() {
-		mqttClient.Publish(GetAvailabilityTopic(cfg), cfg.Qos(), true, "online")
 	}
 
 	// setup Realtime (send data as soon as it arrives) output
@@ -169,15 +168,15 @@ func (c *Client) Shutdown() {
 	close(c.shutdown)
 
 	// publish availability offline
-	if c.cfg.AvailabilityEnable() {
-		c.mqttClient.Publish(GetAvailabilityTopic(c.cfg), c.cfg.Qos(), true, "offline")
+	if availabilityTopic := getAvailabilityTopic(c.cfg); len(availabilityTopic) > 0 {
+		c.mqttClient.Publish(availabilityTopic, c.cfg.Qos(), true, "offline")
 	}
 
 	c.mqttClient.Disconnect(1000)
 	log.Printf("mqttClient[%s]: shutdown completed", c.cfg.Name())
 }
 
-func GetAvailabilityTopic(cfg Config) string {
+func getAvailabilityTopic(cfg Config) string {
 	return replaceTemplate(cfg.AvailabilityTopic(), cfg)
 }
 
