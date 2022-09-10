@@ -49,7 +49,11 @@ func RunClient(
 	storage *dataflow.ValueStorageInstance,
 ) (client Client, err error) {
 	// configure client and start connection
-	opts := mqtt.NewClientOptions().AddBroker(cfg.Broker()).SetClientID(cfg.ClientId())
+	opts := mqtt.NewClientOptions().
+		AddBroker(cfg.Broker()).
+		SetClientID(cfg.ClientId()).
+		SetOrderMatters(false).
+		SetCleanSession(true) // use clean, non-persistent session since we only publish
 	if len(cfg.User()) > 0 {
 		opts.SetUsername(cfg.User())
 	}
