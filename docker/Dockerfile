@@ -1,7 +1,7 @@
 # build backend
-FROM golang:1.19 as go-builder
+FROM golang:1.19-alpine as go-builder
 
-RUN apt-get update && apt-get install -y git upx
+RUN apk add build-base git
 RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 WORKDIR /app
@@ -16,11 +16,8 @@ RUN  VERSION=`git describe --always --tags`; \
      BUILD_TIME=`date -Is`; \
      go build -ldflags="-s -w -X main.buildVersion=$VERSION -X main.buildTime=$BUILD_TIME" -o /go-iotdevice
 
-RUN upx /go-iotdevice
-
 # used to generate /etc/passwd /etc/group
-RUN groupadd -g 1000 app && \
-    useradd -r -u 1000 -g app app
+RUN addgroup -S app && adduser -S app -G app
 RUN chown app:app /go-iotdevice
 
 # use already compiled frontend
