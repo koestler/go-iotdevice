@@ -246,36 +246,97 @@ func (c mqttClientConfigReadMap) TransformAndValidate() (ret []*MqttClientConfig
 
 func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientConfig, err []error) {
 	ret = MqttClientConfig{
-		name:     name,
-		broker:   c.Broker,
-		user:     c.User,
-		password: c.Password,
-		clientId: c.ClientId,
+		name:        name,
+		user:        c.User,
+		password:    c.Password,
+		topicPrefix: c.TopicPrefix,
 	}
 
 	if !nameMatcher.MatchString(ret.name) {
 		err = append(err, fmt.Errorf("MqttClientConfig->Name='%s' does not match %s", ret.name, NameRegexp))
 	}
 
-	if len(ret.broker) < 1 {
+	if len(c.Broker) < 1 {
 		err = append(err, fmt.Errorf("MqttClientConfig->%s->Broker must not be empty", name))
+	} else {
+		if broker, e := url.ParseRequestURI(c.Broker); e != nil {
+			err = append(err, fmt.Errorf("MqttClientConfig->%s->Broker invalid url: %s", name, e))
+		} else if broker == nil {
+			err = append(err, fmt.Errorf("MqttClientConfig->%s->Broker cannot parse broker", name))
+		} else {
+			ret.broker = broker
+		}
 	}
-	if len(ret.clientId) < 1 {
-		ret.clientId = "go-iotdevice-" + uuid.New().String()
+
+	if c.ProtocolVersion == nil {
+		ret.protocolVersion = 5
+	} else if *c.ProtocolVersion == 3 || *c.ProtocolVersion == 5 {
+		ret.protocolVersion = *c.ProtocolVersion
+	} else {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->Protocol=%d but must be 3 or 5", name, *c.ProtocolVersion))
+	}
+
+	if c.ClientId == nil {
+		ret.clientId = "go-mqtt-to-influx-" + uuid.New().String()
+	} else {
+		ret.clientId = *c.ClientId
 	}
 
 	if c.Qos == nil {
-		ret.qos = 1
+		ret.qos = 1 // default qos is 1
 	} else if *c.Qos == 0 || *c.Qos == 1 || *c.Qos == 2 {
 		ret.qos = *c.Qos
 	} else {
 		err = append(err, fmt.Errorf("MqttClientConfig->%s->Qos=%d but must be 0, 1 or 2", name, *c.Qos))
 	}
 
-	if c.TopicPrefix == nil {
-		ret.topicPrefix = ""
+	if len(c.KeepAlive) < 1 {
+		// use default 60s
+		ret.keepAlive = time.Minute
+	} else if keepAlive, e := time.ParseDuration(c.KeepAlive); e != nil {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->KeepAlive='%s' parse error: %s",
+			name, c.KeepAlive, e,
+		))
+	} else if keepAlive < time.Second {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->KeepAlive='%s' must be >=1s",
+			name, c.KeepAlive,
+		))
+	} else if keepAlive%time.Second != 0 {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->KeepAlive='%s' must be a multiple of a second",
+			name, c.KeepAlive,
+		))
 	} else {
-		ret.topicPrefix = *c.TopicPrefix
+		ret.keepAlive = keepAlive
+	}
+
+	if len(c.ConnectRetryDelay) < 1 {
+		// use default 10s
+		ret.connectRetryDelay = 10 * time.Second
+	} else if connectRetryDelay, e := time.ParseDuration(c.ConnectRetryDelay); e != nil {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->ConnectRetryDelay='%s' parse error: %s",
+			name, c.ConnectRetryDelay, e,
+		))
+	} else if connectRetryDelay < 100*time.Millisecond {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->ConnectRetryDelay='%s' must be >=100ms",
+			name, c.ConnectRetryDelay,
+		))
+	} else {
+		ret.connectRetryDelay = connectRetryDelay
+	}
+
+	if len(c.ConnectTimeout) < 1 {
+		// use default 5s
+		ret.connectTimeout = 5 * time.Second
+	} else if connectTimeout, e := time.ParseDuration(c.ConnectTimeout); e != nil {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->ConnectTimeout='%s' parse error: %s",
+			name, c.ConnectTimeout, e,
+		))
+	} else if connectTimeout < 100*time.Millisecond {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->ConnectTimeout='%s' must be >=100ms",
+			name, c.ConnectTimeout,
+		))
+	} else {
+		ret.connectTimeout = connectTimeout
 	}
 
 	if c.AvailabilityTopic == nil {
@@ -320,14 +381,6 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.realtimeTopic = *c.RealtimeTopic
 	}
 
-	if c.RealtimeQos == nil {
-		ret.realtimeQos = 0
-	} else if *c.RealtimeQos == 0 || *c.RealtimeQos == 1 || *c.RealtimeQos == 2 {
-		ret.realtimeQos = *c.RealtimeQos
-	} else {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->RealtimeQos=%d but must be 0, 1 or 2", name, *c.RealtimeQos))
-	}
-
 	if c.RealtimeRetain == nil {
 		ret.realtimeRetain = true
 	} else {
@@ -336,6 +389,10 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 
 	if c.LogDebug != nil && *c.LogDebug {
 		ret.logDebug = true
+	}
+
+	if c.LogMessages != nil && *c.LogMessages {
+		ret.logMessages = true
 	}
 
 	return

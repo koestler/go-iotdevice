@@ -61,12 +61,19 @@ func (c AuthConfig) HtaccessFile() string {
 	return c.htaccessFile
 }
 
+// getters for MqttClientConfig struct
+
 func (c MqttClientConfig) Name() string {
 	return c.name
 }
 
-func (c MqttClientConfig) Broker() string {
+// Broker always returns a non-nil pointer.
+func (c MqttClientConfig) Broker() *url.URL {
 	return c.broker
+}
+
+func (c MqttClientConfig) ProtocolVersion() int {
+	return c.protocolVersion
 }
 
 func (c MqttClientConfig) User() string {
@@ -85,8 +92,16 @@ func (c MqttClientConfig) Qos() byte {
 	return c.qos
 }
 
-func (c MqttClientConfig) TopicPrefix() string {
-	return c.topicPrefix
+func (c MqttClientConfig) KeepAlive() time.Duration {
+	return c.keepAlive
+}
+
+func (c MqttClientConfig) ConnectRetryDelay() time.Duration {
+	return c.connectRetryDelay
+}
+
+func (c MqttClientConfig) ConnectTimeout() time.Duration {
+	return c.connectTimeout
 }
 
 func (c MqttClientConfig) AvailabilityTopic() string {
@@ -113,16 +128,20 @@ func (c MqttClientConfig) RealtimeTopic() string {
 	return c.realtimeTopic
 }
 
-func (c MqttClientConfig) RealtimeQos() byte {
-	return c.realtimeQos
-}
-
 func (c MqttClientConfig) RealtimeRetain() bool {
 	return c.realtimeRetain
 }
 
+func (c MqttClientConfig) TopicPrefix() string {
+	return c.topicPrefix
+}
+
 func (c MqttClientConfig) LogDebug() bool {
 	return c.logDebug
+}
+
+func (c MqttClientConfig) LogMessages() bool {
+	return c.logMessages
 }
 
 func (c DeviceConfig) Name() string {

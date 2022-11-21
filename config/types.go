@@ -28,21 +28,25 @@ type AuthConfig struct {
 
 type MqttClientConfig struct {
 	name              string        // defined automatically by map key
-	broker            string        // mandatory
+	broker            *url.URL      // mandatory
+	protocolVersion   int           // optional: default 5
 	user              string        // optional: default empty
 	password          string        // optional: default empty
-	clientId          string        // optional: default go-iotdevice-UUID
+	clientId          string        // optional: default go-mqtt-to-influx-UUID
 	qos               byte          // optional: default 1, must be 0, 1, 2
-	topicPrefix       string        // optional: ""
+	keepAlive         time.Duration // optional: default 60s
+	connectRetryDelay time.Duration // optional: default 10s
+	connectTimeout    time.Duration // optional: default 5s
 	availabilityTopic string        // optional: default %Prefix%tele/%ClientId%/status
 	telemetryInterval time.Duration // optional: "10s"
 	telemetryTopic    string        // optional: "%Prefix%tele/go-iotdevice/%DeviceName%/state"
 	telemetryRetain   bool          // optional: default false
 	realtimeEnable    bool          // optional: default false
 	realtimeTopic     string        // optional: default "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%"
-	realtimeQos       byte          // optional: default 0, must be 0, 1, 2
 	realtimeRetain    bool          // optional: default true
-	logDebug          bool          // optional: default false
+	topicPrefix       string        // optional: default empty
+	logDebug          bool          // optional: default False
+	logMessages       bool          // optional: default False
 }
 
 type DeviceConfig struct {
@@ -105,20 +109,24 @@ type authConfigRead struct {
 
 type mqttClientConfigRead struct {
 	Broker            string  `yaml:"Broker"`
+	ProtocolVersion   *int    `yaml:"ProtocolVersion"`
 	User              string  `yaml:"User"`
 	Password          string  `yaml:"Password"`
-	ClientId          string  `yaml:"ClientId"`
+	ClientId          *string `yaml:"ClientId"`
 	Qos               *byte   `yaml:"Qos"`
-	TopicPrefix       *string `yaml:"TopicPrefix"`
+	KeepAlive         string  `yaml:"KeepAlive"`
+	ConnectRetryDelay string  `yaml:"ConnectRetryDelay"`
+	ConnectTimeout    string  `yaml:"ConnectTimeout"`
 	AvailabilityTopic *string `yaml:"AvailabilityTopic"`
 	TelemetryInterval string  `yaml:"TelemetryInterval"`
 	TelemetryTopic    *string `yaml:"TelemetryTopic"`
 	TelemetryRetain   *bool   `yaml:"TelemetryRetain"`
 	RealtimeEnable    *bool   `yaml:"RealtimeEnable"`
 	RealtimeTopic     *string `yaml:"RealtimeTopic"`
-	RealtimeQos       *byte   `yaml:"RealtimeQos"`
 	RealtimeRetain    *bool   `yaml:"RealtimeRetain"`
+	TopicPrefix       string  `yaml:"TopicPrefix"`
 	LogDebug          *bool   `yaml:"LogDebug"`
+	LogMessages       *bool   `yaml:"LogMessages"`
 }
 
 type mqttClientConfigReadMap map[string]mqttClientConfigRead

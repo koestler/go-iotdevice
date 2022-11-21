@@ -12,29 +12,22 @@ func runMqttClient(
 	cfg *config.Config,
 	devicePoolInstance *device.DevicePool,
 	storage *dataflow.ValueStorageInstance,
-) (clientPoolInstance *mqttClient.ClientPool) {
-	clientPoolInstance = mqttClient.RunPool()
+) (mqttClientPoolInstance *mqttClient.ClientPool) {
+	// run pool
+	mqttClientPoolInstance = mqttClient.RunPool()
 
-	for _, cfgClient := range cfg.MqttClients() {
+	for _, mqttClientConfig := range cfg.MqttClients() {
 		if cfg.LogWorkerStart() {
 			log.Printf(
-				"mqttClient[%s]: broker='%s'",
-				cfgClient.Name(),
-				cfgClient.Broker(),
+				"mqttClient[%s]: start: Broker='%s', ClientId='%s'",
+				mqttClientConfig.Name(), mqttClientConfig.Broker(), mqttClientConfig.ClientId(),
 			)
 		}
 
-		if client, err := mqttClient.RunClient(cfgClient, devicePoolInstance, storage); err != nil {
-			log.Printf("mqttClient[%s]: start failed: %s", cfgClient.Name(), err)
-		} else {
-			clientPoolInstance.AddClient(client)
-			if cfg.LogWorkerStart() {
-				log.Printf(
-					"mqttClient[%s]: started",
-					client.Config().Name(),
-				)
-			}
-		}
+		var client mqttClient.Client
+		client = mqttClient.CreateV5(mqttClientConfig, devicePoolInstance, storage)
+
+		mqttClientPoolInstance.AddClient(client)
 	}
 
 	return

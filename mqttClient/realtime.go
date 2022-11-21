@@ -2,6 +2,7 @@ package mqttClient
 
 import (
 	"encoding/json"
+	"github.com/eclipse/paho.golang/paho"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"strings"
 	"time"
@@ -18,11 +19,26 @@ type TextRealtimeMessage struct {
 	TextValue string
 }
 
-func convertValueToRealtimeMessage(value dataflow.Value) ([]byte, error) {
+func (c *ClientStruct) getRealtimePublishMessage(value dataflow.Value) (*paho.Publish, error) {
+	payload := convertValueToRealtimeMessage(value)
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return &paho.Publish{
+		QoS:     c.cfg.Qos(),
+		Topic:   c.getRealtimeTopic(value.DeviceName(), value.Register()),
+		Payload: b,
+		Retain:  c.cfg.TelemetryRetain(),
+	}, nil
+}
+
+func convertValueToRealtimeMessage(value dataflow.Value) interface{} {
 	now := timeToString(time.Now())
-	var v interface{}
 	if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
-		v = NumericRealtimeMessage{
+		return NumericRealtimeMessage{
 			Time:         now,
 			NumericValue: numeric.Value(),
 			Unit: func() string {
@@ -33,27 +49,25 @@ func convertValueToRealtimeMessage(value dataflow.Value) ([]byte, error) {
 			}(),
 		}
 	} else if text, ok := value.(dataflow.TextRegisterValue); ok {
-		v = TextRealtimeMessage{
+		return TextRealtimeMessage{
 			Time:      now,
 			TextValue: text.Value(),
 		}
 	}
 
-	return json.Marshal(v)
+	return nil
 }
 
-func getRealtimeTopic(
-	cfg Config,
+func (c *ClientStruct) getRealtimeTopic(
 	deviceName string,
-	valueName string,
-	valueUnit *string,
+	register dataflow.Register,
 ) string {
-	topic := replaceTemplate(cfg.RealtimeTopic(), cfg)
+	topic := replaceTemplate(c.cfg.RealtimeTopic(), c.cfg)
 	// replace Device/Value specific placeholders
 
 	topic = strings.Replace(topic, "%DeviceName%", deviceName, 1)
-	topic = strings.Replace(topic, "%ValueName%", valueName, 1)
-	if valueUnit != nil {
+	topic = strings.Replace(topic, "%ValueName%", register.Name(), 1)
+	if valueUnit := register.Unit(); valueUnit != nil {
 		topic = strings.Replace(topic, "%ValueUnit%", *valueUnit, 1)
 	}
 
