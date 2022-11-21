@@ -446,6 +446,26 @@ func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, e
 		err = append(err, fmt.Errorf("DeviceConfig->%s->Device must not be empty", name))
 	}
 
+	if ret.kind == TeracomKind {
+		if _, e := url.Parse(ret.device); err != nil {
+			err = append(err, fmt.Errorf("DeviceConfig->%s->Device is an invalid URL: %s", name, e))
+		}
+	}
+
+	if c.Username != nil {
+		ret.username = *c.Username
+		if ret.kind != TeracomKind {
+			err = append(err, fmt.Errorf("DeviceConfig->%s->Username must only be set for Teracom devices", name))
+		}
+	}
+
+	if c.Password != nil {
+		ret.password = *c.Password
+		if ret.kind != TeracomKind {
+			err = append(err, fmt.Errorf("DeviceConfig->%s->Password must only be set for Teracom devices", name))
+		}
+	}
+
 	if c.LogDebug != nil && *c.LogDebug {
 		ret.logDebug = true
 	}

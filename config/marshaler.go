@@ -82,9 +82,19 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 }
 
 func (c DeviceConfig) convertToRead() deviceConfigRead {
+	var username, password *string
+	if len(c.username) > 0 {
+		username = &c.username
+	}
+	if len(c.password) > 0 {
+		password = &c.password
+	}
+
 	return deviceConfigRead{
 		Kind:           c.kind.String(),
 		Device:         c.device,
+		Username:       username,
+		Password:       password,
 		SkipFields:     c.skipFields,
 		SkipCategories: c.skipCategories,
 		LogDebug:       &c.logDebug,

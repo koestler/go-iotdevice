@@ -53,6 +53,8 @@ type DeviceConfig struct {
 	name           string     // defined automatically by map key
 	kind           DeviceKind // mandatory: what connection protocol is used
 	device         string     // optional: the serial device eg. /dev/ttyVE0
+	username       string     // optional: a username used for authentication (teracom only)
+	password       string     // optional: a password used for authentication
 	skipFields     []string   // optional: a list of fields that shall be ignored (Eg. Temperature when no sensor is connected)
 	skipCategories []string   // optional: a list of categories that shall be ignored (Eg. Historic)
 	logDebug       bool       // optional: default False
@@ -95,6 +97,7 @@ const (
 	RandomBmvKind
 	RandomSolarKind
 	VedirectKind
+	TeracomKind
 )
 
 func (dk DeviceKind) String() string {
@@ -107,6 +110,8 @@ func (dk DeviceKind) String() string {
 		return "RandomSolar"
 	case VedirectKind:
 		return "Vedirect"
+	case TeracomKind:
+		return "Teracom"
 	default:
 		return fmt.Sprintf("Kind%d", int(dk))
 	}
@@ -121,6 +126,9 @@ func DeviceKindFromString(s string) DeviceKind {
 	}
 	if s == "Vedirect" {
 		return VedirectKind
+	}
+	if s == "Teracom" {
+		return TeracomKind
 	}
 	return UndefinedKind
 }
