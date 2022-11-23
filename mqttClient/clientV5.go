@@ -135,17 +135,27 @@ func (c *ClientV5) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Conn
 				for {
 					select {
 					case <-c.ctx.Done():
+						if c.cfg.LogDebug() {
+							log.Printf("mqttClientV5[%s]: realtime done", c.cfg.Name())
+						}
+
 						return
 					case value := <-subscription.GetOutput():
+						if c.cfg.LogDebug() {
+							log.Printf("mqttClientV5[%s]: send realtime: %s", c.cfg.Name(), value)
+						}
+
 						if p, err := c.getRealtimePublishMessage(value); err != nil {
 							if _, err := c.cm.Publish(c.ctx, p); err != nil {
 								log.Printf("mqttClientV5[%s]: cannot publish realtime: %s", c.cfg.Name(), err)
 							}
+						} else if c.cfg.LogDebug() {
+							log.Printf("mqttClientV5[%s]: error while creating realtime pubslih message: %s", c.cfg.Name(), err)
 						}
 					}
 				}
 			}()
-			log.Printf("mqttClient[%s]: start sending realtime stat messages", c.cfg.Name())
+			log.Printf("mqttClientV5[%s]: start sending realtime stat messages", c.cfg.Name())
 		}
 
 		// setup Telemetry support
@@ -155,15 +165,29 @@ func (c *ClientV5) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Conn
 				for {
 					select {
 					case <-c.ctx.Done():
+						if c.cfg.LogDebug() {
+							log.Printf("mqttClientV5[%s]: telemetry done", c.cfg.Name())
+						}
+
 						return
 					case <-ticker.C:
+						if c.cfg.LogDebug() {
+							log.Printf("mqttClientV5[%s]: telemetry tick", c.cfg.Name())
+						}
+
 						for deviceName, dev := range c.devicePoolInstance.GetDevices() {
+							if c.cfg.LogDebug() {
+								log.Printf("mqttClientV5[%s]: telemetry device: %s", c.cfg.Name(), deviceName)
+							}
+
 							deviceFilter := dataflow.Filter{IncludeDevices: map[string]bool{deviceName: true}}
 							values := c.storage.GetSlice(deviceFilter)
 							if p, err := c.getTelemetryPublishMessage(deviceName, dev, values); err != nil {
 								if _, err := c.cm.Publish(c.ctx, p); err != nil {
 									log.Printf("mqttClientV5[%s]: cannot publish telemetry: %s", c.cfg.Name(), err)
 								}
+							} else if c.cfg.LogDebug() {
+								log.Printf("mqttClientV5[%s]: error while creating telemetry pubslih message: %s", c.cfg.Name(), err)
 							}
 
 						}
@@ -171,7 +195,8 @@ func (c *ClientV5) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Conn
 				}
 			}()
 
-			log.Printf("mqttClientV5[%s]: start sending telemetry messages every %s", c.cfg.Name(), interval.String())
+			log.Printf(
+				"mqttClientV5[%s]: start sending telemetry messages every %s", c.cfg.Name(), interval.String())
 		}
 
 	}
