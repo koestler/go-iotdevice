@@ -46,8 +46,6 @@ type mqttClientConfigReadMap map[string]mqttClientConfigRead
 type deviceConfigRead struct {
 	Kind           string   `yaml:"Kind"`
 	Device         string   `yaml:"Device"`
-	Username       *string  `yaml:"Username"`
-	Password       *string  `yaml:"Password"`
 	SkipFields     []string `yaml:"SkipFields"`
 	SkipCategories []string `yaml:"SkipCategories"`
 	LogDebug       *bool    `yaml:"LogDebug"`

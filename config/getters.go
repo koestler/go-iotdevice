@@ -156,14 +156,6 @@ func (c DeviceConfig) Device() string {
 	return c.device
 }
 
-func (c DeviceConfig) Username() string {
-	return c.username
-}
-
-func (c DeviceConfig) Password() string {
-	return c.password
-}
-
 func (c DeviceConfig) SkipFields() []string {
 	return c.skipFields
 }
