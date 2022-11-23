@@ -145,12 +145,12 @@ func (c *ClientV5) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Conn
 							log.Printf("mqttClientV5[%s]: send realtime: %s", c.cfg.Name(), value)
 						}
 
-						if p, err := c.getRealtimePublishMessage(value); err != nil {
+						if p, err := c.getRealtimePublishMessage(value); err == nil {
 							if _, err := c.cm.Publish(c.ctx, p); err != nil {
 								log.Printf("mqttClientV5[%s]: cannot publish realtime: %s", c.cfg.Name(), err)
 							}
 						} else if c.cfg.LogDebug() {
-							log.Printf("mqttClientV5[%s]: error while creating realtime pubslih message: %s", c.cfg.Name(), err)
+							log.Printf("mqttClientV5[%s]: error while creating realtime publish message: %s", c.cfg.Name(), err)
 						}
 					}
 				}
@@ -182,12 +182,12 @@ func (c *ClientV5) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Conn
 
 							deviceFilter := dataflow.Filter{IncludeDevices: map[string]bool{deviceName: true}}
 							values := c.storage.GetSlice(deviceFilter)
-							if p, err := c.getTelemetryPublishMessage(deviceName, dev, values); err != nil {
+							if p, err := c.getTelemetryPublishMessage(deviceName, dev, values); err == nil {
 								if _, err := c.cm.Publish(c.ctx, p); err != nil {
 									log.Printf("mqttClientV5[%s]: cannot publish telemetry: %s", c.cfg.Name(), err)
 								}
 							} else if c.cfg.LogDebug() {
-								log.Printf("mqttClientV5[%s]: error while creating telemetry pubslih message: %s", c.cfg.Name(), err)
+								log.Printf("mqttClientV5[%s]: error while creating telemetry publish message: %s", c.cfg.Name(), err)
 							}
 
 						}
