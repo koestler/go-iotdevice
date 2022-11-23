@@ -135,10 +135,6 @@ func (c *ClientV5) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Conn
 				for {
 					select {
 					case <-c.ctx.Done():
-						if c.cfg.LogDebug() {
-							log.Printf("mqttClientV5[%s]: realtime done", c.cfg.Name())
-						}
-
 						return
 					case value := <-subscription.GetOutput():
 						if c.cfg.LogDebug() {
@@ -165,10 +161,6 @@ func (c *ClientV5) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Conn
 				for {
 					select {
 					case <-c.ctx.Done():
-						if c.cfg.LogDebug() {
-							log.Printf("mqttClientV5[%s]: telemetry done", c.cfg.Name())
-						}
-
 						return
 					case <-ticker.C:
 						if c.cfg.LogDebug() {
@@ -176,10 +168,6 @@ func (c *ClientV5) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Conn
 						}
 
 						for deviceName, dev := range c.devicePoolInstance.GetDevices() {
-							if c.cfg.LogDebug() {
-								log.Printf("mqttClientV5[%s]: telemetry device: %s", c.cfg.Name(), deviceName)
-							}
-
 							deviceFilter := dataflow.Filter{IncludeDevices: map[string]bool{deviceName: true}}
 							values := c.storage.GetSlice(deviceFilter)
 							if p, err := c.getTelemetryPublishMessage(deviceName, dev, values); err == nil {
@@ -195,8 +183,7 @@ func (c *ClientV5) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Conn
 				}
 			}()
 
-			log.Printf(
-				"mqttClientV5[%s]: start sending telemetry messages every %s", c.cfg.Name(), interval.String())
+			log.Printf("mqttClientV5[%s]: start sending telemetry messages every %s", c.cfg.Name(), interval.String())
 		}
 
 	}
