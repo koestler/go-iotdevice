@@ -2,157 +2,99 @@ package victron
 
 import (
 	"fmt"
+	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/vedirect"
 	"log"
-	"strings"
+	"sync"
 	"time"
 )
 
-type VictronDeviceStruct struct {
-	device.DeviceStruct
-	deviceId vedirect.VeProduct
+type Config interface {
+	Name() string
+	Kind() config.VictronDeviceKind
+	Device() string
+	SkipFields() []string
+	SkipCategories() []string
+	TelemetryViaMqttClients() []string
+	RealtimeViaMqttClients() []string
+	LogDebug() bool
+	LogComDebug() bool
 }
 
-func CreateVictronDevice(deviceStruct device.DeviceStruct, output chan dataflow.Value) (device device.Device, err error) {
-	device = &VictronDeviceStruct{
-		DeviceStruct: deviceStruct,
+type DeviceStruct struct {
+	cfg Config
+
+	source *dataflow.Source
+
+	deviceId         vedirect.VeProduct
+	registers        dataflow.Registers
+	lastUpdated      time.Time
+	lastUpdatedMutex sync.RWMutex
+	model            string
+
+	shutdown chan struct{}
+	closed   chan struct{}
+}
+
+func RunDevice(cfg Config, target dataflow.Fillable) (device device.Device, err error) {
+	// setup output chain
+	output := make(chan dataflow.Value, 128)
+	source := dataflow.CreateSource(output)
+	// pipe all data to next stage
+	source.Append(target)
+
+	c := &DeviceStruct{
+		cfg:      cfg,
+		source:   source,
+		shutdown: make(chan struct{}),
+		closed:   make(chan struct{}),
 	}
-	cfg := device.Config()
 
-	log.Printf("device[%s]: start vedirect source", cfg.Name())
+	if cfg.Kind() == config.VedirectKind {
+		err = startVedirect(c, output)
+	} else if cfg.Kind() == config.RandomBmvKind {
+		err = startRandom(c, output, RegisterListBmv712)
+	} else if cfg.Kind() == config.RandomSolarKind {
+		err = startRandom(c, output, RegisterListSolar)
+	} else {
+		return nil, fmt.Errorf("unknown device kind: %s", cfg.Kind().String())
+	}
 
-	// open vedirect device
-	vd, err := vedirect.Open(cfg.Device(), cfg.LogComDebug())
 	if err != nil {
 		return nil, err
 	}
 
-	// send ping
-	if err := vd.VeCommandPing(); err != nil {
-		return nil, fmt.Errorf("ping failed: %s", err)
-	}
+	return c, nil
+}
 
-	// get deviceId
-	deviceId, err := vd.VeCommandDeviceId()
-	if err != nil {
-		return nil, fmt.Errorf("cannot get DeviceId: %s", err)
-	}
+func (c *DeviceStruct) Name() string {
+	return c.cfg.Name()
+}
 
-	deviceString := deviceId.String()
-	if len(deviceString) < 1 {
-		return nil, fmt.Errorf("unknown deviceId=%x", err)
-	}
+func (c *DeviceStruct) Registers() dataflow.Registers {
+	return c.registers
+}
 
-	log.Printf("device[%s]: source: connect to %s", cfg.Name(), deviceString)
-	device.SetModel(deviceString)
+func (c *DeviceStruct) SetLastUpdatedNow() {
+	c.lastUpdatedMutex.Lock()
+	defer c.lastUpdatedMutex.Unlock()
+	c.lastUpdated = time.Now()
+}
 
-	// get relevant registers
-	registers := RegisterFactoryByProduct(deviceId)
-	if registers == nil {
-		return nil, fmt.Errorf("no registers found for deviceId=%x", deviceId)
-	}
-	// filter registers by skip list
-	registers = dataflow.FilterRegisters(registers, cfg.SkipFields(), cfg.SkipCategories())
-	device.SetRegisters(registers)
+func (c *DeviceStruct) LastUpdated() time.Time {
+	c.lastUpdatedMutex.RLock()
+	defer c.lastUpdatedMutex.RUnlock()
+	return c.lastUpdated
+}
 
-	// start victron reader
-	go func() {
-		defer close(deviceStruct.GetClosedChan())
-		defer close(output)
+func (c *DeviceStruct) Model() string {
+	return c.model
+}
 
-		fetchStaticCounter := 0
-		ticker := time.NewTicker(100 * time.Millisecond)
-		for {
-			select {
-			case <-deviceStruct.GetShutdownChan():
-				return
-			case <-ticker.C:
-				start := time.Now()
-
-				// flush async data
-				vd.RecvFlush()
-
-				if err := vd.VeCommandPing(); err != nil {
-					log.Printf("device[%s]: source: VeCommandPing failed: %v", cfg.Name(), err)
-					continue
-				}
-
-				for _, register := range registers {
-					// only fetch static registers seldomly
-					if register.Static() && (fetchStaticCounter%60 != 0) {
-						continue
-					}
-
-					if numberRegister, ok := register.(dataflow.NumberRegisterStruct); ok {
-						var value float64
-						if numberRegister.Signed() {
-							var intValue int64
-							intValue, err = vd.VeCommandGetInt(register.Address())
-							value = float64(intValue)
-						} else {
-							var intValue uint64
-							intValue, err = vd.VeCommandGetUint(register.Address())
-							value = float64(intValue)
-						}
-
-						if err != nil {
-							log.Printf("device[%s]: fetching number register failed: %v", cfg.Name(), err)
-						} else {
-							output <- dataflow.NewNumericRegisterValue(
-								deviceStruct.Config().Name(),
-								register,
-								value/float64(numberRegister.Factor()),
-							)
-						}
-					} else if _, ok := register.(dataflow.TextRegisterStruct); ok {
-						value, err := vd.VeCommandGetString(register.Address())
-
-						if err != nil {
-							log.Printf("device[%s]: fetching text register failed: %v", cfg.Name(), err)
-						} else {
-							output <- dataflow.NewTextRegisterValue(
-								deviceStruct.Config().Name(),
-								register,
-								strings.TrimSpace(value),
-							)
-						}
-					} else if enumRegister, ok := register.(dataflow.EnumRegisterStruct); ok {
-						var intValue uint64
-						intValue, err = vd.VeCommandGetUint(register.Address())
-
-						if err != nil {
-							log.Printf("device[%s]: fetching enum register failed: %v", cfg.Name(), err)
-						} else {
-							enum := enumRegister.Enum()
-							text := "null"
-							if v, ok := enum[int(intValue)]; ok {
-								text = v
-							}
-							output <- dataflow.NewTextRegisterValue(
-								deviceStruct.Config().Name(),
-								register,
-								text,
-							)
-						}
-					}
-				}
-
-				device.SetLastUpdatedNow()
-
-				fetchStaticCounter++
-
-				if cfg.LogDebug() {
-					log.Printf(
-						"device[%s]: registers fetched, took=%.3fs",
-						cfg.Name(),
-						time.Since(start).Seconds(),
-					)
-				}
-			}
-		}
-	}()
-
-	return
+func (c *DeviceStruct) Shutdown() {
+	close(c.shutdown)
+	<-c.closed
+	log.Printf("device[%s]: shutdown completed", c.cfg.Name())
 }

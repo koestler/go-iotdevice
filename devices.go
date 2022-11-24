@@ -14,41 +14,25 @@ func runDevices(
 	target dataflow.Fillable,
 	initiateShutdown chan<- error,
 ) (devicePoolInstance *device.DevicePool) {
+	// run ppool
 	devicePoolInstance = device.RunPool()
 
-	// register creators
-	device.RegisterCreator(config.RandomBmvKind, device.CreateRandomDeviceFactory(victron.RegisterListBmv712))
-	device.RegisterCreator(config.RandomSolarKind, device.CreateRandomDeviceFactory(victron.RegisterListSolar))
-	device.RegisterCreator(config.VedirectKind, victron.CreateVictronDevice)
-
 	countStarted := 0
-
-	for _, cfgDev := range cfg.Devices() {
+	for _, deviceConfig := range cfg.VictronDevices() {
 		if cfg.LogWorkerStart() {
-			log.Printf(
-				"deviceClient[%s]: start %s, cfgDev='%s'",
-				cfgDev.Name(),
-				cfgDev.Kind().String(),
-				cfgDev.Device(),
-			)
+			log.Printf("device[%s]: start", deviceConfig.Name())
 		}
 
-		if dev, err := device.RunDevice(cfgDev, target); err != nil {
-			log.Printf("deviceClient[%s]: start failed: %s", cfgDev.Name(), err)
+		if dev, err := victron.RunDevice(deviceConfig, target); err != nil {
+			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
 		} else {
 			devicePoolInstance.AddDevice(dev)
 			countStarted += 1
-			if cfg.LogWorkerStart() {
-				log.Printf(
-					"deviceClient[%s]: started",
-					dev.Config().Name(),
-				)
-			}
 		}
 	}
 
 	if countStarted < 1 {
-		initiateShutdown <- errors.New("no cfgDev was started")
+		initiateShutdown <- errors.New("no device was started")
 	}
 
 	return

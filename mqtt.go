@@ -2,16 +2,12 @@ package main
 
 import (
 	"github.com/koestler/go-iotdevice/config"
-	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"log"
 )
 
 func runMqttClient(
 	cfg *config.Config,
-	devicePoolInstance *device.DevicePool,
-	storage *dataflow.ValueStorageInstance,
 ) (mqttClientPoolInstance *mqttClient.ClientPool) {
 	// run pool
 	mqttClientPoolInstance = mqttClient.RunPool()
@@ -25,7 +21,7 @@ func runMqttClient(
 		}
 
 		var client mqttClient.Client
-		client = mqttClient.CreateV5(mqttClientConfig, devicePoolInstance, storage)
+		client = mqttClient.CreateV5(mqttClientConfig)
 
 		mqttClientPoolInstance.AddClient(client)
 	}

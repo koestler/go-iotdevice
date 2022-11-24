@@ -1,16 +1,12 @@
 package mqttClient
 
 import (
-	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/device"
 	"log"
 	"sync"
 )
 
 type ClientStruct struct {
-	cfg                Config
-	devicePoolInstance *device.DevicePool
-	storage            *dataflow.ValueStorageInstance
+	cfg Config
 
 	shutdown chan struct{}
 
@@ -23,16 +19,10 @@ type subscription struct {
 	messageHandler MessageHandler
 }
 
-func createClientStruct(
-	cfg Config,
-	devicePoolInstance *device.DevicePool,
-	storage *dataflow.ValueStorageInstance,
-) ClientStruct {
+func createClientStruct(cfg Config) ClientStruct {
 	return ClientStruct{
-		cfg:                cfg,
-		devicePoolInstance: devicePoolInstance,
-		storage:            storage,
-		shutdown:           make(chan struct{}),
+		cfg:      cfg,
+		shutdown: make(chan struct{}),
 	}
 }
 

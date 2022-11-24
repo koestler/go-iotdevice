@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
-	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/device"
 	"log"
 	"net/url"
 	"time"
@@ -25,12 +23,10 @@ type ClientV5 struct {
 
 func CreateV5(
 	cfg Config,
-	devicePoolInstance *device.DevicePool,
-	storage *dataflow.ValueStorageInstance,
 ) (client *ClientV5) {
 	ctx, cancel := context.WithCancel(context.Background())
 	client = &ClientV5{
-		ClientStruct: createClientStruct(cfg, devicePoolInstance, storage),
+		ClientStruct: createClientStruct(cfg),
 		router:       paho.NewStandardRouter(),
 		ctx:          ctx,
 		cancel:       cancel,
@@ -124,68 +120,6 @@ func (c *ClientV5) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Conn
 				log.Printf("mqttClientV5[%s]: failed to subscribe: %s", c.cfg.Name(), err)
 			}
 		}
-
-		// setup Realtime (send data as soon as it arrives) output
-		if c.cfg.RealtimeEnable() {
-			// transmitRealtime values from data store and publish to mqtt broker
-			go func() {
-				// setup empty filter (everything)
-				subscription := c.storage.Subscribe(dataflow.Filter{})
-				defer subscription.Shutdown()
-				for {
-					select {
-					case <-c.ctx.Done():
-						return
-					case value := <-subscription.GetOutput():
-						if c.cfg.LogDebug() {
-							log.Printf("mqttClientV5[%s]: send realtime: %s", c.cfg.Name(), value)
-						}
-
-						if p, err := c.getRealtimePublishMessage(value); err == nil {
-							if _, err := c.cm.Publish(c.ctx, p); err != nil {
-								log.Printf("mqttClientV5[%s]: cannot publish realtime: %s", c.cfg.Name(), err)
-							}
-						} else if c.cfg.LogDebug() {
-							log.Printf("mqttClientV5[%s]: error while creating realtime publish message: %s", c.cfg.Name(), err)
-						}
-					}
-				}
-			}()
-			log.Printf("mqttClientV5[%s]: start sending realtime stat messages", c.cfg.Name())
-		}
-
-		// setup Telemetry support
-		if interval := c.cfg.TelemetryInterval(); interval > 0 {
-			go func() {
-				ticker := time.NewTicker(interval)
-				for {
-					select {
-					case <-c.ctx.Done():
-						return
-					case <-ticker.C:
-						if c.cfg.LogDebug() {
-							log.Printf("mqttClientV5[%s]: telemetry tick", c.cfg.Name())
-						}
-
-						for deviceName, dev := range c.devicePoolInstance.GetDevices() {
-							deviceFilter := dataflow.Filter{IncludeDevices: map[string]bool{deviceName: true}}
-							values := c.storage.GetSlice(deviceFilter)
-							if p, err := c.getTelemetryPublishMessage(deviceName, dev, values); err == nil {
-								if _, err := c.cm.Publish(c.ctx, p); err != nil {
-									log.Printf("mqttClientV5[%s]: cannot publish telemetry: %s", c.cfg.Name(), err)
-								}
-							} else if c.cfg.LogDebug() {
-								log.Printf("mqttClientV5[%s]: error while creating telemetry publish message: %s", c.cfg.Name(), err)
-							}
-
-						}
-					}
-				}
-			}()
-
-			log.Printf("mqttClientV5[%s]: start sending telemetry messages every %s", c.cfg.Name(), interval.String())
-		}
-
 	}
 }
 

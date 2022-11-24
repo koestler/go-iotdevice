@@ -19,7 +19,6 @@ type Config interface {
 	TelemetryInterval() time.Duration
 	TelemetryTopic() string
 	TelemetryRetain() bool
-	RealtimeEnable() bool
 	RealtimeTopic() string
 	RealtimeRetain() bool
 	TopicPrefix() string

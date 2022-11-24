@@ -32,8 +32,8 @@ func (c *ClientStruct) getTelemetryPublishMessage(deviceName string, dev device.
 	payload := TelemetryMessage{
 		Time:                   timeToString(now),
 		NextTelemetry:          timeToString(now.Add(c.cfg.TelemetryInterval())),
-		Model:                  dev.GetModel(),
-		SecondsSinceLastUpdate: now.Sub(dev.GetLastUpdated()).Seconds(),
+		Model:                  dev.Model(),
+		SecondsSinceLastUpdate: now.Sub(dev.LastUpdated()).Seconds(),
 		NumericValues:          convertValuesToNumericTelemetryValues(values),
 		TextValues:             convertValuesToTextTelemetryValues(values),
 	}

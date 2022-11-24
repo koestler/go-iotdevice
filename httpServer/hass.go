@@ -30,14 +30,14 @@ type hassSensor struct {
 // @Router /hass/{viewName}.yaml [get]
 // @Security ApiKeyAuth
 // Example YMAL
-// - platform: mqtt
-//   name:                  "ve_24v_bmv_current"
-//   state_topic:           "piegn/stat/ve/24v-bmv/Current"
-//   availability_topic:    "piegn/tele/software/srv1-go-iotdevice/LWT"
-//   value_template:        "{{ value_json.Value }}"
-//   unit_of_measurement:   "W"
-//   payload_available:     "Online"
-//   payload_not_available: "Offline"
+//   - platform: mqtt
+//     name:                  "ve_24v_bmv_current"
+//     state_topic:           "piegn/stat/ve/24v-bmv/Current"
+//     availability_topic:    "piegn/tele/software/srv1-go-iotdevice/LWT"
+//     value_template:        "{{ value_json.Value }}"
+//     unit_of_measurement:   "W"
+//     payload_available:     "Online"
+//     payload_not_available: "Offline"
 func setupHassYaml(r *gin.RouterGroup, env *Environment) {
 	for _, v := range env.Views {
 		view := v
@@ -54,7 +54,7 @@ func setupHassYaml(r *gin.RouterGroup, env *Environment) {
 			sensors := make([]hassSensor, 0, 128)
 			for _, deviceName := range view.DeviceNames() {
 				device := env.DevicePoolInstance.GetDevice(deviceName)
-				registers := dataflow.FilterRegisters(device.GetRegisters(), view.SkipFields(), view.SkipCategories())
+				registers := dataflow.FilterRegisters(device.Registers(), view.SkipFields(), view.SkipCategories())
 				for _, register := range registers {
 					sensors = append(sensors, registerToHassSensor(deviceName, register))
 				}
