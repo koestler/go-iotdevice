@@ -59,10 +59,10 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	ret.mqttClients, e = c.MqttClients.TransformAndValidate()
 	err = append(err, e...)
 
-	ret.victronDevices, e = c.VictronDevices.TransformAndValidate()
+	ret.victronDevices, e = c.VictronDevices.TransformAndValidate(ret.mqttClients)
 	err = append(err, e...)
 
-	ret.teracomDevices, e = c.TeracomDevices.TransformAndValidate()
+	ret.teracomDevices, e = c.TeracomDevices.TransformAndValidate(ret.mqttClients)
 	err = append(err, e...)
 
 	ret.mqttDevices, e = c.MqttDevices.TransformAndValidate(ret.mqttClients)
@@ -413,7 +413,28 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	return
 }
 
-func (c teracomDeviceConfigReadMap) TransformAndValidate() (ret []*TeracomDeviceConfig, err []error) {
+func (c victronDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClientConfig) (ret []*VictronDeviceConfig, err []error) {
+	// order map keys by name
+	keys := make([]string, len(c))
+	i := 0
+	for k := range c {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+
+	ret = make([]*VictronDeviceConfig, len(c))
+	j := 0
+	for _, name := range keys {
+		r, e := c[name].TransformAndValidate(name, mqttClients)
+		ret[j] = &r
+		err = append(err, e...)
+		j++
+	}
+	return
+}
+
+func (c teracomDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClientConfig) (ret []*TeracomDeviceConfig, err []error) {
 	// order map keys by name
 	keys := make([]string, len(c))
 	i := 0
@@ -426,7 +447,7 @@ func (c teracomDeviceConfigReadMap) TransformAndValidate() (ret []*TeracomDevice
 	ret = make([]*TeracomDeviceConfig, len(c))
 	j := 0
 	for _, name := range keys {
-		r, e := c[name].TransformAndValidate(name)
+		r, e := c[name].TransformAndValidate(name, mqttClients)
 		ret[j] = &r
 		err = append(err, e...)
 		j++
@@ -455,36 +476,28 @@ func (c mqttDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClientC
 	return
 }
 
-func (c victronDeviceConfigReadMap) TransformAndValidate() (ret []*VictronDeviceConfig, err []error) {
-	// order map keys by name
-	keys := make([]string, len(c))
-	i := 0
-	for k := range c {
-		keys[i] = k
-		i++
-	}
-	sort.Strings(keys)
-
-	ret = make([]*VictronDeviceConfig, len(c))
-	j := 0
-	for _, name := range keys {
-		r, e := c[name].TransformAndValidate(name)
-		ret[j] = &r
-		err = append(err, e...)
-		j++
-	}
-	return
-}
-
-func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, err []error) {
+func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret DeviceConfig, err []error) {
 	ret = DeviceConfig{
-		name:           name,
-		skipFields:     c.SkipFields,
-		skipCategories: c.SkipCategories,
+		name:                    name,
+		telemetryViaMqttClients: c.TelemetryViaMqttClients,
+		realtimeViaMqttClients:  c.RealtimeViaMqttClients,
+		skipFields:              c.SkipFields,
+		skipCategories:          c.SkipCategories,
 	}
 
 	if !nameMatcher.MatchString(ret.name) {
-		err = append(err, fmt.Errorf("DeviceConfig->Name='%s' does not match %s", ret.name, NameRegexp))
+		err = append(err, fmt.Errorf("Devices->Name='%s' does not match %s", ret.name, NameRegexp))
+	}
+
+	for _, clientName := range ret.telemetryViaMqttClients {
+		if !mqttClientExists(clientName, mqttClients) {
+			err = append(err, fmt.Errorf("Devices->%s->TelemetryViaMqttClients client='%s' is not defined", name, clientName))
+		}
+	}
+	for _, clientName := range ret.realtimeViaMqttClients {
+		if !mqttClientExists(clientName, mqttClients) {
+			err = append(err, fmt.Errorf("Devices->%s->RealtimeViaMqttClients client='%s' is not defined", name, clientName))
+		}
 	}
 
 	if c.LogDebug != nil && *c.LogDebug {
@@ -498,14 +511,14 @@ func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, e
 	return
 }
 
-func (c victronDeviceConfigRead) TransformAndValidate(name string) (ret VictronDeviceConfig, err []error) {
+func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret VictronDeviceConfig, err []error) {
 	ret = VictronDeviceConfig{
 		kind:   DeviceKindFromString(c.Kind),
 		device: c.Device,
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name, mqttClients)
 	err = append(err, e...)
 
 	if ret.kind == UndefinedKind {
@@ -519,14 +532,14 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string) (ret VictronD
 	return
 }
 
-func (c teracomDeviceConfigRead) TransformAndValidate(name string) (ret TeracomDeviceConfig, err []error) {
+func (c teracomDeviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret TeracomDeviceConfig, err []error) {
 	ret = TeracomDeviceConfig{
 		username: c.Username,
 		password: c.Password,
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name, mqttClients)
 	err = append(err, e...)
 
 	if len(c.Url) < 1 {
@@ -551,7 +564,7 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []*M
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name, mqttClients)
 	err = append(err, e...)
 
 	for _, clientName := range ret.mqttClients {

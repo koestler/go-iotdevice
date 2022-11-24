@@ -46,12 +46,12 @@ type mqttClientConfigRead struct {
 type mqttClientConfigReadMap map[string]mqttClientConfigRead
 
 type deviceConfigRead struct {
-	SkipFields      []string `yaml:"SkipFields"`
-	SkipCategories  []string `yaml:"SkipCategories"`
-	TelemetryEnable *bool    `yaml:"TelemetryEnable"`
-	RealtimeEnable  *bool    `yaml:"RealtimeEnable"`
-	LogDebug        *bool    `yaml:"LogDebug"`
-	LogComDebug     *bool    `yaml:"LogComDebug"`
+	SkipFields              []string `yaml:"SkipFields"`
+	SkipCategories          []string `yaml:"SkipCategories"`
+	TelemetryViaMqttClients []string `yaml:"TelemetryViaMqttClients"`
+	RealtimeViaMqttClients  []string `yaml:"RealtimeViaMqttClients"`
+	LogDebug                *bool    `yaml:"LogDebug"`
+	LogComDebug             *bool    `yaml:"LogComDebug"`
 }
 
 type victronDeviceConfigRead struct {

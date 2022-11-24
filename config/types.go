@@ -52,13 +52,13 @@ type MqttClientConfig struct {
 }
 
 type DeviceConfig struct {
-	name            string   // defined automatically by map key
-	skipFields      []string // optional: a list of fields that shall be ignored (Eg. Temperature when no sensor is connected)
-	skipCategories  []string // optional: a list of categories that shall be ignored (Eg. Historic)
-	telemetryEnable bool     // optional: default false
-	realtimeEnable  bool     // optional: default false
-	logDebug        bool     // optional: default False
-	logComDebug     bool     // optional: default False
+	name                    string   // defined automatically by map key
+	skipFields              []string // optional: a list of fields that shall be ignored (Eg. Temperature when no sensor is connected)
+	skipCategories          []string // optional: a list of categories that shall be ignored (Eg. Historic)
+	telemetryViaMqttClients []string // optional: default empty
+	realtimeViaMqttClients  []string // optional: default empty
+	logDebug                bool     // optional: default False
+	logComDebug             bool     // optional: default False
 }
 
 type VictronDeviceConfig struct {

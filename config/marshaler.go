@@ -96,12 +96,12 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 
 func (c DeviceConfig) convertToRead() deviceConfigRead {
 	return deviceConfigRead{
-		SkipFields:      c.skipFields,
-		SkipCategories:  c.skipCategories,
-		TelemetryEnable: &c.telemetryEnable,
-		RealtimeEnable:  &c.realtimeEnable,
-		LogDebug:        &c.logDebug,
-		LogComDebug:     &c.logComDebug,
+		SkipFields:              c.skipFields,
+		SkipCategories:          c.skipCategories,
+		TelemetryViaMqttClients: c.telemetryViaMqttClients,
+		RealtimeViaMqttClients:  c.realtimeViaMqttClients,
+		LogDebug:                &c.logDebug,
+		LogComDebug:             &c.logComDebug,
 	}
 }
 

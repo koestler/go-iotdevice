@@ -21,6 +21,10 @@ func (c Config) MqttClients() []*MqttClientConfig {
 	return c.mqttClients
 }
 
+func (c Config) Devices() []*DeviceConfig {
+	return c.devices
+}
+
 func (c Config) VictronDevices() []*VictronDeviceConfig {
 	return c.victronDevices
 }
@@ -160,12 +164,12 @@ func (c DeviceConfig) SkipCategories() []string {
 	return c.skipCategories
 }
 
-func (c DeviceConfig) TelemetryEnable() bool {
-	return c.telemetryEnable
+func (c DeviceConfig) TelemetryViaMqttClients() []string {
+	return c.telemetryViaMqttClients
 }
 
-func (c DeviceConfig) RealtimeEnable() bool {
-	return c.realtimeEnable
+func (c DeviceConfig) RealtimeViaMqttClients() []string {
+	return c.realtimeViaMqttClients
 }
 
 func (c DeviceConfig) LogDebug() bool {
