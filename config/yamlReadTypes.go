@@ -1,16 +1,18 @@
 package config
 
 type configRead struct {
-	Version        *int                    `yaml:"Version"`
-	ProjectTitle   string                  `yaml:"ProjectTitle"`
-	Auth           *authConfigRead         `yaml:"Auth"`
-	MqttClients    mqttClientConfigReadMap `yaml:"MqttClients"`
-	Devices        deviceConfigReadMap     `yaml:"Devices"`
-	Views          viewConfigReadList      `yaml:"Views"`
-	HttpServer     *httpServerConfigRead   `yaml:"HttpServer"`
-	LogConfig      *bool                   `yaml:"LogConfig"`
-	LogWorkerStart *bool                   `yaml:"LogWorkerStart"`
-	LogDebug       *bool                   `yaml:"LogDebug"`
+	Version        *int                       `yaml:"Version"`
+	ProjectTitle   string                     `yaml:"ProjectTitle"`
+	Auth           *authConfigRead            `yaml:"Auth"`
+	MqttClients    mqttClientConfigReadMap    `yaml:"MqttClients"`
+	VictronDevices victronDeviceConfigReadMap `yaml:"VictronDevices"`
+	TeracomDevices teracomDeviceConfigReadMap `yaml:"TeracomDevices"`
+	MqttDevices    mqttDeviceConfigReadMap    `yaml:"MqttDevices"`
+	Views          viewConfigReadList         `yaml:"Views"`
+	HttpServer     *httpServerConfigRead      `yaml:"HttpServer"`
+	LogConfig      *bool                      `yaml:"LogConfig"`
+	LogWorkerStart *bool                      `yaml:"LogWorkerStart"`
+	LogDebug       *bool                      `yaml:"LogDebug"`
 }
 
 type authConfigRead struct {
@@ -44,15 +46,38 @@ type mqttClientConfigRead struct {
 type mqttClientConfigReadMap map[string]mqttClientConfigRead
 
 type deviceConfigRead struct {
-	Kind           string   `yaml:"Kind"`
-	Device         string   `yaml:"Device"`
-	SkipFields     []string `yaml:"SkipFields"`
-	SkipCategories []string `yaml:"SkipCategories"`
-	LogDebug       *bool    `yaml:"LogDebug"`
-	LogComDebug    *bool    `yaml:"LogComDebug"`
+	SkipFields      []string `yaml:"SkipFields"`
+	SkipCategories  []string `yaml:"SkipCategories"`
+	TelemetryEnable *bool    `yaml:"TelemetryEnable"`
+	RealtimeEnable  *bool    `yaml:"RealtimeEnable"`
+	LogDebug        *bool    `yaml:"LogDebug"`
+	LogComDebug     *bool    `yaml:"LogComDebug"`
 }
 
-type deviceConfigReadMap map[string]deviceConfigRead
+type victronDeviceConfigRead struct {
+	deviceConfigRead
+	Device string `yaml:"Device"`
+	Kind   string `yaml:"Kind"`
+}
+
+type victronDeviceConfigReadMap map[string]victronDeviceConfigRead
+
+type teracomDeviceConfigRead struct {
+	deviceConfigRead
+	Url      string `yaml:"Url"`
+	Username string `yaml:"Username"`
+	Password string `yaml:"Password"`
+}
+
+type teracomDeviceConfigReadMap map[string]teracomDeviceConfigRead
+
+type mqttDeviceConfigRead struct {
+	deviceConfigRead
+	MqttTopics  []string `yaml:"MqttTopics"`
+	MqttClients []string `yaml:"MqttClients"`
+}
+
+type mqttDeviceConfigReadMap map[string]mqttDeviceConfigRead
 
 type viewDeviceConfigRead struct {
 	Name  string `yaml:"Name"`

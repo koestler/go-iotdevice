@@ -7,16 +7,19 @@ import (
 )
 
 type Config struct {
-	version        int                 `yaml:"Version"`        // must be 0
-	projectTitle   string              `yaml:"ProjectTitle"`   // optional: default go-iotdevice
-	auth           AuthConfig          `yaml:"Auth"`           // optional: default Disabled
-	mqttClients    []*MqttClientConfig `yaml:"MqttClients"`    // mandatory: at least 1 must be defined
-	devices        []*DeviceConfig     `yaml:"Devices"`        // mandatory: at least 1 must be defined
-	views          []*ViewConfig       `yaml:"Views"`          // mandatory: at least 1 must be defined
-	httpServer     HttpServerConfig    `yaml:"HttpServer"`     // optional: default Disabled
-	logConfig      bool                `yaml:"LogConfig"`      // optional: default False
-	logWorkerStart bool                `yaml:"LogWorkerStart"` // optional: default False
-	logDebug       bool                `yaml:"LogDebug"`       // optional: default False
+	version        int                    // must be 1
+	projectTitle   string                 // optional: default go-iotdevice
+	auth           AuthConfig             // optional: default Disabled
+	mqttClients    []*MqttClientConfig    // mandatory: at least 1 must be defined
+	devices        []*DeviceConfig        // aggregated over all types
+	victronDevices []*VictronDeviceConfig // optional
+	teracomDevices []*TeracomDeviceConfig // optional
+	mqttDevices    []*MqttDeviceConfig    // optional
+	views          []*ViewConfig          // mandatory: at least 1 must be defined
+	httpServer     HttpServerConfig       // optional: default Disabled
+	logConfig      bool                   // optional: default False
+	logWorkerStart bool                   // optional: default False
+	logDebug       bool                   // optional: default False
 }
 
 type AuthConfig struct {
@@ -41,7 +44,6 @@ type MqttClientConfig struct {
 	telemetryInterval time.Duration // optional: "10s"
 	telemetryTopic    string        // optional: "%Prefix%tele/go-iotdevice/%DeviceName%/state"
 	telemetryRetain   bool          // optional: default false
-	realtimeEnable    bool          // optional: default false
 	realtimeTopic     string        // optional: default "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%"
 	realtimeRetain    bool          // optional: default true
 	topicPrefix       string        // optional: default empty
@@ -50,13 +52,32 @@ type MqttClientConfig struct {
 }
 
 type DeviceConfig struct {
-	name           string     // defined automatically by map key
-	kind           DeviceKind // mandatory: what connection protocol is used
-	device         string     // optional: the serial device eg. /dev/ttyVE0
-	skipFields     []string   // optional: a list of fields that shall be ignored (Eg. Temperature when no sensor is connected)
-	skipCategories []string   // optional: a list of categories that shall be ignored (Eg. Historic)
-	logDebug       bool       // optional: default False
-	logComDebug    bool       // optional: default False
+	name            string   // defined automatically by map key
+	skipFields      []string // optional: a list of fields that shall be ignored (Eg. Temperature when no sensor is connected)
+	skipCategories  []string // optional: a list of categories that shall be ignored (Eg. Historic)
+	telemetryEnable bool     // optional: default false
+	realtimeEnable  bool     // optional: default false
+	logDebug        bool     // optional: default False
+	logComDebug     bool     // optional: default False
+}
+
+type VictronDeviceConfig struct {
+	DeviceConfig
+	device string            // mandatory: the serial device path eg. /dev/ttyUSB0
+	kind   VictronDeviceKind // mandatory: what connection protocol is used
+}
+
+type TeracomDeviceConfig struct {
+	DeviceConfig
+	url      *url.URL // mandatory: how to connect to the device. eg. http://device0.local/
+	username string   // mandatory: username used to login
+	password string   // mandatory: password used to login
+}
+
+type MqttDeviceConfig struct {
+	DeviceConfig
+	mqttTopics  []string // mandatory: at least 1 must be defined
+	mqttClients []string
 }
 
 type ViewDeviceConfig struct {
@@ -88,16 +109,16 @@ type HttpServerConfig struct {
 }
 
 // device kind
-type DeviceKind int
+type VictronDeviceKind int
 
 const (
-	UndefinedKind DeviceKind = iota
+	UndefinedKind VictronDeviceKind = iota
 	RandomBmvKind
 	RandomSolarKind
 	VedirectKind
 )
 
-func (dk DeviceKind) String() string {
+func (dk VictronDeviceKind) String() string {
 	switch dk {
 	case UndefinedKind:
 		return "Undefined"
@@ -112,7 +133,7 @@ func (dk DeviceKind) String() string {
 	}
 }
 
-func DeviceKindFromString(s string) DeviceKind {
+func DeviceKindFromString(s string) VictronDeviceKind {
 	if s == "RandomBmv" {
 		return RandomBmvKind
 	}

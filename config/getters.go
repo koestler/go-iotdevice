@@ -21,8 +21,16 @@ func (c Config) MqttClients() []*MqttClientConfig {
 	return c.mqttClients
 }
 
-func (c Config) Devices() []*DeviceConfig {
-	return c.devices
+func (c Config) VictronDevices() []*VictronDeviceConfig {
+	return c.victronDevices
+}
+
+func (c Config) TeracomDevices() []*TeracomDeviceConfig {
+	return c.teracomDevices
+}
+
+func (c Config) MqttDevices() []*MqttDeviceConfig {
+	return c.mqttDevices
 }
 
 func (c Config) Views() []*ViewConfig {
@@ -120,10 +128,6 @@ func (c MqttClientConfig) TelemetryRetain() bool {
 	return c.telemetryRetain
 }
 
-func (c MqttClientConfig) RealtimeEnable() bool {
-	return c.realtimeEnable
-}
-
 func (c MqttClientConfig) RealtimeTopic() string {
 	return c.realtimeTopic
 }
@@ -148,14 +152,6 @@ func (c DeviceConfig) Name() string {
 	return c.name
 }
 
-func (c DeviceConfig) Kind() DeviceKind {
-	return c.kind
-}
-
-func (c DeviceConfig) Device() string {
-	return c.device
-}
-
 func (c DeviceConfig) SkipFields() []string {
 	return c.skipFields
 }
@@ -164,12 +160,48 @@ func (c DeviceConfig) SkipCategories() []string {
 	return c.skipCategories
 }
 
+func (c DeviceConfig) TelemetryEnable() bool {
+	return c.telemetryEnable
+}
+
+func (c DeviceConfig) RealtimeEnable() bool {
+	return c.realtimeEnable
+}
+
 func (c DeviceConfig) LogDebug() bool {
 	return c.logDebug
 }
 
 func (c DeviceConfig) LogComDebug() bool {
 	return c.logComDebug
+}
+
+func (c VictronDeviceConfig) Device() string {
+	return c.device
+}
+
+func (c VictronDeviceConfig) Kind() VictronDeviceKind {
+	return c.kind
+}
+
+func (c TeracomDeviceConfig) Url() *url.URL {
+	return c.url
+}
+
+func (c TeracomDeviceConfig) Username() string {
+	return c.username
+}
+
+func (c TeracomDeviceConfig) Password() string {
+	return c.password
+}
+
+func (c MqttDeviceConfig) MqttTopics() []string {
+	return c.mqttTopics
+}
+
+func (c MqttDeviceConfig) MqttClients() []string {
+	return c.mqttClients
 }
 
 func (c ViewDeviceConfig) Name() string {

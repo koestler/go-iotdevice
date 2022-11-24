@@ -19,9 +19,23 @@ func (c Config) MarshalYAML() (interface{}, error) {
 			}
 			return mqttClients
 		}(),
-		Devices: func() deviceConfigReadMap {
-			devices := make(deviceConfigReadMap, len(c.devices))
-			for _, c := range c.devices {
+		VictronDevices: func() victronDeviceConfigReadMap {
+			devices := make(victronDeviceConfigReadMap, len(c.devices))
+			for _, c := range c.victronDevices {
+				devices[c.name] = c.convertToRead()
+			}
+			return devices
+		}(),
+		TeracomDevices: func() teracomDeviceConfigReadMap {
+			devices := make(teracomDeviceConfigReadMap, len(c.devices))
+			for _, c := range c.teracomDevices {
+				devices[c.name] = c.convertToRead()
+			}
+			return devices
+		}(),
+		MqttDevices: func() mqttDeviceConfigReadMap {
+			devices := make(mqttDeviceConfigReadMap, len(c.devices))
+			for _, c := range c.mqttDevices {
 				devices[c.name] = c.convertToRead()
 			}
 			return devices
@@ -72,7 +86,6 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 		TelemetryInterval: c.telemetryInterval.String(),
 		TelemetryTopic:    &c.telemetryTopic,
 		TelemetryRetain:   &c.telemetryRetain,
-		RealtimeEnable:    &c.realtimeEnable,
 		RealtimeTopic:     &c.realtimeTopic,
 		RealtimeRetain:    &c.realtimeRetain,
 		TopicPrefix:       c.topicPrefix,
@@ -83,12 +96,37 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 
 func (c DeviceConfig) convertToRead() deviceConfigRead {
 	return deviceConfigRead{
-		Kind:           c.kind.String(),
-		Device:         c.device,
-		SkipFields:     c.skipFields,
-		SkipCategories: c.skipCategories,
-		LogDebug:       &c.logDebug,
-		LogComDebug:    &c.logComDebug,
+		SkipFields:      c.skipFields,
+		SkipCategories:  c.skipCategories,
+		TelemetryEnable: &c.telemetryEnable,
+		RealtimeEnable:  &c.realtimeEnable,
+		LogDebug:        &c.logDebug,
+		LogComDebug:     &c.logComDebug,
+	}
+}
+
+func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
+	return victronDeviceConfigRead{
+		deviceConfigRead: c.DeviceConfig.convertToRead(),
+		Device:           c.device,
+		Kind:             c.kind.String(),
+	}
+}
+
+func (c TeracomDeviceConfig) convertToRead() teracomDeviceConfigRead {
+	return teracomDeviceConfigRead{
+		deviceConfigRead: c.DeviceConfig.convertToRead(),
+		Url:              c.url.String(),
+		Username:         c.username,
+		Password:         c.password,
+	}
+}
+
+func (c MqttDeviceConfig) convertToRead() mqttDeviceConfigRead {
+	return mqttDeviceConfigRead{
+		deviceConfigRead: c.DeviceConfig.convertToRead(),
+		MqttTopics:       c.mqttTopics,
+		MqttClients:      c.mqttClients,
 	}
 }
 

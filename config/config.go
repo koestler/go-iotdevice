@@ -59,8 +59,29 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	ret.mqttClients, e = c.MqttClients.TransformAndValidate()
 	err = append(err, e...)
 
-	ret.devices, e = c.Devices.TransformAndValidate()
+	ret.victronDevices, e = c.VictronDevices.TransformAndValidate()
 	err = append(err, e...)
+
+	ret.teracomDevices, e = c.TeracomDevices.TransformAndValidate()
+	err = append(err, e...)
+
+	ret.mqttDevices, e = c.MqttDevices.TransformAndValidate(ret.mqttClients)
+	err = append(err, e...)
+
+	{
+		ret.devices = make([]*DeviceConfig, len(ret.victronDevices)+len(ret.teracomDevices)+len(ret.mqttDevices))
+
+		i := 0
+		for _, d := range ret.victronDevices {
+			ret.devices[i] = &d.DeviceConfig
+		}
+		for _, d := range ret.teracomDevices {
+			ret.devices[i] = &d.DeviceConfig
+		}
+		for _, d := range ret.mqttDevices {
+			ret.devices[i] = &d.DeviceConfig
+		}
+	}
 
 	ret.views, e = c.Views.TransformAndValidate(ret.devices)
 	err = append(err, e...)
@@ -69,10 +90,10 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	err = append(err, e...)
 
 	if c.Version == nil {
-		err = append(err, fmt.Errorf("Version must be defined. Use Version=0."))
+		err = append(err, fmt.Errorf("Version must be defined. Use Version=1."))
 	} else {
 		ret.version = *c.Version
-		if ret.version != 0 {
+		if ret.version != 1 {
 			err = append(err, fmt.Errorf("Version=%d is not supported.", ret.version))
 		}
 	}
@@ -369,12 +390,6 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.telemetryRetain = *c.TelemetryRetain
 	}
 
-	if c.RealtimeEnable == nil {
-		ret.realtimeRetain = false
-	} else {
-		ret.realtimeEnable = *c.RealtimeEnable
-	}
-
 	if c.RealtimeTopic == nil {
 		ret.realtimeTopic = "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%"
 	} else {
@@ -398,25 +413,61 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	return
 }
 
-func (c deviceConfigReadMap) getOrderedKeys() (ret []string) {
-	ret = make([]string, len(c))
+func (c teracomDeviceConfigReadMap) TransformAndValidate() (ret []*TeracomDeviceConfig, err []error) {
+	// order map keys by name
+	keys := make([]string, len(c))
 	i := 0
 	for k := range c {
-		ret[i] = k
+		keys[i] = k
 		i++
 	}
-	sort.Strings(ret)
+	sort.Strings(keys)
+
+	ret = make([]*TeracomDeviceConfig, len(c))
+	j := 0
+	for _, name := range keys {
+		r, e := c[name].TransformAndValidate(name)
+		ret[j] = &r
+		err = append(err, e...)
+		j++
+	}
 	return
 }
 
-func (c deviceConfigReadMap) TransformAndValidate() (ret []*DeviceConfig, err []error) {
-	if len(c) < 1 {
-		return ret, []error{fmt.Errorf("Clients section must no be empty")}
+func (c mqttDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClientConfig) (ret []*MqttDeviceConfig, err []error) {
+	// order map keys by name
+	keys := make([]string, len(c))
+	i := 0
+	for k := range c {
+		keys[i] = k
+		i++
 	}
+	sort.Strings(keys)
 
-	ret = make([]*DeviceConfig, len(c))
+	ret = make([]*MqttDeviceConfig, len(c))
 	j := 0
-	for _, name := range c.getOrderedKeys() {
+	for _, name := range keys {
+		r, e := c[name].TransformAndValidate(name, mqttClients)
+		ret[j] = &r
+		err = append(err, e...)
+		j++
+	}
+	return
+}
+
+func (c victronDeviceConfigReadMap) TransformAndValidate() (ret []*VictronDeviceConfig, err []error) {
+	// order map keys by name
+	keys := make([]string, len(c))
+	i := 0
+	for k := range c {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+
+	ret = make([]*VictronDeviceConfig, len(c))
+	j := 0
+	for _, name := range keys {
 		r, e := c[name].TransformAndValidate(name)
 		ret[j] = &r
 		err = append(err, e...)
@@ -428,22 +479,12 @@ func (c deviceConfigReadMap) TransformAndValidate() (ret []*DeviceConfig, err []
 func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, err []error) {
 	ret = DeviceConfig{
 		name:           name,
-		kind:           DeviceKindFromString(c.Kind),
-		device:         c.Device,
 		skipFields:     c.SkipFields,
 		skipCategories: c.SkipCategories,
 	}
 
 	if !nameMatcher.MatchString(ret.name) {
 		err = append(err, fmt.Errorf("DeviceConfig->Name='%s' does not match %s", ret.name, NameRegexp))
-	}
-
-	if ret.kind == UndefinedKind {
-		err = append(err, fmt.Errorf("DeviceConfig->%s->Kind='%s' is invalid", name, c.Kind))
-	}
-
-	if ret.kind == VedirectKind && len(c.Device) < 1 {
-		err = append(err, fmt.Errorf("DeviceConfig->%s->Device must not be empty", name))
 	}
 
 	if c.LogDebug != nil && *c.LogDebug {
@@ -455,6 +496,80 @@ func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, e
 	}
 
 	return
+}
+
+func (c victronDeviceConfigRead) TransformAndValidate(name string) (ret VictronDeviceConfig, err []error) {
+	ret = VictronDeviceConfig{
+		kind:   DeviceKindFromString(c.Kind),
+		device: c.Device,
+	}
+
+	var e []error
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
+	err = append(err, e...)
+
+	if ret.kind == UndefinedKind {
+		err = append(err, fmt.Errorf("VictronDevices->%s->Kind='%s' is invalid", name, c.Kind))
+	}
+
+	if len(c.Device) < 1 {
+		err = append(err, fmt.Errorf("VictronDevices->%s->Device must not be empty", name))
+	}
+
+	return
+}
+
+func (c teracomDeviceConfigRead) TransformAndValidate(name string) (ret TeracomDeviceConfig, err []error) {
+	ret = TeracomDeviceConfig{
+		username: c.Username,
+		password: c.Password,
+	}
+
+	var e []error
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
+	err = append(err, e...)
+
+	if len(c.Url) < 1 {
+		err = append(err, fmt.Errorf("TeracomDevices->%s->Url must not be empty", name))
+	} else {
+		if u, e := url.ParseRequestURI(c.Url); e != nil {
+			err = append(err, fmt.Errorf("TeracomDevices->%s->Url invalid url: %s", name, e))
+		} else if u == nil {
+			err = append(err, fmt.Errorf("TeracomDevices->%s->Url cannot parse url", name))
+		} else {
+			ret.url = u
+		}
+	}
+
+	return
+}
+
+func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret MqttDeviceConfig, err []error) {
+	ret = MqttDeviceConfig{
+		mqttTopics:  c.MqttTopics,
+		mqttClients: c.MqttClients,
+	}
+
+	var e []error
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
+	err = append(err, e...)
+
+	for _, clientName := range ret.mqttClients {
+		if !mqttClientExists(clientName, mqttClients) {
+			err = append(err, fmt.Errorf("MqttDevices->%s->mqttClients client='%s' is not defined", name, clientName))
+		}
+	}
+
+	return
+}
+
+func mqttClientExists(clientName string, mqttClients []*MqttClientConfig) bool {
+	for _, client := range mqttClients {
+		if clientName == client.name {
+			return true
+		}
+	}
+	return false
 }
 
 func (c viewConfigReadList) TransformAndValidate(devices []*DeviceConfig) (ret []*ViewConfig, err []error) {
@@ -553,8 +668,7 @@ func (c viewDeviceConfigRead) TransformAndValidate(
 	return
 }
 
-func deviceExists(deviceName string,
-	devices []*DeviceConfig) bool {
+func deviceExists(deviceName string, devices []*DeviceConfig) bool {
 	for _, client := range devices {
 		if deviceName == client.name {
 			return true

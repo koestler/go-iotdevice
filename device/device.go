@@ -11,7 +11,7 @@ import (
 
 type Config interface {
 	Name() string
-	Kind() config.DeviceKind
+	Kind() config.VictronDeviceKind
 	Device() string
 	SkipFields() []string
 	SkipCategories() []string
@@ -32,9 +32,9 @@ type Device interface {
 
 type Creator func(deviceStruct DeviceStruct, output chan dataflow.Value) (device Device, err error)
 
-var creators = make(map[config.DeviceKind]Creator)
+var creators = make(map[config.VictronDeviceKind]Creator)
 
-func RegisterCreator(kind config.DeviceKind, creator Creator) {
+func RegisterCreator(kind config.VictronDeviceKind, creator Creator) {
 	creators[kind] = creator
 }
 
