@@ -19,6 +19,16 @@ type TextRealtimeMessage struct {
 	TextValue string
 }
 
+func (c *ClientStruct) PublishRealtimeMessage(value dataflow.Value) error {
+	p, err := c.getRealtimePublishMessage(value)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.cm.Publish(c.ctx, p)
+	return err
+}
+
 func (c *ClientStruct) getRealtimePublishMessage(value dataflow.Value) (*paho.Publish, error) {
 	payload := convertValueToRealtimeMessage(value)
 

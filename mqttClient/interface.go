@@ -1,6 +1,7 @@
 package mqttClient
 
 import (
+	"github.com/koestler/go-iotdevice/dataflow"
 	"net/url"
 	"time"
 )
@@ -32,6 +33,9 @@ type Client interface {
 	Shutdown()
 	ReplaceTemplate(template string) string
 	AddRoute(subscribeTopic string, messageHandler MessageHandler)
+	PublishTelemetryMessage(deviceName string, model string, lastUpdated time.Time, values []dataflow.Value) error
+	PublishRealtimeMessage(value dataflow.Value) error
+	TelemetryInterval() time.Duration
 }
 
 type MessageHandler func(Message)

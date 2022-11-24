@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/device"
 	"strings"
 	"time"
 )
@@ -27,13 +26,23 @@ type TextTelemetryValue struct {
 	Value string
 }
 
-func (c *ClientStruct) getTelemetryPublishMessage(deviceName string, dev device.Device, values []dataflow.Value) (*paho.Publish, error) {
+func (c *ClientStruct) PublishTelemetryMessage(deviceName string, model string, lastUpdated time.Time, values []dataflow.Value) error {
+	p, err := c.getTelemetryPublishMessage(deviceName, model, lastUpdated, values)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.cm.Publish(c.ctx, p)
+	return err
+}
+
+func (c *ClientStruct) getTelemetryPublishMessage(deviceName string, model string, lastUpdated time.Time, values []dataflow.Value) (*paho.Publish, error) {
 	now := time.Now()
 	payload := TelemetryMessage{
 		Time:                   timeToString(now),
 		NextTelemetry:          timeToString(now.Add(c.cfg.TelemetryInterval())),
-		Model:                  dev.Model(),
-		SecondsSinceLastUpdate: now.Sub(dev.LastUpdated()).Seconds(),
+		Model:                  model,
+		SecondsSinceLastUpdate: now.Sub(lastUpdated).Seconds(),
 		NumericValues:          convertValuesToNumericTelemetryValues(values),
 		TextValues:             convertValuesToTextTelemetryValues(values),
 	}

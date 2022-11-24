@@ -10,26 +10,17 @@ import (
 	"time"
 )
 
-type ClientV5 struct {
-	ClientStruct
-
-	cliCfg autopaho.ClientConfig
-	cm     *autopaho.ConnectionManager
-	router *paho.StandardRouter
-
-	ctx    context.Context
-	cancel context.CancelFunc
-}
-
 func CreateV5(
 	cfg Config,
-) (client *ClientV5) {
+) (client *ClientStruct) {
 	ctx, cancel := context.WithCancel(context.Background())
-	client = &ClientV5{
-		ClientStruct: createClientStruct(cfg),
-		router:       paho.NewStandardRouter(),
-		ctx:          ctx,
-		cancel:       cancel,
+	client = &ClientStruct{
+		cfg:      cfg,
+		shutdown: make(chan struct{}),
+
+		router: paho.NewStandardRouter(),
+		ctx:    ctx,
+		cancel: cancel,
 	}
 
 	// configure mqtt library
@@ -68,7 +59,7 @@ func CreateV5(
 	return
 }
 
-func (c *ClientV5) Run() {
+func (c *ClientStruct) Run() {
 	// add routes to router
 	c.subscriptionsMutex.RLock()
 	defer c.subscriptionsMutex.RUnlock()
@@ -90,7 +81,7 @@ func (c *ClientV5) Run() {
 	}
 }
 
-func (c *ClientV5) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Connack) {
+func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Connack) {
 	return func(cm *autopaho.ConnectionManager, conack *paho.Connack) {
 		log.Printf("mqttClientV5[%s]: connection is up", c.cfg.Name())
 		// publish online
@@ -120,10 +111,11 @@ func (c *ClientV5) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Conn
 				log.Printf("mqttClientV5[%s]: failed to subscribe: %s", c.cfg.Name(), err)
 			}
 		}
+
 	}
 }
 
-func (c *ClientV5) Shutdown() {
+func (c *ClientStruct) Shutdown() {
 	close(c.shutdown)
 
 	// publish availability offline
@@ -148,7 +140,7 @@ func (c *ClientV5) Shutdown() {
 	log.Printf("mqttClientV5[%s]: shutdown completed", c.cfg.Name())
 }
 
-func (c *ClientV5) availabilityMsg(payload string) *paho.Publish {
+func (c *ClientStruct) availabilityMsg(payload string) *paho.Publish {
 	return &paho.Publish{
 		QoS:     c.cfg.Qos(),
 		Topic:   c.GetAvailabilityTopic(),

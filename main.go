@@ -76,9 +76,6 @@ func main() {
 
 	// call defer statements before os.Exit
 	exitCode := func() (exitCode int) {
-		// whenever an error is pushed to this chan, main is terminated
-		initiateShutdown := make(chan error)
-
 		if cfg.LogWorkerStart() {
 			log.Printf("main: start go-iotdevice version=%s", buildVersion)
 		}
@@ -98,7 +95,7 @@ func main() {
 		mqttClientPoolInstance.RunClients()
 
 		// start devices
-		devicePoolInstance := runDevices(cfg, storage, initiateShutdown)
+		devicePoolInstance := runDevices(cfg, mqttClientPoolInstance, storage)
 		defer devicePoolInstance.Shutdown()
 
 		// start http server
@@ -112,9 +109,6 @@ func main() {
 
 		// wait for something to trigger a shutdown
 		select {
-		case err := <-initiateShutdown:
-			log.Printf("main: forced shutdown due to fatal error: %s", err)
-			exitCode = ExitDueToModuleStart
 		case sig := <-gracefulStop:
 			if cfg.LogWorkerStart() {
 				log.Printf("main: graceful shutdown; caught signal: %+v", sig)

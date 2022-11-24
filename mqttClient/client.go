@@ -1,8 +1,12 @@
 package mqttClient
 
 import (
+	"context"
+	"github.com/eclipse/paho.golang/autopaho"
+	"github.com/eclipse/paho.golang/paho"
 	"log"
 	"sync"
+	"time"
 )
 
 type ClientStruct struct {
@@ -12,18 +16,18 @@ type ClientStruct struct {
 
 	subscriptionsMutex sync.RWMutex
 	subscriptions      []subscription
+
+	cliCfg autopaho.ClientConfig
+	cm     *autopaho.ConnectionManager
+	router *paho.StandardRouter
+
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 type subscription struct {
 	subscribeTopic string
 	messageHandler MessageHandler
-}
-
-func createClientStruct(cfg Config) ClientStruct {
-	return ClientStruct{
-		cfg:      cfg,
-		shutdown: make(chan struct{}),
-	}
 }
 
 func (c *ClientStruct) AddRoute(subscribeTopic string, messageHandler MessageHandler) {
@@ -56,4 +60,8 @@ func (c *ClientStruct) AddRoute(subscribeTopic string, messageHandler MessageHan
 
 func (c *ClientStruct) Name() string {
 	return c.cfg.Name()
+}
+
+func (c *ClientStruct) TelemetryInterval() time.Duration {
+	return c.cfg.TelemetryInterval()
 }
