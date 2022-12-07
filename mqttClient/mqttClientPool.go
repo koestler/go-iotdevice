@@ -49,12 +49,7 @@ func (p *ClientPool) GetClientsByNames(clientNames []string) (clients []Client) 
 	defer p.clientsMutex.RUnlock()
 
 	if len(clientNames) < 1 {
-		clients = make([]Client, len(p.clients))
-		i := 0
-		for _, c := range p.clients {
-			clients[i] = c
-			i++
-		}
+		return []Client{}
 	} else {
 		clients = make([]Client, 0, len(clientNames))
 		for _, clientName := range clientNames {
