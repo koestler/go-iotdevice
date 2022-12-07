@@ -296,7 +296,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	}
 
 	if c.ClientId == nil {
-		ret.clientId = "go-mqtt-to-influx-" + uuid.New().String()
+		ret.clientId = "go-iotdevice-" + uuid.New().String()
 	} else {
 		ret.clientId = *c.ClientId
 	}
