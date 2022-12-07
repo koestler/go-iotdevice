@@ -103,7 +103,6 @@ type httpServerConfigRead struct {
 	Bind            string `yaml:"Bind"`
 	Port            *int   `yaml:"Port"`
 	LogRequests     *bool  `yaml:"LogRequests"`
-	EnableDocs      *bool  `yaml:"EnableDocs"`
 	FrontendProxy   string `yaml:"FrontendProxy"`
 	FrontendPath    string `yaml:"FrontendPath"`
 	FrontendExpires string `yaml:"FrontendExpires"`

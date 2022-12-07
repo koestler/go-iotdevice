@@ -8,8 +8,6 @@ import (
 	"log"
 )
 
-//go:generate swag init -g httpServer/swagger.go
-
 func runHttpServer(
 	cfg *config.Config,
 	devicePoolInstance *device.DevicePool,

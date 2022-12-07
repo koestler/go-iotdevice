@@ -177,7 +177,6 @@ func (c HttpServerConfig) convertToRead() httpServerConfigRead {
 		Bind:            c.bind,
 		Port:            &c.port,
 		LogRequests:     &c.logRequests,
-		EnableDocs:      &c.enableDocs,
 		FrontendProxy:   frontendProxy,
 		FrontendPath:    c.frontendPath,
 		FrontendExpires: c.frontendExpires.String(),

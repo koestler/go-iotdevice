@@ -281,10 +281,6 @@ func (c HttpServerConfig) LogRequests() bool {
 	return c.logRequests
 }
 
-func (c HttpServerConfig) EnableDocs() bool {
-	return c.enableDocs
-}
-
 func (c HttpServerConfig) FrontendProxy() *url.URL {
 	return c.frontendProxy
 }

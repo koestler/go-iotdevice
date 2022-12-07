@@ -200,11 +200,6 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 		ret.logRequests = true
 	}
 
-	ret.enableDocs = true
-	if c.EnableDocs != nil && !*c.EnableDocs {
-		ret.enableDocs = false
-	}
-
 	if len(c.FrontendProxy) > 0 {
 		u, parseError := url.Parse(c.FrontendProxy)
 		if parseError == nil {

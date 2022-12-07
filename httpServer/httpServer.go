@@ -35,7 +35,6 @@ type Config interface {
 	LogRequests() bool
 	LogDebug() bool
 	LogConfig() bool
-	EnableDocs() bool
 	FrontendProxy() *url.URL
 	FrontendPath() string
 	GetViewNames() []string
@@ -54,9 +53,6 @@ func Run(env *Environment) (httpServer *HttpServer) {
 	engine.Use(gin.Recovery())
 	engine.Use(authJwtMiddleware(env))
 
-	if cfg.EnableDocs() {
-		setupSwaggerDocs(engine, cfg)
-	}
 	addApiV1Routes(engine, cfg, env)
 	setupFrontend(engine, cfg)
 

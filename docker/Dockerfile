@@ -2,7 +2,6 @@
 FROM golang:1.19-alpine as go-builder
 
 RUN apk add build-base git
-RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 WORKDIR /app
 COPY . /app
