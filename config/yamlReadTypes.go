@@ -55,26 +55,26 @@ type deviceConfigRead struct {
 }
 
 type victronDeviceConfigRead struct {
-	deviceConfigRead
-	Device string `yaml:"Device"`
-	Kind   string `yaml:"Kind"`
+	General deviceConfigRead `yaml:"General"`
+	Device  string           `yaml:"Device"`
+	Kind    string           `yaml:"Kind"`
 }
 
 type victronDeviceConfigReadMap map[string]victronDeviceConfigRead
 
 type teracomDeviceConfigRead struct {
-	deviceConfigRead
-	Url      string `yaml:"Url"`
-	Username string `yaml:"Username"`
-	Password string `yaml:"Password"`
+	General  deviceConfigRead `yaml:"General"`
+	Url      string           `yaml:"Url"`
+	Username string           `yaml:"Username"`
+	Password string           `yaml:"Password"`
 }
 
 type teracomDeviceConfigReadMap map[string]teracomDeviceConfigRead
 
 type mqttDeviceConfigRead struct {
-	deviceConfigRead
-	MqttTopics  []string `yaml:"MqttTopics"`
-	MqttClients []string `yaml:"MqttClients"`
+	General     deviceConfigRead `yaml:"General"`
+	MqttTopics  []string         `yaml:"MqttTopics"`
+	MqttClients []string         `yaml:"MqttClients"`
 }
 
 type mqttDeviceConfigReadMap map[string]mqttDeviceConfigRead

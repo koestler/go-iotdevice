@@ -107,26 +107,26 @@ func (c DeviceConfig) convertToRead() deviceConfigRead {
 
 func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 	return victronDeviceConfigRead{
-		deviceConfigRead: c.DeviceConfig.convertToRead(),
-		Device:           c.device,
-		Kind:             c.kind.String(),
+		General: c.DeviceConfig.convertToRead(),
+		Device:  c.device,
+		Kind:    c.kind.String(),
 	}
 }
 
 func (c TeracomDeviceConfig) convertToRead() teracomDeviceConfigRead {
 	return teracomDeviceConfigRead{
-		deviceConfigRead: c.DeviceConfig.convertToRead(),
-		Url:              c.url.String(),
-		Username:         c.username,
-		Password:         c.password,
+		General:  c.DeviceConfig.convertToRead(),
+		Url:      c.url.String(),
+		Username: c.username,
+		Password: c.password,
 	}
 }
 
 func (c MqttDeviceConfig) convertToRead() mqttDeviceConfigRead {
 	return mqttDeviceConfigRead{
-		deviceConfigRead: c.DeviceConfig.convertToRead(),
-		MqttTopics:       c.mqttTopics,
-		MqttClients:      c.mqttClients,
+		General:     c.DeviceConfig.convertToRead(),
+		MqttTopics:  c.mqttTopics,
+		MqttClients: c.mqttClients,
 	}
 }
 

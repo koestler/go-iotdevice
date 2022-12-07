@@ -521,7 +521,7 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients [
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name, mqttClients)
+	ret.DeviceConfig, e = c.General.TransformAndValidate(name, mqttClients)
 	err = append(err, e...)
 
 	if ret.kind == UndefinedKind {
@@ -542,7 +542,7 @@ func (c teracomDeviceConfigRead) TransformAndValidate(name string, mqttClients [
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name, mqttClients)
+	ret.DeviceConfig, e = c.General.TransformAndValidate(name, mqttClients)
 	err = append(err, e...)
 
 	if len(c.Url) < 1 {
@@ -567,7 +567,7 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []*M
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name, mqttClients)
+	ret.DeviceConfig, e = c.General.TransformAndValidate(name, mqttClients)
 	err = append(err, e...)
 
 	for _, clientName := range ret.mqttClients {
