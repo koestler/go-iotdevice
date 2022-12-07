@@ -6,11 +6,11 @@ import (
 )
 
 type RealtimeMessage struct {
-	Category     string
-	Description  string
-	NumericValue *float64
-	TextValue    *string
-	Unit         *string
+	Category     string   `json:"Category"`
+	Description  string   `json:"Description"`
+	NumericValue *float64 `json:"NumericValue,omitempty"`
+	TextValue    *string  `json:"TextValue,omitempty"`
+	Unit         *string  `json:"Unit,omitempty"`
 }
 
 func convertValueToRealtimeMessage(value dataflow.Value) interface{} {
