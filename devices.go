@@ -22,9 +22,10 @@ func runDevices(
 			log.Printf("device[%s]: start", deviceConfig.Name())
 		}
 
-		if dev, err := victron.RunDevice(deviceConfig, mqttClientPool, storage); err != nil {
+		if dev, err := victron.RunDevice(deviceConfig, deviceConfig, storage); err != nil {
 			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
 		} else {
+			device.RunMqttForwarders(dev, mqttClientPool, storage)
 			devicePoolInstance.AddDevice(dev)
 			countStarted += 1
 		}

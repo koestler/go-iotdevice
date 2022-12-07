@@ -140,6 +140,16 @@ func (c *ClientStruct) Shutdown() {
 	log.Printf("mqttClientV5[%s]: shutdown completed", c.cfg.Name())
 }
 
+func (c *ClientStruct) Publish(topic string, payload []byte, qos byte, retain bool) (err error) {
+	_, err = c.cm.Publish(c.ctx, &paho.Publish{
+		QoS:     qos,
+		Topic:   replaceTemplate(topic, c.cfg),
+		Payload: payload,
+		Retain:  retain,
+	})
+	return
+}
+
 func (c *ClientStruct) availabilityMsg(payload string) *paho.Publish {
 	return &paho.Publish{
 		QoS:     c.cfg.Qos(),

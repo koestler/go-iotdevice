@@ -6,7 +6,6 @@ import (
 	"github.com/eclipse/paho.golang/paho"
 	"log"
 	"sync"
-	"time"
 )
 
 type ClientStruct struct {
@@ -28,6 +27,10 @@ type ClientStruct struct {
 type subscription struct {
 	subscribeTopic string
 	messageHandler MessageHandler
+}
+
+func (c *ClientStruct) Config() Config {
+	return c.cfg
 }
 
 func (c *ClientStruct) AddRoute(subscribeTopic string, messageHandler MessageHandler) {
@@ -56,12 +59,4 @@ func (c *ClientStruct) AddRoute(subscribeTopic string, messageHandler MessageHan
 	c.subscriptionsMutex.Lock()
 	defer c.subscriptionsMutex.Unlock()
 	c.subscriptions = append(c.subscriptions, s)
-}
-
-func (c *ClientStruct) Name() string {
-	return c.cfg.Name()
-}
-
-func (c *ClientStruct) TelemetryInterval() time.Duration {
-	return c.cfg.TelemetryInterval()
 }

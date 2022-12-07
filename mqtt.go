@@ -22,7 +22,6 @@ func runMqttClient(
 
 		var client mqttClient.Client
 		client = mqttClient.CreateV5(mqttClientConfig)
-
 		mqttClientPoolInstance.AddClient(client)
 	}
 

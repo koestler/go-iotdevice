@@ -10,10 +10,10 @@ import (
 )
 
 func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
-	log.Printf("device[%s]: start vedirect source", c.cfg.Name())
+	log.Printf("device[%s]: start vedirect source", c.deviceConfig.Name())
 
 	// open vedirect device
-	vd, err := vedirect.Open(c.cfg.Device(), c.cfg.LogComDebug())
+	vd, err := vedirect.Open(c.victronConfig.Device(), c.deviceConfig.LogComDebug())
 	if err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 		return fmt.Errorf("unknown deviceId=%x", err)
 	}
 
-	log.Printf("device[%s]: source: connect to %s", c.cfg.Name(), deviceString)
+	log.Printf("device[%s]: source: connect to %s", c.deviceConfig.Name(), deviceString)
 	c.model = deviceString
 
 	// get relevant registers
@@ -43,7 +43,7 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 		return fmt.Errorf("no registers found for deviceId=%x", deviceId)
 	}
 	// filter registers by skip list
-	c.registers = dataflow.FilterRegisters(registers, c.cfg.SkipFields(), c.cfg.SkipCategories())
+	c.registers = dataflow.FilterRegisters(registers, c.deviceConfig.SkipFields(), c.deviceConfig.SkipCategories())
 
 	// start victron reader
 	go func() {
@@ -63,7 +63,7 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 				vd.RecvFlush()
 
 				if err := vd.VeCommandPing(); err != nil {
-					log.Printf("device[%s]: source: VeCommandPing failed: %v", c.cfg.Name(), err)
+					log.Printf("device[%s]: source: VeCommandPing failed: %v", c.deviceConfig.Name(), err)
 					continue
 				}
 
@@ -86,10 +86,10 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 						}
 
 						if err != nil {
-							log.Printf("device[%s]: fetching number register failed: %v", c.cfg.Name(), err)
+							log.Printf("device[%s]: fetching number register failed: %v", c.deviceConfig.Name(), err)
 						} else {
 							output <- dataflow.NewNumericRegisterValue(
-								c.cfg.Name(),
+								c.deviceConfig.Name(),
 								register,
 								value/float64(numberRegister.Factor()),
 							)
@@ -98,10 +98,10 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 						value, err := vd.VeCommandGetString(register.Address())
 
 						if err != nil {
-							log.Printf("device[%s]: fetching text register failed: %v", c.cfg.Name(), err)
+							log.Printf("device[%s]: fetching text register failed: %v", c.deviceConfig.Name(), err)
 						} else {
 							output <- dataflow.NewTextRegisterValue(
-								c.cfg.Name(),
+								c.deviceConfig.Name(),
 								register,
 								strings.TrimSpace(value),
 							)
@@ -111,14 +111,14 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 						intValue, err = vd.VeCommandGetUint(register.Address())
 
 						if err != nil {
-							log.Printf("device[%s]: fetching enum register failed: %v", c.cfg.Name(), err)
+							log.Printf("device[%s]: fetching enum register failed: %v", c.deviceConfig.Name(), err)
 						} else {
 							enum := enumRegister.Enum()
 							text := "null"
 							if v, ok := enum[int(intValue)]; ok {
 								text = v
 							}
-							output <- dataflow.NewTextRegisterValue(c.cfg.Name(), register, text)
+							output <- dataflow.NewTextRegisterValue(c.deviceConfig.Name(), register, text)
 						}
 					}
 				}
@@ -127,10 +127,10 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 
 				fetchStaticCounter++
 
-				if c.cfg.LogDebug() {
+				if c.deviceConfig.LogDebug() {
 					log.Printf(
 						"device[%s]: registers fetched, took=%.3fs",
-						c.cfg.Name(),
+						c.deviceConfig.Name(),
 						time.Since(start).Seconds(),
 					)
 				}

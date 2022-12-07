@@ -1,4 +1,4 @@
-package mqttClient
+package device
 
 import "time"
 

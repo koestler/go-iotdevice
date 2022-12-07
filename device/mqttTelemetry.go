@@ -1,11 +1,8 @@
-package mqttClient
+package device
 
 import (
-	"encoding/json"
-	"github.com/eclipse/paho.golang/paho"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"strings"
-	"time"
 )
 
 type TelemetryMessage struct {
@@ -24,40 +21,6 @@ type NumericTelemetryValue struct {
 
 type TextTelemetryValue struct {
 	Value string
-}
-
-func (c *ClientStruct) PublishTelemetryMessage(deviceName string, model string, lastUpdated time.Time, values []dataflow.Value) error {
-	p, err := c.getTelemetryPublishMessage(deviceName, model, lastUpdated, values)
-	if err != nil {
-		return err
-	}
-
-	_, err = c.cm.Publish(c.ctx, p)
-	return err
-}
-
-func (c *ClientStruct) getTelemetryPublishMessage(deviceName string, model string, lastUpdated time.Time, values []dataflow.Value) (*paho.Publish, error) {
-	now := time.Now()
-	payload := TelemetryMessage{
-		Time:                   timeToString(now),
-		NextTelemetry:          timeToString(now.Add(c.cfg.TelemetryInterval())),
-		Model:                  model,
-		SecondsSinceLastUpdate: now.Sub(lastUpdated).Seconds(),
-		NumericValues:          convertValuesToNumericTelemetryValues(values),
-		TextValues:             convertValuesToTextTelemetryValues(values),
-	}
-
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	return &paho.Publish{
-		QoS:     c.cfg.Qos(),
-		Topic:   c.getTelemetryTopic(deviceName),
-		Payload: b,
-		Retain:  c.cfg.TelemetryRetain(),
-	}, nil
 }
 
 func convertValuesToNumericTelemetryValues(values []dataflow.Value) (ret map[string]NumericTelemetryValue) {
@@ -94,9 +57,8 @@ func convertValuesToTextTelemetryValues(values []dataflow.Value) (ret map[string
 	return
 }
 
-func (c *ClientStruct) getTelemetryTopic(deviceName string) string {
-	topic := replaceTemplate(c.cfg.TelemetryTopic(), c.cfg)
+func getTelemetryTopic(topic string, device Device) string {
 	// replace Device/Value specific placeholders
-	topic = strings.Replace(topic, "%DeviceName%", deviceName, 1)
+	topic = strings.Replace(topic, "%DeviceName%", device.Config().Name(), 1)
 	return topic
 }

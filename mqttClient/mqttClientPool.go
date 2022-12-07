@@ -35,13 +35,13 @@ func (p *ClientPool) Shutdown() {
 func (p *ClientPool) AddClient(client Client) {
 	p.clientsMutex.Lock()
 	defer p.clientsMutex.Unlock()
-	p.clients[client.Name()] = client
+	p.clients[client.Config().Name()] = client
 }
 
 func (p *ClientPool) RemoveClient(client Client) {
 	p.clientsMutex.Lock()
 	defer p.clientsMutex.Unlock()
-	delete(p.clients, client.Name())
+	delete(p.clients, client.Config().Name())
 }
 
 func (p *ClientPool) GetClientsByNames(clientNames []string) (clients []Client) {

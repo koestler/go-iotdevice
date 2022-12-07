@@ -27,13 +27,13 @@ func (p *DevicePool) Shutdown() {
 func (p *DevicePool) AddDevice(device Device) {
 	p.DevicesMutex.Lock()
 	defer p.DevicesMutex.Unlock()
-	p.Devices[device.Name()] = device
+	p.Devices[device.Config().Name()] = device
 }
 
 func (p *DevicePool) RemoveDevice(device Device) {
 	p.DevicesMutex.Lock()
 	defer p.DevicesMutex.Unlock()
-	delete(p.Devices, device.Name())
+	delete(p.Devices, device.Config().Name())
 }
 
 func (p *DevicePool) GetDevice(deviceName string) Device {

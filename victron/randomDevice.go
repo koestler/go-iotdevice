@@ -9,10 +9,10 @@ import (
 
 func startRandom(c *DeviceStruct, output chan dataflow.Value, registers dataflow.Registers) error {
 	// filter registers by skip list
-	c.registers = dataflow.FilterRegisters(registers, c.cfg.SkipFields(), c.cfg.SkipCategories())
+	c.registers = dataflow.FilterRegisters(registers, c.deviceConfig.SkipFields(), c.deviceConfig.SkipCategories())
 
-	if c.cfg.LogDebug() {
-		log.Printf("device[%s]: start random source", c.cfg.Name())
+	if c.deviceConfig.LogDebug() {
+		log.Printf("device[%s]: start random source", c.deviceConfig.Name())
 	}
 
 	// start source go routine
@@ -36,9 +36,9 @@ func startRandom(c *DeviceStruct, output chan dataflow.Value, registers dataflow
 							value = 1e2 * rand.Float64() / float64(numberRegister.Factor())
 						}
 
-						output <- dataflow.NewNumericRegisterValue(c.cfg.Name(), register, value)
+						output <- dataflow.NewNumericRegisterValue(c.deviceConfig.Name(), register, value)
 					} else if _, ok := register.(dataflow.TextRegisterStruct); ok {
-						output <- dataflow.NewTextRegisterValue(c.cfg.Name(), register, randomString(8))
+						output <- dataflow.NewTextRegisterValue(c.deviceConfig.Name(), register, randomString(8))
 					}
 				}
 				c.SetLastUpdatedNow()
