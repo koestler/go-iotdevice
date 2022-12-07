@@ -35,6 +35,7 @@ type mqttClientConfigRead struct {
 	TelemetryInterval string  `yaml:"TelemetryInterval"`
 	TelemetryTopic    *string `yaml:"TelemetryTopic"`
 	TelemetryRetain   *bool   `yaml:"TelemetryRetain"`
+	RealtimeEnable    *bool   `yaml:"RealtimeEnable"`
 	RealtimeTopic     *string `yaml:"RealtimeTopic"`
 	RealtimeRetain    *bool   `yaml:"RealtimeRetain"`
 	TopicPrefix       string  `yaml:"TopicPrefix"`

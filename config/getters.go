@@ -132,6 +132,10 @@ func (c MqttClientConfig) TelemetryRetain() bool {
 	return c.telemetryRetain
 }
 
+func (c MqttClientConfig) RealtimeEnable() bool {
+	return c.realtimeEnable
+}
+
 func (c MqttClientConfig) RealtimeTopic() string {
 	return c.realtimeTopic
 }

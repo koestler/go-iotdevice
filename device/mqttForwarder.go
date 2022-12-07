@@ -13,6 +13,10 @@ func RunMqttForwarders(d Device, mqttClientPool *mqttClient.ClientPool, storage 
 
 	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
 	for _, mc := range mqttClientPool.GetClientsByNames(d.Config().RealtimeViaMqttClients()) {
+		if !mc.Config().RealtimeEnable() {
+			continue
+		}
+
 		// transmitRealtime values from data store and publish to mqtt broker
 		go func() {
 			// setup empty filter (everything)

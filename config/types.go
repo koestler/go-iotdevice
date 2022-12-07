@@ -44,6 +44,7 @@ type MqttClientConfig struct {
 	telemetryInterval time.Duration // optional: "10s"
 	telemetryTopic    string        // optional: "%Prefix%tele/go-iotdevice/%DeviceName%/state"
 	telemetryRetain   bool          // optional: default false
+	realtimeEnable    bool          // default: false
 	realtimeTopic     string        // optional: default "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%"
 	realtimeRetain    bool          // optional: default true
 	topicPrefix       string        // optional: default empty

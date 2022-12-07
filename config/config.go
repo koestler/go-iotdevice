@@ -393,6 +393,12 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.telemetryRetain = *c.TelemetryRetain
 	}
 
+	if c.RealtimeEnable == nil {
+		ret.realtimeEnable = false
+	} else {
+		ret.realtimeEnable = *c.RealtimeEnable
+	}
+
 	if c.RealtimeTopic == nil {
 		ret.realtimeTopic = "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%"
 	} else {
