@@ -3,41 +3,32 @@ package device
 import (
 	"github.com/koestler/go-iotdevice/dataflow"
 	"strings"
-	"time"
 )
 
-type NumericRealtimeMessage struct {
-	Time         string
-	NumericValue float64
-	Unit         string
-}
-
-type TextRealtimeMessage struct {
-	Time      string
-	TextValue string
+type RealtimeMessage struct {
+	Category     string
+	Description  string
+	NumericValue *float64
+	TextValue    *string
+	Unit         *string
 }
 
 func convertValueToRealtimeMessage(value dataflow.Value) interface{} {
-	now := timeToString(time.Now())
-	if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
-		return NumericRealtimeMessage{
-			Time:         now,
-			NumericValue: numeric.Value(),
-			Unit: func() string {
-				if u := numeric.Register().Unit(); u != nil {
-					return *u
-				}
-				return ""
-			}(),
-		}
-	} else if text, ok := value.(dataflow.TextRegisterValue); ok {
-		return TextRealtimeMessage{
-			Time:      now,
-			TextValue: text.Value(),
-		}
+	ret := RealtimeMessage{
+		Category:    value.Register().Category(),
+		Description: value.Register().Description(),
+		Unit:        value.Register().Unit(),
 	}
 
-	return nil
+	if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
+		v := numeric.Value()
+		ret.NumericValue = &v
+	} else if text, ok := value.(dataflow.TextRegisterValue); ok {
+		v := text.Value()
+		ret.TextValue = &v
+	}
+
+	return ret
 }
 
 func getRealtimeTopic(
