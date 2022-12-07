@@ -6,8 +6,6 @@ RUN apk add build-base git
 WORKDIR /app
 COPY . /app
 
-RUN go generate
-
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 
