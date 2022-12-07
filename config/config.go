@@ -74,12 +74,15 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 		i := 0
 		for _, d := range ret.victronDevices {
 			ret.devices[i] = &d.DeviceConfig
+			i += 1
 		}
 		for _, d := range ret.teracomDevices {
 			ret.devices[i] = &d.DeviceConfig
+			i += 1
 		}
 		for _, d := range ret.mqttDevices {
 			ret.devices[i] = &d.DeviceConfig
+			i += 1
 		}
 	}
 
