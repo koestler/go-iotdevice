@@ -32,20 +32,18 @@ func RunMqttForwarders(d Device, mqttClientPool *mqttClient.ClientPool, storage 
 					}
 
 					if payload, err := json.Marshal(convertValueToRealtimeMessage(value)); err != nil {
-						if err := mc.Publish(
-							getRealtimeTopic(mc.Config().RealtimeTopic(), d, value.Register()),
-							payload,
-							mc.Config().Qos(),
-							mc.Config().RealtimeRetain(),
-						); err != nil {
-							log.Printf(
-								"device[%s]->mqttClient[%s]: cannot publish realtime: %s",
-								d.Config().Name(), mc.Config().Name(), err,
-							)
-						}
-					} else {
 						log.Printf(
 							"device[%s]->mqttClient[%s]: cannot generate realtime message: %s",
+							d.Config().Name(), mc.Config().Name(), err,
+						)
+					} else if err := mc.Publish(
+						getRealtimeTopic(mc.Config().RealtimeTopic(), d, value.Register()),
+						payload,
+						mc.Config().Qos(),
+						mc.Config().RealtimeRetain(),
+					); err != nil {
+						log.Printf(
+							"device[%s]->mqttClient[%s]: cannot publish realtime: %s",
 							d.Config().Name(), mc.Config().Name(), err,
 						)
 					}
@@ -89,20 +87,18 @@ func RunMqttForwarders(d Device, mqttClientPool *mqttClient.ClientPool, storage 
 						}
 
 						if payload, err := json.Marshal(telemetryMessage); err != nil {
-							if err := mc.Publish(
-								getTelemetryTopic(mc.Config().TelemetryTopic(), d),
-								payload,
-								mc.Config().Qos(),
-								mc.Config().TelemetryRetain(),
-							); err != nil {
-								log.Printf(
-									"device[%s]->mqttClient[%s]: cannot publish telemetry: %s",
-									d.Config().Name(), mc.Config().Name(), err,
-								)
-							}
-						} else {
 							log.Printf(
 								"device[%s]->mqttClient[%s]: cannot generate telemetry message: %s",
+								d.Config().Name(), mc.Config().Name(), err,
+							)
+						} else if err := mc.Publish(
+							getTelemetryTopic(mc.Config().TelemetryTopic(), d),
+							payload,
+							mc.Config().Qos(),
+							mc.Config().TelemetryRetain(),
+						); err != nil {
+							log.Printf(
+								"device[%s]->mqttClient[%s]: cannot publish telemetry: %s",
 								d.Config().Name(), mc.Config().Name(), err,
 							)
 						}
