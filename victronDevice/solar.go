@@ -1,4 +1,4 @@
-package victron
+package victronDevice
 
 import (
 	"github.com/koestler/go-iotdevice/dataflow"

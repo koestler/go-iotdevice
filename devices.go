@@ -5,7 +5,7 @@ import (
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
-	"github.com/koestler/go-iotdevice/victron"
+	"github.com/koestler/go-iotdevice/victronDevice"
 	"log"
 )
 
@@ -22,7 +22,7 @@ func runDevices(
 			log.Printf("device[%s]: start", deviceConfig.Name())
 		}
 
-		if dev, err := victron.RunDevice(deviceConfig, deviceConfig, storage); err != nil {
+		if dev, err := victronDevice.RunDevice(deviceConfig, deviceConfig, storage); err != nil {
 			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
 		} else {
 			device.RunMqttForwarders(dev, mqttClientPool, storage)
