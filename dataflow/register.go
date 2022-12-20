@@ -205,8 +205,8 @@ func FilterRegisters(input Registers, excludeFields []string, excludeCategories 
 }
 
 func AutosetSort(input Registers) Registers {
-	for sort, r := range input {
-		r.SetSort(sort)
+	for idx := range input {
+		input[idx].SetSort(idx)
 	}
 	return input
 }
