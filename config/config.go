@@ -529,7 +529,7 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients [
 		err = append(err, fmt.Errorf("VictronDevices->%s->Kind='%s' is invalid", name, c.Kind))
 	}
 
-	if len(c.Device) < 1 {
+	if ret.kind == VedirectKind && len(c.Device) < 1 {
 		err = append(err, fmt.Errorf("VictronDevices->%s->Device must not be empty", name))
 	}
 
