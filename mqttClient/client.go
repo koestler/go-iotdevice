@@ -59,4 +59,12 @@ func (c *ClientStruct) AddRoute(subscribeTopic string, messageHandler MessageHan
 	c.subscriptionsMutex.Lock()
 	defer c.subscriptionsMutex.Unlock()
 	c.subscriptions = append(c.subscriptions, s)
+
+	// add route
+	c.router.RegisterHandler(s.subscribeTopic, func(p *paho.Publish) {
+		s.messageHandler(Message{
+			topic:   p.Topic,
+			payload: p.Payload,
+		})
+	})
 }

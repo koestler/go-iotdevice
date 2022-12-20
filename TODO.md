@@ -5,3 +5,4 @@
 - handle case of startup when usb-serial is present but no Victron device is connected
 - redo / check homeassistant integration using mqtt realtime messages
 - device: use context instead of shutdown channel?
+- make dataflow.Register type non-victron specific

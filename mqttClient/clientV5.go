@@ -60,19 +60,6 @@ func CreateV5(
 }
 
 func (c *ClientStruct) Run() {
-	// add routes to router
-	c.subscriptionsMutex.RLock()
-	defer c.subscriptionsMutex.RUnlock()
-	for _, s := range c.subscriptions {
-		sub := s
-		c.router.RegisterHandler(sub.subscribeTopic, func(p *paho.Publish) {
-			sub.messageHandler(Message{
-				topic:   p.Topic,
-				payload: p.Payload,
-			})
-		})
-	}
-
 	// start connection manager
 	var err error
 	c.cm, err = autopaho.NewConnection(c.ctx, c.cliCfg)
