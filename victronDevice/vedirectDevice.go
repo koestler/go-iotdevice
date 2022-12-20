@@ -38,12 +38,14 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 	c.model = deviceString
 
 	// get relevant registers
-	registers := RegisterFactoryByProduct(deviceId)
-	if registers == nil {
-		return fmt.Errorf("no registers found for deviceId=%x", deviceId)
+	{
+		registers := RegisterFactoryByProduct(deviceId)
+		if registers == nil {
+			return fmt.Errorf("no registers found for deviceId=%x", deviceId)
+		}
+		// filter registers by skip list
+		c.registers = dataflow.FilterRegisters(registers, c.deviceConfig.SkipFields(), c.deviceConfig.SkipCategories())
 	}
-	// filter registers by skip list
-	c.registers = dataflow.FilterRegisters(registers, c.deviceConfig.SkipFields(), c.deviceConfig.SkipCategories())
 
 	// start victron reader
 	go func() {
@@ -67,7 +69,7 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 					continue
 				}
 
-				for _, register := range registers {
+				for _, register := range c.registers {
 					// only fetch static registers seldomly
 					if register.Static() && (fetchStaticCounter%60 != 0) {
 						continue
