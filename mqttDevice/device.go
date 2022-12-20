@@ -158,8 +158,8 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 			true,
 			1,
 			unit,
+			msg.Sort,
 		)
-		r.SetSort(msg.Sort)
 	} else {
 		r = dataflow.CreateTextRegisterStruct(
 			msg.Category,
@@ -167,8 +167,8 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 			msg.Description,
 			0,
 			false,
+			msg.Sort,
 		)
-		r.SetSort(msg.Sort)
 	}
 
 	c.registers[registerName] = r

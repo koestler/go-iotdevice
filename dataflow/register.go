@@ -21,7 +21,6 @@ type Register interface {
 	Type() RegisterType
 	Unit() *string
 	Sort() int
-	SetSort(int)
 }
 
 type RegisterStruct struct {
@@ -49,7 +48,12 @@ type EnumRegisterStruct struct {
 	enum map[int]string
 }
 
-func CreateTextRegisterStruct(category, name, description string, address uint16, static bool) TextRegisterStruct {
+func CreateTextRegisterStruct(
+	category, name, description string,
+	address uint16,
+	static bool,
+	sort int,
+	) TextRegisterStruct {
 	return TextRegisterStruct{
 		RegisterStruct{
 			category:    category,
@@ -57,6 +61,7 @@ func CreateTextRegisterStruct(category, name, description string, address uint16
 			description: description,
 			address:     address,
 			static:      static,
+			sort: sort,
 		},
 	}
 }
@@ -68,6 +73,7 @@ func CreateNumberRegisterStruct(
 	signed bool,
 	factor int,
 	unit string,
+	sort int,
 ) NumberRegisterStruct {
 	var u *string = nil
 	if len(unit) > 0 {
@@ -81,6 +87,7 @@ func CreateNumberRegisterStruct(
 			description: description,
 			address:     address,
 			static:      static,
+			sort: sort,
 		},
 		signed: signed,
 		factor: factor,
@@ -88,7 +95,13 @@ func CreateNumberRegisterStruct(
 	}
 }
 
-func CreateEnumRegisterStruct(category, name, description string, address uint16, static bool, enum map[int]string) EnumRegisterStruct {
+func CreateEnumRegisterStruct(
+	category, name, description string,
+	address uint16,
+	static bool,
+	enum map[int]string,
+	sort int,
+	) EnumRegisterStruct {
 	return EnumRegisterStruct{
 		RegisterStruct: RegisterStruct{
 			category:    category,
@@ -96,6 +109,7 @@ func CreateEnumRegisterStruct(category, name, description string, address uint16
 			description: description,
 			address:     address,
 			static:      static,
+			sort: sort,
 		},
 		enum: enum,
 	}
@@ -123,10 +137,6 @@ func (r RegisterStruct) Static() bool {
 
 func (r RegisterStruct) Sort() int {
 	return r.sort
-}
-
-func (r RegisterStruct) SetSort(sort int) {
-	r.sort = sort
 }
 
 func (r TextRegisterStruct) Unit() *string {
@@ -202,13 +212,6 @@ func FilterRegisters(input Registers, excludeFields []string, excludeCategories 
 		output = append(output, r)
 	}
 	return
-}
-
-func AutosetSort(input Registers) Registers {
-	for idx := range input {
-		input[idx].SetSort(idx)
-	}
-	return input
 }
 
 func SortRegisters(input Registers) Registers {

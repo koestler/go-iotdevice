@@ -15,6 +15,7 @@ type registerResponse struct {
 	Description string  `json:"description" example:"Panel power"`
 	Type        string  `json:"type" example:"numeric"`
 	Unit        *string `json:"unit" example:"W"`
+	Sort        int     `json:"sort" example:"100"`
 }
 
 // setupRegisters godoc
@@ -58,6 +59,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 						Description: v.Description(),
 						Type:        typeString(v.Type()),
 						Unit:        v.Unit(),
+						Sort: v.Sort(),
 					}
 				}
 				setCacheControlPublic(c, 10*time.Second)
