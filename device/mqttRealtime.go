@@ -11,6 +11,7 @@ type RealtimeMessage struct {
 	NumericValue *float64 `json:"NumericValue,omitempty"`
 	TextValue    *string  `json:"TextValue,omitempty"`
 	Unit         *string  `json:"Unit,omitempty"`
+	Sort         int      `json:"Sort"`
 }
 
 func convertValueToRealtimeMessage(value dataflow.Value) interface{} {
@@ -18,6 +19,7 @@ func convertValueToRealtimeMessage(value dataflow.Value) interface{} {
 		Category:    value.Register().Category(),
 		Description: value.Register().Description(),
 		Unit:        value.Register().Unit(),
+		Sort:        value.Register().Sort(),
 	}
 
 	if numeric, ok := value.(dataflow.NumericRegisterValue); ok {

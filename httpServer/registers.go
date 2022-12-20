@@ -49,6 +49,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 
 				registers := device.Registers()
 				registers = dataflow.FilterRegisters(registers, view.SkipFields(), view.SkipCategories())
+				dataflow.SortRegisters(registers)
 				response := make([]registerResponse, len(registers))
 				for i, v := range registers {
 					response[i] = registerResponse{

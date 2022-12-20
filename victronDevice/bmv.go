@@ -314,31 +314,31 @@ var RegisterListBmvHistoric = dataflow.Registers{
 	),
 }
 
-var RegisterListBmv = dataflow.MergeRegisters(
+var RegisterListBmv = dataflow.AutosetSort(dataflow.MergeRegisters(
 	RegisterListBmvMonitor,
 	RegisterListBmvProduct,
 	RegisterListBmvHistoric,
-)
+))
 
-var RegisterListBmv712 = dataflow.FilterRegisters(
+var RegisterListBmv712 = dataflow.AutosetSort(dataflow.FilterRegisters(
 	RegisterListBmv,
 	[]string{
 		"ProductRevision",
 		"Description",
 	},
 	[]string{},
-)
+))
 
-var RegisterListBmv702 = dataflow.FilterRegisters(
+var RegisterListBmv702 = dataflow.AutosetSort(dataflow.FilterRegisters(
 	RegisterListBmv,
 	[]string{
 		"ProductRevision",
 		"Description",
 	},
 	[]string{},
-)
+))
 
-var RegisterListBmv700 = dataflow.FilterRegisters(
+var RegisterListBmv700 = dataflow.AutosetSort(dataflow.FilterRegisters(
 	RegisterListBmv,
 	[]string{
 		"AuxVoltage",
@@ -349,4 +349,4 @@ var RegisterListBmv700 = dataflow.FilterRegisters(
 		"AuxVoltageMaximum",
 	},
 	[]string{},
-)
+))

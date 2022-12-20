@@ -511,10 +511,10 @@ var RegisterListSolarPanelData = dataflow.Registers{
 	),
 }
 
-var RegisterListSolar = dataflow.MergeRegisters(
+var RegisterListSolar = dataflow.AutosetSort(dataflow.MergeRegisters(
 	RegisterListSolarPanelData,
 	RegisterListSolarChargerData,
 	RegisterListSolarProduct,
 	RegisterListSolarGeneric,
 	RegisterListSolarSettings,
-)
+))

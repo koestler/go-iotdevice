@@ -1,5 +1,7 @@
 package dataflow
 
+import "sort"
+
 type Registers []Register
 
 type RegisterType int
@@ -18,6 +20,8 @@ type Register interface {
 	Static() bool
 	Type() RegisterType
 	Unit() *string
+	Sort() int
+	SetSort(int)
 }
 
 type RegisterStruct struct {
@@ -26,6 +30,7 @@ type RegisterStruct struct {
 	description string
 	address     uint16
 	static      bool
+	sort        int
 }
 
 type TextRegisterStruct struct {
@@ -116,6 +121,14 @@ func (r RegisterStruct) Static() bool {
 	return r.static
 }
 
+func (r RegisterStruct) Sort() int {
+	return r.sort
+}
+
+func (r RegisterStruct) SetSort(sort int) {
+	r.sort = sort
+}
+
 func (r TextRegisterStruct) Unit() *string {
 	return nil
 }
@@ -189,6 +202,18 @@ func FilterRegisters(input Registers, excludeFields []string, excludeCategories 
 		output = append(output, r)
 	}
 	return
+}
+
+func AutosetSort(input Registers) Registers {
+	for sort, r := range input {
+		r.SetSort(sort)
+	}
+	return input
+}
+
+func SortRegisters(input Registers) Registers {
+	sort.SliceStable(input, func(i, j int) bool { return input[i].Sort() < input[j].Sort() })
+	return input
 }
 
 func registerNameExcluded(exclude []string, r Register) bool {

@@ -47,7 +47,7 @@ func RunDevice(
 		deviceConfig: deviceConfig,
 		mqttConfig:   mqttConfig,
 		source:       source,
-		registers: make(map[string]dataflow.Register),
+		registers:    make(map[string]dataflow.Register),
 		shutdown:     make(chan struct{}),
 	}
 
@@ -57,7 +57,7 @@ func RunDevice(
 		for _, topic := range mqttConfig.MqttTopics() {
 			log.Printf("device[%s] subscribe to mqttClient=%s topic=%s", deviceConfig.Name(), mc.Config().Name(), topic)
 			mc.AddRoute(topic, func(m mqttClient.Message) {
-					registerName, err := parseTopic(m.Topic())
+				registerName, err := parseTopic(m.Topic())
 				if err != nil {
 					log.Printf("device[%s]->mqttClient[%s]: cannot parse topic: %s", deviceConfig.Name(), mc.Config().Name(), err)
 					return
@@ -118,7 +118,7 @@ func (c *DeviceStruct) Registers() dataflow.Registers {
 	i := 0
 	for _, r := range c.registers {
 		ret[i] = r
-		i+=1
+		i += 1
 	}
 	return ret
 }
@@ -129,8 +129,8 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 	if r, ok := c.registers[registerName]; ok {
 		if r.Category() == msg.Category &&
 			r.Description() == msg.Description &&
-			r.Unit() == msg.Unit {
-
+			r.Unit() == msg.Unit &&
+			r.Sort() == msg.Sort {
 			c.registersMutex.RUnlock()
 			return r
 		}
@@ -159,6 +159,7 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 			1,
 			unit,
 		)
+		r.SetSort(msg.Sort)
 	} else {
 		r = dataflow.CreateTextRegisterStruct(
 			msg.Category,
@@ -167,6 +168,7 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 			0,
 			false,
 		)
+		r.SetSort(msg.Sort)
 	}
 
 	c.registers[registerName] = r
