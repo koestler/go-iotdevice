@@ -79,7 +79,6 @@ var RegisterListSolarGeneric = dataflow.Registers{
 			255: "Unavailable",
 		},
 		4,
-
 	),
 	// skipped Remote control used
 	// skipped Device off Reason Bitmask

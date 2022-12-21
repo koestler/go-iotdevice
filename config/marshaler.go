@@ -116,10 +116,11 @@ func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 
 func (c TeracomDeviceConfig) convertToRead() teracomDeviceConfigRead {
 	return teracomDeviceConfigRead{
-		General:  c.DeviceConfig.convertToRead(),
-		Url:      c.url.String(),
-		Username: c.username,
-		Password: c.password,
+		General:      c.DeviceConfig.convertToRead(),
+		Url:          c.url.String(),
+		Username:     c.username,
+		Password:     c.password,
+		PollInterval: c.pollInterval.String(),
 	}
 }
 

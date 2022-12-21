@@ -55,16 +55,16 @@ func RunDevice(
 	counter := 0
 	for _, mc := range mqttClientPool.GetClientsByNames(mqttConfig.MqttClients()) {
 		for _, topic := range mqttConfig.MqttTopics() {
-			log.Printf("device[%s] subscribe to mqttClient=%s topic=%s", deviceConfig.Name(), mc.Config().Name(), topic)
+			log.Printf("mqttDevice[%s] subscribe to mqttClient=%s topic=%s", deviceConfig.Name(), mc.Config().Name(), topic)
 			mc.AddRoute(topic, func(m mqttClient.Message) {
 				registerName, err := parseTopic(m.Topic())
 				if err != nil {
-					log.Printf("device[%s]->mqttClient[%s]: cannot parse topic: %s", deviceConfig.Name(), mc.Config().Name(), err)
+					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse topic: %s", deviceConfig.Name(), mc.Config().Name(), err)
 					return
 				}
 				realtimeMessage, err := parsePayload(m.Payload())
 				if err != nil {
-					log.Printf("device[%s]->mqttClient[%s]: cannot parse payload: %s", deviceConfig.Name(), mc.Config().Name(), err)
+					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse payload: %s", deviceConfig.Name(), mc.Config().Name(), err)
 					return
 				}
 
@@ -193,5 +193,5 @@ func (c *DeviceStruct) Model() string {
 
 func (c *DeviceStruct) Shutdown() {
 	close(c.shutdown)
-	log.Printf("device[%s]: shutdown completed", c.deviceConfig.Name())
+	log.Printf("mqttDevice[%s]: shutdown completed", c.deviceConfig.Name())
 }

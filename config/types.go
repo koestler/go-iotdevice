@@ -70,9 +70,10 @@ type VictronDeviceConfig struct {
 
 type TeracomDeviceConfig struct {
 	DeviceConfig
-	url      *url.URL // mandatory: how to connect to the device. eg. http://device0.local/
-	username string   // mandatory: username used to login
-	password string   // mandatory: password used to login
+	url          *url.URL      // mandatory: how to connect to the device. eg. http://device0.local/
+	username     string        // mandatory: username used to login
+	password     string        // mandatory: password used to login
+	pollInterval time.Duration // optional: default 1s
 }
 
 type MqttDeviceConfig struct {

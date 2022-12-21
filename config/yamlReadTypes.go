@@ -63,10 +63,11 @@ type victronDeviceConfigRead struct {
 type victronDeviceConfigReadMap map[string]victronDeviceConfigRead
 
 type teracomDeviceConfigRead struct {
-	General  deviceConfigRead `yaml:"General"`
-	Url      string           `yaml:"Url"`
-	Username string           `yaml:"Username"`
-	Password string           `yaml:"Password"`
+	General      deviceConfigRead `yaml:"General"`
+	Url          string           `yaml:"Url"`
+	Username     string           `yaml:"Username"`
+	Password     string           `yaml:"Password"`
+	PollInterval string           `yaml:"PollInterval"`
 }
 
 type teracomDeviceConfigReadMap map[string]teracomDeviceConfigRead

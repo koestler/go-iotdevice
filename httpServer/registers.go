@@ -59,7 +59,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 						Description: v.Description(),
 						Type:        typeString(v.Type()),
 						Unit:        v.Unit(),
-						Sort: v.Sort(),
+						Sort:        v.Sort(),
 					}
 				}
 				setCacheControlPublic(c, 10*time.Second)

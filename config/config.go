@@ -558,6 +558,21 @@ func (c teracomDeviceConfigRead) TransformAndValidate(name string, mqttClients [
 		}
 	}
 
+	if len(c.PollInterval) < 1 {
+		// use default 1s
+		ret.pollInterval = time.Second
+	} else if pollInterval, e := time.ParseDuration(c.PollInterval); e != nil {
+		err = append(err, fmt.Errorf("TeracomDevices->%s->PollInterval='%s' parse error: %s",
+			name, c.PollInterval, e,
+		))
+	} else if pollInterval < 50*time.Millisecond {
+		err = append(err, fmt.Errorf("TeracomDevices->%s->PollInterval='%s' must be >=50ms",
+			name, c.PollInterval,
+		))
+	} else {
+		ret.pollInterval = pollInterval
+	}
+
 	return
 }
 

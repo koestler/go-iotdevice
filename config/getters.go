@@ -204,6 +204,10 @@ func (c TeracomDeviceConfig) Password() string {
 	return c.password
 }
 
+func (c TeracomDeviceConfig) PollInterval() time.Duration {
+	return c.pollInterval
+}
+
 func (c MqttDeviceConfig) MqttTopics() []string {
 	return c.mqttTopics
 }

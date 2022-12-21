@@ -53,7 +53,7 @@ func CreateTextRegisterStruct(
 	address uint16,
 	static bool,
 	sort int,
-	) TextRegisterStruct {
+) TextRegisterStruct {
 	return TextRegisterStruct{
 		RegisterStruct{
 			category:    category,
@@ -61,7 +61,7 @@ func CreateTextRegisterStruct(
 			description: description,
 			address:     address,
 			static:      static,
-			sort: sort,
+			sort:        sort,
 		},
 	}
 }
@@ -87,7 +87,7 @@ func CreateNumberRegisterStruct(
 			description: description,
 			address:     address,
 			static:      static,
-			sort: sort,
+			sort:        sort,
 		},
 		signed: signed,
 		factor: factor,
@@ -101,7 +101,7 @@ func CreateEnumRegisterStruct(
 	static bool,
 	enum map[int]string,
 	sort int,
-	) EnumRegisterStruct {
+) EnumRegisterStruct {
 	return EnumRegisterStruct{
 		RegisterStruct: RegisterStruct{
 			category:    category,
@@ -109,7 +109,7 @@ func CreateEnumRegisterStruct(
 			description: description,
 			address:     address,
 			static:      static,
-			sort: sort,
+			sort:        sort,
 		},
 		enum: enum,
 	}
