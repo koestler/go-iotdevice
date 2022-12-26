@@ -1,6 +1,6 @@
 module github.com/koestler/go-iotdevice
 
-go 1.17
+go 1.19
 
 require (
 	github.com/eclipse/paho.golang v0.10.0
