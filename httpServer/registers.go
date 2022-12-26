@@ -14,7 +14,7 @@ type registerResponse struct {
 	Name        string `json:"name" example:"PanelPower"`
 	Description string `json:"description" example:"Panel power"`
 	Type        string `json:"type" example:"numeric"`
-	Unit        string `json:"unit" example:"W"`
+	Unit        string `json:"unit,omitempty" example:"W"`
 	Sort        int    `json:"sort" example:"100"`
 }
 

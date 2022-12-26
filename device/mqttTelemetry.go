@@ -6,21 +6,21 @@ import (
 )
 
 type TelemetryMessage struct {
-	Time                   string
-	NextTelemetry          string
-	Model                  string
-	SecondsSinceLastUpdate float64
-	NumericValues          map[string]NumericTelemetryValue
-	TextValues             map[string]TextTelemetryValue
+	Time                   string                           `json:"Time"`
+	NextTelemetry          string                           `json:"NextTelemetry"`
+	Model                  string                           `json:"Model"`
+	SecondsSinceLastUpdate float64                          `json:"SecondsSinceLastUpdate"`
+	NumericValues          map[string]NumericTelemetryValue `json:"NumericValues,omitempty"`
+	TextValues             map[string]TextTelemetryValue    `json:"TextValues,omitempty"`
 }
 
 type NumericTelemetryValue struct {
-	Value float64
-	Unit  string
+	Value float64 `json:"Value"`
+	Unit  string  `json:"Unit,omitempty"`
 }
 
 type TextTelemetryValue struct {
-	Value string
+	Value string `json:"Value"`
 }
 
 func convertValuesToNumericTelemetryValues(values []dataflow.Value) (ret map[string]NumericTelemetryValue) {
