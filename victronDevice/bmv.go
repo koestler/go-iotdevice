@@ -1,11 +1,7 @@
 package victronDevice
 
-import (
-	"github.com/koestler/go-iotdevice/dataflow"
-)
-
-var RegisterListBmvProduct = dataflow.Registers{
-	dataflow.CreateNumberRegisterStruct(
+var RegisterListBmvProduct = VictronRegisters{
+	CreateNumberRegisterStruct(
 		"Product",
 		"ProductId",
 		"Product id",
@@ -16,7 +12,7 @@ var RegisterListBmvProduct = dataflow.Registers{
 		"",
 		200,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Product",
 		"ProductRevision",
 		"Product revision",
@@ -27,7 +23,7 @@ var RegisterListBmvProduct = dataflow.Registers{
 		"",
 		201,
 	),
-	dataflow.CreateTextRegisterStruct(
+	CreateTextRegisterStruct(
 		"Product",
 		"SerialNumber",
 		"Serial number",
@@ -35,7 +31,7 @@ var RegisterListBmvProduct = dataflow.Registers{
 		true,
 		202,
 	),
-	dataflow.CreateTextRegisterStruct(
+	CreateTextRegisterStruct(
 		"Product",
 		"ModelName",
 		"Model name",
@@ -43,7 +39,7 @@ var RegisterListBmvProduct = dataflow.Registers{
 		true,
 		203,
 	),
-	dataflow.CreateTextRegisterStruct(
+	CreateTextRegisterStruct(
 		"Product",
 		"Description",
 		"Description",
@@ -51,7 +47,7 @@ var RegisterListBmvProduct = dataflow.Registers{
 		true,
 		204,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Product",
 		"Uptime",
 		"Device uptime",
@@ -65,8 +61,8 @@ var RegisterListBmvProduct = dataflow.Registers{
 	// skipped Bluetooth capabilities
 }
 
-var RegisterListBmvMonitor = dataflow.Registers{
-	dataflow.CreateNumberRegisterStruct(
+var RegisterListBmvMonitor = VictronRegisters{
+	CreateNumberRegisterStruct(
 		"Essential",
 		"Power",
 		"Power",
@@ -76,7 +72,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		1,
 		"W",
 		0,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Essential",
 		"CurrentHighRes",
 		"Current",
@@ -87,7 +83,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		"A",
 		1,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Essential",
 		"MainVoltage",
 		"Main voltage",
@@ -98,7 +94,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		"V",
 		2,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Monitor",
 		"AuxVoltage",
 		"Aux (starter) voltage",
@@ -109,7 +105,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		"V",
 		100,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Monitor",
 		"Consumed",
 		"Consumed",
@@ -119,7 +115,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		10,
 		"Ah",
 		101,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Essential",
 		"SOC",
 		"State of charge",
@@ -129,7 +125,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		100,
 		"%",
 		3,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Monitor",
 		"TTG",
 		"Time to go",
@@ -139,7 +135,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		1,
 		"min",
 		102,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Essential",
 		"BatteryTemperature",
 		"Battery Temperature",
@@ -149,7 +145,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		100,
 		"K",
 		4,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Monitor",
 		"MidPointVoltage",
 		"Mid-point voltage",
@@ -159,7 +155,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		100,
 		"V",
 		104,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Monitor",
 		"MidPointVoltageDeviation",
 		"Mid-point voltage deviation",
@@ -169,7 +165,7 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		10,
 		"%",
 		105,
-	), dataflow.CreateEnumRegisterStruct(
+	), CreateEnumRegisterStruct(
 		"Monitor",
 		"SynchronizationState",
 		"Synchronization state",
@@ -183,8 +179,8 @@ var RegisterListBmvMonitor = dataflow.Registers{
 	),
 }
 
-var RegisterListBmvHistoric = dataflow.Registers{
-	dataflow.CreateNumberRegisterStruct(
+var RegisterListBmvHistoric = VictronRegisters{
+	CreateNumberRegisterStruct(
 		"Historic",
 		"DepthOfTheDeepestDischarge",
 		"Depth of the deepest discharge",
@@ -194,7 +190,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		10,
 		"Ah",
 		300,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"DepthOfTheLastDischarge",
 		"Depth of the last discharge",
@@ -204,7 +200,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		10,
 		"Ah",
 		301,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"DepthOfTheAverageDischarge",
 		"Depth of the average discharge",
@@ -214,7 +210,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		10,
 		"Ah",
 		302,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"NumberOfCycles",
 		"Number of cycles",
@@ -224,7 +220,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		1,
 		"",
 		303,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"NumberOfFullDischarges",
 		"Number of full discharges",
@@ -234,7 +230,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		1,
 		"",
 		304,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"CumulativeAmpHours",
 		"Cumulative amp hours",
@@ -244,7 +240,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		10,
 		"Ah",
 		305,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"MainVoltageMinimum",
 		"Minimum voltage",
@@ -254,7 +250,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		100,
 		"V",
 		306,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"MainVoltageMaximum",
 		"Maximum voltage",
@@ -264,7 +260,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		100,
 		"V",
 		307,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"TimeSinceFullCharge",
 		"Time since full charge",
@@ -274,7 +270,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		1,
 		"s",
 		308,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"NumberOfAutomaticSynchronizations",
 		"Number of automatic synchronizations",
@@ -284,7 +280,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		1,
 		"",
 		309,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"NumberOfLowMainVoltageAlarms",
 		"Number of low voltage alarms",
@@ -294,7 +290,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		1,
 		"",
 		310,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"NumberOfHighMainVoltageAlarms",
 		"Number of high voltage alarms",
@@ -304,7 +300,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		1,
 		"",
 		311,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"AuxVoltageMinimum",
 		"Minimum starter voltage",
@@ -314,7 +310,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		100,
 		"V",
 		312,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"AuxVoltageMaximum",
 		"Maximum starter voltage",
@@ -324,7 +320,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		100,
 		"V",
 		313,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"AmountOfDischargedEnergy",
 		"Amount of discharged energy",
@@ -334,7 +330,7 @@ var RegisterListBmvHistoric = dataflow.Registers{
 		100,
 		"kWh",
 		314,
-	), dataflow.CreateNumberRegisterStruct(
+	), CreateNumberRegisterStruct(
 		"Historic",
 		"AmountOfChargedEnergy",
 		"Amount of charged energy",
@@ -347,39 +343,30 @@ var RegisterListBmvHistoric = dataflow.Registers{
 	),
 }
 
-var RegisterListBmv = dataflow.MergeRegisters(
+var RegisterListBmv = MergeRegisters(
 	RegisterListBmvMonitor,
 	RegisterListBmvProduct,
 	RegisterListBmvHistoric,
 )
 
-var RegisterListBmv712 = dataflow.FilterRegisters(
+var RegisterListBmv712 = FilterRegistersByName(
 	RegisterListBmv,
-	[]string{
-		"ProductRevision",
-		"Description",
-	},
-	[]string{},
+	"ProductRevision",
+	"Description",
 )
 
-var RegisterListBmv702 = dataflow.FilterRegisters(
+var RegisterListBmv702 = FilterRegistersByName(
 	RegisterListBmv,
-	[]string{
-		"ProductRevision",
-		"Description",
-	},
-	[]string{},
+	"ProductRevision",
+	"Description",
 )
 
-var RegisterListBmv700 = dataflow.FilterRegisters(
+var RegisterListBmv700 = FilterRegistersByName(
 	RegisterListBmv,
-	[]string{
-		"AuxVoltage",
-		"BatteryTemperature",
-		"MidPointVoltage",
-		"MidPointVoltageDeviation",
-		"AuxVoltageMinimum",
-		"AuxVoltageMaximum",
-	},
-	[]string{},
+	"AuxVoltage",
+	"BatteryTemperature",
+	"MidPointVoltage",
+	"MidPointVoltageDeviation",
+	"AuxVoltageMinimum",
+	"AuxVoltageMaximum",
 )

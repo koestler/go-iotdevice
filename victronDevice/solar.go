@@ -1,11 +1,7 @@
 package victronDevice
 
-import (
-	"github.com/koestler/go-iotdevice/dataflow"
-)
-
-var RegisterListSolarProduct = dataflow.Registers{
-	dataflow.CreateNumberRegisterStruct(
+var RegisterListSolarProduct = VictronRegisters{
+	CreateNumberRegisterStruct(
 		"Product",
 		"ProductId",
 		"Product id",
@@ -16,7 +12,7 @@ var RegisterListSolarProduct = dataflow.Registers{
 		"",
 		300,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Product",
 		"GroupId",
 		"Group id",
@@ -27,7 +23,7 @@ var RegisterListSolarProduct = dataflow.Registers{
 		"",
 		301,
 	),
-	dataflow.CreateTextRegisterStruct(
+	CreateTextRegisterStruct(
 		"Product",
 		"SerialNumber",
 		"Serial number",
@@ -35,7 +31,7 @@ var RegisterListSolarProduct = dataflow.Registers{
 		true,
 		302,
 	),
-	dataflow.CreateTextRegisterStruct(
+	CreateTextRegisterStruct(
 		"Product",
 		"ModelName",
 		"Model name",
@@ -46,8 +42,8 @@ var RegisterListSolarProduct = dataflow.Registers{
 	// skipped capabilities
 }
 
-var RegisterListSolarGeneric = dataflow.Registers{
-	dataflow.CreateEnumRegisterStruct(
+var RegisterListSolarGeneric = VictronRegisters{
+	CreateEnumRegisterStruct(
 		"Generic",
 		"DeviceMode",
 		"Device mode",
@@ -60,7 +56,7 @@ var RegisterListSolarGeneric = dataflow.Registers{
 		},
 		400,
 	),
-	dataflow.CreateEnumRegisterStruct(
+	CreateEnumRegisterStruct(
 		"Essential",
 		"DeviceState",
 		"Device state",
@@ -84,8 +80,8 @@ var RegisterListSolarGeneric = dataflow.Registers{
 	// skipped Device off Reason Bitmask
 }
 
-var RegisterListSolarSettings = dataflow.Registers{
-	dataflow.CreateEnumRegisterStruct(
+var RegisterListSolarSettings = VictronRegisters{
+	CreateEnumRegisterStruct(
 		"Settings",
 		"AdaptiveMode",
 		"Adaptive mode",
@@ -97,7 +93,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		},
 		500,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Settings",
 		"AutomaticEqualisationMode",
 		"Automatic equalisation mode",
@@ -108,7 +104,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		"",
 		501,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Settings",
 		"BatteryAbsorptionTimeLimit",
 		"Battery absorption time limit",
@@ -119,7 +115,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		"h",
 		502,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Settings",
 		"BatteryAbsorptionVoltage",
 		"Battery absorption voltage",
@@ -130,7 +126,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		"V",
 		503,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Settings",
 		"BatteryFloatVoltage",
 		"Battery float voltage",
@@ -141,7 +137,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		"V",
 		504,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Settings",
 		"BatteryEqualisationVoltage",
 		"Battery equalisation voltage",
@@ -152,7 +148,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		"V",
 		505,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Settings",
 		"BatteryTempCompensation",
 		"Battery temperature compensation",
@@ -163,7 +159,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		"mV/K",
 		506,
 	),
-	dataflow.CreateEnumRegisterStruct(
+	CreateEnumRegisterStruct(
 		"Settings",
 		"BatteryType",
 		"Battery type",
@@ -182,7 +178,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		},
 		507,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Settings",
 		"BatteryMaximumCurrent",
 		"Battery maximum current",
@@ -193,7 +189,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		"A",
 		508,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Settings",
 		"BatteryVoltage",
 		"Battery voltage",
@@ -204,7 +200,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		"V",
 		509,
 	),
-	dataflow.CreateEnumRegisterStruct(
+	CreateEnumRegisterStruct(
 		"Settings",
 		"BatteryVoltageSetting",
 		"Battery voltage setting",
@@ -219,7 +215,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		},
 		511,
 	),
-	dataflow.CreateEnumRegisterStruct(
+	CreateEnumRegisterStruct(
 		"Settings",
 		"BmsPresent",
 		"BMS present",
@@ -231,7 +227,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		},
 		512,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Settings",
 		"TailCurrent",
 		"Tail current",
@@ -242,7 +238,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		"A",
 		513,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Settings",
 		"LowTempCurrent",
 		"Low temperature charge current",
@@ -253,7 +249,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		"A",
 		514,
 	),
-	dataflow.CreateEnumRegisterStruct(
+	CreateEnumRegisterStruct(
 		"Settings",
 		"AutoEqualiseStop",
 		"Auto equalise stop on voltage",
@@ -265,7 +261,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		},
 		515,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Settings",
 		"EqualisationCurrentLevel",
 		"Equalisation current level",
@@ -276,7 +272,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		"%",
 		516,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Settings",
 		"EqualisationDuration",
 		"Equalisation duration",
@@ -287,7 +283,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		"h",
 		517,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Settings",
 		"ReBulkVoltageOffset",
 		"Re-bulk voltage offset",
@@ -298,7 +294,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 		"V",
 		518,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Settings",
 		"BatteryLowTemperatureLevel",
 		"Battery low temperature level",
@@ -311,7 +307,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 	),
 	/*
 		// todo: fetch depending on firmware version
-		dataflow.CreateNumberRegisterStruct(
+		CreateNumberRegisterStruct(
 			"Settings",
 			"VoltageCompensation",
 			"Voltage compensation",
@@ -324,8 +320,8 @@ var RegisterListSolarSettings = dataflow.Registers{
 	*/
 }
 
-var RegisterListSolarChargerData = dataflow.Registers{
-	dataflow.CreateNumberRegisterStruct(
+var RegisterListSolarChargerData = VictronRegisters{
+	CreateNumberRegisterStruct(
 		"Essential",
 		"BatteryTemperature",
 		"Battery temperature",
@@ -336,7 +332,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 		"K",
 		5,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Charger",
 		"ChargerMaximumCurrent",
 		"Charger maximum current",
@@ -347,7 +343,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 		"A",
 		201,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Charger",
 		"SystemYield",
 		"System yield",
@@ -358,7 +354,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 		"kWh",
 		202,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Charger",
 		"SystemYieldResettable",
 		"System yield (resettable)",
@@ -369,7 +365,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 		"kWh",
 		203,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Charger",
 		"ChargerInternalTemperature",
 		"Charger internal temperature",
@@ -380,7 +376,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 		"C",
 		204,
 	),
-	dataflow.CreateEnumRegisterStruct(
+	CreateEnumRegisterStruct(
 		"Generic",
 		"ChargerErrorCode",
 		"Charger error",
@@ -409,7 +405,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 		},
 		401,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Essential",
 		"ChargerCurrent",
 		"Charger current",
@@ -420,7 +416,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 		"A",
 		1,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Essential",
 		"ChargerVoltage",
 		"Charger voltage",
@@ -432,7 +428,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 		2,
 	),
 	// skipped Additional charger state info (bitmask)
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Essential",
 		"YieldToday",
 		"Yield today",
@@ -443,7 +439,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 		"kWh",
 		3,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Charger",
 		"MaximumPowerToday",
 		"Maximum power today",
@@ -454,7 +450,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 		"W",
 		205,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Essential",
 		"YieldYesterday",
 		"Yield yesterday",
@@ -465,7 +461,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 		"kWh",
 		4,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Charger",
 		"MaximumPowerYesterday",
 		"Maximum power yesterday",
@@ -483,8 +479,8 @@ var RegisterListSolarChargerData = dataflow.Registers{
 	// skipped adjustable voltage maximum
 }
 
-var RegisterListSolarPanelData = dataflow.Registers{
-	dataflow.CreateNumberRegisterStruct(
+var RegisterListSolarPanelData = VictronRegisters{
+	CreateNumberRegisterStruct(
 		"Essential",
 		"PanelPower",
 		"Panel power",
@@ -495,7 +491,7 @@ var RegisterListSolarPanelData = dataflow.Registers{
 		"W",
 		0,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Panel",
 		"PanelVoltage",
 		"Panel voltage",
@@ -506,7 +502,7 @@ var RegisterListSolarPanelData = dataflow.Registers{
 		"V",
 		100,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Panel",
 		"PanelCurrent",
 		"Panel current",
@@ -517,7 +513,7 @@ var RegisterListSolarPanelData = dataflow.Registers{
 		"A",
 		101,
 	),
-	dataflow.CreateNumberRegisterStruct(
+	CreateNumberRegisterStruct(
 		"Panel",
 		"PanelMaximumVoltage",
 		"Panel maximum voltage",
@@ -528,7 +524,7 @@ var RegisterListSolarPanelData = dataflow.Registers{
 		"V",
 		102,
 	),
-	dataflow.CreateEnumRegisterStruct(
+	CreateEnumRegisterStruct(
 		"Panel",
 		"TrackerMode",
 		"Tracker mode",
@@ -543,7 +539,7 @@ var RegisterListSolarPanelData = dataflow.Registers{
 	),
 }
 
-var RegisterListSolar = dataflow.MergeRegisters(
+var RegisterListSolar = MergeRegisters(
 	RegisterListSolarPanelData,
 	RegisterListSolarChargerData,
 	RegisterListSolarProduct,

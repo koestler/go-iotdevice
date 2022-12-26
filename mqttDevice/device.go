@@ -145,28 +145,20 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 
 	// create new register
 	var r dataflow.Register
+	var registerType dataflow.RegisterType = dataflow.TextRegister
+
 	if msg.NumericValue != nil {
-		r = dataflow.CreateNumberRegisterStruct(
-			msg.Category,
-			registerName,
-			msg.Description,
-			0,
-			false,
-			true,
-			1,
-			msg.Unit,
-			msg.Sort,
-		)
-	} else {
-		r = dataflow.CreateTextRegisterStruct(
-			msg.Category,
-			registerName,
-			msg.Description,
-			0,
-			false,
-			msg.Sort,
-		)
+		registerType = dataflow.NumberRegister
 	}
+
+	r = dataflow.CreateRegisterStruct(
+		msg.Category,
+		registerName,
+		msg.Description,
+		registerType,
+		msg.Unit,
+		msg.Sort,
+	)
 
 	// add the register into the list
 	c.registersMutex.Lock()

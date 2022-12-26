@@ -5,6 +5,7 @@
 - handle case of startup when usb-serial is present but no Victron device is connected
 - redo / check homeassistant integration using mqtt realtime messages
 - device: use context instead of shutdown channel?
-- make dataflow.Register type non-victron specific
 - add boolean registers
 - add output registers
+- victron: remove phoenix (there is no docu for vedirect protocol)
+- victron: fetch VoltageCompensation depending on firmware version[TODO.md](TODO.md)

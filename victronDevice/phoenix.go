@@ -1,9 +1,5 @@
 package victronDevice
 
-import (
-	"github.com/koestler/go-iotdevice/dataflow"
-)
+var RegisterPhoenixInverter = VictronRegisters{}
 
-var RegisterPhoenixInverter = dataflow.Registers{}
-
-var RegisterPhoenixSmartCharger = dataflow.Registers{}
+var RegisterPhoenixSmartCharger = VictronRegisters{}

@@ -7,7 +7,7 @@ type Registers []Register
 type RegisterType int
 
 const (
-	StringRegister RegisterType = iota
+	TextRegister RegisterType = iota
 	NumberRegister
 	EnumRegister
 )
@@ -16,97 +16,33 @@ type Register interface {
 	Category() string
 	Name() string
 	Description() string
-	Address() uint16
-	Static() bool
-	Type() RegisterType
+	RegisterType() RegisterType
 	Unit() string
 	Sort() int
 }
 
 type RegisterStruct struct {
-	category    string
-	name        string
-	description string
-	address     uint16
-	static      bool
-	sort        int
+	category     string
+	name         string
+	description  string
+	registerType RegisterType
+	unit         string
+	sort         int
 }
 
-type TextRegisterStruct struct {
-	RegisterStruct
-}
-
-type NumberRegisterStruct struct {
-	RegisterStruct
-	signed bool
-	factor int
-	unit   string
-}
-
-type EnumRegisterStruct struct {
-	RegisterStruct
-	enum map[int]string
-}
-
-func CreateTextRegisterStruct(
+func CreateRegisterStruct(
 	category, name, description string,
-	address uint16,
-	static bool,
-	sort int,
-) TextRegisterStruct {
-	return TextRegisterStruct{
-		RegisterStruct{
-			category:    category,
-			name:        name,
-			description: description,
-			address:     address,
-			static:      static,
-			sort:        sort,
-		},
-	}
-}
-
-func CreateNumberRegisterStruct(
-	category, name, description string,
-	address uint16,
-	static bool,
-	signed bool,
-	factor int,
+	registerType RegisterType,
 	unit string,
 	sort int,
-) NumberRegisterStruct {
-	return NumberRegisterStruct{
-		RegisterStruct: RegisterStruct{
-			category:    category,
-			name:        name,
-			description: description,
-			address:     address,
-			static:      static,
-			sort:        sort,
-		},
-		signed: signed,
-		factor: factor,
-		unit:   unit,
-	}
-}
-
-func CreateEnumRegisterStruct(
-	category, name, description string,
-	address uint16,
-	static bool,
-	enum map[int]string,
-	sort int,
-) EnumRegisterStruct {
-	return EnumRegisterStruct{
-		RegisterStruct: RegisterStruct{
-			category:    category,
-			name:        name,
-			description: description,
-			address:     address,
-			static:      static,
-			sort:        sort,
-		},
-		enum: enum,
+) RegisterStruct {
+	return RegisterStruct{
+		category:     category,
+		name:         name,
+		description:  description,
+		registerType: registerType,
+		unit:         unit,
+		sort:         sort,
 	}
 }
 
@@ -122,86 +58,25 @@ func (r RegisterStruct) Description() string {
 	return r.description
 }
 
-func (r RegisterStruct) Address() uint16 {
-	return r.address
+func (r RegisterStruct) RegisterType() RegisterType {
+	return r.registerType
 }
 
-func (r RegisterStruct) Static() bool {
-	return r.static
+func (r RegisterStruct) Unit() string {
+	return r.unit
 }
 
 func (r RegisterStruct) Sort() int {
 	return r.sort
 }
 
-func (r TextRegisterStruct) Unit() string {
-	return ""
-}
-
-func (r EnumRegisterStruct) Unit() string {
-	return ""
-}
-
-func (r NumberRegisterStruct) Factor() int {
-	return r.factor
-}
-
-func (r NumberRegisterStruct) Unit() string {
-	return r.unit
-}
-
-func (r NumberRegisterStruct) Signed() bool {
-	return r.signed
-}
-
-func (r EnumRegisterStruct) Enum() map[int]string {
-	return r.enum
-}
-
-func (r TextRegisterStruct) Type() RegisterType {
-	return StringRegister
-}
-
-func (r NumberRegisterStruct) Type() RegisterType {
-	return NumberRegister
-}
-
-func (r EnumRegisterStruct) Type() RegisterType {
-	return EnumRegister
-}
-
-func MergeRegisters(maps ...Registers) (output Registers) {
-	size := len(maps)
-	if size == 0 {
-		return output
-	}
-	if size == 1 {
-		return maps[0]
-	}
-
-	numb := 0
-	for _, m := range maps {
-		numb += len(m)
-	}
-
-	output = make(Registers, numb)
-	i := 0
-	for _, m := range maps {
-		for _, v := range m {
-			output[i] = v
-			i += 1
-		}
-	}
-	return output
-}
-
 func FilterRegisters(input Registers, excludeFields []string, excludeCategories []string) (output Registers) {
 	output = make(Registers, 0, len(input))
 	for _, r := range input {
-		if registerNameExcluded(excludeFields, r) {
+		if RegisterNameExcluded(excludeFields, r) {
 			continue
 		}
-		if registerCategoryExcluded(excludeCategories, r) {
+		if RegisterCategoryExcluded(excludeCategories, r) {
 			continue
 		}
 		output = append(output, r)
@@ -214,7 +89,7 @@ func SortRegisters(input Registers) Registers {
 	return input
 }
 
-func registerNameExcluded(exclude []string, r Register) bool {
+func RegisterNameExcluded(exclude []string, r Register) bool {
 	for _, e := range exclude {
 		if e == r.Name() {
 			return true
@@ -223,7 +98,7 @@ func registerNameExcluded(exclude []string, r Register) bool {
 	return false
 }
 
-func registerCategoryExcluded(exclude []string, r Register) bool {
+func RegisterCategoryExcluded(exclude []string, r Register) bool {
 	for _, e := range exclude {
 		if e == r.Category() {
 			return true

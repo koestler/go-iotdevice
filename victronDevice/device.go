@@ -23,7 +23,7 @@ type DeviceStruct struct {
 	source *dataflow.Source
 
 	deviceId         vedirect.VeProduct
-	registers        dataflow.Registers
+	registers        VictronRegisters
 	lastUpdated      time.Time
 	lastUpdatedMutex sync.RWMutex
 	model            string
@@ -77,7 +77,11 @@ func (c *DeviceStruct) ShutdownChan() chan struct{} {
 }
 
 func (c *DeviceStruct) Registers() dataflow.Registers {
-	return c.registers
+	ret := make(dataflow.Registers, len(c.registers))
+	for i, r := range c.registers {
+		ret[i] = r.(dataflow.Register)
+	}
+	return ret
 }
 
 func (c *DeviceStruct) SetLastUpdatedNow() {

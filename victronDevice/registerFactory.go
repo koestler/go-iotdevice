@@ -1,11 +1,10 @@
 package victronDevice
 
 import (
-	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/vedirect"
 )
 
-func RegisterFactoryByProduct(product vedirect.VeProduct) dataflow.Registers {
+func RegisterFactoryByProduct(product vedirect.VeProduct) VictronRegisters {
 	switch product {
 	case vedirect.VeProductBMV700:
 		return RegisterListBmv700

@@ -225,30 +225,24 @@ func (ds *DeviceStruct) addIgnoreRegister(category, registerName, description, u
 	// create new register
 	sort := ds.getRegisterSort(category)
 	var r dataflow.Register
+	var registerType dataflow.RegisterType
+
 	if dataType == "numeric" {
-		r = dataflow.CreateNumberRegisterStruct(
-			category,
-			registerName,
-			description,
-			0,
-			false,
-			true,
-			1,
-			unit,
-			sort,
-		)
+		registerType = dataflow.NumberRegister
 	} else if dataType == "text" {
-		r = dataflow.CreateTextRegisterStruct(
-			category,
-			registerName,
-			description,
-			0,
-			false,
-			sort,
-		)
+		registerType = dataflow.TextRegister
 	} else {
 		panic("unknown dataType: " + dataType)
 	}
+
+	r = dataflow.CreateRegisterStruct(
+		category,
+		registerName,
+		description,
+		registerType,
+		unit,
+		sort,
+	)
 
 	// add the register into the list
 	ds.registersMutex.Lock()

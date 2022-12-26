@@ -44,7 +44,7 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 			return fmt.Errorf("no registers found for deviceId=%x", deviceId)
 		}
 		// filter registers by skip list
-		c.registers = dataflow.FilterRegisters(registers, c.deviceConfig.SkipFields(), c.deviceConfig.SkipCategories())
+		c.registers = FilterRegisters(registers, c.deviceConfig.SkipFields(), c.deviceConfig.SkipCategories())
 	}
 
 	// start victron reader
@@ -75,7 +75,7 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 						continue
 					}
 
-					if numberRegister, ok := register.(dataflow.NumberRegisterStruct); ok {
+					if numberRegister, ok := register.(NumberRegisterStruct); ok {
 						var value float64
 						if numberRegister.Signed() {
 							var intValue int64
@@ -96,7 +96,7 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 								value/float64(numberRegister.Factor()),
 							)
 						}
-					} else if _, ok := register.(dataflow.TextRegisterStruct); ok {
+					} else if _, ok := register.(TextRegisterStruct); ok {
 						value, err := vd.VeCommandGetString(register.Address())
 
 						if err != nil {
@@ -108,7 +108,7 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 								strings.TrimSpace(value),
 							)
 						}
-					} else if enumRegister, ok := register.(dataflow.EnumRegisterStruct); ok {
+					} else if enumRegister, ok := register.(EnumRegisterStruct); ok {
 						var intValue uint64
 						intValue, err = vd.VeCommandGetUint(register.Address())
 

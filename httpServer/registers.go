@@ -57,7 +57,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 						Category:    v.Category(),
 						Name:        v.Name(),
 						Description: v.Description(),
-						Type:        typeString(v.Type()),
+						Type:        typeString(v.RegisterType()),
 						Unit:        v.Unit(),
 						Sort:        v.Sort(),
 					}
@@ -74,7 +74,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 
 func typeString(rt dataflow.RegisterType) string {
 	switch rt {
-	case dataflow.StringRegister:
+	case dataflow.TextRegister:
 		return "string"
 	case dataflow.NumberRegister:
 		return "number"
