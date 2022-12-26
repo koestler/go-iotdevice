@@ -78,6 +78,8 @@ func typeString(rt dataflow.RegisterType) string {
 		return "string"
 	case dataflow.NumberRegister:
 		return "number"
+	case dataflow.EnumRegister:
+		return "enum"
 	default:
 		return ""
 	}
