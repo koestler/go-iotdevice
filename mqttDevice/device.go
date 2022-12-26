@@ -137,12 +137,7 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 	}
 	c.registersMutex.RUnlock()
 
-	// add the register into the list
-	c.registersMutex.Lock()
-	defer c.registersMutex.Unlock()
-
 	var r dataflow.Register
-
 	if msg.NumericValue != nil {
 		r = dataflow.CreateNumberRegisterStruct(
 			msg.Category,
@@ -165,6 +160,10 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 			msg.Sort,
 		)
 	}
+
+	// add the register into the list
+	c.registersMutex.Lock()
+	defer c.registersMutex.Unlock()
 
 	c.registers[registerName] = r
 	return r

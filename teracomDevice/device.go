@@ -1,7 +1,7 @@
 package teracomDevice
 
 import (
-	"crypto/tls"
+	"encoding/xml"
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
@@ -25,7 +25,7 @@ type DeviceStruct struct {
 	deviceConfig  device.Config
 	teracomConfig Config
 
-	source *dataflow.Source
+	output chan dataflow.Value
 
 	httpClient    *http.Client
 	statusRequest *http.Request
@@ -46,28 +46,24 @@ func RunDevice(
 ) (device device.Device, err error) {
 	// setup output chain
 	output := make(chan dataflow.Value, 128)
+
+	// create source and connect to storage
 	source := dataflow.CreateSource(output)
-	// pipe all data to next stage
 	source.Append(storage)
 
 	c := &DeviceStruct{
 		deviceConfig:  deviceConfig,
 		teracomConfig: teracomConfig,
-		source:        source,
+		output:        output,
 
-		httpClient:  &http.Client{
+		httpClient: &http.Client{
 			// this tool is designed to serve cameras running on the local network
 			// -> us a relatively short timeout
 			Timeout: 10 * time.Second,
-
-			// ubnt cameras don't use valid certificates
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			},
 		},
 
-		registers:     make(map[string]dataflow.Register),
-		shutdown:      make(chan struct{}),
+		registers: make(map[string]dataflow.Register),
+		shutdown:  make(chan struct{}),
 	}
 
 	// setup request
@@ -76,19 +72,19 @@ func RunDevice(
 	}
 
 	// start polling the device
-	c.startPolling(output)
+	c.startPolling()
 
 	return c, nil
 }
 
-func (c *DeviceStruct) startPolling(output chan dataflow.Value) {
+func (c *DeviceStruct) startPolling() {
 	if c.deviceConfig.LogDebug() {
 		log.Printf("teracomDevice[%s]: start polling, interval=%s", c.deviceConfig.Name(), c.teracomConfig.PollInterval())
 	}
 
 	// start source go routine
 	go func() {
-		defer close(output)
+		defer close(c.output)
 
 		ticker := time.NewTicker(c.teracomConfig.PollInterval())
 
@@ -99,10 +95,19 @@ func (c *DeviceStruct) startPolling(output chan dataflow.Value) {
 			case <-ticker.C:
 				log.Printf("teracomDevice[%s]: tick", c.deviceConfig.Name())
 
-				xml, err := c.getStatusXml()
-				log.Printf("teracomDevice[%s]: err=%s", c.deviceConfig.Name(), err)
-				log.Printf("teracomDevice[%s]: xml=%s", c.deviceConfig.Name(), xml)
+				statusXml, err := c.getStatusXml()
+				if err != nil {
+					log.Printf("teracomDevice[%s]: canot get status, err=%s", c.deviceConfig.Name(), err)
+					continue
+				}
 
+				var status StatusStruct
+				err = xml.Unmarshal(statusXml, &status)
+				if err != nil {
+					log.Printf("teracomDevice[%s]: canot parse xml, err=%s", c.deviceConfig.Name(), err)
+					continue
+				}
+				c.extractRegistersAndValues(status)
 				c.SetLastUpdatedNow()
 			}
 		}
@@ -112,7 +117,9 @@ func (c *DeviceStruct) startPolling(output chan dataflow.Value) {
 func (c *DeviceStruct) getStatusRequest() (request *http.Request, err error) {
 	addr := c.teracomConfig.Url().JoinPath("status.xml")
 	request, err = http.NewRequest("GET", addr.String(), nil)
-	if err != nil { return }
+	if err != nil {
+		return
+	}
 	request.SetBasicAuth(c.teracomConfig.Username(), c.teracomConfig.Password())
 
 	return
@@ -142,6 +149,55 @@ func (c *DeviceStruct) Config() device.Config {
 
 func (c *DeviceStruct) ShutdownChan() chan struct{} {
 	return c.shutdown
+}
+
+func (c *DeviceStruct) addIgnoreRegister(category, registerName, description, unit, dataType string) dataflow.Register {
+	// check if this register exists already and the properties are still the same
+	c.registersMutex.RLock()
+	if r, ok := c.registers[registerName]; ok {
+		if r.Category() == category &&
+			r.Description() == description &&
+			r.Unit() == unit {
+			c.registersMutex.RUnlock()
+			return r
+		}
+	}
+
+	numbRegisters := len(c.registers)
+	c.registersMutex.RUnlock()
+
+	var r dataflow.Register
+	if dataType == "numeric" {
+		r = dataflow.CreateNumberRegisterStruct(
+			category,
+			registerName,
+			description,
+			0,
+			false,
+			true,
+			1,
+			unit,
+			numbRegisters, // sort the registers in the order the were first seen
+		)
+	} else if dataType == "text" {
+		r = dataflow.CreateTextRegisterStruct(
+			category,
+			registerName,
+			description,
+			0,
+			false,
+			numbRegisters,
+		)
+	} else {
+		panic("unknown dataType: " + dataType)
+	}
+
+	// add the register into the list
+	c.registersMutex.Lock()
+	defer c.registersMutex.Unlock()
+
+	c.registers[registerName] = r
+	return r
 }
 
 func (c *DeviceStruct) Registers() dataflow.Registers {
