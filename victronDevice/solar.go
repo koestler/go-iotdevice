@@ -78,7 +78,7 @@ var RegisterListSolarGeneric = dataflow.Registers{
 			252: "External Control",
 			255: "Unavailable",
 		},
-		4,
+		6,
 	),
 	// skipped Remote control used
 	// skipped Device off Reason Bitmask
@@ -455,7 +455,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 		205,
 	),
 	dataflow.CreateNumberRegisterStruct(
-		"Charger",
+		"Essential",
 		"YieldYesterday",
 		"Yield yesterday",
 		0xEDD1,
@@ -463,7 +463,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 		false,
 		100,
 		"kWh",
-		206,
+		4,
 	),
 	dataflow.CreateNumberRegisterStruct(
 		"Charger",
