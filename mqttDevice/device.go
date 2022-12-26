@@ -129,7 +129,7 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 	if r, ok := c.registers[registerName]; ok {
 		if r.Category() == msg.Category &&
 			r.Description() == msg.Description &&
-			((r.Unit() == nil && msg.Unit == nil) || *r.Unit() == *msg.Unit) &&
+			r.Unit() == msg.Unit &&
 			r.Sort() == msg.Sort {
 			c.registersMutex.RUnlock()
 			return r
@@ -144,11 +144,6 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 	var r dataflow.Register
 
 	if msg.NumericValue != nil {
-		unit := ""
-		if msg.Unit != nil {
-			unit = *msg.Unit
-		}
-
 		r = dataflow.CreateNumberRegisterStruct(
 			msg.Category,
 			registerName,
@@ -157,7 +152,7 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 			false,
 			true,
 			1,
-			unit,
+			msg.Unit,
 			msg.Sort,
 		)
 	} else {

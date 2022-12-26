@@ -30,14 +30,7 @@ type NumericRegisterValue struct {
 }
 
 func (v NumericRegisterValue) String() string {
-	var unit string
-	if unitP := v.Register().Unit(); unitP != nil {
-		unit = *unitP
-	} else {
-		unit = ""
-	}
-
-	return fmt.Sprintf("%s=%f%s", v.Register().Name(), v.value, unit)
+	return fmt.Sprintf("%s=%f%s", v.Register().Name(), v.value, v.Register().Unit())
 }
 
 func (v NumericRegisterValue) Value() float64 {

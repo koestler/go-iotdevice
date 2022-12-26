@@ -10,12 +10,12 @@ import (
 )
 
 type registerResponse struct {
-	Category    string  `json:"category" example:"Monitor"`
-	Name        string  `json:"name" example:"PanelPower"`
-	Description string  `json:"description" example:"Panel power"`
-	Type        string  `json:"type" example:"numeric"`
-	Unit        *string `json:"unit" example:"W"`
-	Sort        int     `json:"sort" example:"100"`
+	Category    string `json:"category" example:"Monitor"`
+	Name        string `json:"name" example:"PanelPower"`
+	Description string `json:"description" example:"Panel power"`
+	Type        string `json:"type" example:"numeric"`
+	Unit        string `json:"unit" example:"W"`
+	Sort        int    `json:"sort" example:"100"`
 }
 
 // setupRegisters godoc

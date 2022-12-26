@@ -30,12 +30,7 @@ func convertValuesToNumericTelemetryValues(values []dataflow.Value) (ret map[str
 		if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
 			ret[value.Register().Name()] = NumericTelemetryValue{
 				Value: numeric.Value(),
-				Unit: func() string {
-					if u := numeric.Register().Unit(); u != nil {
-						return *u
-					}
-					return ""
-				}(),
+				Unit:  numeric.Register().Unit(),
 			}
 		}
 	}

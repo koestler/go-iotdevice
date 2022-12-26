@@ -10,7 +10,7 @@ type RealtimeMessage struct {
 	Description  string   `json:"Description"`
 	NumericValue *float64 `json:"NumericValue,omitempty"`
 	TextValue    *string  `json:"TextValue,omitempty"`
-	Unit         *string  `json:"Unit,omitempty"`
+	Unit         string   `json:"Unit,omitempty"`
 	Sort         int      `json:"Sort"`
 }
 
@@ -40,8 +40,8 @@ func getRealtimeTopic(
 ) string {
 	topic = strings.Replace(topic, "%DeviceName%", device.Config().Name(), 1)
 	topic = strings.Replace(topic, "%ValueName%", register.Name(), 1)
-	if valueUnit := register.Unit(); valueUnit != nil {
-		topic = strings.Replace(topic, "%ValueUnit%", *valueUnit, 1)
+	if valueUnit := register.Unit(); valueUnit != "" {
+		topic = strings.Replace(topic, "%ValueUnit%", valueUnit, 1)
 	}
 
 	return topic

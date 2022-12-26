@@ -19,7 +19,7 @@ type Register interface {
 	Address() uint16
 	Static() bool
 	Type() RegisterType
-	Unit() *string
+	Unit() string
 	Sort() int
 }
 
@@ -40,7 +40,7 @@ type NumberRegisterStruct struct {
 	RegisterStruct
 	signed bool
 	factor int
-	unit   *string
+	unit   string
 }
 
 type EnumRegisterStruct struct {
@@ -75,11 +75,6 @@ func CreateNumberRegisterStruct(
 	unit string,
 	sort int,
 ) NumberRegisterStruct {
-	var u *string = nil
-	if len(unit) > 0 {
-		u = &unit
-	}
-
 	return NumberRegisterStruct{
 		RegisterStruct: RegisterStruct{
 			category:    category,
@@ -91,7 +86,7 @@ func CreateNumberRegisterStruct(
 		},
 		signed: signed,
 		factor: factor,
-		unit:   u,
+		unit:   unit,
 	}
 }
 
@@ -139,19 +134,19 @@ func (r RegisterStruct) Sort() int {
 	return r.sort
 }
 
-func (r TextRegisterStruct) Unit() *string {
-	return nil
+func (r TextRegisterStruct) Unit() string {
+	return ""
 }
 
-func (r EnumRegisterStruct) Unit() *string {
-	return nil
+func (r EnumRegisterStruct) Unit() string {
+	return ""
 }
 
 func (r NumberRegisterStruct) Factor() int {
 	return r.factor
 }
 
-func (r NumberRegisterStruct) Unit() *string {
+func (r NumberRegisterStruct) Unit() string {
 	return r.unit
 }
 

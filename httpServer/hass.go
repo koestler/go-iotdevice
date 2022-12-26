@@ -10,14 +10,14 @@ import (
 )
 
 type hassSensor struct {
-	Platform            string  `yaml:"platform"`
-	Name                string  `yaml:"name"`
-	StateTopic          string  `yaml:"state_topic"`
-	AvailabilityTopic   string  `yaml:"availability_topic"`
-	ValueTemplate       string  `yaml:"value_template"`
-	UnitOfMeasurement   *string `yaml:"unit_of_measurement"`
-	PayloadAvailable    string  `yaml:"payload_available"`
-	PayloadNotAvailable string  `yaml:"payload_not_available"`
+	Platform            string `yaml:"platform"`
+	Name                string `yaml:"name"`
+	StateTopic          string `yaml:"state_topic"`
+	AvailabilityTopic   string `yaml:"availability_topic"`
+	ValueTemplate       string `yaml:"value_template"`
+	UnitOfMeasurement   string `yaml:"unit_of_measurement,omitempty"`
+	PayloadAvailable    string `yaml:"payload_available"`
+	PayloadNotAvailable string `yaml:"payload_not_available"`
 }
 
 // setupHassYaml godoc
