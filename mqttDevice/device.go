@@ -129,7 +129,7 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 	if r, ok := c.registers[registerName]; ok {
 		if r.Category() == msg.Category &&
 			r.Description() == msg.Description &&
-			r.Unit() == msg.Unit &&
+			((r.Unit() == nil && msg.Unit == nil) || *r.Unit() == *msg.Unit) &&
 			r.Sort() == msg.Sort {
 			c.registersMutex.RUnlock()
 			return r
