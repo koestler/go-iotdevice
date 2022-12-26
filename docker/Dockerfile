@@ -1,7 +1,7 @@
 # build backend
-FROM golang:1.19-alpine as go-builder
+FROM golang:1.19 as go-builder
 
-RUN apk add build-base git
+RUN apt-get update && apt-get install -y git
 
 WORKDIR /app
 COPY . /app
@@ -14,7 +14,8 @@ RUN  VERSION=`git describe --always --tags`; \
      go build -ldflags="-s -w -X main.buildVersion=$VERSION -X main.buildTime=$BUILD_TIME" -o /go-iotdevice
 
 # used to generate /etc/passwd /etc/group
-RUN addgroup -S app && adduser -S app -G app
+RUN groupadd -g 1000 app && \
+    useradd -r -u 1000 -g app app
 RUN chown app:app /go-iotdevice
 
 # use already compiled frontend
