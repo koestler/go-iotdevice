@@ -8,4 +8,3 @@
 - make dataflow.Register type non-victron specific
 - add boolean registers
 - add output registers
-- httpDevices: support skip categories / fields
