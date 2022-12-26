@@ -4,7 +4,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
-	"log"
 	"strconv"
 )
 
@@ -16,15 +15,14 @@ func (c *TeracomDevice) GetPath() string {
 	return "status.xml"
 }
 
-func (c *TeracomDevice) HandleResponse(body []byte) bool {
+func (c *TeracomDevice) HandleResponse(body []byte) error {
 	var status StatusStruct
 	if err := xml.Unmarshal(body, &status); err != nil {
-		log.Printf("httpDevice[%s]: canot parse xml, err=%s", c.ds.deviceConfig.Name(), err)
-		return false
+		return fmt.Errorf("cannot parse xml: %s", err)
 	}
 	c.extractRegistersAndValues(status)
 
-	return true
+	return nil
 }
 
 func (c *TeracomDevice) GetCategorySort(category string) int {

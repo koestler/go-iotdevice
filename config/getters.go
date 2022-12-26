@@ -212,6 +212,10 @@ func (c HttpDeviceConfig) PollInterval() time.Duration {
 	return c.pollInterval
 }
 
+func (c HttpDeviceConfig) PollIntervalMaxBackoff() time.Duration {
+	return c.pollIntervalMaxBackoff
+}
+
 func (c MqttDeviceConfig) MqttTopics() []string {
 	return c.mqttTopics
 }

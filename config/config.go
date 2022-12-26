@@ -578,6 +578,21 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string, mqttClients []*M
 		ret.pollInterval = pollInterval
 	}
 
+	if len(c.PollIntervalMaxBackoff) < 1 {
+		// use default 10s
+		ret.pollIntervalMaxBackoff = 10 * time.Second
+	} else if pollIntervalMaxBackoff, e := time.ParseDuration(c.PollIntervalMaxBackoff); e != nil {
+		err = append(err, fmt.Errorf("HttpDevices->%s->PollIntervalMaxBackoff='%s' parse error: %s",
+			name, c.PollIntervalMaxBackoff, e,
+		))
+	} else if pollIntervalMaxBackoff < 100*time.Millisecond {
+		err = append(err, fmt.Errorf("HttpDevices->%s->PollIntervalMaxBackoff='%s' must be >=100ms",
+			name, c.PollIntervalMaxBackoff,
+		))
+	} else {
+		ret.pollIntervalMaxBackoff = pollIntervalMaxBackoff
+	}
+
 	return
 }
 

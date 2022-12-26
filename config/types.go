@@ -69,11 +69,12 @@ type VictronDeviceConfig struct {
 
 type HttpDeviceConfig struct {
 	DeviceConfig
-	url          *url.URL       // mandatory: how to connect to the device. eg. http://device0.local/
-	kind         HttpDeviceKind // mandatory: what connection protocol is used
-	username     string         // mandatory: username used to login
-	password     string         // mandatory: password used to login
-	pollInterval time.Duration  // optional: default 1s
+	url                    *url.URL       // mandatory: how to connect to the device. eg. http://device0.local/
+	kind                   HttpDeviceKind // mandatory: what connection protocol is used
+	username               string         // mandatory: username used to login
+	password               string         // mandatory: password used to login
+	pollInterval           time.Duration  // optional: default 1s
+	pollIntervalMaxBackoff time.Duration  // optional: default 10s
 }
 
 type MqttDeviceConfig struct {

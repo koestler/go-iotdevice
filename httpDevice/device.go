@@ -20,11 +20,12 @@ type Config interface {
 	Username() string
 	Password() string
 	PollInterval() time.Duration
+	PollIntervalMaxBackoff() time.Duration
 }
 
 type Implementation interface {
 	GetPath() string
-	HandleResponse(body []byte) bool
+	HandleResponse(body []byte) error
 	GetCategorySort(category string) int
 }
 
@@ -92,7 +93,7 @@ func RunDevice(
 	}
 
 	// start polling the device
-	ds.startPolling()
+	ds.pollingRoutine()
 
 	return ds, nil
 }
@@ -119,46 +120,80 @@ func (ds *DeviceStruct) getRegisterSort(category string) int {
 	}
 }
 
-func (ds *DeviceStruct) startPolling() {
+func (ds *DeviceStruct) pollingRoutine() {
 	if ds.deviceConfig.LogDebug() {
 		log.Printf("httpDevice[%s]: start polling, interval=%s", ds.deviceConfig.Name(), ds.httpConfig.PollInterval())
 	}
 
 	// start source go routine
+	errorsInARow := 0
+	interval := ds.getPollInterval(errorsInARow)
 	go func() {
 		defer close(ds.output)
-
-		ticker := time.NewTicker(ds.httpConfig.PollInterval())
-
+		ticker := time.NewTicker(interval)
 		for {
 			select {
 			case <-ds.shutdown:
 				return
 			case <-ticker.C:
-				resp, err := ds.httpClient.Do(ds.pollRequest)
-				if err != nil {
-					log.Printf("httpDevice[%s]: cannot get status: %s", ds.deviceConfig.Name(), err)
-					return
+				if err := ds.poll(); err != nil {
+					log.Printf("httpDevice[%s]: error: %s", ds.deviceConfig.Name(), err)
+					errorsInARow += 1
+				} else {
+					errorsInARow = 0
 				}
 
-				if resp.StatusCode != http.StatusOK {
-					err = fmt.Errorf("GET %s failed with code: %d", ds.pollRequest.URL.String(), resp.StatusCode)
-					return
+				// change poll interval on error
+				if newInterval := ds.getPollInterval(errorsInARow); interval != newInterval {
+					interval = newInterval
+					ticker.Reset(interval)
+					if errorsInARow == 0 {
+						log.Printf("httpDevice[%s]: recoverd, next poll in: %s", ds.deviceConfig.Name(), interval)
+					}
 				}
-
-				body, err := io.ReadAll(resp.Body)
-				resp.Body.Close()
-				if err != nil {
-					log.Printf("httpDevice[%s]: cannot get response body: %s", ds.deviceConfig.Name(), err)
-					return
-				}
-
-				if ds.impl.HandleResponse(body) {
-					ds.SetLastUpdatedNow()
+				if errorsInARow > 0 {
+					log.Printf("httpDevice[%s]: exponential backoff, retry in: %s", ds.deviceConfig.Name(), interval)
 				}
 			}
 		}
 	}()
+}
+
+func (ds *DeviceStruct) getPollInterval(errorsInARow int) time.Duration {
+	var backoffFactor int64 = 1 << errorsInARow // 2^errorsInARow
+	interval := ds.httpConfig.PollInterval() * time.Duration(backoffFactor)
+	max := ds.httpConfig.PollIntervalMaxBackoff()
+	if interval > max {
+		return max
+	}
+	return interval
+}
+
+func (ds *DeviceStruct) poll() error {
+	resp, err := ds.httpClient.Do(ds.pollRequest)
+	if err != nil {
+		return fmt.Errorf("cannot get status: %s", err)
+
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("GET %s failed with code: %d", ds.pollRequest.URL.String(), resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err := resp.Body.Close(); err != nil {
+		return fmt.Errorf("error during body reader close: %s", err)
+	}
+	if err != nil {
+		return fmt.Errorf("cannot get response body: %s", err)
+	}
+
+	if err := ds.impl.HandleResponse(body); err != nil {
+		return err
+	}
+
+	ds.SetLastUpdatedNow()
+	return nil
 }
 
 func (ds *DeviceStruct) Config() device.Config {

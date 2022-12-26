@@ -63,12 +63,13 @@ type victronDeviceConfigRead struct {
 type victronDeviceConfigReadMap map[string]victronDeviceConfigRead
 
 type httpDeviceConfigRead struct {
-	General      deviceConfigRead `yaml:"General"`
-	Url          string           `yaml:"Url"`
-	Kind         string           `yaml:"Kind"`
-	Username     string           `yaml:"Username"`
-	Password     string           `yaml:"Password"`
-	PollInterval string           `yaml:"PollInterval"`
+	General                deviceConfigRead `yaml:"General"`
+	Url                    string           `yaml:"Url"`
+	Kind                   string           `yaml:"Kind"`
+	Username               string           `yaml:"Username"`
+	Password               string           `yaml:"Password"`
+	PollInterval           string           `yaml:"PollInterval"`
+	PollIntervalMaxBackoff string           `yaml:"PollIntervalMaxBackoff"`
 }
 
 type httpDeviceConfigReadMap map[string]httpDeviceConfigRead
