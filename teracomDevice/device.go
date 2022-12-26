@@ -93,8 +93,6 @@ func (c *DeviceStruct) startPolling() {
 			case <-c.shutdown:
 				return
 			case <-ticker.C:
-				log.Printf("teracomDevice[%s]: tick", c.deviceConfig.Name())
-
 				statusXml, err := c.getStatusXml()
 				if err != nil {
 					log.Printf("teracomDevice[%s]: canot get status, err=%s", c.deviceConfig.Name(), err)

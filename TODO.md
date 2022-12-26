@@ -6,3 +6,5 @@
 - redo / check homeassistant integration using mqtt realtime messages
 - device: use context instead of shutdown channel?
 - make dataflow.Register type non-victron specific
+- add boolean registers
+- add output registers
