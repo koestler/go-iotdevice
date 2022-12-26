@@ -69,13 +69,14 @@ func RunDevice(
 				}
 
 				register := c.addIgnoreRegister(registerName, realtimeMessage)
-				if v := realtimeMessage.NumericValue; v != nil {
-					output <- dataflow.NewNumericRegisterValue(deviceConfig.Name(), register, *v)
-				} else if v := realtimeMessage.TextValue; v != nil {
-					output <- dataflow.NewTextRegisterValue(deviceConfig.Name(), register, *v)
+				if register != nil {
+					if v := realtimeMessage.NumericValue; v != nil {
+						output <- dataflow.NewNumericRegisterValue(deviceConfig.Name(), register, *v)
+					} else if v := realtimeMessage.TextValue; v != nil {
+						output <- dataflow.NewTextRegisterValue(deviceConfig.Name(), register, *v)
+					}
+					c.SetLastUpdatedNow()
 				}
-				c.SetLastUpdatedNow()
-
 			})
 			counter += 1
 		}
@@ -137,6 +138,12 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 	}
 	c.registersMutex.RUnlock()
 
+	// check if register is on ignore list
+	if device.IsExcluded(registerName, msg.Category, c.deviceConfig) {
+		return nil
+	}
+
+	// create new register
 	var r dataflow.Register
 	if msg.NumericValue != nil {
 		r = dataflow.CreateNumberRegisterStruct(

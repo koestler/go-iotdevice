@@ -175,8 +175,13 @@ func (c *DeviceStruct) addIgnoreRegister(category, registerName, description, un
 	}
 	c.registersMutex.RUnlock()
 
-	sort := c.getRegisterSort(category)
+	// check if register is on ignore list
+	if device.IsExcluded(registerName, category, c.deviceConfig) {
+		return nil
+	}
 
+	// create new register
+	sort := c.getRegisterSort(category)
 	var r dataflow.Register
 	if dataType == "numeric" {
 		r = dataflow.CreateNumberRegisterStruct(

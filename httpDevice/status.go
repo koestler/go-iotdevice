@@ -113,6 +113,9 @@ func (c *DeviceStruct) text(category, registerName, description, value string) {
 	}
 
 	register := c.addIgnoreRegister(category, registerName, description, "", "text")
+	if register == nil {
+		return
+	}
 	c.output <- dataflow.NewTextRegisterValue(c.deviceConfig.Name(), register, value)
 }
 
@@ -128,6 +131,9 @@ func (c *DeviceStruct) number(category, registerName, description, unit string, 
 	}
 
 	register := c.addIgnoreRegister(category, registerName, description, unit, "numeric")
+	if register == nil {
+		return
+	}
 	c.output <- dataflow.NewNumericRegisterValue(c.deviceConfig.Name(), register, floatValue)
 }
 
@@ -145,6 +151,9 @@ func (c *DeviceStruct) boolean(category, registerName, description string, value
 	}(value)
 
 	register := c.addIgnoreRegister(category, registerName, description, "", "numeric")
+	if register == nil {
+		return
+	}
 	c.output <- dataflow.NewNumericRegisterValue(c.deviceConfig.Name(), register, numericValue)
 }
 
