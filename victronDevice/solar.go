@@ -204,17 +204,6 @@ var RegisterListSolarSettings = dataflow.Registers{
 		"V",
 		509,
 	),
-	dataflow.CreateNumberRegisterStruct(
-		"Settings",
-		"BatteryTemperature",
-		"Battery temperature",
-		0xEDEC,
-		true,
-		false,
-		100,
-		"K",
-		510,
-	),
 	dataflow.CreateEnumRegisterStruct(
 		"Settings",
 		"BatteryVoltageSetting",
