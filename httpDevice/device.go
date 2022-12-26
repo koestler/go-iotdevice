@@ -1,4 +1,4 @@
-package teracomDevice
+package httpDevice
 
 import (
 	"encoding/xml"
@@ -92,7 +92,7 @@ func (c *DeviceStruct) getRegisterSort(category string) int {
 
 func (c *DeviceStruct) startPolling() {
 	if c.deviceConfig.LogDebug() {
-		log.Printf("teracomDevice[%s]: start polling, interval=%s", c.deviceConfig.Name(), c.teracomConfig.PollInterval())
+		log.Printf("httpDevice[%s]: start polling, interval=%s", c.deviceConfig.Name(), c.teracomConfig.PollInterval())
 	}
 
 	// start source go routine
@@ -108,14 +108,14 @@ func (c *DeviceStruct) startPolling() {
 			case <-ticker.C:
 				statusXml, err := c.getStatusXml()
 				if err != nil {
-					log.Printf("teracomDevice[%s]: canot get status, err=%s", c.deviceConfig.Name(), err)
+					log.Printf("httpDevice[%s]: canot get status, err=%s", c.deviceConfig.Name(), err)
 					continue
 				}
 
 				var status StatusStruct
 				err = xml.Unmarshal(statusXml, &status)
 				if err != nil {
-					log.Printf("teracomDevice[%s]: canot parse xml, err=%s", c.deviceConfig.Name(), err)
+					log.Printf("httpDevice[%s]: canot parse xml, err=%s", c.deviceConfig.Name(), err)
 					continue
 				}
 				c.extractRegistersAndValues(status)
@@ -139,7 +139,7 @@ func (c *DeviceStruct) getStatusRequest() (request *http.Request, err error) {
 func (c *DeviceStruct) getStatusXml() (body []byte, err error) {
 	resp, err := c.httpClient.Do(c.statusRequest)
 	if err != nil {
-		log.Printf("teracomDevice[%s]: cannot get status: %s", c.deviceConfig.Name(), err)
+		log.Printf("httpDevice[%s]: cannot get status: %s", c.deviceConfig.Name(), err)
 		return
 	}
 
@@ -242,5 +242,5 @@ func (c *DeviceStruct) Model() string {
 
 func (c *DeviceStruct) Shutdown() {
 	close(c.shutdown)
-	log.Printf("teracomDevice[%s]: shutdown completed", c.deviceConfig.Name())
+	log.Printf("httpDevice[%s]: shutdown completed", c.deviceConfig.Name())
 }

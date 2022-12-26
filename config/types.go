@@ -13,7 +13,7 @@ type Config struct {
 	mqttClients    []*MqttClientConfig    // mandatory: at least 1 must be defined
 	devices        []*DeviceConfig        // aggregated over all types
 	victronDevices []*VictronDeviceConfig // optional
-	teracomDevices []*TeracomDeviceConfig // optional
+	httpDevices    []*HttpDeviceConfig    // optional
 	mqttDevices    []*MqttDeviceConfig    // optional
 	views          []*ViewConfig          // mandatory: at least 1 must be defined
 	httpServer     HttpServerConfig       // optional: default Disabled
@@ -68,7 +68,7 @@ type VictronDeviceConfig struct {
 	kind   VictronDeviceKind // mandatory: what connection protocol is used
 }
 
-type TeracomDeviceConfig struct {
+type HttpDeviceConfig struct {
 	DeviceConfig
 	url          *url.URL      // mandatory: how to connect to the device. eg. http://device0.local/
 	username     string        // mandatory: username used to login

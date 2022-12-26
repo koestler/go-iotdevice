@@ -4,9 +4,9 @@ import (
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
+	"github.com/koestler/go-iotdevice/httpDevice"
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/mqttDevice"
-	"github.com/koestler/go-iotdevice/teracomDevice"
 	"github.com/koestler/go-iotdevice/victronDevice"
 	"log"
 )
@@ -44,12 +44,12 @@ func runDevices(
 		}
 	}
 
-	for _, deviceConfig := range cfg.TeracomDevices() {
+	for _, deviceConfig := range cfg.HttpDevices() {
 		if cfg.LogWorkerStart() {
 			log.Printf("device[%s]: start tearacom type", deviceConfig.Name())
 		}
 
-		if dev, err := teracomDevice.RunDevice(deviceConfig, deviceConfig, storage, mqttClientPool); err != nil {
+		if dev, err := httpDevice.RunDevice(deviceConfig, deviceConfig, storage, mqttClientPool); err != nil {
 			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
 		} else {
 			device.RunMqttForwarders(dev, mqttClientPool, storage)

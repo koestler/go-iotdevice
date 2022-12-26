@@ -6,7 +6,7 @@ type configRead struct {
 	Auth           *authConfigRead            `yaml:"Auth"`
 	MqttClients    mqttClientConfigReadMap    `yaml:"MqttClients"`
 	VictronDevices victronDeviceConfigReadMap `yaml:"VictronDevices"`
-	TeracomDevices teracomDeviceConfigReadMap `yaml:"TeracomDevices"`
+	HttpDevices    httpDeviceConfigReadMap    `yaml:"HttpDevices"`
 	MqttDevices    mqttDeviceConfigReadMap    `yaml:"MqttDevices"`
 	Views          viewConfigReadList         `yaml:"Views"`
 	HttpServer     *httpServerConfigRead      `yaml:"HttpServer"`
@@ -62,7 +62,7 @@ type victronDeviceConfigRead struct {
 
 type victronDeviceConfigReadMap map[string]victronDeviceConfigRead
 
-type teracomDeviceConfigRead struct {
+type httpDeviceConfigRead struct {
 	General      deviceConfigRead `yaml:"General"`
 	Url          string           `yaml:"Url"`
 	Username     string           `yaml:"Username"`
@@ -70,7 +70,7 @@ type teracomDeviceConfigRead struct {
 	PollInterval string           `yaml:"PollInterval"`
 }
 
-type teracomDeviceConfigReadMap map[string]teracomDeviceConfigRead
+type httpDeviceConfigReadMap map[string]httpDeviceConfigRead
 
 type mqttDeviceConfigRead struct {
 	General     deviceConfigRead `yaml:"General"`

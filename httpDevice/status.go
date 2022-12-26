@@ -1,4 +1,4 @@
-package teracomDevice
+package httpDevice
 
 import (
 	"fmt"

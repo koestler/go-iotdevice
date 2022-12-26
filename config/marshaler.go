@@ -26,9 +26,9 @@ func (c Config) MarshalYAML() (interface{}, error) {
 			}
 			return devices
 		}(),
-		TeracomDevices: func() teracomDeviceConfigReadMap {
-			devices := make(teracomDeviceConfigReadMap, len(c.devices))
-			for _, c := range c.teracomDevices {
+		HttpDevices: func() httpDeviceConfigReadMap {
+			devices := make(httpDeviceConfigReadMap, len(c.devices))
+			for _, c := range c.httpDevices {
 				devices[c.name] = c.convertToRead()
 			}
 			return devices
@@ -114,8 +114,8 @@ func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 	}
 }
 
-func (c TeracomDeviceConfig) convertToRead() teracomDeviceConfigRead {
-	return teracomDeviceConfigRead{
+func (c HttpDeviceConfig) convertToRead() httpDeviceConfigRead {
+	return httpDeviceConfigRead{
 		General:      c.DeviceConfig.convertToRead(),
 		Url:          c.url.String(),
 		Username:     c.username,

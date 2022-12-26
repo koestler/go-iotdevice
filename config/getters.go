@@ -29,8 +29,8 @@ func (c Config) VictronDevices() []*VictronDeviceConfig {
 	return c.victronDevices
 }
 
-func (c Config) TeracomDevices() []*TeracomDeviceConfig {
-	return c.teracomDevices
+func (c Config) HttpDevices() []*HttpDeviceConfig {
+	return c.httpDevices
 }
 
 func (c Config) MqttDevices() []*MqttDeviceConfig {
@@ -192,19 +192,19 @@ func (c VictronDeviceConfig) Kind() VictronDeviceKind {
 	return c.kind
 }
 
-func (c TeracomDeviceConfig) Url() *url.URL {
+func (c HttpDeviceConfig) Url() *url.URL {
 	return c.url
 }
 
-func (c TeracomDeviceConfig) Username() string {
+func (c HttpDeviceConfig) Username() string {
 	return c.username
 }
 
-func (c TeracomDeviceConfig) Password() string {
+func (c HttpDeviceConfig) Password() string {
 	return c.password
 }
 
-func (c TeracomDeviceConfig) PollInterval() time.Duration {
+func (c HttpDeviceConfig) PollInterval() time.Duration {
 	return c.pollInterval
 }
 

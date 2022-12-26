@@ -62,21 +62,21 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	ret.victronDevices, e = c.VictronDevices.TransformAndValidate(ret.mqttClients)
 	err = append(err, e...)
 
-	ret.teracomDevices, e = c.TeracomDevices.TransformAndValidate(ret.mqttClients)
+	ret.httpDevices, e = c.HttpDevices.TransformAndValidate(ret.mqttClients)
 	err = append(err, e...)
 
 	ret.mqttDevices, e = c.MqttDevices.TransformAndValidate(ret.mqttClients)
 	err = append(err, e...)
 
 	{
-		ret.devices = make([]*DeviceConfig, len(ret.victronDevices)+len(ret.teracomDevices)+len(ret.mqttDevices))
+		ret.devices = make([]*DeviceConfig, len(ret.victronDevices)+len(ret.httpDevices)+len(ret.mqttDevices))
 
 		i := 0
 		for _, d := range ret.victronDevices {
 			ret.devices[i] = &d.DeviceConfig
 			i += 1
 		}
-		for _, d := range ret.teracomDevices {
+		for _, d := range ret.httpDevices {
 			ret.devices[i] = &d.DeviceConfig
 			i += 1
 		}
@@ -438,7 +438,7 @@ func (c victronDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClie
 	return
 }
 
-func (c teracomDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClientConfig) (ret []*TeracomDeviceConfig, err []error) {
+func (c httpDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClientConfig) (ret []*HttpDeviceConfig, err []error) {
 	// order map keys by name
 	keys := make([]string, len(c))
 	i := 0
@@ -448,7 +448,7 @@ func (c teracomDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClie
 	}
 	sort.Strings(keys)
 
-	ret = make([]*TeracomDeviceConfig, len(c))
+	ret = make([]*HttpDeviceConfig, len(c))
 	j := 0
 	for _, name := range keys {
 		r, e := c[name].TransformAndValidate(name, mqttClients)
@@ -536,8 +536,8 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients [
 	return
 }
 
-func (c teracomDeviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret TeracomDeviceConfig, err []error) {
-	ret = TeracomDeviceConfig{
+func (c httpDeviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret HttpDeviceConfig, err []error) {
+	ret = HttpDeviceConfig{
 		username: c.Username,
 		password: c.Password,
 	}
@@ -547,12 +547,12 @@ func (c teracomDeviceConfigRead) TransformAndValidate(name string, mqttClients [
 	err = append(err, e...)
 
 	if len(c.Url) < 1 {
-		err = append(err, fmt.Errorf("TeracomDevices->%s->Url must not be empty", name))
+		err = append(err, fmt.Errorf("HttpDevices->%s->Url must not be empty", name))
 	} else {
 		if u, e := url.ParseRequestURI(c.Url); e != nil {
-			err = append(err, fmt.Errorf("TeracomDevices->%s->Url invalid url: %s", name, e))
+			err = append(err, fmt.Errorf("HttpDevices->%s->Url invalid url: %s", name, e))
 		} else if u == nil {
-			err = append(err, fmt.Errorf("TeracomDevices->%s->Url cannot parse url", name))
+			err = append(err, fmt.Errorf("HttpDevices->%s->Url cannot parse url", name))
 		} else {
 			ret.url = u
 		}
@@ -562,11 +562,11 @@ func (c teracomDeviceConfigRead) TransformAndValidate(name string, mqttClients [
 		// use default 1s
 		ret.pollInterval = time.Second
 	} else if pollInterval, e := time.ParseDuration(c.PollInterval); e != nil {
-		err = append(err, fmt.Errorf("TeracomDevices->%s->PollInterval='%s' parse error: %s",
+		err = append(err, fmt.Errorf("HttpDevices->%s->PollInterval='%s' parse error: %s",
 			name, c.PollInterval, e,
 		))
 	} else if pollInterval < 100*time.Millisecond {
-		err = append(err, fmt.Errorf("TeracomDevices->%s->PollInterval='%s' must be >=100ms",
+		err = append(err, fmt.Errorf("HttpDevices->%s->PollInterval='%s' must be >=100ms",
 			name, c.PollInterval,
 		))
 	} else {
