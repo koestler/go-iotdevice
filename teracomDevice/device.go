@@ -31,6 +31,7 @@ type DeviceStruct struct {
 	statusRequest *http.Request
 
 	registers        map[string]dataflow.Register
+	sort             map[string]int
 	registersMutex   sync.RWMutex
 	lastUpdated      time.Time
 	lastUpdatedMutex sync.RWMutex
@@ -63,6 +64,7 @@ func RunDevice(
 		},
 
 		registers: make(map[string]dataflow.Register),
+		sort:      make(map[string]int),
 		shutdown:  make(chan struct{}),
 	}
 
@@ -75,6 +77,17 @@ func RunDevice(
 	c.startPolling()
 
 	return c, nil
+}
+
+func (c *DeviceStruct) getRegisterSort(category string) int {
+	offset := getCategorySort(category) * 100
+	if count, ok := c.sort[category]; !ok {
+		c.sort[category] = 1
+		return offset
+	} else {
+		c.sort[category] += 1
+		return offset + count
+	}
 }
 
 func (c *DeviceStruct) startPolling() {
@@ -160,9 +173,9 @@ func (c *DeviceStruct) addIgnoreRegister(category, registerName, description, un
 			return r
 		}
 	}
-
-	numbRegisters := len(c.registers)
 	c.registersMutex.RUnlock()
+
+	sort := c.getRegisterSort(category)
 
 	var r dataflow.Register
 	if dataType == "numeric" {
@@ -175,7 +188,7 @@ func (c *DeviceStruct) addIgnoreRegister(category, registerName, description, un
 			true,
 			1,
 			unit,
-			numbRegisters, // sort the registers in the order the were first seen
+			sort,
 		)
 	} else if dataType == "text" {
 		r = dataflow.CreateTextRegisterStruct(
@@ -184,7 +197,7 @@ func (c *DeviceStruct) addIgnoreRegister(category, registerName, description, un
 			description,
 			0,
 			false,
-			numbRegisters,
+			sort,
 		)
 	} else {
 		panic("unknown dataType: " + dataType)
