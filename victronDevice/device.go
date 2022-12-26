@@ -51,11 +51,11 @@ func RunDevice(
 		closed:        make(chan struct{}),
 	}
 
-	if victronConfig.Kind() == config.VedirectKind {
+	if victronConfig.Kind() == config.VictronVedirectKind {
 		err = startVedirect(c, output)
-	} else if victronConfig.Kind() == config.RandomBmvKind {
+	} else if victronConfig.Kind() == config.VictronRandomBmvKind {
 		err = startRandom(c, output, RegisterListBmv712)
-	} else if victronConfig.Kind() == config.RandomSolarKind {
+	} else if victronConfig.Kind() == config.VictronRandomSolarKind {
 		err = startRandom(c, output, RegisterListSolar)
 	} else {
 		return nil, fmt.Errorf("unknown device kind: %s", victronConfig.Kind().String())

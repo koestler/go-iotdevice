@@ -196,6 +196,10 @@ func (c HttpDeviceConfig) Url() *url.URL {
 	return c.url
 }
 
+func (c HttpDeviceConfig) Kind() HttpDeviceKind {
+	return c.kind
+}
+
 func (c HttpDeviceConfig) Username() string {
 	return c.username
 }

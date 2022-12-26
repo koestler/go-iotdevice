@@ -15,4 +15,3 @@ func IsExcluded(registerName, category string, cfg Config) bool {
 	return false
 
 }
-

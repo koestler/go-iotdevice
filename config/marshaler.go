@@ -118,6 +118,7 @@ func (c HttpDeviceConfig) convertToRead() httpDeviceConfigRead {
 	return httpDeviceConfigRead{
 		General:      c.DeviceConfig.convertToRead(),
 		Url:          c.url.String(),
+		Kind:         c.kind.String(),
 		Username:     c.username,
 		Password:     c.password,
 		PollInterval: c.pollInterval.String(),

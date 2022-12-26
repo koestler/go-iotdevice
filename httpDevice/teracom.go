@@ -1,10 +1,56 @@
 package httpDevice
 
 import (
+	"encoding/xml"
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
+	"log"
 	"strconv"
 )
+
+type TeracomDevice struct {
+	ds *DeviceStruct
+}
+
+func (c *TeracomDevice) GetPath() string {
+	return "status.xml"
+}
+
+func (c *TeracomDevice) HandleResponse(body []byte) bool {
+	var status StatusStruct
+	if err := xml.Unmarshal(body, &status); err != nil {
+		log.Printf("httpDevice[%s]: canot parse xml, err=%s", c.ds.deviceConfig.Name(), err)
+		return false
+	}
+	c.extractRegistersAndValues(status)
+
+	return true
+}
+
+func (c *TeracomDevice) GetCategorySort(category string) int {
+	switch category {
+	case "Sensors":
+		return 0
+	case "Analog Inputs":
+		return 1
+	case "Virtual Inputs":
+		return 2
+	case "Digital Inputs":
+		return 3
+	case "Relays":
+		return 4
+	case "Alarms":
+		return 5
+	case "General":
+		return 6
+	case "Device Info":
+		return 7
+	case "Settings":
+		return 8
+	default:
+		panic("unknown category: " + category)
+	}
+}
 
 type sensorValueStruct struct {
 	Value string `xml:"value"`
@@ -107,19 +153,19 @@ type StatusStruct struct {
 	} `xml:"Time"`
 }
 
-func (c *DeviceStruct) text(category, registerName, description, value string) {
+func (c *TeracomDevice) text(category, registerName, description, value string) {
 	if len(value) < 1 {
 		return
 	}
 
-	register := c.addIgnoreRegister(category, registerName, description, "", "text")
+	register := c.ds.addIgnoreRegister(category, registerName, description, "", "text")
 	if register == nil {
 		return
 	}
-	c.output <- dataflow.NewTextRegisterValue(c.deviceConfig.Name(), register, value)
+	c.ds.output <- dataflow.NewTextRegisterValue(c.ds.deviceConfig.Name(), register, value)
 }
 
-func (c *DeviceStruct) number(category, registerName, description, unit string, value string) {
+func (c *TeracomDevice) number(category, registerName, description, unit string, value string) {
 	if value == "---" {
 		// this is teracom's way of encoding null
 		return
@@ -130,14 +176,14 @@ func (c *DeviceStruct) number(category, registerName, description, unit string, 
 		return
 	}
 
-	register := c.addIgnoreRegister(category, registerName, description, unit, "numeric")
+	register := c.ds.addIgnoreRegister(category, registerName, description, unit, "numeric")
 	if register == nil {
 		return
 	}
-	c.output <- dataflow.NewNumericRegisterValue(c.deviceConfig.Name(), register, floatValue)
+	c.ds.output <- dataflow.NewNumericRegisterValue(c.ds.deviceConfig.Name(), register, floatValue)
 }
 
-func (c *DeviceStruct) boolean(category, registerName, description string, value string) {
+func (c *TeracomDevice) boolean(category, registerName, description string, value string) {
 	numericValue := func(value string) float64 {
 		if value == "ON" {
 			return 1
@@ -150,39 +196,14 @@ func (c *DeviceStruct) boolean(category, registerName, description string, value
 		return 0
 	}(value)
 
-	register := c.addIgnoreRegister(category, registerName, description, "", "numeric")
+	register := c.ds.addIgnoreRegister(category, registerName, description, "", "numeric")
 	if register == nil {
 		return
 	}
-	c.output <- dataflow.NewNumericRegisterValue(c.deviceConfig.Name(), register, numericValue)
+	c.ds.output <- dataflow.NewNumericRegisterValue(c.ds.deviceConfig.Name(), register, numericValue)
 }
 
-func getCategorySort(category string) int {
-	switch category {
-	case "Sensors":
-		return 0
-	case "Analog Inputs":
-		return 1
-	case "Virtual Inputs":
-		return 2
-	case "Digital Inputs":
-		return 3
-	case "Relays":
-		return 4
-	case "Alarms":
-		return 5
-	case "General":
-		return 6
-	case "Device Info":
-		return 7
-	case "Settings":
-		return 8
-	default:
-		panic("unknown category: " + category)
-	}
-}
-
-func (c *DeviceStruct) extractRegistersAndValues(s StatusStruct) {
+func (c *TeracomDevice) extractRegistersAndValues(s StatusStruct) {
 	// device info
 	cat := "Device Info"
 	c.text(cat, "DeviceName", "Device Name", s.DeviceInfo.DeviceName)

@@ -1,8 +1,8 @@
 package httpDevice
 
 import (
-	"encoding/xml"
 	"fmt"
+	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
@@ -16,19 +16,27 @@ import (
 
 type Config interface {
 	Url() *url.URL
+	Kind() config.HttpDeviceKind
 	Username() string
 	Password() string
 	PollInterval() time.Duration
 }
 
+type Implementation interface {
+	GetPath() string
+	HandleResponse(body []byte) bool
+	GetCategorySort(category string) int
+}
+
 type DeviceStruct struct {
-	deviceConfig  device.Config
-	teracomConfig Config
+	deviceConfig device.Config
+	httpConfig   Config
 
 	output chan dataflow.Value
 
-	httpClient    *http.Client
-	statusRequest *http.Request
+	httpClient  *http.Client
+	pollRequest *http.Request
+	impl        Implementation
 
 	registers        map[string]dataflow.Register
 	sort             map[string]int
@@ -52,10 +60,10 @@ func RunDevice(
 	source := dataflow.CreateSource(output)
 	source.Append(storage)
 
-	c := &DeviceStruct{
-		deviceConfig:  deviceConfig,
-		teracomConfig: teracomConfig,
-		output:        output,
+	ds := &DeviceStruct{
+		deviceConfig: deviceConfig,
+		httpConfig:   teracomConfig,
+		output:       output,
 
 		httpClient: &http.Client{
 			// this tool is designed to serve cameras running on the local network
@@ -68,120 +76,119 @@ func RunDevice(
 		shutdown:  make(chan struct{}),
 	}
 
+	// setup impl
+	switch k := ds.httpConfig.Kind(); k {
+	case config.HttpTeracomKind:
+		ds.impl = &TeracomDevice{ds}
+	case config.HttpShelly3mKind:
+		ds.impl = &TeracomDevice{}
+	default:
+		panic("unimplemented kind: " + k.String())
+	}
+
 	// setup request
-	if c.statusRequest, err = c.getStatusRequest(); err != nil {
-		return nil, err
+	if ds.pollRequest, err = ds.GetRequest(ds.impl.GetPath()); err != nil {
+		return
 	}
 
 	// start polling the device
-	c.startPolling()
+	ds.startPolling()
 
-	return c, nil
+	return ds, nil
 }
 
-func (c *DeviceStruct) getRegisterSort(category string) int {
-	offset := getCategorySort(category) * 100
-	if count, ok := c.sort[category]; !ok {
-		c.sort[category] = 1
+func (ds *DeviceStruct) GetRequest(path string) (request *http.Request, err error) {
+	addr := ds.httpConfig.Url().JoinPath(path)
+	request, err = http.NewRequest("GET", addr.String(), nil)
+	if err != nil {
+		return
+	}
+	request.SetBasicAuth(ds.httpConfig.Username(), ds.httpConfig.Password())
+
+	return
+}
+
+func (ds *DeviceStruct) getRegisterSort(category string) int {
+	offset := ds.impl.GetCategorySort(category) * 100
+	if count, ok := ds.sort[category]; !ok {
+		ds.sort[category] = 1
 		return offset
 	} else {
-		c.sort[category] += 1
+		ds.sort[category] += 1
 		return offset + count
 	}
 }
 
-func (c *DeviceStruct) startPolling() {
-	if c.deviceConfig.LogDebug() {
-		log.Printf("httpDevice[%s]: start polling, interval=%s", c.deviceConfig.Name(), c.teracomConfig.PollInterval())
+func (ds *DeviceStruct) startPolling() {
+	if ds.deviceConfig.LogDebug() {
+		log.Printf("httpDevice[%s]: start polling, interval=%s", ds.deviceConfig.Name(), ds.httpConfig.PollInterval())
 	}
 
 	// start source go routine
 	go func() {
-		defer close(c.output)
+		defer close(ds.output)
 
-		ticker := time.NewTicker(c.teracomConfig.PollInterval())
+		ticker := time.NewTicker(ds.httpConfig.PollInterval())
 
 		for {
 			select {
-			case <-c.shutdown:
+			case <-ds.shutdown:
 				return
 			case <-ticker.C:
-				statusXml, err := c.getStatusXml()
+				resp, err := ds.httpClient.Do(ds.pollRequest)
 				if err != nil {
-					log.Printf("httpDevice[%s]: canot get status, err=%s", c.deviceConfig.Name(), err)
-					continue
+					log.Printf("httpDevice[%s]: cannot get status: %s", ds.deviceConfig.Name(), err)
+					return
 				}
 
-				var status StatusStruct
-				err = xml.Unmarshal(statusXml, &status)
-				if err != nil {
-					log.Printf("httpDevice[%s]: canot parse xml, err=%s", c.deviceConfig.Name(), err)
-					continue
+				if resp.StatusCode != http.StatusOK {
+					err = fmt.Errorf("GET %s failed with code: %d", ds.pollRequest.URL.String(), resp.StatusCode)
+					return
 				}
-				c.extractRegistersAndValues(status)
-				c.SetLastUpdatedNow()
+
+				body, err := io.ReadAll(resp.Body)
+				resp.Body.Close()
+				if err != nil {
+					log.Printf("httpDevice[%s]: cannot get response body: %s", ds.deviceConfig.Name(), err)
+					return
+				}
+
+				if ds.impl.HandleResponse(body) {
+					ds.SetLastUpdatedNow()
+				}
 			}
 		}
 	}()
 }
 
-func (c *DeviceStruct) getStatusRequest() (request *http.Request, err error) {
-	addr := c.teracomConfig.Url().JoinPath("status.xml")
-	request, err = http.NewRequest("GET", addr.String(), nil)
-	if err != nil {
-		return
-	}
-	request.SetBasicAuth(c.teracomConfig.Username(), c.teracomConfig.Password())
-
-	return
+func (ds *DeviceStruct) Config() device.Config {
+	return ds.deviceConfig
 }
 
-func (c *DeviceStruct) getStatusXml() (body []byte, err error) {
-	resp, err := c.httpClient.Do(c.statusRequest)
-	if err != nil {
-		log.Printf("httpDevice[%s]: cannot get status: %s", c.deviceConfig.Name(), err)
-		return
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		err = fmt.Errorf("GET %s failed with code: %d", c.statusRequest.URL.String(), resp.StatusCode)
-		return
-	}
-
-	defer resp.Body.Close()
-	body, err = io.ReadAll(resp.Body)
-
-	return
+func (ds *DeviceStruct) ShutdownChan() chan struct{} {
+	return ds.shutdown
 }
 
-func (c *DeviceStruct) Config() device.Config {
-	return c.deviceConfig
-}
-
-func (c *DeviceStruct) ShutdownChan() chan struct{} {
-	return c.shutdown
-}
-
-func (c *DeviceStruct) addIgnoreRegister(category, registerName, description, unit, dataType string) dataflow.Register {
+func (ds *DeviceStruct) addIgnoreRegister(category, registerName, description, unit, dataType string) dataflow.Register {
 	// check if this register exists already and the properties are still the same
-	c.registersMutex.RLock()
-	if r, ok := c.registers[registerName]; ok {
+	ds.registersMutex.RLock()
+	if r, ok := ds.registers[registerName]; ok {
 		if r.Category() == category &&
 			r.Description() == description &&
 			r.Unit() == unit {
-			c.registersMutex.RUnlock()
+			ds.registersMutex.RUnlock()
 			return r
 		}
 	}
-	c.registersMutex.RUnlock()
+	ds.registersMutex.RUnlock()
 
 	// check if register is on ignore list
-	if device.IsExcluded(registerName, category, c.deviceConfig) {
+	if device.IsExcluded(registerName, category, ds.deviceConfig) {
 		return nil
 	}
 
 	// create new register
-	sort := c.getRegisterSort(category)
+	sort := ds.getRegisterSort(category)
 	var r dataflow.Register
 	if dataType == "numeric" {
 		r = dataflow.CreateNumberRegisterStruct(
@@ -209,43 +216,43 @@ func (c *DeviceStruct) addIgnoreRegister(category, registerName, description, un
 	}
 
 	// add the register into the list
-	c.registersMutex.Lock()
-	defer c.registersMutex.Unlock()
+	ds.registersMutex.Lock()
+	defer ds.registersMutex.Unlock()
 
-	c.registers[registerName] = r
+	ds.registers[registerName] = r
 	return r
 }
 
-func (c *DeviceStruct) Registers() dataflow.Registers {
-	c.registersMutex.RLock()
-	defer c.registersMutex.RUnlock()
+func (ds *DeviceStruct) Registers() dataflow.Registers {
+	ds.registersMutex.RLock()
+	defer ds.registersMutex.RUnlock()
 
-	ret := make(dataflow.Registers, len(c.registers))
+	ret := make(dataflow.Registers, len(ds.registers))
 	i := 0
-	for _, r := range c.registers {
+	for _, r := range ds.registers {
 		ret[i] = r
 		i += 1
 	}
 	return ret
 }
 
-func (c *DeviceStruct) SetLastUpdatedNow() {
-	c.lastUpdatedMutex.Lock()
-	defer c.lastUpdatedMutex.Unlock()
-	c.lastUpdated = time.Now()
+func (ds *DeviceStruct) SetLastUpdatedNow() {
+	ds.lastUpdatedMutex.Lock()
+	defer ds.lastUpdatedMutex.Unlock()
+	ds.lastUpdated = time.Now()
 }
 
-func (c *DeviceStruct) LastUpdated() time.Time {
-	c.lastUpdatedMutex.RLock()
-	defer c.lastUpdatedMutex.RUnlock()
-	return c.lastUpdated
+func (ds *DeviceStruct) LastUpdated() time.Time {
+	ds.lastUpdatedMutex.RLock()
+	defer ds.lastUpdatedMutex.RUnlock()
+	return ds.lastUpdated
 }
 
-func (c *DeviceStruct) Model() string {
-	return "teracom"
+func (ds *DeviceStruct) Model() string {
+	return "http-" + ds.httpConfig.Kind().String()
 }
 
-func (c *DeviceStruct) Shutdown() {
-	close(c.shutdown)
-	log.Printf("httpDevice[%s]: shutdown completed", c.deviceConfig.Name())
+func (ds *DeviceStruct) Shutdown() {
+	close(ds.shutdown)
+	log.Printf("httpDevice[%s]: shutdown completed", ds.deviceConfig.Name())
 }

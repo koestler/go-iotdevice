@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"net/url"
 	"time"
 )
@@ -70,10 +69,11 @@ type VictronDeviceConfig struct {
 
 type HttpDeviceConfig struct {
 	DeviceConfig
-	url          *url.URL      // mandatory: how to connect to the device. eg. http://device0.local/
-	username     string        // mandatory: username used to login
-	password     string        // mandatory: password used to login
-	pollInterval time.Duration // optional: default 1s
+	url          *url.URL       // mandatory: how to connect to the device. eg. http://device0.local/
+	kind         HttpDeviceKind // mandatory: what connection protocol is used
+	username     string         // mandatory: username used to login
+	password     string         // mandatory: password used to login
+	pollInterval time.Duration  // optional: default 1s
 }
 
 type MqttDeviceConfig struct {
@@ -109,40 +109,69 @@ type HttpServerConfig struct {
 	configExpires   time.Duration // optional: default 1min; what cache-control header to sent for static frontend files
 }
 
-// device kind
+// victron device kind
 type VictronDeviceKind int
 
 const (
-	UndefinedKind VictronDeviceKind = iota
-	RandomBmvKind
-	RandomSolarKind
-	VedirectKind
+	VictronUndefinedKind VictronDeviceKind = iota
+	VictronRandomBmvKind
+	VictronRandomSolarKind
+	VictronVedirectKind
 )
 
 func (dk VictronDeviceKind) String() string {
 	switch dk {
-	case UndefinedKind:
-		return "Undefined"
-	case RandomBmvKind:
+	case VictronRandomBmvKind:
 		return "RandomBmv"
-	case RandomSolarKind:
+	case VictronRandomSolarKind:
 		return "RandomSolar"
-	case VedirectKind:
+	case VictronVedirectKind:
 		return "Vedirect"
 	default:
-		return fmt.Sprintf("Kind%d", int(dk))
+		return "Undefined"
 	}
 }
 
-func DeviceKindFromString(s string) VictronDeviceKind {
+func VictronDeviceKindFromString(s string) VictronDeviceKind {
 	if s == "RandomBmv" {
-		return RandomBmvKind
+		return VictronRandomBmvKind
 	}
 	if s == "RandomSolar" {
-		return RandomSolarKind
+		return VictronRandomSolarKind
 	}
 	if s == "Vedirect" {
-		return VedirectKind
+		return VictronVedirectKind
 	}
-	return UndefinedKind
+	return VictronUndefinedKind
+}
+
+// http device kind
+type HttpDeviceKind int
+
+const (
+	HttpUndefinedKind HttpDeviceKind = iota
+	HttpTeracomKind
+	HttpShelly3mKind
+)
+
+func (dk HttpDeviceKind) String() string {
+	switch dk {
+	case HttpTeracomKind:
+		return "Teracom"
+	case HttpShelly3mKind:
+		return "Shelly3m"
+	default:
+		return "Undefined"
+	}
+}
+
+func HttpDeviceKindFromString(s string) HttpDeviceKind {
+	if s == "Teracom" {
+		return HttpTeracomKind
+	}
+	if s == "Shelly3m" {
+		return HttpShelly3mKind
+	}
+
+	return HttpUndefinedKind
 }

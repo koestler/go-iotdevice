@@ -517,7 +517,7 @@ func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttC
 
 func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret VictronDeviceConfig, err []error) {
 	ret = VictronDeviceConfig{
-		kind:   DeviceKindFromString(c.Kind),
+		kind:   VictronDeviceKindFromString(c.Kind),
 		device: c.Device,
 	}
 
@@ -525,11 +525,11 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients [
 	ret.DeviceConfig, e = c.General.TransformAndValidate(name, mqttClients)
 	err = append(err, e...)
 
-	if ret.kind == UndefinedKind {
+	if ret.kind == VictronUndefinedKind {
 		err = append(err, fmt.Errorf("VictronDevices->%s->Kind='%s' is invalid", name, c.Kind))
 	}
 
-	if ret.kind == VedirectKind && len(c.Device) < 1 {
+	if ret.kind == VictronVedirectKind && len(c.Device) < 1 {
 		err = append(err, fmt.Errorf("VictronDevices->%s->Device must not be empty", name))
 	}
 
@@ -538,6 +538,7 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients [
 
 func (c httpDeviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret HttpDeviceConfig, err []error) {
 	ret = HttpDeviceConfig{
+		kind:     HttpDeviceKindFromString(c.Kind),
 		username: c.Username,
 		password: c.Password,
 	}
@@ -556,6 +557,10 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string, mqttClients []*M
 		} else {
 			ret.url = u
 		}
+	}
+
+	if ret.kind == HttpUndefinedKind {
+		err = append(err, fmt.Errorf("HttpDevices->%s->Kind='%s' is invalid", name, c.Kind))
 	}
 
 	if len(c.PollInterval) < 1 {
