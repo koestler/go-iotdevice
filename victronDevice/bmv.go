@@ -140,15 +140,15 @@ var RegisterListBmvMonitor = dataflow.Registers{
 		"min",
 		102,
 	), dataflow.CreateNumberRegisterStruct(
-		"Monitor",
+		"Essential",
 		"Temperature",
-		"Temperature",
+		"Battery Temperature",
 		0xEDEC,
 		false,
 		false,
 		100,
 		"K",
-		103,
+		4,
 	), dataflow.CreateNumberRegisterStruct(
 		"Monitor",
 		"MidPointVoltage",

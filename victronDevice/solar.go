@@ -326,7 +326,7 @@ var RegisterListSolarSettings = dataflow.Registers{
 
 var RegisterListSolarChargerData = dataflow.Registers{
 	dataflow.CreateNumberRegisterStruct(
-		"Charger",
+		"Essential",
 		"BatteryTemperature",
 		"Battery temperature",
 		0xEDEC,
@@ -334,7 +334,7 @@ var RegisterListSolarChargerData = dataflow.Registers{
 		false,
 		100,
 		"K",
-		200,
+		5,
 	),
 	dataflow.CreateNumberRegisterStruct(
 		"Charger",
