@@ -7,5 +7,4 @@
 - device: use context instead of shutdown channel?
 - add boolean registers
 - add output registers
-- victron: remove phoenix (there is no docu for vedirect protocol)
-- victron: fetch VoltageCompensation depending on firmware version[TODO.md](TODO.md)
+- victron: fetch VoltageCompensation depending on firmware version
