@@ -147,7 +147,10 @@ func (ds *DeviceStruct) pollingRoutine() {
 }
 
 func (ds *DeviceStruct) getPollInterval(errorsInARow int) time.Duration {
-	var backoffFactor int64 = 1 << errorsInARow // 2^errorsInARow
+	if errorsInARow > 62 {
+		errorsInARow = 62
+	}
+	var backoffFactor uint64 = 1 << errorsInARow // 2^errorsInARow
 	interval := ds.httpConfig.PollInterval() * time.Duration(backoffFactor)
 	max := ds.httpConfig.PollIntervalMaxBackoff()
 	if interval > max {
