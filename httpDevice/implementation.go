@@ -12,8 +12,8 @@ func implementationFactory(ds *DeviceStruct) Implementation {
 	switch k := ds.httpConfig.Kind(); k {
 	case config.HttpTeracomKind:
 		return &TeracomDevice{ds}
-	case config.HttpShelly3mKind:
-		return &TeracomDevice{}
+	case config.HttpShellyEm3Kind:
+		return &ShellyEm3Device{ds}
 	default:
 		panic("unimplemented kind: " + k.String())
 	}

@@ -152,14 +152,14 @@ type HttpDeviceKind int
 const (
 	HttpUndefinedKind HttpDeviceKind = iota
 	HttpTeracomKind
-	HttpShelly3mKind
+	HttpShellyEm3Kind
 )
 
 func (dk HttpDeviceKind) String() string {
 	switch dk {
 	case HttpTeracomKind:
 		return "Teracom"
-	case HttpShelly3mKind:
+	case HttpShellyEm3Kind:
 		return "Shelly3m"
 	default:
 		return "Undefined"
@@ -170,8 +170,8 @@ func HttpDeviceKindFromString(s string) HttpDeviceKind {
 	if s == "Teracom" {
 		return HttpTeracomKind
 	}
-	if s == "Shelly3m" {
-		return HttpShelly3mKind
+	if s == "ShellyEm3" {
+		return HttpShellyEm3Kind
 	}
 
 	return HttpUndefinedKind
