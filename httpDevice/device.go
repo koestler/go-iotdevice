@@ -23,12 +23,6 @@ type Config interface {
 	PollIntervalMaxBackoff() time.Duration
 }
 
-type Implementation interface {
-	GetPath() string
-	HandleResponse(body []byte) error
-	GetCategorySort(category string) int
-}
-
 type DeviceStruct struct {
 	deviceConfig device.Config
 	httpConfig   Config
@@ -78,14 +72,7 @@ func RunDevice(
 	}
 
 	// setup impl
-	switch k := ds.httpConfig.Kind(); k {
-	case config.HttpTeracomKind:
-		ds.impl = &TeracomDevice{ds}
-	case config.HttpShelly3mKind:
-		ds.impl = &TeracomDevice{}
-	default:
-		panic("unimplemented kind: " + k.String())
-	}
+	ds.impl = implementationFactory(ds)
 
 	// setup request
 	if ds.pollRequest, err = ds.GetRequest(ds.impl.GetPath()); err != nil {
