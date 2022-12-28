@@ -16,7 +16,7 @@ func (c *TeracomDevice) GetPath() string {
 }
 
 func (c *TeracomDevice) HandleResponse(body []byte) error {
-	var status StatusStruct
+	var status teracomStatusStruct
 	if err := xml.Unmarshal(body, &status); err != nil {
 		return fmt.Errorf("cannot parse xml: %s", err)
 	}
@@ -50,7 +50,7 @@ func (c *TeracomDevice) GetCategorySort(category string) int {
 	}
 }
 
-type sensorValueStruct struct {
+type teracomSensorValueStruct struct {
 	Value string `xml:"value"`
 	Unit  string `xml:"unit"`
 	Alarm string `xml:"alarm"`
@@ -59,14 +59,14 @@ type sensorValueStruct struct {
 	Hys   string `xml:"hys"`
 }
 
-type sensorStruct struct {
-	Description string            `xml:"description"`
-	ID          string            `xml:"id"`
-	Item1       sensorValueStruct `xml:"item1"`
-	Item2       sensorValueStruct `xml:"item2"`
+type teracomSensorStruct struct {
+	Description string                   `xml:"description"`
+	ID          string                   `xml:"id"`
+	Item1       teracomSensorValueStruct `xml:"item1"`
+	Item2       teracomSensorValueStruct `xml:"item2"`
 }
 
-type analogStruct struct {
+type teracomAnalogStruct struct {
 	Description string `xml:"description"`
 	Value       string `xml:"value"`
 	Unit        string `xml:"unit"`
@@ -78,7 +78,7 @@ type analogStruct struct {
 	Hys         string `xml:"hys"`
 }
 
-type digitalStruct struct {
+type teracomDigitalStruct struct {
 	Description string `xml:"description"`
 	Value       string `xml:"value"`
 	Valuebin    string `xml:"valuebin"`
@@ -86,7 +86,7 @@ type digitalStruct struct {
 	Alarm       string `xml:"alarm"`
 }
 
-type relayStruct struct {
+type teracomRelayStruct struct {
 	Description string `xml:"description"`
 	Value       string `xml:"value"`
 	Valuebin    string `xml:"valuebin"`
@@ -94,7 +94,7 @@ type relayStruct struct {
 	Control     string `xml:"control"`
 }
 
-type StatusStruct struct {
+type teracomStatusStruct struct {
 	DeviceInfo struct {
 		DeviceName  string `xml:"DeviceName"`
 		HostName    string `xml:"HostName"`
@@ -105,38 +105,38 @@ type StatusStruct struct {
 		SysLocation string `xml:"SysLocation"`
 	} `xml:"DeviceInfo"`
 	S struct {
-		S1 sensorStruct `xml:"S1"`
-		S2 sensorStruct `xml:"S2"`
-		S3 sensorStruct `xml:"S3"`
-		S4 sensorStruct `xml:"S4"`
-		S5 sensorStruct `xml:"S5"`
-		S6 sensorStruct `xml:"S6"`
-		S7 sensorStruct `xml:"S7"`
-		S8 sensorStruct `xml:"S8"`
+		S1 teracomSensorStruct `xml:"S1"`
+		S2 teracomSensorStruct `xml:"S2"`
+		S3 teracomSensorStruct `xml:"S3"`
+		S4 teracomSensorStruct `xml:"S4"`
+		S5 teracomSensorStruct `xml:"S5"`
+		S6 teracomSensorStruct `xml:"S6"`
+		S7 teracomSensorStruct `xml:"S7"`
+		S8 teracomSensorStruct `xml:"S8"`
 	}
 	AI struct {
-		AI1 analogStruct `xml:"AI1"`
-		AI2 analogStruct `xml:"AI2"`
-		AI3 analogStruct `xml:"AI3"`
-		AI4 analogStruct `xml:"AI4"`
+		AI1 teracomAnalogStruct `xml:"AI1"`
+		AI2 teracomAnalogStruct `xml:"AI2"`
+		AI3 teracomAnalogStruct `xml:"AI3"`
+		AI4 teracomAnalogStruct `xml:"AI4"`
 	} `xml:"AI"`
 	VI struct {
-		VI1 analogStruct `xml:"VI1"`
-		VI2 analogStruct `xml:"VI2"`
-		VI3 analogStruct `xml:"VI3"`
-		VI4 analogStruct `xml:"VI4"`
+		VI1 teracomAnalogStruct `xml:"VI1"`
+		VI2 teracomAnalogStruct `xml:"VI2"`
+		VI3 teracomAnalogStruct `xml:"VI3"`
+		VI4 teracomAnalogStruct `xml:"VI4"`
 	} `xml:"VI"`
 	DI struct {
-		DI1 digitalStruct `xml:"DI1"`
-		DI2 digitalStruct `xml:"DI2"`
-		DI3 digitalStruct `xml:"DI3"`
-		DI4 digitalStruct `xml:"DI4"`
+		DI1 teracomDigitalStruct `xml:"DI1"`
+		DI2 teracomDigitalStruct `xml:"DI2"`
+		DI3 teracomDigitalStruct `xml:"DI3"`
+		DI4 teracomDigitalStruct `xml:"DI4"`
 	} `xml:"DI"`
 	R struct {
-		R1 relayStruct `xml:"R1"`
-		R2 relayStruct `xml:"R2"`
-		R3 relayStruct `xml:"R3"`
-		R4 relayStruct `xml:"R4"`
+		R1 teracomRelayStruct `xml:"R1"`
+		R2 teracomRelayStruct `xml:"R2"`
+		R3 teracomRelayStruct `xml:"R3"`
+		R4 teracomRelayStruct `xml:"R4"`
 	} `xml:"R"`
 	HTTPPush struct {
 		Key        string `xml:"Key"`
@@ -201,7 +201,7 @@ func (c *TeracomDevice) boolean(category, registerName, description string, valu
 	c.ds.output <- dataflow.NewNumericRegisterValue(c.ds.deviceConfig.Name(), register, numericValue)
 }
 
-func (c *TeracomDevice) extractRegistersAndValues(s StatusStruct) {
+func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 	// device info
 	cat := "Device Info"
 	c.text(cat, "DeviceName", "Device Name", s.DeviceInfo.DeviceName)
@@ -220,11 +220,11 @@ func (c *TeracomDevice) extractRegistersAndValues(s StatusStruct) {
 	c.text(cat, "Time", "Time", s.Time.Time)
 
 	// sensors
-	sensor := func(sIdx int, s sensorStruct) {
+	sensor := func(sIdx int, s teracomSensorStruct) {
 		if s.ID == "0000000000000000" {
 			return
 		}
-		item := func(sIdx, vIdx int, s sensorStruct, i sensorValueStruct, multi bool) {
+		item := func(sIdx, vIdx int, s teracomSensorStruct, i teracomSensorValueStruct, multi bool) {
 			regName := fmt.Sprintf("S%dV%d", sIdx, vIdx)
 			desc := s.Description
 			if multi {
@@ -258,7 +258,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s StatusStruct) {
 	sensor(8, s.S.S8)
 
 	// analog inputs
-	analog := func(regNamePrefix, valueCat string, sIdx int, a analogStruct) {
+	analog := func(regNamePrefix, valueCat string, sIdx int, a teracomAnalogStruct) {
 		if a.Value == "---" {
 			return
 		}
@@ -287,7 +287,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s StatusStruct) {
 	analog("VI", "Virtual Inputs", 4, s.VI.VI4)
 
 	// digital inputs
-	digital := func(sIdx int, a digitalStruct) {
+	digital := func(sIdx int, a teracomDigitalStruct) {
 		regName := fmt.Sprintf("DI%d", sIdx)
 		desc := a.Description
 
@@ -300,7 +300,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s StatusStruct) {
 	digital(4, s.DI.DI4)
 
 	// relays
-	relay := func(sIdx int, r relayStruct) {
+	relay := func(sIdx int, r teracomRelayStruct) {
 		regName := fmt.Sprintf("R%d", sIdx)
 		desc := r.Description
 
