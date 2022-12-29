@@ -224,12 +224,13 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 		if s.ID == "0000000000000000" {
 			return
 		}
-		item := func(sIdx, vIdx int, s teracomSensorStruct, i teracomSensorValueStruct, multi bool) {
+		item := func(sIdx, vIdx int, s teracomSensorStruct, i teracomSensorValueStruct) {
+			if i.Value == "---" {
+				return
+			}
+
 			regName := fmt.Sprintf("S%dV%d", sIdx, vIdx)
 			desc := s.Description
-			if multi {
-				desc = fmt.Sprintf("%s - %s", desc, i.Unit)
-			}
 
 			c.number("Sensors", regName, desc, i.Unit, i.Value)
 			c.number("Alarms", regName+"Alarm", desc+" Alarm", "", i.Alarm)
@@ -239,11 +240,8 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 			c.number("Settings", regName+"Hys", desc+" Hysteresis", i.Unit, i.Hys)
 		}
 
-		multi := s.Item2.Value != "---"
-		item(sIdx, 1, s, s.Item1, multi)
-		if multi {
-			item(sIdx, 2, s, s.Item2, true)
-		}
+		item(sIdx, 1, s, s.Item1)
+		item(sIdx, 2, s, s.Item2)
 
 		regName := fmt.Sprintf("S%d", sIdx)
 		c.text("Settings", regName+"Id", s.Description+" Id", s.ID)
