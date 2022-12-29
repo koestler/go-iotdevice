@@ -268,7 +268,7 @@ func (ds *DeviceStruct) LastUpdated() time.Time {
 }
 
 func (ds *DeviceStruct) Model() string {
-	return "http-" + ds.httpConfig.Kind().String()
+	return ds.httpConfig.Kind().String()
 }
 
 func (ds *DeviceStruct) Shutdown() {
