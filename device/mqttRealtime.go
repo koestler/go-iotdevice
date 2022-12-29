@@ -6,10 +6,10 @@ import (
 )
 
 type RealtimeMessage struct {
-	Category     string   `json:"Category"`
-	Description  string   `json:"Description"`
-	NumericValue *float64 `json:"NumericValue,omitempty"`
-	TextValue    *string  `json:"TextValue,omitempty"`
+	Category     string   `json:"Cat"`
+	Description  string   `json:"Desc"`
+	NumericValue *float64 `json:"NumVal,omitempty"`
+	TextValue    *string  `json:"TextVal,omitempty"`
 	Unit         string   `json:"Unit,omitempty"`
 	Sort         int      `json:"Sort"`
 }
