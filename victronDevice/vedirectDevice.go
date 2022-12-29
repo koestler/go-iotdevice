@@ -93,7 +93,7 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 							output <- dataflow.NewNumericRegisterValue(
 								c.deviceConfig.Name(),
 								register,
-								value/float64(numberRegister.Factor()),
+								value/float64(numberRegister.Factor())+numberRegister.Offset(),
 							)
 						}
 					} else if _, ok := register.(TextRegisterStruct); ok {

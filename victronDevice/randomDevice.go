@@ -31,9 +31,9 @@ func startRandom(c *DeviceStruct, output chan dataflow.Value, registers VictronR
 					if numberRegister, ok := register.(NumberRegisterStruct); ok {
 						var value float64
 						if numberRegister.Signed() {
-							value = 1e2 * (rand.Float64() - 0.5) * 2 / float64(numberRegister.Factor())
+							value = 1e2*(rand.Float64()-0.5)*2/float64(numberRegister.Factor()) + numberRegister.Offset()
 						} else {
-							value = 1e2 * rand.Float64() / float64(numberRegister.Factor())
+							value = 1e2*rand.Float64()/float64(numberRegister.Factor()) + numberRegister.Offset()
 						}
 
 						output <- dataflow.NewNumericRegisterValue(c.deviceConfig.Name(), register, value)

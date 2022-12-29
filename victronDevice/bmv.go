@@ -9,6 +9,7 @@ var RegisterListBmvProduct = VictronRegisters{
 		true,
 		false,
 		1,
+		0,
 		"",
 		200,
 	),
@@ -20,6 +21,7 @@ var RegisterListBmvProduct = VictronRegisters{
 		true,
 		false,
 		1,
+		0,
 		"",
 		201,
 	),
@@ -55,6 +57,7 @@ var RegisterListBmvProduct = VictronRegisters{
 		false,
 		false,
 		1,
+		0,
 		"s",
 		205,
 	),
@@ -70,6 +73,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		false,
 		true,
 		1,
+		0,
 		"W",
 		0,
 	), CreateNumberRegisterStruct(
@@ -80,6 +84,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		false,
 		true,
 		1000,
+		0,
 		"A",
 		1,
 	),
@@ -91,6 +96,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		false,
 		true,
 		100,
+		0,
 		"V",
 		2,
 	),
@@ -102,6 +108,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		false,
 		false,
 		100,
+		0,
 		"V",
 		100,
 	),
@@ -113,6 +120,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		false,
 		true,
 		10,
+		0,
 		"Ah",
 		101,
 	), CreateNumberRegisterStruct(
@@ -123,6 +131,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		false,
 		false,
 		100,
+		0,
 		"%",
 		3,
 	), CreateNumberRegisterStruct(
@@ -133,6 +142,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		false,
 		false,
 		1,
+		0,
 		"min",
 		102,
 	), CreateNumberRegisterStruct(
@@ -143,7 +153,8 @@ var RegisterListBmvMonitor = VictronRegisters{
 		false,
 		false,
 		100,
-		"K",
+		-273.15, // unit outputs temp in K
+		"°C",
 		4,
 	), CreateNumberRegisterStruct(
 		"Monitor",
@@ -153,6 +164,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		false,
 		false,
 		100,
+		0,
 		"V",
 		104,
 	), CreateNumberRegisterStruct(
@@ -163,6 +175,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		false,
 		true,
 		10,
+		0,
 		"%",
 		105,
 	), CreateEnumRegisterStruct(
@@ -188,6 +201,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		true,
 		10,
+		0,
 		"Ah",
 		300,
 	), CreateNumberRegisterStruct(
@@ -198,6 +212,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		true,
 		10,
+		0,
 		"Ah",
 		301,
 	), CreateNumberRegisterStruct(
@@ -208,6 +223,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		true,
 		10,
+		0,
 		"Ah",
 		302,
 	), CreateNumberRegisterStruct(
@@ -218,6 +234,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		false,
 		1,
+		0,
 		"",
 		303,
 	), CreateNumberRegisterStruct(
@@ -228,6 +245,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		false,
 		1,
+		0,
 		"",
 		304,
 	), CreateNumberRegisterStruct(
@@ -238,6 +256,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		true,
 		10,
+		0,
 		"Ah",
 		305,
 	), CreateNumberRegisterStruct(
@@ -248,6 +267,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		false,
 		100,
+		0,
 		"V",
 		306,
 	), CreateNumberRegisterStruct(
@@ -258,6 +278,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		false,
 		100,
+		0,
 		"V",
 		307,
 	), CreateNumberRegisterStruct(
@@ -268,6 +289,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		false,
 		1,
+		0,
 		"s",
 		308,
 	), CreateNumberRegisterStruct(
@@ -278,6 +300,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		false,
 		1,
+		0,
 		"",
 		309,
 	), CreateNumberRegisterStruct(
@@ -288,6 +311,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		false,
 		1,
+		0,
 		"",
 		310,
 	), CreateNumberRegisterStruct(
@@ -298,6 +322,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		false,
 		1,
+		0,
 		"",
 		311,
 	), CreateNumberRegisterStruct(
@@ -308,6 +333,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		true,
 		100,
+		0,
 		"V",
 		312,
 	), CreateNumberRegisterStruct(
@@ -318,6 +344,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		true,
 		100,
+		0,
 		"V",
 		313,
 	), CreateNumberRegisterStruct(
@@ -328,6 +355,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		false,
 		100,
+		0,
 		"kWh",
 		314,
 	), CreateNumberRegisterStruct(
@@ -338,6 +366,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		false,
 		false,
 		100,
+		0,
 		"kWh",
 		315,
 	),

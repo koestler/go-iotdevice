@@ -19,6 +19,7 @@ type NumberRegisterStruct struct {
 	VictronRegisterStruct
 	signed bool
 	factor int
+	offset float64
 }
 
 type TextRegisterStruct struct {
@@ -105,6 +106,7 @@ func CreateNumberRegisterStruct(
 	static bool,
 	signed bool,
 	factor int,
+	offset float64,
 	unit string,
 	sort int,
 ) NumberRegisterStruct {
@@ -121,6 +123,7 @@ func CreateNumberRegisterStruct(
 		},
 		signed,
 		factor,
+		offset,
 	}
 }
 
@@ -156,6 +159,10 @@ func (r VictronRegisterStruct) Static() bool {
 
 func (r NumberRegisterStruct) Factor() int {
 	return r.factor
+}
+
+func (r NumberRegisterStruct) Offset() float64 {
+	return r.offset
 }
 
 func (r NumberRegisterStruct) Signed() bool {
