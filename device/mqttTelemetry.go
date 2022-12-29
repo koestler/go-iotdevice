@@ -15,12 +15,16 @@ type TelemetryMessage struct {
 }
 
 type NumericTelemetryValue struct {
-	Value float64 `json:"Value"`
-	Unit  string  `json:"Unit,omitempty"`
+	Category    string  `json:"Cat"`
+	Description string  `json:"Desc"`
+	Value       float64 `json:"Val"`
+	Unit        string  `json:"Unit,omitempty"`
 }
 
 type TextTelemetryValue struct {
-	Value string `json:"Value"`
+	Category    string `json:"Cat"`
+	Description string `json:"Desc"`
+	Value       string `json:"Val"`
 }
 
 func convertValuesToNumericTelemetryValues(values []dataflow.Value) (ret map[string]NumericTelemetryValue) {
@@ -29,8 +33,10 @@ func convertValuesToNumericTelemetryValues(values []dataflow.Value) (ret map[str
 	for _, value := range values {
 		if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
 			ret[value.Register().Name()] = NumericTelemetryValue{
-				Value: numeric.Value(),
-				Unit:  numeric.Register().Unit(),
+				Category:    numeric.Register().Category(),
+				Description: numeric.Register().Description(),
+				Value:       numeric.Value(),
+				Unit:        numeric.Register().Unit(),
 			}
 		}
 	}
@@ -44,7 +50,9 @@ func convertValuesToTextTelemetryValues(values []dataflow.Value) (ret map[string
 	for _, value := range values {
 		if text, ok := value.(dataflow.TextRegisterValue); ok {
 			ret[value.Register().Name()] = TextTelemetryValue{
-				Value: text.Value(),
+				Category:    text.Register().Category(),
+				Description: text.Register().Description(),
+				Value:       text.Value(),
 			}
 		}
 	}
