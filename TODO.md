@@ -8,3 +8,4 @@
 - add boolean registers
 - add output registers
 - victron: fetch VoltageCompensation depending on firmware version
+- handle case when http device becomes unreachable (null all values, do not send telemetry)
