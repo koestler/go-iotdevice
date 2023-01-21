@@ -235,7 +235,7 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 		return rawValues[3:], nil
 	}
 
-	vd.debugPrintf("vedirect: VeCommandGet end tries=%v last err=%v", address, numbTries, err)
+	vd.debugPrintf("vedirect: VeCommandGet(address=%x) end tries=%v last err=%v", address, numbTries, err)
 	err = errors.New(fmt.Sprintf("gave up after %v tries, last err=%v", numbTries, err))
 	return nil, err
 }
