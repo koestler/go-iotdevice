@@ -136,10 +136,9 @@ func (ds *DeviceStruct) pollingRoutine() {
 					ticker.Reset(interval)
 					if errorsInARow == 0 {
 						log.Printf("httpDevice[%s]: recoverd, next poll in: %s", ds.deviceConfig.Name(), interval)
+					} else {
+						log.Printf("httpDevice[%s]: exponential backoff, retry in: %s", ds.deviceConfig.Name(), interval)
 					}
-				}
-				if errorsInARow > 0 {
-					log.Printf("httpDevice[%s]: exponential backoff, retry in: %s", ds.deviceConfig.Name(), interval)
 				}
 			}
 		}
