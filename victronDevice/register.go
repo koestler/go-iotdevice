@@ -7,28 +7,20 @@ type VictronRegister interface {
 	dataflow.Register
 	Address() uint16
 	Static() bool
+	Signed() bool
+	Factor() int
+	Offset() float64
 }
 
 type VictronRegisterStruct struct {
 	dataflow.RegisterStruct
 	address uint16
 	static  bool
-}
 
-type NumberRegisterStruct struct {
-	VictronRegisterStruct
+	// only relevant for number registers
 	signed bool
 	factor int
 	offset float64
-}
-
-type TextRegisterStruct struct {
-	VictronRegisterStruct
-}
-
-type EnumRegisterStruct struct {
-	VictronRegisterStruct
-	enum map[int]string
 }
 
 func MergeRegisters(maps ...VictronRegisters) (output VictronRegisters) {
@@ -86,17 +78,21 @@ func CreateTextRegisterStruct(
 	address uint16,
 	static bool,
 	sort int,
-) TextRegisterStruct {
-	return TextRegisterStruct{
-		VictronRegisterStruct{
-			dataflow.CreateRegisterStruct(
-				category, name, description,
-				dataflow.TextRegister, "",
-				sort,
-			),
-			address,
-			static,
-		},
+) VictronRegisterStruct {
+	return VictronRegisterStruct{
+		dataflow.CreateRegisterStruct(
+			category, name, description,
+			dataflow.TextRegister,
+			nil,
+			"",
+			sort,
+			false,
+		),
+		address,
+		static,
+		false, // unused
+		1,     // unused
+		0,     // unused
 	}
 }
 
@@ -109,18 +105,18 @@ func CreateNumberRegisterStruct(
 	offset float64,
 	unit string,
 	sort int,
-) NumberRegisterStruct {
-	return NumberRegisterStruct{
-		VictronRegisterStruct{
-			dataflow.CreateRegisterStruct(
-				category, name, description,
-				dataflow.NumberRegister,
-				unit,
-				sort,
-			),
-			address,
-			static,
-		},
+) VictronRegisterStruct {
+	return VictronRegisterStruct{
+		dataflow.CreateRegisterStruct(
+			category, name, description,
+			dataflow.NumberRegister,
+			nil,
+			unit,
+			sort,
+			false,
+		),
+		address,
+		static,
 		signed,
 		factor,
 		offset,
@@ -133,19 +129,21 @@ func CreateEnumRegisterStruct(
 	static bool,
 	enum map[int]string,
 	sort int,
-) EnumRegisterStruct {
-	return EnumRegisterStruct{
-		VictronRegisterStruct{
-			dataflow.CreateRegisterStruct(
-				category, name, description,
-				dataflow.EnumRegister,
-				"",
-				sort,
-			),
-			address,
-			static,
-		},
-		enum,
+) VictronRegisterStruct {
+	return VictronRegisterStruct{
+		dataflow.CreateRegisterStruct(
+			category, name, description,
+			dataflow.EnumRegister,
+			enum,
+			"",
+			sort,
+			false,
+		),
+		address,
+		static,
+		false, // unused
+		1,     // unused
+		0,     // unused
 	}
 }
 
@@ -157,18 +155,14 @@ func (r VictronRegisterStruct) Static() bool {
 	return r.static
 }
 
-func (r NumberRegisterStruct) Factor() int {
+func (r VictronRegisterStruct) Factor() int {
 	return r.factor
 }
 
-func (r NumberRegisterStruct) Offset() float64 {
+func (r VictronRegisterStruct) Offset() float64 {
 	return r.offset
 }
 
-func (r NumberRegisterStruct) Signed() bool {
+func (r VictronRegisterStruct) Signed() bool {
 	return r.signed
-}
-
-func (r EnumRegisterStruct) Enum() map[int]string {
-	return r.enum
 }

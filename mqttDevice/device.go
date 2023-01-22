@@ -156,8 +156,10 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 		registerName,
 		msg.Description,
 		registerType,
+		nil,
 		msg.Unit,
 		msg.Sort,
+		false,
 	)
 
 	// add the register into the list

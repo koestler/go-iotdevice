@@ -233,8 +233,10 @@ func (ds *DeviceStruct) addIgnoreRegister(category, registerName, description, u
 		registerName,
 		description,
 		registerType,
+		nil,
 		unit,
 		sort,
+		false,
 	)
 
 	// add the register into the list

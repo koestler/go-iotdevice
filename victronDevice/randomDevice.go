@@ -27,18 +27,20 @@ func startRandom(c *DeviceStruct, output chan dataflow.Value, registers VictronR
 			case <-c.shutdown:
 				return
 			case <-ticker.C:
-				for _, register := range registers {
-					if numberRegister, ok := register.(NumberRegisterStruct); ok {
+				for _, r := range registers {
+					switch r.RegisterType() {
+					case dataflow.NumberRegister:
 						var value float64
-						if numberRegister.Signed() {
-							value = 1e2*(rand.Float64()-0.5)*2/float64(numberRegister.Factor()) + numberRegister.Offset()
+						if r.Signed() {
+							value = 1e2*(rand.Float64()-0.5)*2/float64(r.Factor()) + r.Offset()
 						} else {
-							value = 1e2*rand.Float64()/float64(numberRegister.Factor()) + numberRegister.Offset()
+							value = 1e2*rand.Float64()/float64(r.Factor()) + r.Offset()
 						}
 
-						output <- dataflow.NewNumericRegisterValue(c.deviceConfig.Name(), register, value)
-					} else if _, ok := register.(TextRegisterStruct); ok {
-						output <- dataflow.NewTextRegisterValue(c.deviceConfig.Name(), register, randomString(8))
+						output <- dataflow.NewNumericRegisterValue(c.deviceConfig.Name(), r, value)
+
+					case dataflow.TextRegister:
+						output <- dataflow.NewTextRegisterValue(c.deviceConfig.Name(), r, randomString(8))
 					}
 				}
 				c.SetLastUpdatedNow()

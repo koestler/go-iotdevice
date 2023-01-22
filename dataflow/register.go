@@ -17,8 +17,10 @@ type Register interface {
 	Name() string
 	Description() string
 	RegisterType() RegisterType
+	Enum() map[int]string
 	Unit() string
 	Sort() int
+	Controllable() bool
 }
 
 type RegisterStruct struct {
@@ -26,23 +28,29 @@ type RegisterStruct struct {
 	name         string
 	description  string
 	registerType RegisterType
+	enum         map[int]string
 	unit         string
 	sort         int
+	controllable bool
 }
 
 func CreateRegisterStruct(
 	category, name, description string,
 	registerType RegisterType,
+	enum map[int]string,
 	unit string,
 	sort int,
+	controllable bool,
 ) RegisterStruct {
 	return RegisterStruct{
 		category:     category,
 		name:         name,
 		description:  description,
 		registerType: registerType,
+		enum:         enum,
 		unit:         unit,
 		sort:         sort,
+		controllable: controllable,
 	}
 }
 
@@ -62,12 +70,20 @@ func (r RegisterStruct) RegisterType() RegisterType {
 	return r.registerType
 }
 
+func (r RegisterStruct) Enum() map[int]string {
+	return r.enum
+}
+
 func (r RegisterStruct) Unit() string {
 	return r.unit
 }
 
 func (r RegisterStruct) Sort() int {
 	return r.sort
+}
+
+func (r RegisterStruct) Controllable() bool {
+	return r.controllable
 }
 
 func FilterRegisters(input Registers, excludeFields []string, excludeCategories []string) (output Registers) {

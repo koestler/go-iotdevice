@@ -75,9 +75,10 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 						continue
 					}
 
-					if numberRegister, ok := register.(NumberRegisterStruct); ok {
+					switch register.RegisterType() {
+					case dataflow.NumberRegister:
 						var value float64
-						if numberRegister.Signed() {
+						if register.Signed() {
 							var intValue int64
 							intValue, err = vd.VeCommandGetInt(register.Address())
 							value = float64(intValue)
@@ -93,10 +94,10 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 							output <- dataflow.NewNumericRegisterValue(
 								c.deviceConfig.Name(),
 								register,
-								value/float64(numberRegister.Factor())+numberRegister.Offset(),
+								value/float64(register.Factor())+register.Offset(),
 							)
 						}
-					} else if _, ok := register.(TextRegisterStruct); ok {
+					case dataflow.TextRegister:
 						value, err := vd.VeCommandGetString(register.Address())
 
 						if err != nil {
@@ -108,14 +109,14 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 								strings.TrimSpace(value),
 							)
 						}
-					} else if enumRegister, ok := register.(EnumRegisterStruct); ok {
+					case dataflow.EnumRegister:
 						var intValue uint64
 						intValue, err = vd.VeCommandGetUint(register.Address())
 
 						if err != nil {
 							log.Printf("device[%s]: fetching enum register failed: %v", c.deviceConfig.Name(), err)
 						} else {
-							enum := enumRegister.Enum()
+							enum := register.Enum()
 							text := "null"
 							if v, ok := enum[int(intValue)]; ok {
 								text = v
