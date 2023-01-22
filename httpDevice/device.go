@@ -114,6 +114,7 @@ func (ds *DeviceStruct) pollingRoutine() {
 
 	// start source go routine
 	errorsInARow := 0
+	lastErrorMsg := ""
 	interval := ds.getPollInterval(errorsInARow)
 	go func() {
 		defer close(ds.output)
@@ -124,10 +125,13 @@ func (ds *DeviceStruct) pollingRoutine() {
 				return
 			case <-ticker.C:
 				if err := ds.poll(); err != nil {
-					log.Printf("httpDevice[%s]: error: %s", ds.deviceConfig.Name(), err)
 					errorsInARow += 1
+					if errMsg := fmt.Sprintf("httpDevice[%s]: error: %s", ds.deviceConfig.Name(), err); errMsg != lastErrorMsg {
+						log.Println(errMsg)
+					}
 				} else {
 					errorsInARow = 0
+					lastErrorMsg = ""
 				}
 
 				// change poll interval on error
