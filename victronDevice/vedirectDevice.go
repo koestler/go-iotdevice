@@ -116,12 +116,7 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 						if err != nil {
 							log.Printf("device[%s]: fetching enum register failed: %v", c.deviceConfig.Name(), err)
 						} else {
-							enum := register.Enum()
-							text := "null"
-							if v, ok := enum[int(intValue)]; ok {
-								text = v
-							}
-							output <- dataflow.NewTextRegisterValue(c.deviceConfig.Name(), register, text)
+							output <- dataflow.NewEnumRegisterValue(c.deviceConfig.Name(), register, int(intValue))
 						}
 					}
 				}

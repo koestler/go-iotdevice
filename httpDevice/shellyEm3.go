@@ -112,17 +112,23 @@ func (c *ShellyEm3Device) number(category, registerName, description, unit strin
 }
 
 func (c *ShellyEm3Device) boolean(category, registerName, description string, value bool) {
-	// todo: encode as enum instead of number register
-	register := c.ds.addIgnoreRegister(category, registerName, description, "", dataflow.NumberRegister, nil)
+	register := c.ds.addIgnoreRegister(
+		category, registerName, description, "",
+		dataflow.NumberRegister,
+		map[int]string{
+			0: "false",
+			1: "true",
+		},
+	)
 	if register == nil {
 		return
 	}
 
-	var numericValue float64 = 0
+	var intValue = 0
 	if value {
-		numericValue = 1
+		intValue = 1
 	}
-	c.ds.output <- dataflow.NewNumericRegisterValue(c.ds.deviceConfig.Name(), register, numericValue)
+	c.ds.output <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, intValue)
 }
 
 func (c *ShellyEm3Device) extractRegistersAndValues(s ShellyEm3StatusStruct) {

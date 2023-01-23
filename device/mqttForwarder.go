@@ -117,3 +117,7 @@ func RunMqttForwarders(d Device, mqttClientPool *mqttClient.ClientPool, storage 
 		}
 	}
 }
+
+func timeToString(t time.Time) string {
+	return t.Format(time.RFC3339)
+}

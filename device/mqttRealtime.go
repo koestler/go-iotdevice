@@ -28,6 +28,9 @@ func convertValueToRealtimeMessage(value dataflow.Value) interface{} {
 	} else if text, ok := value.(dataflow.TextRegisterValue); ok {
 		v := text.Value()
 		ret.TextValue = &v
+	} else if enum, ok := value.(dataflow.EnumRegisterValue); ok {
+		v := enum.Value()
+		ret.TextValue = &v
 	}
 
 	return ret

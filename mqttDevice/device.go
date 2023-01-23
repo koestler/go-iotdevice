@@ -145,7 +145,7 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 
 	// create new register
 	var r dataflow.Register
-	var registerType dataflow.RegisterType = dataflow.TextRegister
+	var registerType = dataflow.TextRegister
 
 	if msg.NumericValue != nil {
 		registerType = dataflow.NumberRegister
