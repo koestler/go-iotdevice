@@ -96,7 +96,7 @@ func (c *ShellyEm3Device) text(category, registerName, description, value string
 		return
 	}
 
-	register := c.ds.addIgnoreRegister(category, registerName, description, "", "text")
+	register := c.ds.addIgnoreRegister(category, registerName, description, "", dataflow.TextRegister, nil)
 	if register == nil {
 		return
 	}
@@ -104,7 +104,7 @@ func (c *ShellyEm3Device) text(category, registerName, description, value string
 }
 
 func (c *ShellyEm3Device) number(category, registerName, description, unit string, value float64) {
-	register := c.ds.addIgnoreRegister(category, registerName, description, unit, "numeric")
+	register := c.ds.addIgnoreRegister(category, registerName, description, unit, dataflow.NumberRegister, nil)
 	if register == nil {
 		return
 	}
@@ -112,7 +112,8 @@ func (c *ShellyEm3Device) number(category, registerName, description, unit strin
 }
 
 func (c *ShellyEm3Device) boolean(category, registerName, description string, value bool) {
-	register := c.ds.addIgnoreRegister(category, registerName, description, "", "numeric")
+	// todo: encode as enum instead of number register
+	register := c.ds.addIgnoreRegister(category, registerName, description, "", dataflow.NumberRegister, nil)
 	if register == nil {
 		return
 	}

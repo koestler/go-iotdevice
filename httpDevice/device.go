@@ -197,12 +197,17 @@ func (ds *DeviceStruct) ShutdownChan() chan struct{} {
 	return ds.shutdown
 }
 
-func (ds *DeviceStruct) addIgnoreRegister(category, registerName, description, unit, dataType string) dataflow.Register {
+func (ds *DeviceStruct) addIgnoreRegister(
+	category, registerName, description, unit string,
+	registerType dataflow.RegisterType,
+	enum map[int]string,
+) dataflow.Register {
 	// check if this register exists already and the properties are still the same
 	ds.registersMutex.RLock()
 	if r, ok := ds.registers[registerName]; ok {
 		if r.Category() == category &&
 			r.Description() == description &&
+			r.RegisterType() == registerType &&
 			r.Unit() == unit {
 			ds.registersMutex.RUnlock()
 			return r
@@ -217,23 +222,12 @@ func (ds *DeviceStruct) addIgnoreRegister(category, registerName, description, u
 
 	// create new register
 	sort := ds.getRegisterSort(category)
-	var r dataflow.Register
-	var registerType dataflow.RegisterType
-
-	if dataType == "numeric" {
-		registerType = dataflow.NumberRegister
-	} else if dataType == "text" {
-		registerType = dataflow.TextRegister
-	} else {
-		panic("unknown dataType: " + dataType)
-	}
-
-	r = dataflow.CreateRegisterStruct(
+	r := dataflow.CreateRegisterStruct(
 		category,
 		registerName,
 		description,
 		registerType,
-		nil,
+		enum,
 		unit,
 		sort,
 		false,

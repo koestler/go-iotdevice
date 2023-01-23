@@ -10,12 +10,13 @@ import (
 )
 
 type registerResponse struct {
-	Category    string `json:"category" example:"Monitor"`
-	Name        string `json:"name" example:"PanelPower"`
-	Description string `json:"description" example:"Panel power"`
-	Type        string `json:"type" example:"numeric"`
-	Unit        string `json:"unit,omitempty" example:"W"`
-	Sort        int    `json:"sort" example:"100"`
+	Category    string         `json:"category" example:"Monitor"`
+	Name        string         `json:"name" example:"PanelPower"`
+	Description string         `json:"description" example:"Panel power"`
+	Type        string         `json:"type" example:"numeric"`
+	Enum        map[int]string `json:"enum,omitempty"`
+	Unit        string         `json:"unit,omitempty" example:"W"`
+	Sort        int            `json:"sort" example:"100"`
 }
 
 // setupRegisters godoc
@@ -57,7 +58,8 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 						Category:    v.Category(),
 						Name:        v.Name(),
 						Description: v.Description(),
-						Type:        typeString(v.RegisterType()),
+						Type:        v.RegisterType().String(),
+						Enum:        v.Enum(),
 						Unit:        v.Unit(),
 						Sort:        v.Sort(),
 					}
@@ -69,18 +71,5 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 				log.Printf("httpServer: %s%s -> serve fields", r.BasePath(), relativePath)
 			}
 		}
-	}
-}
-
-func typeString(rt dataflow.RegisterType) string {
-	switch rt {
-	case dataflow.TextRegister:
-		return "string"
-	case dataflow.NumberRegister:
-		return "number"
-	case dataflow.EnumRegister:
-		return "enum"
-	default:
-		return ""
 	}
 }

@@ -58,11 +58,7 @@ func setupValuesJson(r *gin.RouterGroup, env *Environment) {
 func compile1DResponse(values []dataflow.Value) (response map[string]valueResponse) {
 	response = make(map[string]valueResponse, len(values))
 	for _, value := range values {
-		if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
-			response[value.Register().Name()] = numeric.Value()
-		} else if text, ok := value.(dataflow.TextRegisterValue); ok {
-			response[value.Register().Name()] = text.Value()
-		}
+		response[value.Register().Name()] = value.GenericValue()
 	}
 	return
 }
@@ -221,11 +217,7 @@ func append2DResponseValue(response map[string]map[string]valueResponse, value d
 		response[d0] = make(map[string]valueResponse, 1)
 	}
 
-	if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
-		response[d0][d1] = numeric.Value()
-	} else if text, ok := value.(dataflow.TextRegisterValue); ok {
-		response[d0][d1] = text.Value()
-	}
+	response[d0][d1] = value.GenericValue()
 }
 
 func getFilter(deviceNames, skipFields, skipCategories []string) dataflow.Filter {

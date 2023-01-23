@@ -4,14 +4,6 @@ import "sort"
 
 type Registers []Register
 
-type RegisterType int
-
-const (
-	TextRegister RegisterType = iota
-	NumberRegister
-	EnumRegister
-)
-
 type Register interface {
 	Category() string
 	Name() string

@@ -156,7 +156,7 @@ func (c *TeracomDevice) text(category, registerName, description, value string) 
 		return
 	}
 
-	register := c.ds.addIgnoreRegister(category, registerName, description, "", "text")
+	register := c.ds.addIgnoreRegister(category, registerName, description, "", dataflow.TextRegister, nil)
 	if register == nil {
 		return
 	}
@@ -174,31 +174,29 @@ func (c *TeracomDevice) number(category, registerName, description, unit string,
 		return
 	}
 
-	register := c.ds.addIgnoreRegister(category, registerName, description, unit, "numeric")
+	register := c.ds.addIgnoreRegister(category, registerName, description, unit, dataflow.NumberRegister, nil)
 	if register == nil {
 		return
 	}
 	c.ds.output <- dataflow.NewNumericRegisterValue(c.ds.deviceConfig.Name(), register, floatValue)
 }
 
-func (c *TeracomDevice) boolean(category, registerName, description string, value string) {
-	numericValue := func(value string) float64 {
-		if value == "ON" {
-			return 1
-		}
-
-		if value == "OPEN" {
-			return 1
-		}
-
-		return 0
-	}(value)
-
-	register := c.ds.addIgnoreRegister(category, registerName, description, "", "numeric")
+func (c *TeracomDevice) enum(category, registerName, description string, enum map[int]string, strValue string) {
+	register := c.ds.addIgnoreRegister(category, registerName, description, "", dataflow.EnumRegister, enum)
 	if register == nil {
 		return
 	}
-	c.ds.output <- dataflow.NewNumericRegisterValue(c.ds.deviceConfig.Name(), register, numericValue)
+
+	enumIdx := func(string) int {
+		for idx, v := range enum {
+			if v == strValue {
+				return idx
+			}
+		}
+		return -1
+	}(strValue)
+
+	c.ds.output <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, enumIdx)
 }
 
 func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
@@ -289,7 +287,13 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 		regName := fmt.Sprintf("DI%d", sIdx)
 		desc := a.Description
 
-		c.boolean("Digital Inputs", regName, desc, a.Value)
+		c.enum("Digital Inputs", regName, desc,
+			map[int]string{
+				0: "OPEN",
+				1: "CLOSED",
+			},
+			a.Value,
+		)
 		c.number("Alarms", regName+"Alarm", desc+" Alarm", "", a.Alarm)
 	}
 	digital(1, s.DI.DI1)
@@ -302,7 +306,13 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 		regName := fmt.Sprintf("R%d", sIdx)
 		desc := r.Description
 
-		c.boolean("Relays", regName, desc, r.Value)
+		c.enum("Relays", regName, desc,
+			map[int]string{
+				0: "OFF",
+				1: "ON",
+			},
+			r.Value,
+		)
 		if r.Control != "0" {
 			c.text("Relays", regName+"Control", desc+" is controlled by", r.Control)
 		}
