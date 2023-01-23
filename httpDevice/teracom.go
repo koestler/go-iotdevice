@@ -199,6 +199,25 @@ func (c *TeracomDevice) enum(category, registerName, description string, enum ma
 	c.ds.output <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, enumIdx)
 }
 
+func (c *TeracomDevice) alarm(category, registerName, description string, strValue string) {
+	enum := map[int]string{
+		0: "OK",
+		1: "ALARMED",
+	}
+
+	register := c.ds.addIgnoreRegister(category, registerName, description, "", dataflow.EnumRegister, enum)
+	if register == nil {
+		return
+	}
+
+	enumIdx := 0
+	if strValue == "1" {
+		enumIdx = 1
+	}
+
+	c.ds.output <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, enumIdx)
+}
+
 func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 	// device info
 	cat := "Device Info"
@@ -213,7 +232,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 	// general
 	cat = "General"
 	c.text(cat, "Hwerr", "Hardware Error", s.Hwerr)
-	c.text(cat, "Alarmed", "Alarmed", s.Alarmed)
+	c.alarm(cat, "Alarmed", "Alarmed", s.Alarmed)
 	c.text(cat, "Date", "Date", s.Time.Date)
 	c.text(cat, "Time", "Time", s.Time.Time)
 
@@ -231,7 +250,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 			desc := s.Description
 
 			c.number("Sensors", regName, desc, i.Unit, i.Value)
-			c.number("Alarms", regName+"Alarm", desc+" Alarm", "", i.Alarm)
+			c.alarm("Alarms", regName+"Alarm", desc, i.Alarm)
 
 			c.number("Settings", regName+"Min", desc+" Min", i.Unit, i.Min)
 			c.number("Settings", regName+"Max", desc+" Max", i.Unit, i.Max)
@@ -263,7 +282,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 		desc := a.Description
 
 		c.number(valueCat, regName, desc, a.Unit, a.Value)
-		c.number("Alarms", regName+"Alarm", desc+" Alarm", "", a.Alarm)
+		c.alarm("Alarms", regName+"Alarm", desc, a.Alarm)
 
 		c.number("Settings", regName+"Min", desc+" Min", a.Unit, a.Min)
 		c.number("Settings", regName+"Max", desc+" Max", a.Unit, a.Max)
@@ -294,7 +313,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 			},
 			a.Value,
 		)
-		c.number("Alarms", regName+"Alarm", desc+" Alarm", "", a.Alarm)
+		c.alarm("Alarms", regName+"Alarm", desc, a.Alarm)
 	}
 	digital(1, s.DI.DI1)
 	digital(2, s.DI.DI2)
