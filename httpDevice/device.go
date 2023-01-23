@@ -128,6 +128,7 @@ func (ds *DeviceStruct) pollingRoutine() {
 					errorsInARow += 1
 					if errMsg := fmt.Sprintf("httpDevice[%s]: error: %s", ds.deviceConfig.Name(), err); errMsg != lastErrorMsg {
 						log.Println(errMsg)
+						lastErrorMsg = errMsg
 					}
 				} else {
 					errorsInARow = 0
@@ -165,8 +166,7 @@ func (ds *DeviceStruct) getPollInterval(errorsInARow int) time.Duration {
 func (ds *DeviceStruct) poll() error {
 	resp, err := ds.httpClient.Do(ds.pollRequest)
 	if err != nil {
-		return fmt.Errorf("cannot get status: %s", err)
-
+		return fmt.Errorf("GET %s failed: %d", ds.pollRequest.URL.String())
 	}
 
 	if resp.StatusCode != http.StatusOK {
