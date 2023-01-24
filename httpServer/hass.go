@@ -63,7 +63,7 @@ func setupHassYaml(r *gin.RouterGroup, env *Environment) {
 			yamlGetResponse(c, sensors)
 		})
 		if env.Config.LogConfig() {
-			log.Printf("httpServer: %s%s -> serve hass configuration as yaml", r.BasePath(), relativePath)
+			log.Printf("httpServer: GET %s%s -> serve hass configuration as yaml", r.BasePath(), relativePath)
 		}
 
 	}

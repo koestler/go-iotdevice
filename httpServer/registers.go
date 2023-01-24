@@ -70,7 +70,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 				jsonGetResponse(c, response)
 			})
 			if env.Config.LogConfig() {
-				log.Printf("httpServer: %s%s -> serve fields", r.BasePath(), relativePath)
+				log.Printf("httpServer: GET %s%s -> serve fields", r.BasePath(), relativePath)
 			}
 		}
 	}

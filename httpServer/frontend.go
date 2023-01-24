@@ -20,7 +20,7 @@ func setupFrontend(engine *gin.Engine, config Config) {
 			proxy.ServeHTTP(c.Writer, c.Request)
 		})
 		if config.LogConfig() {
-			log.Printf("httpServer: /* -> proxy %s*", frontendUrl)
+			log.Printf("httpServer: GET /* -> proxy %s*", frontendUrl)
 		}
 	} else {
 		frontendPath := path.Clean(config.FrontendPath())
@@ -71,6 +71,6 @@ func serveStatic(engine *gin.Engine, config Config, route, filePath string) {
 		c.File(filePath)
 	})
 	if config.LogConfig() {
-		log.Printf("httpServer: %s -> serve static %s", route, filePath)
+		log.Printf("httpServer: GET %s -> serve static %s", route, filePath)
 	}
 }

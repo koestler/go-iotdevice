@@ -78,7 +78,7 @@ func setupLogin(r *gin.RouterGroup, env *Environment) {
 		c.JSON(http.StatusOK, loginResponse{Token: tokenStr, User: req.User, AllowedViews: allowedViews})
 	})
 	if env.Config.LogConfig() {
-		log.Printf("httpServer: %slogin -> serve login", r.BasePath())
+		log.Printf("httpServer: POST %slogin -> serve login", r.BasePath())
 	}
 }
 
@@ -87,7 +87,7 @@ func disableLogin(r *gin.RouterGroup, config Config) {
 		jsonErrorResponse(c, http.StatusServiceUnavailable, errors.New("Authentication module is disabled"))
 	})
 	if config.LogConfig() {
-		log.Printf("httpServer: %slogin -> login disabled", r.BasePath())
+		log.Printf("httpServer: POST %slogin -> login disabled", r.BasePath())
 	}
 }
 

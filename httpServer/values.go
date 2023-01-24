@@ -14,9 +14,9 @@ import (
 
 type valueResponse interface{}
 
-// setupValuesJson godoc
+// setupValuesGetJson godoc
 // @Summary Outputs the latest values of all the fields of a device.
-// @ID valuesJson
+// @ID valuesGetJson
 // @Param viewName path string true "View name as provided by the config endpoint"
 // @Param deviceName path string true "Device name as provided in devices array of the config endpoint"
 // @Produce json
@@ -24,7 +24,7 @@ type valueResponse interface{}
 // @Failure 404 {object} ErrorResponse
 // @Router /values/{viewName}/{deviceName}.json [get]
 // @Security ApiKeyAuth
-func setupValuesJson(r *gin.RouterGroup, env *Environment) {
+func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 	// add dynamic routes
 	for _, v := range env.Views {
 		view := v
@@ -49,7 +49,53 @@ func setupValuesJson(r *gin.RouterGroup, env *Environment) {
 				jsonGetResponse(c, compile1DResponse(values))
 			})
 			if env.Config.LogConfig() {
-				log.Printf("httpServer: %s%s -> serve values as json", r.BasePath(), relativePath)
+				log.Printf("httpServer: GET %s%s -> serve values as json", r.BasePath(), relativePath)
+			}
+		}
+	}
+}
+
+// setupValuesPatch godoc
+// @Summary Sets controllable registers
+// @ID valuesPatch
+// @Param viewName path string true "View name as provided by the config endpoint"
+// @Param deviceName path string true "Device name as provided in devices array of the config endpoint"
+// @Produce json
+// @success 200 {array} valueResponse
+// @Failure 404 {object} ErrorResponse
+// @Router /values/{viewName}/{deviceName} [patch]
+// @Security ApiKeyAuth
+func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
+	// add dynamic routes
+	for _, v := range env.Views {
+		view := v
+		for _, deviceName := range view.DeviceNames() {
+			device := env.DevicePoolInstance.GetDevice(deviceName)
+			if device == nil {
+				continue
+			}
+
+			relativePath := "values/" + view.Name() + "/" + deviceName
+
+			// the following line uses a loop variable; it must be outside the closure
+			//filter := getFilter([]string{deviceName}, view.SkipFields(), view.SkipCategories())
+			r.PATCH(relativePath, func(c *gin.Context) {
+				// check authorization
+				if !isViewAuthenticated(view, c) {
+					jsonErrorResponse(c, http.StatusForbidden, errors.New("User is not allowed here"))
+					return
+				}
+
+				var req map[string]interface{}
+				if err := c.ShouldBindJSON(&req); err != nil {
+					jsonErrorResponse(c, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
+					return
+				}
+
+				log.Printf("patch received: %v", req)
+			})
+			if env.Config.LogConfig() {
+				log.Printf("httpServer: PATCH %s%s -> setup value dispatcher", r.BasePath(), relativePath)
 			}
 		}
 	}
@@ -196,7 +242,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 			}()
 		})
 		if env.Config.LogConfig() {
-			log.Printf("httpServer: %s%s -> setup websocket for values", r.BasePath(), relativePath)
+			log.Printf("httpServer: GET %s%s -> setup websocket for values", r.BasePath(), relativePath)
 		}
 	}
 }
