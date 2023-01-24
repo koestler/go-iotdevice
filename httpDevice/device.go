@@ -201,6 +201,7 @@ func (ds *DeviceStruct) addIgnoreRegister(
 	category, registerName, description, unit string,
 	registerType dataflow.RegisterType,
 	enum map[int]string,
+	controllable bool,
 ) dataflow.Register {
 	// check if this register exists already and the properties are still the same
 	ds.registersMutex.RLock()
@@ -230,7 +231,7 @@ func (ds *DeviceStruct) addIgnoreRegister(
 		enum,
 		unit,
 		sort,
-		false,
+		controllable,
 	)
 
 	// add the register into the list

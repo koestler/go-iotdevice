@@ -96,7 +96,9 @@ func (c *ShellyEm3Device) text(category, registerName, description, value string
 		return
 	}
 
-	register := c.ds.addIgnoreRegister(category, registerName, description, "", dataflow.TextRegister, nil)
+	register := c.ds.addIgnoreRegister(
+		category, registerName, description, "", dataflow.TextRegister, nil, false,
+	)
 	if register == nil {
 		return
 	}
@@ -104,7 +106,9 @@ func (c *ShellyEm3Device) text(category, registerName, description, value string
 }
 
 func (c *ShellyEm3Device) number(category, registerName, description, unit string, value float64) {
-	register := c.ds.addIgnoreRegister(category, registerName, description, unit, dataflow.NumberRegister, nil)
+	register := c.ds.addIgnoreRegister(
+		category, registerName, description, unit, dataflow.NumberRegister, nil, false,
+	)
 	if register == nil {
 		return
 	}
@@ -119,6 +123,7 @@ func (c *ShellyEm3Device) boolean(category, registerName, description string, va
 			0: "false",
 			1: "true",
 		},
+		false,
 	)
 	if register == nil {
 		return

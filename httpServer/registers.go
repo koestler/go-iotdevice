@@ -10,13 +10,14 @@ import (
 )
 
 type registerResponse struct {
-	Category    string         `json:"category" example:"Monitor"`
-	Name        string         `json:"name" example:"PanelPower"`
-	Description string         `json:"description" example:"Panel power"`
-	Type        string         `json:"type" example:"numeric"`
-	Enum        map[int]string `json:"enum,omitempty"`
-	Unit        string         `json:"unit,omitempty" example:"W"`
-	Sort        int            `json:"sort" example:"100"`
+	Category     string         `json:"category" example:"Monitor"`
+	Name         string         `json:"name" example:"PanelPower"`
+	Description  string         `json:"description" example:"Panel power"`
+	Type         string         `json:"type" example:"numeric"`
+	Enum         map[int]string `json:"enum,omitempty"`
+	Unit         string         `json:"unit,omitempty" example:"W"`
+	Sort         int            `json:"sort" example:"100"`
+	Controllable bool           `json:"controllable" example:"false""`
 }
 
 // setupRegisters godoc
@@ -55,13 +56,14 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 				response := make([]registerResponse, len(registers))
 				for i, v := range registers {
 					response[i] = registerResponse{
-						Category:    v.Category(),
-						Name:        v.Name(),
-						Description: v.Description(),
-						Type:        v.RegisterType().String(),
-						Enum:        v.Enum(),
-						Unit:        v.Unit(),
-						Sort:        v.Sort(),
+						Category:     v.Category(),
+						Name:         v.Name(),
+						Description:  v.Description(),
+						Type:         v.RegisterType().String(),
+						Enum:         v.Enum(),
+						Unit:         v.Unit(),
+						Sort:         v.Sort(),
+						Controllable: v.Controllable(),
 					}
 				}
 				setCacheControlPublic(c, 10*time.Second)

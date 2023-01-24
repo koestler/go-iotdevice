@@ -156,7 +156,9 @@ func (c *TeracomDevice) text(category, registerName, description, value string) 
 		return
 	}
 
-	register := c.ds.addIgnoreRegister(category, registerName, description, "", dataflow.TextRegister, nil)
+	register := c.ds.addIgnoreRegister(
+		category, registerName, description, "", dataflow.TextRegister, nil, false,
+	)
 	if register == nil {
 		return
 	}
@@ -174,15 +176,21 @@ func (c *TeracomDevice) number(category, registerName, description, unit string,
 		return
 	}
 
-	register := c.ds.addIgnoreRegister(category, registerName, description, unit, dataflow.NumberRegister, nil)
+	register := c.ds.addIgnoreRegister(
+		category, registerName, description, unit, dataflow.NumberRegister, nil, false,
+	)
 	if register == nil {
 		return
 	}
 	c.ds.output <- dataflow.NewNumericRegisterValue(c.ds.deviceConfig.Name(), register, floatValue)
 }
 
-func (c *TeracomDevice) enum(category, registerName, description string, enum map[int]string, strValue string) {
-	register := c.ds.addIgnoreRegister(category, registerName, description, "", dataflow.EnumRegister, enum)
+func (c *TeracomDevice) enum(
+	category, registerName, description string, enum map[int]string, strValue string, controllable bool,
+) {
+	register := c.ds.addIgnoreRegister(
+		category, registerName, description, "", dataflow.EnumRegister, enum, controllable,
+	)
 	if register == nil {
 		return
 	}
@@ -205,7 +213,9 @@ func (c *TeracomDevice) alarm(category, registerName, description string, strVal
 		1: "ALARMED",
 	}
 
-	register := c.ds.addIgnoreRegister(category, registerName, description, "", dataflow.EnumRegister, enum)
+	register := c.ds.addIgnoreRegister(
+		category, registerName, description, "", dataflow.EnumRegister, enum, false,
+	)
 	if register == nil {
 		return
 	}
@@ -312,6 +322,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 				1: "CLOSED",
 			},
 			a.Value,
+			false,
 		)
 		c.alarm("Alarms", regName+"Alarm", desc, a.Alarm)
 	}
@@ -332,6 +343,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 				2: "in pulse",
 			},
 			r.Value,
+			true,
 		)
 		if r.Control != "0" {
 			c.text("Relays", regName+"Control", desc+" is controlled by", r.Control)
