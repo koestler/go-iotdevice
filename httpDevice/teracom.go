@@ -329,6 +329,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 			map[int]string{
 				0: "OFF",
 				1: "ON",
+				2: "in pulse",
 			},
 			r.Value,
 		)
