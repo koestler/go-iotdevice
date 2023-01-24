@@ -124,6 +124,16 @@ func (c *DeviceStruct) Registers() dataflow.Registers {
 	return ret
 }
 
+func (c *DeviceStruct) GetRegister(registerName string) dataflow.Register {
+	c.registersMutex.RLock()
+	defer c.registersMutex.RUnlock()
+
+	if r, ok := c.registers[registerName]; ok {
+		return r
+	}
+	return nil
+}
+
 func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.RealtimeMessage) dataflow.Register {
 	// check if this register exists already and the properties are still the same
 	c.registersMutex.RLock()

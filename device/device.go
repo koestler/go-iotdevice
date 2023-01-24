@@ -18,6 +18,7 @@ type Config interface {
 type Device interface {
 	Config() Config
 	Registers() dataflow.Registers
+	GetRegister(registerName string) dataflow.Register
 	LastUpdated() time.Time
 	Model() string
 	Shutdown()

@@ -84,6 +84,15 @@ func (c *DeviceStruct) Registers() dataflow.Registers {
 	return ret
 }
 
+func (c *DeviceStruct) GetRegister(registerName string) dataflow.Register {
+	for _, r := range c.registers {
+		if r.Name() == registerName {
+			return r
+		}
+	}
+	return nil
+}
+
 func (c *DeviceStruct) SetLastUpdatedNow() {
 	c.lastUpdatedMutex.Lock()
 	defer c.lastUpdatedMutex.Unlock()

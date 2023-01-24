@@ -101,7 +101,10 @@ type EnumRegisterValue struct {
 }
 
 func (v EnumRegisterValue) String() string {
-	return fmt.Sprintf("%s=%f%s", v.Register().Name(), v.value, v.Register().Unit())
+	if textVal, ok := v.Register().Enum()[v.value]; ok {
+		return fmt.Sprintf("%s=%d:%s", v.Register().Name(), v.value, textVal)
+	}
+	return fmt.Sprintf("%s=%d", v.Register().Name(), v.value)
 }
 
 func (v EnumRegisterValue) Value() string {

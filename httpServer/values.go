@@ -2,6 +2,7 @@ package httpServer
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -66,19 +67,23 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 // @Router /values/{viewName}/{deviceName} [patch]
 // @Security ApiKeyAuth
 func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
+	// setup output chain and connect it to storage
+	output := make(chan dataflow.Value, 128)
+	source := dataflow.CreateSource(output)
+	source.Append(env.Storage)
+
 	// add dynamic routes
 	for _, v := range env.Views {
 		view := v
-		for _, deviceName := range view.DeviceNames() {
+		for _, dn := range view.DeviceNames() {
+			// the following line uses a loop variable; it must be outside the closure
+			deviceName := dn
 			device := env.DevicePoolInstance.GetDevice(deviceName)
 			if device == nil {
 				continue
 			}
 
 			relativePath := "values/" + view.Name() + "/" + deviceName
-
-			// the following line uses a loop variable; it must be outside the closure
-			//filter := getFilter([]string{deviceName}, view.SkipFields(), view.SkipCategories())
 			r.PATCH(relativePath, func(c *gin.Context) {
 				// check authorization
 				if !isViewAuthenticated(view, c) {
@@ -92,7 +97,50 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 					return
 				}
 
-				log.Printf("patch received: %v", req)
+				// check all inputs
+				inputs := make([]dataflow.Value, 0, len(req))
+				for registerName, value := range req {
+					register := device.GetRegister(registerName)
+					if register == nil {
+						jsonErrorResponse(c, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
+						return
+					}
+
+					invalidType := func(t string) {
+						jsonErrorResponse(c, http.StatusUnprocessableEntity, fmt.Errorf("expect type of %s to be a %s", registerName, t))
+					}
+
+					switch register.RegisterType() {
+					case dataflow.TextRegister:
+						if v, ok := value.(string); ok {
+							inputs = append(inputs, dataflow.NewTextRegisterValue(deviceName, register, v))
+						} else {
+							invalidType("string")
+							return
+						}
+					case dataflow.NumberRegister:
+						if v, ok := value.(float64); ok {
+							inputs = append(inputs, dataflow.NewNumericRegisterValue(deviceName, register, v))
+						} else {
+							invalidType("float")
+							return
+						}
+
+					case dataflow.EnumRegister:
+						if v, ok := value.(float64); ok {
+							inputs = append(inputs, dataflow.NewEnumRegisterValue(deviceName, register, int(v)))
+						} else {
+							invalidType("float")
+							return
+						}
+					}
+				}
+
+				// all ok, send inputs to storage
+				for _, inp := range inputs {
+					log.Printf("send: %v", inp)
+					output <- inp
+				}
 			})
 			if env.Config.LogConfig() {
 				log.Printf("httpServer: PATCH %s%s -> setup value dispatcher", r.BasePath(), relativePath)

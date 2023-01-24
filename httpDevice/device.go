@@ -255,6 +255,16 @@ func (ds *DeviceStruct) Registers() dataflow.Registers {
 	return ret
 }
 
+func (ds *DeviceStruct) GetRegister(registerName string) dataflow.Register {
+	ds.registersMutex.RLock()
+	defer ds.registersMutex.RUnlock()
+
+	if r, ok := ds.registers[registerName]; ok {
+		return r
+	}
+	return nil
+}
+
 func (ds *DeviceStruct) SetLastUpdatedNow() {
 	ds.lastUpdatedMutex.Lock()
 	defer ds.lastUpdatedMutex.Unlock()
