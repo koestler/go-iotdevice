@@ -5,7 +5,6 @@ import (
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
-	"github.com/koestler/go-iotdevice/mqttClient"
 	"io"
 	"log"
 	"net/http"
@@ -26,6 +25,7 @@ type Config interface {
 type DeviceStruct struct {
 	deviceConfig device.Config
 	httpConfig   Config
+	storage      *dataflow.ValueStorageInstance
 
 	output chan dataflow.Value
 
@@ -46,7 +46,6 @@ func RunDevice(
 	deviceConfig device.Config,
 	teracomConfig Config,
 	storage *dataflow.ValueStorageInstance,
-	mqttClientPool *mqttClient.ClientPool,
 ) (device device.Device, err error) {
 	// setup output chain
 	output := make(chan dataflow.Value, 128)
@@ -58,10 +57,11 @@ func RunDevice(
 	ds := &DeviceStruct{
 		deviceConfig: deviceConfig,
 		httpConfig:   teracomConfig,
+		storage:      storage,
 		output:       output,
 
 		httpClient: &http.Client{
-			// this tool is designed to serve cameras running on the local network
+			// this tool is designed to serve devices running on the local network
 			// -> us a relatively short timeout
 			Timeout: 10 * time.Second,
 		},
@@ -81,6 +81,9 @@ func RunDevice(
 
 	// start polling the device
 	ds.pollingRoutine()
+
+	// start listing for update to controllable registers
+	ds.controlRoutine()
 
 	return ds, nil
 }
@@ -166,7 +169,7 @@ func (ds *DeviceStruct) getPollInterval(errorsInARow int) time.Duration {
 func (ds *DeviceStruct) poll() error {
 	resp, err := ds.httpClient.Do(ds.pollRequest)
 	if err != nil {
-		return fmt.Errorf("GET %s failed: %d", ds.pollRequest.URL.String())
+		return fmt.Errorf("GET %s failed", ds.pollRequest.URL.String())
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -187,6 +190,51 @@ func (ds *DeviceStruct) poll() error {
 
 	ds.SetLastUpdatedNow()
 	return nil
+}
+
+func (ds *DeviceStruct) controlRoutine() {
+	go func() {
+		filter := dataflow.Filter{
+			IncludeDevices: map[string]bool{ds.Config().Name(): true},
+			OnlyControl:    true,
+		}
+		subscription := ds.storage.Subscribe(filter)
+		defer subscription.Shutdown()
+
+		for {
+			select {
+			case <-ds.shutdown:
+				return
+			case value := <-subscription.GetOutput():
+				if ds.Config().LogDebug() {
+					log.Printf(
+						"device[%s]: controllable command: %s",
+						ds.Config().Name(), value.String(),
+					)
+				}
+				if request, err := ds.impl.ControlValueRequest(value); err != nil {
+					log.Printf(
+						"device[%s]: control request genration failed: %s",
+						ds.Config().Name(), err,
+					)
+				} else {
+					request.URL = ds.httpConfig.Url().JoinPath(request.URL.String())
+					request.SetBasicAuth(ds.httpConfig.Username(), ds.httpConfig.Password())
+					if resp, err := ds.httpClient.Do(request); err != nil {
+						log.Printf(
+							"device[%s]: control request failed: %s",
+							ds.Config().Name(), err,
+						)
+					} else if resp.StatusCode != http.StatusOK {
+						log.Printf(
+							"device[%s]: control request failed with code: %d",
+							ds.Config().Name(), resp.StatusCode,
+						)
+					}
+				}
+			}
+		}
+	}()
 }
 
 func (ds *DeviceStruct) Config() device.Config {

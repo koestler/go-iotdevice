@@ -36,11 +36,11 @@ func startRandom(c *DeviceStruct, output chan dataflow.Value, registers VictronR
 						} else {
 							value = 1e2*rand.Float64()/float64(r.Factor()) + r.Offset()
 						}
-						output <- dataflow.NewNumericRegisterValue(c.deviceConfig.Name(), r, value)
+						output <- dataflow.NewNumericRegisterValue(c.deviceConfig.Name(), r, value, false)
 					case dataflow.TextRegister:
-						output <- dataflow.NewTextRegisterValue(c.deviceConfig.Name(), r, randomString(8))
+						output <- dataflow.NewTextRegisterValue(c.deviceConfig.Name(), r, randomString(8), false)
 					case dataflow.EnumRegister:
-						output <- dataflow.NewEnumRegisterValue(c.deviceConfig.Name(), r, randomEnum(r.Enum()))
+						output <- dataflow.NewEnumRegisterValue(c.deviceConfig.Name(), r, randomEnum(r.Enum()), false)
 					}
 				}
 				c.SetLastUpdatedNow()

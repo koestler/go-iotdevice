@@ -109,14 +109,14 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 					switch register.RegisterType() {
 					case dataflow.TextRegister:
 						if v, ok := value.(string); ok {
-							inputs = append(inputs, dataflow.NewTextRegisterValue(deviceName, register, v))
+							inputs = append(inputs, dataflow.NewTextRegisterValue(deviceName, register, v, true))
 						} else {
 							invalidType("string")
 							return
 						}
 					case dataflow.NumberRegister:
 						if v, ok := value.(float64); ok {
-							inputs = append(inputs, dataflow.NewNumericRegisterValue(deviceName, register, v))
+							inputs = append(inputs, dataflow.NewNumericRegisterValue(deviceName, register, v, true))
 						} else {
 							invalidType("float")
 							return
@@ -124,7 +124,7 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 
 					case dataflow.EnumRegister:
 						if v, ok := value.(float64); ok {
-							inputs = append(inputs, dataflow.NewEnumRegisterValue(deviceName, register, int(v)))
+							inputs = append(inputs, dataflow.NewEnumRegisterValue(deviceName, register, int(v), true))
 						} else {
 							invalidType("float")
 							return
@@ -134,7 +134,6 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 
 				// all ok, send inputs to storage
 				for _, inp := range inputs {
-					log.Printf("send: %v", inp)
 					output <- inp
 				}
 			})

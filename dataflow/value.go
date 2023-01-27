@@ -4,6 +4,7 @@ import "fmt"
 
 type Value interface {
 	DeviceName() string
+	Control() bool
 	Register() Register
 	String() string
 	GenericValue() interface{}
@@ -14,11 +15,16 @@ type ValueMap map[string]Value
 
 type RegisterValue struct {
 	deviceName string
+	control    bool
 	register   Register
 }
 
 func (v RegisterValue) DeviceName() string {
 	return v.deviceName
+}
+
+func (v RegisterValue) Control() bool {
+	return v.control
 }
 
 func (v RegisterValue) Register() Register {
@@ -50,11 +56,12 @@ func (v NumericRegisterValue) Equals(comp Value) bool {
 	return b.Register().Name() == b.Register().Name() && v.value == b.value
 }
 
-func NewNumericRegisterValue(deviceName string, register Register, value float64) NumericRegisterValue {
+func NewNumericRegisterValue(deviceName string, register Register, value float64, control bool) NumericRegisterValue {
 	return NumericRegisterValue{
 		RegisterValue: RegisterValue{
 			deviceName: deviceName,
 			register:   register,
+			control:    control,
 		},
 		value: value,
 	}
@@ -85,11 +92,12 @@ func (v TextRegisterValue) Equals(comp Value) bool {
 	return b.Register().Name() == b.Register().Name() && v.value == b.value
 }
 
-func NewTextRegisterValue(deviceName string, register Register, value string) TextRegisterValue {
+func NewTextRegisterValue(deviceName string, register Register, value string, control bool) TextRegisterValue {
 	return TextRegisterValue{
 		RegisterValue: RegisterValue{
 			deviceName: deviceName,
 			register:   register,
+			control:    control,
 		},
 		value: value,
 	}
@@ -126,11 +134,12 @@ func (v EnumRegisterValue) Equals(comp Value) bool {
 	return b.Register().Name() == b.Register().Name() && v.value == b.value
 }
 
-func NewEnumRegisterValue(deviceName string, register Register, value int) EnumRegisterValue {
+func NewEnumRegisterValue(deviceName string, register Register, value int, control bool) EnumRegisterValue {
 	return EnumRegisterValue{
 		RegisterValue: RegisterValue{
 			deviceName: deviceName,
 			register:   register,
+			control:    control,
 		},
 		value: value,
 	}

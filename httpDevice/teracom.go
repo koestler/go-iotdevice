@@ -4,7 +4,10 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
+	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 )
 
 type TeracomDevice struct {
@@ -48,6 +51,46 @@ func (c *TeracomDevice) GetCategorySort(category string) int {
 	default:
 		panic("unknown category: " + category)
 	}
+}
+
+func (c *TeracomDevice) ControlValueRequest(value dataflow.Value) (*http.Request, error) {
+	if value.Register().RegisterType() != dataflow.EnumRegister {
+		return nil, fmt.Errorf("only enum implemented")
+	}
+
+	enum := value.(dataflow.EnumRegisterValue)
+
+	// control relays
+	var cmd string
+	switch v := enum.Value(); v {
+	case "ON":
+		cmd = "ron"
+	case "OFF":
+		cmd = "rof"
+	case "in pulse":
+		cmd = "rpl"
+	default:
+		return nil, fmt.Errorf("unsupported value=%s", v)
+	}
+
+	var param string
+	switch name := value.Register().Name(); name {
+	case "R1":
+		param = "1"
+	case "R2":
+		param = "2"
+	case "R3":
+		param = "4"
+	case "R4":
+		param = "8"
+	default:
+		return nil, fmt.Errorf("unsupported register Name=%s", name)
+	}
+
+	values := url.Values{}
+	values.Set(cmd, param)
+
+	return http.NewRequest("POST", "/monitor/monitor.htm", strings.NewReader(values.Encode()))
 }
 
 type teracomSensorValueStruct struct {
@@ -162,7 +205,7 @@ func (c *TeracomDevice) text(category, registerName, description, value string) 
 	if register == nil {
 		return
 	}
-	c.ds.output <- dataflow.NewTextRegisterValue(c.ds.deviceConfig.Name(), register, value)
+	c.ds.output <- dataflow.NewTextRegisterValue(c.ds.deviceConfig.Name(), register, value, false)
 }
 
 func (c *TeracomDevice) number(category, registerName, description, unit string, value string) {
@@ -182,7 +225,7 @@ func (c *TeracomDevice) number(category, registerName, description, unit string,
 	if register == nil {
 		return
 	}
-	c.ds.output <- dataflow.NewNumericRegisterValue(c.ds.deviceConfig.Name(), register, floatValue)
+	c.ds.output <- dataflow.NewNumericRegisterValue(c.ds.deviceConfig.Name(), register, floatValue, false)
 }
 
 func (c *TeracomDevice) enum(
@@ -204,7 +247,7 @@ func (c *TeracomDevice) enum(
 		return -1
 	}(strValue)
 
-	c.ds.output <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, enumIdx)
+	c.ds.output <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, enumIdx, false)
 }
 
 func (c *TeracomDevice) alarm(category, registerName, description string, strValue string) {
@@ -225,7 +268,7 @@ func (c *TeracomDevice) alarm(category, registerName, description string, strVal
 		enumIdx = 1
 	}
 
-	c.ds.output <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, enumIdx)
+	c.ds.output <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, enumIdx, false)
 }
 
 func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {

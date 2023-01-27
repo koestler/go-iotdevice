@@ -21,6 +21,7 @@ type Filter struct {
 	IncludeDevices         map[string]bool
 	SkipRegisterNames      map[string]bool
 	SkipRegisterCategories map[string]bool
+	OnlyControl            bool
 }
 
 type readStateRequest struct {

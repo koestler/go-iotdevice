@@ -49,7 +49,7 @@ func runDevices(
 			log.Printf("device[%s]: start tearacom type", deviceConfig.Name())
 		}
 
-		if dev, err := httpDevice.RunDevice(deviceConfig, deviceConfig, storage, mqttClientPool); err != nil {
+		if dev, err := httpDevice.RunDevice(deviceConfig, deviceConfig, storage); err != nil {
 			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
 		} else {
 			device.RunMqttForwarders(dev, mqttClientPool, storage)

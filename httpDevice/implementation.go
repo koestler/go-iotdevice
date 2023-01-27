@@ -1,11 +1,16 @@
 package httpDevice
 
-import "github.com/koestler/go-iotdevice/config"
+import (
+	"github.com/koestler/go-iotdevice/config"
+	"github.com/koestler/go-iotdevice/dataflow"
+	"net/http"
+)
 
 type Implementation interface {
 	GetPath() string
 	HandleResponse(body []byte) error
 	GetCategorySort(category string) int
+	ControlValueRequest(value dataflow.Value) (*http.Request, error)
 }
 
 func implementationFactory(ds *DeviceStruct) Implementation {
