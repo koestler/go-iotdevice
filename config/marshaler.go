@@ -56,9 +56,9 @@ func (c Config) MarshalYAML() (interface{}, error) {
 			r := c.httpServer.convertToRead()
 			return &r
 		}(),
-		LogConfig:      &c.logConfig,
-		LogWorkerStart: &c.logWorkerStart,
-		LogDebug:       &c.logDebug,
+		LogConfig:       &c.logConfig,
+		LogWorkerStart:  &c.logWorkerStart,
+		LogStorageDebug: &c.logStorageDebug,
 	}, nil
 }
 
@@ -184,5 +184,6 @@ func (c HttpServerConfig) convertToRead() httpServerConfigRead {
 		FrontendPath:    c.frontendPath,
 		FrontendExpires: c.frontendExpires.String(),
 		ConfigExpires:   c.configExpires.String(),
+		LogDebug:        &c.logDebug,
 	}
 }

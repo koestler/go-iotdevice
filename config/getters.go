@@ -53,8 +53,8 @@ func (c Config) LogWorkerStart() bool {
 	return c.logWorkerStart
 }
 
-func (c Config) LogDebug() bool {
-	return c.logDebug
+func (c Config) LogStorageDebug() bool {
+	return c.logStorageDebug
 }
 
 func (c AuthConfig) Enabled() bool {
@@ -216,6 +216,10 @@ func (c HttpDeviceConfig) PollIntervalMaxBackoff() time.Duration {
 	return c.pollIntervalMaxBackoff
 }
 
+func (c HttpDeviceConfig) LogDebug() bool {
+	return c.logDebug
+}
+
 func (c MqttDeviceConfig) MqttTopics() []string {
 	return c.mqttTopics
 }
@@ -307,6 +311,10 @@ func (c HttpServerConfig) FrontendExpires() time.Duration {
 
 func (c HttpServerConfig) ConfigExpires() time.Duration {
 	return c.configExpires
+}
+
+func (c HttpServerConfig) LogDebug() bool {
+	return c.logDebug
 }
 
 func (c Config) GetViewNames() (ret []string) {

@@ -115,8 +115,8 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 		ret.logWorkerStart = true
 	}
 
-	if c.LogDebug != nil && *c.LogDebug {
-		ret.logDebug = true
+	if c.LogStorageDebug != nil && *c.LogStorageDebug {
+		ret.logStorageDebug = true
 	}
 
 	return
@@ -235,6 +235,10 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 		err = append(err, fmt.Errorf("HttpServerConfig->ConfigExpires='%s' must be positive", c.ConfigExpires))
 	} else {
 		ret.configExpires = configExpires
+	}
+
+	if c.LogDebug != nil && *c.LogDebug {
+		ret.logDebug = true
 	}
 
 	return

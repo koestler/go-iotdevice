@@ -6,19 +6,19 @@ import (
 )
 
 type Config struct {
-	version        int                    // must be 1
-	projectTitle   string                 // optional: default go-iotdevice
-	auth           AuthConfig             // optional: default Disabled
-	mqttClients    []*MqttClientConfig    // mandatory: at least 1 must be defined
-	devices        []*DeviceConfig        // aggregated over all types
-	victronDevices []*VictronDeviceConfig // optional
-	httpDevices    []*HttpDeviceConfig    // optional
-	mqttDevices    []*MqttDeviceConfig    // optional
-	views          []*ViewConfig          // mandatory: at least 1 must be defined
-	httpServer     HttpServerConfig       // optional: default Disabled
-	logConfig      bool                   // optional: default False
-	logWorkerStart bool                   // optional: default False
-	logDebug       bool                   // optional: default False
+	version         int                    // must be 1
+	projectTitle    string                 // optional: default go-iotdevice
+	auth            AuthConfig             // optional: default Disabled
+	mqttClients     []*MqttClientConfig    // mandatory: at least 1 must be defined
+	devices         []*DeviceConfig        // aggregated over all types
+	victronDevices  []*VictronDeviceConfig // optional
+	httpDevices     []*HttpDeviceConfig    // optional
+	mqttDevices     []*MqttDeviceConfig    // optional
+	views           []*ViewConfig          // mandatory: at least 1 must be defined
+	httpServer      HttpServerConfig       // optional: default Disabled
+	logConfig       bool                   // optional: default False
+	logWorkerStart  bool                   // optional: default False
+	logStorageDebug bool                   // optional: default False
 }
 
 type AuthConfig struct {
@@ -108,6 +108,7 @@ type HttpServerConfig struct {
 	frontendPath    string        // optional: default "frontend-build"; otherwise set to a path where the frontend build is located
 	frontendExpires time.Duration // optional: default 5min; what cache-control header to sent for static frontend files
 	configExpires   time.Duration // optional: default 1min; what cache-control header to sent for static frontend files
+	logDebug        bool          // optional: default false
 }
 
 // victron device kind

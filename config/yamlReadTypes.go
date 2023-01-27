@@ -1,18 +1,18 @@
 package config
 
 type configRead struct {
-	Version        *int                       `yaml:"Version"`
-	ProjectTitle   string                     `yaml:"ProjectTitle"`
-	Auth           *authConfigRead            `yaml:"Auth"`
-	MqttClients    mqttClientConfigReadMap    `yaml:"MqttClients"`
-	VictronDevices victronDeviceConfigReadMap `yaml:"VictronDevices"`
-	HttpDevices    httpDeviceConfigReadMap    `yaml:"HttpDevices"`
-	MqttDevices    mqttDeviceConfigReadMap    `yaml:"MqttDevices"`
-	Views          viewConfigReadList         `yaml:"Views"`
-	HttpServer     *httpServerConfigRead      `yaml:"HttpServer"`
-	LogConfig      *bool                      `yaml:"LogConfig"`
-	LogWorkerStart *bool                      `yaml:"LogWorkerStart"`
-	LogDebug       *bool                      `yaml:"LogDebug"`
+	Version         *int                       `yaml:"Version"`
+	ProjectTitle    string                     `yaml:"ProjectTitle"`
+	Auth            *authConfigRead            `yaml:"Auth"`
+	MqttClients     mqttClientConfigReadMap    `yaml:"MqttClients"`
+	VictronDevices  victronDeviceConfigReadMap `yaml:"VictronDevices"`
+	HttpDevices     httpDeviceConfigReadMap    `yaml:"HttpDevices"`
+	MqttDevices     mqttDeviceConfigReadMap    `yaml:"MqttDevices"`
+	Views           viewConfigReadList         `yaml:"Views"`
+	HttpServer      *httpServerConfigRead      `yaml:"HttpServer"`
+	LogConfig       *bool                      `yaml:"LogConfig"`
+	LogWorkerStart  *bool                      `yaml:"LogWorkerStart"`
+	LogStorageDebug *bool                      `yaml:"LogStorageDebug"`
 }
 
 type authConfigRead struct {
@@ -110,4 +110,5 @@ type httpServerConfigRead struct {
 	FrontendPath    string `yaml:"FrontendPath"`
 	FrontendExpires string `yaml:"FrontendExpires"`
 	ConfigExpires   string `yaml:"ConfigExpires"`
+	LogDebug        *bool  `yaml:"LogDebug"`
 }

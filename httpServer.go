@@ -28,7 +28,6 @@ func runHttpServer(
 				cfg.HttpServer(),
 				cfg.GetViewNames(),
 				cfg.LogConfig(),
-				cfg.LogDebug(),
 			},
 			ProjectTitle:       cfg.ProjectTitle(),
 			Views:              cfg.Views(),
@@ -43,7 +42,6 @@ type httpServerConfig struct {
 	config.HttpServerConfig
 	viewNames []string
 	logConfig bool
-	logDebug  bool
 }
 
 func (c httpServerConfig) GetViewNames() []string {
@@ -52,10 +50,6 @@ func (c httpServerConfig) GetViewNames() []string {
 
 func (c httpServerConfig) LogConfig() bool {
 	return c.logConfig
-}
-
-func (c httpServerConfig) LogDebug() bool {
-	return c.logDebug
 }
 
 func (c httpServerConfig) BuildVersion() string {
