@@ -336,6 +336,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 		regName := fmt.Sprintf("R%d", sIdx)
 		desc := r.Description
 
+		controllable := r.Control == "0"
 		c.enum("Relays", regName, desc,
 			map[int]string{
 				0: "OFF",
@@ -343,9 +344,9 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 				2: "in pulse",
 			},
 			r.Value,
-			true,
+			controllable,
 		)
-		if r.Control != "0" {
+		if !controllable {
 			c.text("Relays", regName+"Control", desc+" is controlled by", r.Control)
 		}
 	}
