@@ -30,7 +30,7 @@ type registerResponse struct {
 // @Produce json
 // @success 200 {array} registerResponse
 // @Failure 404 {object} ErrorResponse
-// @Router /registers/{viewName}/{deviceName}.json [get]
+// @Router /views/{viewName}/devices/{deviceName}/registers [get]
 // @Security ApiKeyAuth
 func setupRegisters(r *gin.RouterGroup, env *Environment) {
 	// add dynamic routes
@@ -42,7 +42,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 				continue
 			}
 
-			relativePath := "registers/" + view.Name() + "/" + deviceName + ".json"
+			relativePath := "views/" + view.Name() + "/devices/" + deviceName + "/registers"
 			r.GET(relativePath, func(c *gin.Context) {
 				// check authorization
 				if !isViewAuthenticated(view, c) {

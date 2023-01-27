@@ -33,7 +33,7 @@ type loginResponse struct {
 // @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Failure 503 {object} ErrorResponse
-// @Router /login [post]
+// @Router /auth/login [post]
 func setupLogin(r *gin.RouterGroup, env *Environment) {
 	if !env.Auth.Enabled() {
 		disableLogin(r, env.Config)
@@ -48,7 +48,7 @@ func setupLogin(r *gin.RouterGroup, env *Environment) {
 		return
 	}
 
-	r.POST("login", func(c *gin.Context) {
+	r.POST("auth/login", func(c *gin.Context) {
 		var req loginRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			jsonErrorResponse(c, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
