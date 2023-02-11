@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 func (c Config) MarshalYAML() (interface{}, error) {
 
 	return configRead{
@@ -22,6 +24,13 @@ func (c Config) MarshalYAML() (interface{}, error) {
 		VictronDevices: func() victronDeviceConfigReadMap {
 			devices := make(victronDeviceConfigReadMap, len(c.devices))
 			for _, c := range c.victronDevices {
+				devices[c.name] = c.convertToRead()
+			}
+			return devices
+		}(),
+		ModbusDevices: func() modbusDeviceConfigReadMap {
+			devices := make(modbusDeviceConfigReadMap, len(c.devices))
+			for _, c := range c.modbusDevices {
 				devices[c.name] = c.convertToRead()
 			}
 			return devices
@@ -111,6 +120,15 @@ func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 		General: c.DeviceConfig.convertToRead(),
 		Device:  c.device,
 		Kind:    c.kind.String(),
+	}
+}
+
+func (c ModbusDeviceConfig) convertToRead() modbusDeviceConfigRead {
+	return modbusDeviceConfigRead{
+		General: c.DeviceConfig.convertToRead(),
+		Device:  c.device,
+		Kind:    c.kind.String(),
+		Address: fmt.Sprintf("0x%x", c.address),
 	}
 }
 

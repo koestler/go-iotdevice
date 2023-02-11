@@ -12,6 +12,7 @@ type Config struct {
 	mqttClients     []*MqttClientConfig    // mandatory: at least 1 must be defined
 	devices         []*DeviceConfig        // aggregated over all types
 	victronDevices  []*VictronDeviceConfig // optional: default empty
+	modbusDevices   []*ModbusDeviceConfig  // optional: default empty
 	httpDevices     []*HttpDeviceConfig    // optional: default empty
 	mqttDevices     []*MqttDeviceConfig    // optional: default empty
 	views           []*ViewConfig          // mandatory: at least 1 must be defined
@@ -65,6 +66,13 @@ type VictronDeviceConfig struct {
 	DeviceConfig
 	device string            // mandatory: the serial device path eg. /dev/ttyUSB0
 	kind   VictronDeviceKind // mandatory: what connection protocol is used
+}
+
+type ModbusDeviceConfig struct {
+	DeviceConfig
+	device  string           // mandatory: the serial device path eg. /dev/ttyUSB0
+	kind    ModbusDeviceKind // mandatory: what connection protocol is used
+	address uint             // mandatory: the modbus address of the device; format: 0x0A
 }
 
 type HttpDeviceConfig struct {
@@ -145,6 +153,31 @@ func VictronDeviceKindFromString(s string) VictronDeviceKind {
 		return VictronVedirectKind
 	}
 	return VictronUndefinedKind
+}
+
+// Modbus device kind
+type ModbusDeviceKind int
+
+const (
+	ModbusUndefinedKind ModbusDeviceKind = iota
+	ModbusWaveshareRtuRelay8Kind
+)
+
+func (dk ModbusDeviceKind) String() string {
+	switch dk {
+	case ModbusWaveshareRtuRelay8Kind:
+		return "WaveshareRtuRelay8"
+	default:
+		return "Undefined"
+	}
+}
+
+func ModbusDeviceKindFromString(s string) ModbusDeviceKind {
+	if s == "WaveshareRtuRelay8" {
+		return ModbusWaveshareRtuRelay8Kind
+	}
+
+	return ModbusUndefinedKind
 }
 
 // http device kind

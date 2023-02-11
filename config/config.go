@@ -442,6 +442,27 @@ func (c victronDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClie
 	return
 }
 
+func (c modbusDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClientConfig) (ret []*ModbusDeviceConfig, err []error) {
+	// order map keys by name
+	keys := make([]string, len(c))
+	i := 0
+	for k := range c {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+
+	ret = make([]*ModbusDeviceConfig, len(c))
+	j := 0
+	for _, name := range keys {
+		r, e := c[name].TransformAndValidate(name, mqttClients)
+		ret[j] = &r
+		err = append(err, e...)
+		j++
+	}
+	return
+}
+
 func (c httpDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClientConfig) (ret []*HttpDeviceConfig, err []error) {
 	// order map keys by name
 	keys := make([]string, len(c))
@@ -535,6 +556,31 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients [
 
 	if ret.kind == VictronVedirectKind && len(c.Device) < 1 {
 		err = append(err, fmt.Errorf("VictronDevices->%s->Device must not be empty", name))
+	}
+
+	return
+}
+
+func (c modbusDeviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret ModbusDeviceConfig, err []error) {
+	ret = ModbusDeviceConfig{
+		kind:   ModbusDeviceKindFromString(c.Kind),
+		device: c.Device,
+	}
+
+	var e []error
+	ret.DeviceConfig, e = c.General.TransformAndValidate(name, mqttClients)
+	err = append(err, e...)
+
+	if ret.kind == ModbusUndefinedKind {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->Kind='%s' is invalid", name, c.Kind))
+	}
+
+	if len(c.Device) < 1 {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->Device must not be empty", name))
+	}
+
+	if n, e := fmt.Sscanf(c.Address, "0x%x", ret.address); n != 1 || e != nil {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->Adress=%s is invalid", c.Address))
 	}
 
 	return

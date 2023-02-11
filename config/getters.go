@@ -192,6 +192,18 @@ func (c VictronDeviceConfig) Kind() VictronDeviceKind {
 	return c.kind
 }
 
+func (c ModbusDeviceConfig) Device() string {
+	return c.device
+}
+
+func (c ModbusDeviceConfig) Kind() ModbusDeviceKind {
+	return c.kind
+}
+
+func (c ModbusDeviceConfig) Address() uint {
+	return c.address
+}
+
 func (c HttpDeviceConfig) Url() *url.URL {
 	return c.url
 }

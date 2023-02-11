@@ -6,6 +6,7 @@ type configRead struct {
 	Authentication  *authenticationConfigRead  `yaml:"Authentication"`
 	MqttClients     mqttClientConfigReadMap    `yaml:"MqttClients"`
 	VictronDevices  victronDeviceConfigReadMap `yaml:"VictronDevices"`
+	ModbusDevices   modbusDeviceConfigReadMap  `yaml:"ModbusDevices"`
 	HttpDevices     httpDeviceConfigReadMap    `yaml:"HttpDevices"`
 	MqttDevices     mqttDeviceConfigReadMap    `yaml:"MqttDevices"`
 	Views           viewConfigReadList         `yaml:"Views"`
@@ -61,6 +62,15 @@ type victronDeviceConfigRead struct {
 }
 
 type victronDeviceConfigReadMap map[string]victronDeviceConfigRead
+
+type modbusDeviceConfigRead struct {
+	General deviceConfigRead `yaml:"General"`
+	Device  string           `yaml:"Device"`
+	Kind    string           `yaml:"Kind"`
+	Address string           `yaml:"Address"`
+}
+
+type modbusDeviceConfigReadMap map[string]modbusDeviceConfigRead
 
 type httpDeviceConfigRead struct {
 	General                deviceConfigRead `yaml:"General"`
