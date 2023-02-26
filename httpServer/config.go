@@ -35,9 +35,9 @@ type deviceViewResponse struct {
 // @Produce json
 // @Success 200 {object} configResponse
 // @Failure 500 {object} ErrorResponse
-// @Router /frontend/config [get]
+// @Router /configuration/frontend [get]
 func setupConfig(r *gin.RouterGroup, env *Environment) {
-	r.GET("frontend/config", func(c *gin.Context) {
+	r.GET("configuration/frontend", func(c *gin.Context) {
 		response := configResponse{
 			ProjectTitle:   env.ProjectTitle,
 			BackendVersion: env.Config.BuildVersion(),
