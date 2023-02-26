@@ -33,22 +33,22 @@ type loginResponse struct {
 // @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Failure 503 {object} ErrorResponse
-// @Router /auth/login [post]
+// @Router /authentication/login [post]
 func setupLogin(r *gin.RouterGroup, env *Environment) {
-	if !env.Auth.Enabled() {
+	if !env.Authentication.Enabled() {
 		disableLogin(r, env.Config)
 		return
 	}
 
 	// setup htpasswd module
-	authChecker, err := htpasswd.New(env.Auth.HtaccessFile(), htpasswd.DefaultSystems, nil)
+	authChecker, err := htpasswd.New(env.Authentication.HtaccessFile(), htpasswd.DefaultSystems, nil)
 	if err != nil {
 		log.Printf("httpServer: cannot load htaccess file: %s", err)
 		disableLogin(r, env.Config)
 		return
 	}
 
-	r.POST("auth/login", func(c *gin.Context) {
+	r.POST("authentication/login", func(c *gin.Context) {
 		var req loginRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			jsonErrorResponse(c, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
@@ -61,7 +61,7 @@ func setupLogin(r *gin.RouterGroup, env *Environment) {
 			return
 		}
 
-		tokenStr, err := createJwtToken(env.Auth, req.User)
+		tokenStr, err := createJwtToken(env.Authentication, req.User)
 		if err != nil {
 			jsonErrorResponse(c, http.StatusInternalServerError, errors.New("Cannot create token"))
 			return
@@ -83,7 +83,7 @@ func setupLogin(r *gin.RouterGroup, env *Environment) {
 }
 
 func disableLogin(r *gin.RouterGroup, config Config) {
-	r.POST("login", func(c *gin.Context) {
+	r.POST("authentication/login", func(c *gin.Context) {
 		jsonErrorResponse(c, http.StatusServiceUnavailable, errors.New("Authentication module is disabled"))
 	})
 	if config.LogConfig() {
@@ -117,6 +117,6 @@ func reloadAuthChecker(file *htpasswd.File, config Config) {
 	}
 
 	if config.LogDebug() {
-		log.Printf("httpServer: login: auth file reloaded")
+		log.Printf("httpServer: login: authentication file reloaded")
 	}
 }

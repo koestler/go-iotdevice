@@ -14,7 +14,7 @@ type jwtClaims struct {
 	jwt.StandardClaims
 }
 
-func createJwtToken(config config.AuthConfig, user string) (tokenStr string, err error) {
+func createJwtToken(config config.AuthenticationConfig, user string) (tokenStr string, err error) {
 	claims := &jwtClaims{
 		User: user,
 		StandardClaims: jwt.StandardClaims{
@@ -35,7 +35,7 @@ func authJwtMiddleware(env *Environment) gin.HandlerFunc {
 			return
 		}
 
-		if user, err := checkToken(tokenStr, env.Auth.JwtSecret()); err != nil {
+		if user, err := checkToken(tokenStr, env.Authentication.JwtSecret()); err != nil {
 			jsonErrorResponse(c, http.StatusUnauthorized, errors.New("invalid jwt token"))
 			c.Abort()
 		} else {

@@ -3,7 +3,7 @@ package config
 type configRead struct {
 	Version         *int                       `yaml:"Version"`
 	ProjectTitle    string                     `yaml:"ProjectTitle"`
-	Auth            *authConfigRead            `yaml:"Auth"`
+	Authentication  *authenticationConfigRead  `yaml:"Authentication"`
 	MqttClients     mqttClientConfigReadMap    `yaml:"MqttClients"`
 	VictronDevices  victronDeviceConfigReadMap `yaml:"VictronDevices"`
 	HttpDevices     httpDeviceConfigReadMap    `yaml:"HttpDevices"`
@@ -15,7 +15,7 @@ type configRead struct {
 	LogStorageDebug *bool                      `yaml:"LogStorageDebug"`
 }
 
-type authConfigRead struct {
+type authenticationConfigRead struct {
 	JwtSecret         *string `yaml:"JwtSecret"`
 	JwtValidityPeriod string  `yaml:"JwtValidityPeriod"`
 	HtaccessFile      *string `yaml:"HtaccessFile"`

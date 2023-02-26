@@ -5,11 +5,11 @@ func (c Config) MarshalYAML() (interface{}, error) {
 	return configRead{
 		Version:      &c.version,
 		ProjectTitle: c.projectTitle,
-		Auth: func() *authConfigRead {
-			if !c.auth.enabled {
+		Authentication: func() *authenticationConfigRead {
+			if !c.authentication.enabled {
 				return nil
 			}
-			r := c.auth.convertToRead()
+			r := c.authentication.convertToRead()
 			return &r
 		}(),
 		MqttClients: func() mqttClientConfigReadMap {
@@ -62,9 +62,9 @@ func (c Config) MarshalYAML() (interface{}, error) {
 	}, nil
 }
 
-func (c AuthConfig) convertToRead() authConfigRead {
+func (c AuthenticationConfig) convertToRead() authenticationConfigRead {
 	jwtSecret := string(c.jwtSecret)
-	return authConfigRead{
+	return authenticationConfigRead{
 		JwtSecret:         &jwtSecret,
 		JwtValidityPeriod: c.jwtValidityPeriod.String(),
 		HtaccessFile:      &c.htaccessFile,

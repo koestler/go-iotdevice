@@ -53,7 +53,7 @@ func (c Config) PrintConfig() (err error) {
 
 func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	var e []error
-	ret.auth, e = c.Auth.TransformAndValidate()
+	ret.authentication, e = c.Authentication.TransformAndValidate()
 	err = append(err, e...)
 
 	ret.mqttClients, e = c.MqttClients.TransformAndValidate()
@@ -122,14 +122,14 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	return
 }
 
-func (c *authConfigRead) TransformAndValidate() (ret AuthConfig, err []error) {
+func (c *authenticationConfigRead) TransformAndValidate() (ret AuthenticationConfig, err []error) {
 	ret.enabled = false
 	ret.jwtValidityPeriod = time.Hour
 
 	if randString, e := randomString(64); err == nil {
 		ret.jwtSecret = []byte(randString)
 	} else {
-		err = append(err, fmt.Errorf("Auth->JwtSecret: error while generating random secret: %s", e))
+		err = append(err, fmt.Errorf("Authentication->JwtSecret: error while generating random secret: %s", e))
 	}
 
 	if c == nil {
@@ -140,7 +140,7 @@ func (c *authConfigRead) TransformAndValidate() (ret AuthConfig, err []error) {
 
 	if c.JwtSecret != nil {
 		if len(*c.JwtSecret) < 32 {
-			err = append(err, fmt.Errorf("Auth->JwtSecret must be empty ot >= 32 chars"))
+			err = append(err, fmt.Errorf("Authentication->JwtSecret must be empty ot >= 32 chars"))
 		} else {
 			ret.jwtSecret = []byte(*c.JwtSecret)
 		}
@@ -149,11 +149,11 @@ func (c *authConfigRead) TransformAndValidate() (ret AuthConfig, err []error) {
 	if len(c.JwtValidityPeriod) < 1 {
 		// use default
 	} else if authJwtValidityPeriod, e := time.ParseDuration(c.JwtValidityPeriod); e != nil {
-		err = append(err, fmt.Errorf("Auth->JwtValidityPeriod='%s' parse error: %s",
+		err = append(err, fmt.Errorf("Authentication->JwtValidityPeriod='%s' parse error: %s",
 			c.JwtValidityPeriod, e,
 		))
 	} else if authJwtValidityPeriod < 0 {
-		err = append(err, fmt.Errorf("Auth->JwtValidityPeriod='%s' must be positive",
+		err = append(err, fmt.Errorf("Authentication->JwtValidityPeriod='%s' must be positive",
 			c.JwtValidityPeriod,
 		))
 	} else {
@@ -162,11 +162,11 @@ func (c *authConfigRead) TransformAndValidate() (ret AuthConfig, err []error) {
 
 	if c.HtaccessFile != nil && len(*c.HtaccessFile) > 0 {
 		if info, e := os.Stat(*c.HtaccessFile); e != nil {
-			err = append(err, fmt.Errorf("Auth->HtaccessFile='%s' cannot open file. error: %s",
+			err = append(err, fmt.Errorf("Authentication->HtaccessFile='%s' cannot open file. error: %s",
 				*c.HtaccessFile, e,
 			))
 		} else if info.IsDir() {
-			err = append(err, fmt.Errorf("Auth->HtaccessFile='%s' must be a file, not a directory",
+			err = append(err, fmt.Errorf("Authentication->HtaccessFile='%s' must be a file, not a directory",
 				*c.HtaccessFile,
 			))
 		}

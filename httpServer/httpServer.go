@@ -23,7 +23,7 @@ type Environment struct {
 	Config             Config
 	ProjectTitle       string
 	Views              []*config.ViewConfig
-	Auth               config.AuthConfig
+	Authentication     config.AuthenticationConfig
 	DevicePoolInstance *device.DevicePool
 	Storage            *dataflow.ValueStorageInstance
 }

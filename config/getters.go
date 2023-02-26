@@ -13,8 +13,8 @@ func (c Config) ProjectTitle() string {
 	return c.projectTitle
 }
 
-func (c Config) Auth() AuthConfig {
-	return c.auth
+func (c Config) Auth() AuthenticationConfig {
+	return c.authentication
 }
 
 func (c Config) MqttClients() []*MqttClientConfig {
@@ -57,19 +57,19 @@ func (c Config) LogStorageDebug() bool {
 	return c.logStorageDebug
 }
 
-func (c AuthConfig) Enabled() bool {
+func (c AuthenticationConfig) Enabled() bool {
 	return c.enabled
 }
 
-func (c AuthConfig) JwtSecret() []byte {
+func (c AuthenticationConfig) JwtSecret() []byte {
 	return c.jwtSecret
 }
 
-func (c AuthConfig) JwtValidityPeriod() time.Duration {
+func (c AuthenticationConfig) JwtValidityPeriod() time.Duration {
 	return c.jwtValidityPeriod
 }
 
-func (c AuthConfig) HtaccessFile() string {
+func (c AuthenticationConfig) HtaccessFile() string {
 	return c.htaccessFile
 }
 

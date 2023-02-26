@@ -8,7 +8,7 @@ import (
 type Config struct {
 	version         int                    // must be 1
 	projectTitle    string                 // optional: default go-iotdevice
-	auth            AuthConfig             // optional: default Disabled
+	authentication  AuthenticationConfig   // optional: default Disabled
 	mqttClients     []*MqttClientConfig    // mandatory: at least 1 must be defined
 	devices         []*DeviceConfig        // aggregated over all types
 	victronDevices  []*VictronDeviceConfig // optional
@@ -21,8 +21,8 @@ type Config struct {
 	logStorageDebug bool                   // optional: default False
 }
 
-type AuthConfig struct {
-	enabled           bool          // defined automatically if Auth section exists
+type AuthenticationConfig struct {
+	enabled           bool          // defined automatically if Authentication section exists
 	jwtSecret         []byte        `yaml:"JwtSecret"`         // optional: default new random string on startup
 	jwtValidityPeriod time.Duration `yaml:"JwtValidityPeriod"` // optional: default 1h
 	htaccessFile      string        `yaml:"HtaccessFile"`      // optional: default no valid users
