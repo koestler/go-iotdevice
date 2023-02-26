@@ -71,7 +71,7 @@ All other configuration defined in a single yaml file which is read from `./conf
 
 Here is a fully documented configuration file including all options:
 ```yaml
-# documentation/config.yaml
+# documentation/full-config.yaml
 
 Version: 1                                                 # configuration file format; must be set to 1 for >v2 of this tool.
 ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice: is shown in the http frontend

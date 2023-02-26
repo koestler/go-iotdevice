@@ -48,7 +48,7 @@ func setupLogin(r *gin.RouterGroup, env *Environment) {
 		return
 	}
 
-	r.POST("authentication/login", func(c *gin.Context) {
+	r.POST("auth/login", func(c *gin.Context) {
 		var req loginRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
 			jsonErrorResponse(c, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
@@ -83,7 +83,7 @@ func setupLogin(r *gin.RouterGroup, env *Environment) {
 }
 
 func disableLogin(r *gin.RouterGroup, config Config) {
-	r.POST("authentication/login", func(c *gin.Context) {
+	r.POST("auth/login", func(c *gin.Context) {
 		jsonErrorResponse(c, http.StatusServiceUnavailable, errors.New("Authentication module is disabled"))
 	})
 	if config.LogConfig() {
