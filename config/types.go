@@ -34,7 +34,7 @@ type MqttClientConfig struct {
 	protocolVersion   int           // optional: default 5
 	user              string        // optional: default empty
 	password          string        // optional: default empty
-	clientId          string        // optional: default go-mqtt-to-influx-UUID
+	clientId          string        // optional: default go-iotdevice-UUID
 	qos               byte          // optional: default 1, must be 0, 1, 2
 	keepAlive         time.Duration // optional: default 60s
 	connectRetryDelay time.Duration // optional: default 10s
