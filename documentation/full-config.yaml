@@ -10,9 +10,10 @@ HttpServer:                                                # optional, when miss
   LogRequests: True                                        # optional, default true, enables the http access log to stdout
   # configure FrontendProxy xor FrontendPath
   #FrontendProxy: "http://127.0.0.1:3000/"                 # optional: default deactivated; proxies the frontend to another server; useful for development
-  FrontendPath: "./frontend-build/"                        # optional: default "frontend-build": path to a static frontend build
-  FrontendExpires: "5min"                                  # optional: default 5min, what cache-control header to send for static frontend files
-  ConfigExpires: ""
+  FrontendPath: ./frontend-build/                          # optional: default "frontend-build": path to a static frontend build
+  FrontendExpires: 5m                                      # optional: default 5min, what cache-control header to send for static frontend files
+  ConfigExpires: 1m                                        # optional: default 1min, what cache-control header to send for configuration endpoints
+  LogDebug: False                                          # optional: default false, output debug messages related to the http server
 
 Authentication:                                            # optional, when missing: login is disabled
   #JwtSecret: "insert a random string here and uncomment"  # optional, default random, used to sign the JWT tokens
