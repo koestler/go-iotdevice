@@ -11,9 +11,9 @@ type Config struct {
 	authentication  AuthenticationConfig   // optional: default Disabled
 	mqttClients     []*MqttClientConfig    // mandatory: at least 1 must be defined
 	devices         []*DeviceConfig        // aggregated over all types
-	victronDevices  []*VictronDeviceConfig // optional
-	httpDevices     []*HttpDeviceConfig    // optional
-	mqttDevices     []*MqttDeviceConfig    // optional
+	victronDevices  []*VictronDeviceConfig // optional: default empty
+	httpDevices     []*HttpDeviceConfig    // optional: default empty
+	mqttDevices     []*MqttDeviceConfig    // optional: default empty
 	views           []*ViewConfig          // mandatory: at least 1 must be defined
 	httpServer      HttpServerConfig       // optional: default Disabled
 	logConfig       bool                   // optional: default False
@@ -106,8 +106,8 @@ type HttpServerConfig struct {
 	logRequests     bool          // optional: default False
 	frontendProxy   *url.URL      // optional: default deactivated; otherwise an address of the frontend dev-server
 	frontendPath    string        // optional: default "frontend-build"; otherwise set to a path where the frontend build is located
-	frontendExpires time.Duration // optional: default 5min; what cache-control header to sent for static frontend files
-	configExpires   time.Duration // optional: default 1min; what cache-control header to sent for static frontend files
+	frontendExpires time.Duration // optional: default 5min; what cache-control header to send for static frontend files
+	configExpires   time.Duration // optional: default 1min; what cache-control header to send for config endpoint
 	logDebug        bool          // optional: default false
 }
 
