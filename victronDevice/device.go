@@ -20,8 +20,6 @@ type DeviceStruct struct {
 	deviceConfig  device.Config
 	victronConfig Config
 
-	source *dataflow.Source
-
 	deviceId         vedirect.VeProduct
 	registers        VictronRegisters
 	lastUpdated      time.Time
@@ -37,26 +35,19 @@ func RunDevice(
 	victronConfig Config,
 	storage *dataflow.ValueStorageInstance,
 ) (device device.Device, err error) {
-	// setup output chain
-	output := make(chan dataflow.Value, 128)
-	source := dataflow.CreateSource(output)
-	// pipe all data to next stage
-	source.Append(storage)
-
 	c := &DeviceStruct{
 		deviceConfig:  deviceConfig,
 		victronConfig: victronConfig,
-		source:        source,
 		shutdown:      make(chan struct{}),
 		closed:        make(chan struct{}),
 	}
 
 	if victronConfig.Kind() == config.VictronVedirectKind {
-		err = startVedirect(c, output)
+		err = startVedirect(c, storage)
 	} else if victronConfig.Kind() == config.VictronRandomBmvKind {
-		err = startRandom(c, output, RegisterListBmv712)
+		err = startRandom(c, storage, RegisterListBmv712)
 	} else if victronConfig.Kind() == config.VictronRandomSolarKind {
-		err = startRandom(c, output, RegisterListSolar)
+		err = startRandom(c, storage, RegisterListSolar)
 	} else {
 		return nil, fmt.Errorf("unknown device kind: %s", victronConfig.Kind().String())
 	}

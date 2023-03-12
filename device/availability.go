@@ -20,10 +20,10 @@ func GetAvailabilityRegister() dataflow.Register {
 	return availabilityRegister
 }
 
-func SendDisconnected(deviceName string, output chan dataflow.Value) {
-	output <- dataflow.NewEnumRegisterValue(deviceName, GetAvailabilityRegister(), 0)
+func SendDisconnected(deviceName string, fillable dataflow.Fillable) {
+	fillable.Fill(dataflow.NewEnumRegisterValue(deviceName, GetAvailabilityRegister(), 0))
 }
 
-func SendConnteced(deviceName string, output chan dataflow.Value) {
-	output <- dataflow.NewEnumRegisterValue(deviceName, GetAvailabilityRegister(), 1)
+func SendConnteced(deviceName string, fillable dataflow.Fillable) {
+	fillable.Fill(dataflow.NewEnumRegisterValue(deviceName, GetAvailabilityRegister(), 1))
 }

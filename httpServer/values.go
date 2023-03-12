@@ -63,11 +63,6 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 // @Router /views/{viewName}/devices/{deviceName}/values [patch]
 // @Security ApiKeyAuth
 func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
-	// setup output chain and connect it to storage
-	output := make(chan dataflow.Value, 128)
-	source := dataflow.CreateSource(output)
-	source.Append(env.CommandStorage)
-
 	// add dynamic routes
 	for _, v := range env.Views {
 		view := v
@@ -134,7 +129,7 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 
 				// all ok, send inputs to storage
 				for _, inp := range inputs {
-					output <- inp
+					env.CommandStorage.Fill(inp)
 				}
 			})
 			if env.Config.LogConfig() {

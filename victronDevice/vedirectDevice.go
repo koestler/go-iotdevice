@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
+func startVedirect(c *DeviceStruct, output dataflow.Fillable) error {
 	log.Printf("device[%s]: start vedirect source", c.deviceConfig.Name())
 
 	// open vedirect device
@@ -50,7 +50,6 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 	// start victron reader
 	go func() {
 		defer close(c.closed)
-		defer close(output)
 
 		fetchStaticCounter := 0
 		ticker := time.NewTicker(100 * time.Millisecond)
@@ -91,11 +90,11 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 						if err != nil {
 							log.Printf("device[%s]: fetching number register failed: %v", c.deviceConfig.Name(), err)
 						} else {
-							output <- dataflow.NewNumericRegisterValue(
+							output.Fill(dataflow.NewNumericRegisterValue(
 								c.deviceConfig.Name(),
 								register,
 								value/float64(register.Factor())+register.Offset(),
-							)
+							))
 						}
 					case dataflow.TextRegister:
 						value, err := vd.VeCommandGetString(register.Address())
@@ -103,11 +102,11 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 						if err != nil {
 							log.Printf("device[%s]: fetching text register failed: %v", c.deviceConfig.Name(), err)
 						} else {
-							output <- dataflow.NewTextRegisterValue(
+							output.Fill(dataflow.NewTextRegisterValue(
 								c.deviceConfig.Name(),
 								register,
 								strings.TrimSpace(value),
-							)
+							))
 						}
 					case dataflow.EnumRegister:
 						var intValue uint64
@@ -116,11 +115,11 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 						if err != nil {
 							log.Printf("device[%s]: fetching enum register failed: %v", c.deviceConfig.Name(), err)
 						} else {
-							output <- dataflow.NewEnumRegisterValue(
+							output.Fill(dataflow.NewEnumRegisterValue(
 								c.deviceConfig.Name(),
 								register,
 								int(intValue),
-							)
+							))
 						}
 					}
 				}

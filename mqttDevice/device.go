@@ -21,7 +21,7 @@ type DeviceStruct struct {
 	deviceConfig device.Config
 	mqttConfig   Config
 
-	source *dataflow.Source
+	fillable dataflow.Fillable
 
 	registers        map[string]dataflow.Register
 	registersMutex   sync.RWMutex
@@ -37,16 +37,10 @@ func RunDevice(
 	storage *dataflow.ValueStorageInstance,
 	mqttClientPool *mqttClient.ClientPool,
 ) (device device.Device, err error) {
-	// setup output chain
-	output := make(chan dataflow.Value, 128)
-	source := dataflow.CreateSource(output)
-	// pipe all data to next stage
-	source.Append(storage)
-
 	c := &DeviceStruct{
 		deviceConfig: deviceConfig,
 		mqttConfig:   mqttConfig,
-		source:       source,
+		fillable:     storage,
 		registers:    make(map[string]dataflow.Register),
 		shutdown:     make(chan struct{}),
 	}
@@ -71,9 +65,9 @@ func RunDevice(
 				register := c.addIgnoreRegister(registerName, realtimeMessage)
 				if register != nil {
 					if v := realtimeMessage.NumericValue; v != nil {
-						output <- dataflow.NewNumericRegisterValue(deviceConfig.Name(), register, *v)
+						c.fillable.Fill(dataflow.NewNumericRegisterValue(deviceConfig.Name(), register, *v))
 					} else if v := realtimeMessage.TextValue; v != nil {
-						output <- dataflow.NewTextRegisterValue(deviceConfig.Name(), register, *v)
+						c.fillable.Fill(dataflow.NewTextRegisterValue(deviceConfig.Name(), register, *v))
 					}
 					c.SetLastUpdatedNow()
 				}

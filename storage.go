@@ -14,7 +14,7 @@ func runStorage(cfg *config.Config) *dataflow.ValueStorageInstance {
 	storageInstance := dataflow.ValueStorageCreate()
 
 	if cfg.LogStorageDebug() {
-		subscription := storageInstance.Drain()
+		subscription := storageInstance.Subscribe(dataflow.Filter{})
 		dataflow.SinkLog("storage", subscription.GetOutput())
 	}
 

@@ -101,7 +101,7 @@ func ValueStorageCreate() (valueStorageInstance *ValueStorageInstance) {
 	valueStorageInstance = &ValueStorageInstance{
 		state:                   make(State),
 		subscriptions:           make(map[*Subscription]struct{}),
-		inputChannel:            make(chan Value, 128), // input channel is buffered
+		inputChannel:            make(chan Value, 1024),
 		subscriptionChannel:     make(chan *Subscription),
 		readStateRequestChannel: make(chan *readStateRequest, 16),
 		shutdown:                make(chan struct{}),
@@ -148,17 +148,8 @@ func (instance *ValueStorageInstance) GetSlice(filter Filter) (result []Value) {
 	return
 }
 
-// this is a simple fan-in routine which copies all inputs to the same NewValue channel
-func (instance *ValueStorageInstance) Fill(input <-chan Value) {
-	go func() {
-		for value := range input {
-			instance.inputChannel <- value
-		}
-	}()
-}
-
-func (instance *ValueStorageInstance) Drain() Subscription {
-	return instance.Subscribe(Filter{})
+func (instance *ValueStorageInstance) Fill(value Value) {
+	instance.inputChannel <- value
 }
 
 func (instance *ValueStorageInstance) Subscribe(filter Filter) Subscription {

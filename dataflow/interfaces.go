@@ -8,11 +8,5 @@ type Drainable interface {
 
 // something which can consume values (-> a sink)
 type Fillable interface {
-	Fill(input <-chan Value)
-}
-
-// simething which does both (-> a pipeline stage)
-type Pipelineable interface {
-	Drainable
-	Fillable
+	Fill(value Value)
 }

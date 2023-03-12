@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func startRandom(c *DeviceStruct, output chan dataflow.Value, registers VictronRegisters) error {
+func startRandom(c *DeviceStruct, output dataflow.Fillable, registers VictronRegisters) error {
 	// filter registers by skip list
 	c.registers = FilterRegisters(registers, c.deviceConfig.SkipFields(), c.deviceConfig.SkipCategories())
 
@@ -18,10 +18,8 @@ func startRandom(c *DeviceStruct, output chan dataflow.Value, registers VictronR
 	// start source go routine
 	go func() {
 		defer close(c.closed)
-		defer close(output)
 
 		ticker := time.NewTicker(time.Second)
-
 		for {
 			select {
 			case <-c.shutdown:
@@ -36,11 +34,11 @@ func startRandom(c *DeviceStruct, output chan dataflow.Value, registers VictronR
 						} else {
 							value = 1e2*rand.Float64()/float64(r.Factor()) + r.Offset()
 						}
-						output <- dataflow.NewNumericRegisterValue(c.deviceConfig.Name(), r, value)
+						output.Fill(dataflow.NewNumericRegisterValue(c.deviceConfig.Name(), r, value))
 					case dataflow.TextRegister:
-						output <- dataflow.NewTextRegisterValue(c.deviceConfig.Name(), r, randomString(8))
+						output.Fill(dataflow.NewTextRegisterValue(c.deviceConfig.Name(), r, randomString(8)))
 					case dataflow.EnumRegister:
-						output <- dataflow.NewEnumRegisterValue(c.deviceConfig.Name(), r, randomEnum(r.Enum()))
+						output.Fill(dataflow.NewEnumRegisterValue(c.deviceConfig.Name(), r, randomEnum(r.Enum())))
 					}
 				}
 				c.SetLastUpdatedNow()

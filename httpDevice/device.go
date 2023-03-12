@@ -28,9 +28,6 @@ type DeviceStruct struct {
 	stateStorage   *dataflow.ValueStorageInstance
 	commandStorage *dataflow.ValueStorageInstance
 
-	stateOutput   chan dataflow.Value
-	commandOutput chan dataflow.Value
-
 	httpClient  *http.Client
 	pollRequest *http.Request
 	impl        Implementation
@@ -50,23 +47,11 @@ func RunDevice(
 	stateStorage *dataflow.ValueStorageInstance,
 	commandStorage *dataflow.ValueStorageInstance,
 ) (device device.Device, err error) {
-	// setup stateOutput chain and connect it to storage
-	stateOutput := make(chan dataflow.Value, 128)
-	stateSource := dataflow.CreateSource(stateOutput)
-	stateSource.Append(stateStorage)
-
-	// setup stateOutput chain and connect it to storage
-	commandOutput := make(chan dataflow.Value, 128)
-	commandSource := dataflow.CreateSource(commandOutput)
-	commandSource.Append(commandStorage)
-
 	ds := &DeviceStruct{
 		deviceConfig:   deviceConfig,
 		httpConfig:     teracomConfig,
 		stateStorage:   stateStorage,
 		commandStorage: commandStorage,
-		stateOutput:    stateOutput,
-		commandOutput:  commandOutput,
 
 		httpClient: &http.Client{
 			// this tool is designed to serve devices running on the local network
@@ -124,8 +109,6 @@ func (ds *DeviceStruct) mainRoutine() {
 		errorsInARow := 0
 		lastErrorMsg := ""
 		interval := ds.getPollInterval(errorsInARow)
-
-		defer close(ds.stateOutput)
 		pollTicker := time.NewTicker(interval)
 
 		ds.addRegister(device.GetAvailabilityRegister())
@@ -137,10 +120,10 @@ func (ds *DeviceStruct) mainRoutine() {
 					lastErrorMsg = errMsg
 				}
 				if errorsInARow > 1 {
-					device.SendDisconnected(ds.Config().Name(), ds.stateOutput)
+					device.SendDisconnected(ds.Config().Name(), ds.stateStorage)
 				}
 			} else {
-				device.SendConnteced(ds.Config().Name(), ds.stateOutput)
+				device.SendConnteced(ds.Config().Name(), ds.stateStorage)
 				errorsInARow = 0
 				lastErrorMsg = ""
 				if ds.Config().LogDebug() {
@@ -209,7 +192,7 @@ func (ds *DeviceStruct) mainRoutine() {
 			}
 
 			// reset the command; this allows the same command (eg. toggle) to be sent again
-			ds.commandOutput <- dataflow.NewNullRegisterValue(ds.Config().Name(), value.Register())
+			ds.commandStorage.Fill(dataflow.NewNullRegisterValue(ds.Config().Name(), value.Register()))
 		}
 
 		for {
