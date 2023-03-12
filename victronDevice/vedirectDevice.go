@@ -95,7 +95,6 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 								c.deviceConfig.Name(),
 								register,
 								value/float64(register.Factor())+register.Offset(),
-								false,
 							)
 						}
 					case dataflow.TextRegister:
@@ -108,7 +107,6 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 								c.deviceConfig.Name(),
 								register,
 								strings.TrimSpace(value),
-								false,
 							)
 						}
 					case dataflow.EnumRegister:
@@ -122,7 +120,6 @@ func startVedirect(c *DeviceStruct, output chan dataflow.Value) error {
 								c.deviceConfig.Name(),
 								register,
 								int(intValue),
-								false,
 							)
 						}
 					}

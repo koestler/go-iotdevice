@@ -4,7 +4,6 @@ import "fmt"
 
 type Value interface {
 	DeviceName() string
-	Control() bool
 	Register() Register
 	String() string
 	GenericValue() interface{}
@@ -15,16 +14,11 @@ type ValueMap map[string]Value
 
 type RegisterValue struct {
 	deviceName string
-	control    bool
 	register   Register
 }
 
 func (v RegisterValue) DeviceName() string {
 	return v.deviceName
-}
-
-func (v RegisterValue) Control() bool {
-	return v.control
 }
 
 func (v RegisterValue) Register() Register {
@@ -56,12 +50,11 @@ func (v NumericRegisterValue) Equals(comp Value) bool {
 	return b.Register().Name() == b.Register().Name() && v.value == b.value
 }
 
-func NewNumericRegisterValue(deviceName string, register Register, value float64, control bool) NumericRegisterValue {
+func NewNumericRegisterValue(deviceName string, register Register, value float64) NumericRegisterValue {
 	return NumericRegisterValue{
 		RegisterValue: RegisterValue{
 			deviceName: deviceName,
 			register:   register,
-			control:    control,
 		},
 		value: value,
 	}
@@ -92,12 +85,11 @@ func (v TextRegisterValue) Equals(comp Value) bool {
 	return b.Register().Name() == b.Register().Name() && v.value == b.value
 }
 
-func NewTextRegisterValue(deviceName string, register Register, value string, control bool) TextRegisterValue {
+func NewTextRegisterValue(deviceName string, register Register, value string) TextRegisterValue {
 	return TextRegisterValue{
 		RegisterValue: RegisterValue{
 			deviceName: deviceName,
 			register:   register,
-			control:    control,
 		},
 		value: value,
 	}
@@ -134,13 +126,38 @@ func (v EnumRegisterValue) Equals(comp Value) bool {
 	return b.Register().Name() == b.Register().Name() && v.value == b.value
 }
 
-func NewEnumRegisterValue(deviceName string, register Register, value int, control bool) EnumRegisterValue {
+func NewEnumRegisterValue(deviceName string, register Register, value int) EnumRegisterValue {
 	return EnumRegisterValue{
 		RegisterValue: RegisterValue{
 			deviceName: deviceName,
 			register:   register,
-			control:    control,
 		},
 		value: value,
+	}
+}
+
+type NullRegisterValue struct {
+	RegisterValue
+}
+
+func (v NullRegisterValue) String() string {
+	return "NULL"
+}
+
+func (v NullRegisterValue) GenericValue() interface{} {
+	return nil
+}
+
+func (v NullRegisterValue) Equals(comp Value) bool {
+	_, ok := comp.(NullRegisterValue)
+	return ok
+}
+
+func NewNullRegisterValue(deviceName string, register Register) NullRegisterValue {
+	return NullRegisterValue{
+		RegisterValue: RegisterValue{
+			deviceName: deviceName,
+			register:   register,
+		},
 	}
 }

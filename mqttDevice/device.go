@@ -71,9 +71,9 @@ func RunDevice(
 				register := c.addIgnoreRegister(registerName, realtimeMessage)
 				if register != nil {
 					if v := realtimeMessage.NumericValue; v != nil {
-						output <- dataflow.NewNumericRegisterValue(deviceConfig.Name(), register, *v, false)
+						output <- dataflow.NewNumericRegisterValue(deviceConfig.Name(), register, *v)
 					} else if v := realtimeMessage.TextValue; v != nil {
-						output <- dataflow.NewTextRegisterValue(deviceConfig.Name(), register, *v, false)
+						output <- dataflow.NewTextRegisterValue(deviceConfig.Name(), register, *v)
 					}
 					c.SetLastUpdatedNow()
 				}

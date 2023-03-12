@@ -201,6 +201,7 @@ func (ds *DeviceStruct) mainRoutine() {
 					}
 				}
 			}
+
 		}
 
 		for {

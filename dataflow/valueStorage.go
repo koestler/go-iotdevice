@@ -44,10 +44,12 @@ func (instance *ValueStorageInstance) mainStorageRoutine() {
 }
 
 func (instance *ValueStorageInstance) handleNewValue(newValue Value) {
-	// check if the newValue is not present or has been changed
+	// make sure device exists
 	if _, ok := instance.state[newValue.DeviceName()]; !ok {
 		instance.state[newValue.DeviceName()] = make(ValueMap)
 	}
+
+	// check if the newValue is not present or has been changed
 	if currentValue, ok := instance.state[newValue.DeviceName()][newValue.Register().Name()]; !ok || !currentValue.Equals(newValue) {
 		// copy the input value to all subscribed output channels
 		for subscription := range instance.subscriptions {
@@ -61,8 +63,12 @@ func (instance *ValueStorageInstance) handleNewValue(newValue Value) {
 			}
 		}
 
-		// and save the new state
-		instance.state[newValue.DeviceName()][newValue.Register().Name()] = newValue
+		if _, ok := newValue.(NullRegisterValue); ok {
+			delete(instance.state[newValue.DeviceName()], newValue.Register().Name())
+		} else {
+			// and save the new state
+			instance.state[newValue.DeviceName()][newValue.Register().Name()] = newValue
+		}
 	}
 }
 

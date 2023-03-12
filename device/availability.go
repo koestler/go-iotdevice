@@ -21,9 +21,9 @@ func GetAvailabilityRegister() dataflow.Register {
 }
 
 func SendDisconnected(deviceName string, output chan dataflow.Value) {
-	output <- dataflow.NewEnumRegisterValue(deviceName, GetAvailabilityRegister(), 0, false)
+	output <- dataflow.NewEnumRegisterValue(deviceName, GetAvailabilityRegister(), 0)
 }
 
 func SendConnteced(deviceName string, output chan dataflow.Value) {
-	output <- dataflow.NewEnumRegisterValue(deviceName, GetAvailabilityRegister(), 1, false)
+	output <- dataflow.NewEnumRegisterValue(deviceName, GetAvailabilityRegister(), 1)
 }
