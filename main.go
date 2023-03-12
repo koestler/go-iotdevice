@@ -23,10 +23,9 @@ type CmdOptions struct {
 }
 
 const (
-	ExitSuccess          = 0
-	ExitDueToCmdOptions  = 1
-	ExitDueToConfig      = 2
-	ExitDueToModuleStart = 3
+	ExitSuccess         = 0
+	ExitDueToCmdOptions = 1
+	ExitDueToConfig     = 2
 )
 
 func getCmdOptions() (cmdOptions CmdOptions, cmdName string) {
