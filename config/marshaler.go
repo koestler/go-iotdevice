@@ -128,7 +128,7 @@ func (c ModbusDeviceConfig) convertToRead() modbusDeviceConfigRead {
 		General: c.DeviceConfig.convertToRead(),
 		Device:  c.device,
 		Kind:    c.kind.String(),
-		Address: fmt.Sprintf("0x%x", c.address),
+		Address: fmt.Sprintf("0x%02x", c.address),
 	}
 }
 

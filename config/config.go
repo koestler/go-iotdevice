@@ -62,6 +62,9 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	ret.victronDevices, e = c.VictronDevices.TransformAndValidate(ret.mqttClients)
 	err = append(err, e...)
 
+	ret.modbusDevices, e = c.ModbusDevices.TransformAndValidate(ret.mqttClients)
+	err = append(err, e...)
+
 	ret.httpDevices, e = c.HttpDevices.TransformAndValidate(ret.mqttClients)
 	err = append(err, e...)
 
@@ -69,10 +72,17 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	err = append(err, e...)
 
 	{
-		ret.devices = make([]*DeviceConfig, len(ret.victronDevices)+len(ret.httpDevices)+len(ret.mqttDevices))
+		ret.devices = make(
+			[]*DeviceConfig,
+			len(ret.victronDevices)+len(ret.modbusDevices)+len(ret.httpDevices)+len(ret.mqttDevices),
+		)
 
 		i := 0
 		for _, d := range ret.victronDevices {
+			ret.devices[i] = &d.DeviceConfig
+			i += 1
+		}
+		for _, d := range ret.modbusDevices {
 			ret.devices[i] = &d.DeviceConfig
 			i += 1
 		}
@@ -579,8 +589,8 @@ func (c modbusDeviceConfigRead) TransformAndValidate(name string, mqttClients []
 		err = append(err, fmt.Errorf("ModbusDevices->%s->Device must not be empty", name))
 	}
 
-	if n, e := fmt.Sscanf(c.Address, "0x%x", ret.address); n != 1 || e != nil {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->Adress=%s is invalid", c.Address))
+	if n, e := fmt.Sscanf(c.Address, "0x%x", &ret.address); n != 1 || e != nil {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->Adress=%s is invalid: %s", name, c.Address, e))
 	}
 
 	return
