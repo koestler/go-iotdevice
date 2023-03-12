@@ -14,7 +14,8 @@ import (
 func runDevices(
 	cfg *config.Config,
 	mqttClientPool *mqttClient.ClientPool,
-	storage *dataflow.ValueStorageInstance,
+	stateStorage *dataflow.ValueStorageInstance,
+	commandStorage *dataflow.ValueStorageInstance,
 ) (devicePoolInstance *device.DevicePool) {
 	devicePoolInstance = device.RunPool()
 
@@ -23,10 +24,10 @@ func runDevices(
 			log.Printf("device[%s]: start victron type", deviceConfig.Name())
 		}
 
-		if dev, err := victronDevice.RunDevice(deviceConfig, deviceConfig, storage); err != nil {
+		if dev, err := victronDevice.RunDevice(deviceConfig, deviceConfig, stateStorage); err != nil {
 			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
 		} else {
-			device.RunMqttForwarders(dev, mqttClientPool, storage)
+			device.RunMqttForwarders(dev, mqttClientPool, stateStorage)
 			devicePoolInstance.AddDevice(dev)
 		}
 	}
@@ -36,10 +37,10 @@ func runDevices(
 			log.Printf("device[%s]: start mqtt type", deviceConfig.Name())
 		}
 
-		if dev, err := mqttDevice.RunDevice(deviceConfig, deviceConfig, storage, mqttClientPool); err != nil {
+		if dev, err := mqttDevice.RunDevice(deviceConfig, deviceConfig, stateStorage, mqttClientPool); err != nil {
 			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
 		} else {
-			device.RunMqttForwarders(dev, mqttClientPool, storage)
+			device.RunMqttForwarders(dev, mqttClientPool, stateStorage)
 			devicePoolInstance.AddDevice(dev)
 		}
 	}
@@ -49,10 +50,10 @@ func runDevices(
 			log.Printf("device[%s]: start tearacom type", deviceConfig.Name())
 		}
 
-		if dev, err := httpDevice.RunDevice(deviceConfig, deviceConfig, storage); err != nil {
+		if dev, err := httpDevice.RunDevice(deviceConfig, deviceConfig, stateStorage, commandStorage); err != nil {
 			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
 		} else {
-			device.RunMqttForwarders(dev, mqttClientPool, storage)
+			device.RunMqttForwarders(dev, mqttClientPool, stateStorage)
 			devicePoolInstance.AddDevice(dev)
 		}
 	}

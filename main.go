@@ -86,8 +86,10 @@ func main() {
 		}
 
 		// start storage
-		storage := runStorage(cfg)
-		defer storage.Shutdown()
+		stateStorage := runStorage(cfg)
+		defer stateStorage.Shutdown()
+		commandStorage := runStorage(cfg)
+		defer commandStorage.Shutdown()
 
 		// start mqtt clients
 		mqttClientPoolInstance := runMqttClient(cfg)
@@ -95,11 +97,11 @@ func main() {
 		mqttClientPoolInstance.RunClients()
 
 		// start devices
-		devicePoolInstance := runDevices(cfg, mqttClientPoolInstance, storage)
+		devicePoolInstance := runDevices(cfg, mqttClientPoolInstance, stateStorage, commandStorage)
 		defer devicePoolInstance.Shutdown()
 
 		// start http server
-		httpServerInstance := runHttpServer(cfg, devicePoolInstance, storage)
+		httpServerInstance := runHttpServer(cfg, devicePoolInstance, stateStorage, commandStorage)
 		defer httpServerInstance.Shutdown()
 
 		// setup SIGTERM, SIGINT handlers

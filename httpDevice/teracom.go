@@ -91,7 +91,7 @@ func (c *TeracomDevice) ControlValueRequest(value dataflow.Value) (*http.Request
 	values.Set(cmd, param)
 
 	onSuccess := func() {
-		//c.relay(value.Register().Name(), value.Register().Description(), enum.Value(), value.Register().Controllable())
+		c.relay(value.Register().Name(), value.Register().Description(), enum.Value(), value.Register().Controllable())
 	}
 
 	req, err := http.NewRequest("POST", "/monitor/monitor.htm", strings.NewReader(values.Encode()))

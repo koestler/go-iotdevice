@@ -42,7 +42,7 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 					jsonErrorResponse(c, http.StatusForbidden, errors.New("User is not allowed here"))
 					return
 				}
-				values := env.Storage.GetSlice(filter)
+				values := env.StateStorage.GetSlice(filter)
 				jsonGetResponse(c, compile1DResponse(values))
 			})
 			if env.Config.LogConfig() {
@@ -66,7 +66,7 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 	// setup output chain and connect it to storage
 	output := make(chan dataflow.Value, 128)
 	source := dataflow.CreateSource(output)
-	source.Append(env.Storage)
+	source.Append(env.CommandStorage)
 
 	// add dynamic routes
 	for _, v := range env.Views {

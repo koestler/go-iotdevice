@@ -52,7 +52,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 			}
 			log.Printf("httpServer: %s%s: connection established to %s", r.BasePath(), relativePath, c.ClientIP())
 
-			subscription := env.Storage.Subscribe(filter)
+			subscription := env.StateStorage.Subscribe(filter)
 
 			go func() {
 				defer subscription.Shutdown()
@@ -98,7 +98,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 
 				// send all values after initial connect
 				{
-					values := env.Storage.GetSlice(filter)
+					values := env.StateStorage.GetSlice(filter)
 					response := compile2DResponse(values)
 					if err := wsSendValuesResponse(writer, encoder, response); err != nil {
 						log.Printf("httpServer: %s%s: error while sending initial values: %s", r.BasePath(), relativePath, err)

@@ -25,7 +25,8 @@ type Environment struct {
 	Views              []*config.ViewConfig
 	Authentication     config.AuthenticationConfig
 	DevicePoolInstance *device.DevicePool
-	Storage            *dataflow.ValueStorageInstance
+	StateStorage       *dataflow.ValueStorageInstance
+	CommandStorage     *dataflow.ValueStorageInstance
 }
 
 type Config interface {

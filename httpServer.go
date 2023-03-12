@@ -11,7 +11,8 @@ import (
 func runHttpServer(
 	cfg *config.Config,
 	devicePoolInstance *device.DevicePool,
-	storage *dataflow.ValueStorageInstance,
+	stateStorage *dataflow.ValueStorageInstance,
+	commandStorage *dataflow.ValueStorageInstance,
 ) *httpServer.HttpServer {
 	httpServerCfg := cfg.HttpServer()
 	if !httpServerCfg.Enabled() {
@@ -33,7 +34,8 @@ func runHttpServer(
 			Views:              cfg.Views(),
 			Authentication:     cfg.Auth(),
 			DevicePoolInstance: devicePoolInstance,
-			Storage:            storage,
+			StateStorage:       stateStorage,
+			CommandStorage:     commandStorage,
 		},
 	)
 }
