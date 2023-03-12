@@ -108,7 +108,7 @@ func (c *ShellyEm3Device) text(category, registerName, description, value string
 	if register == nil {
 		return
 	}
-	c.ds.output <- dataflow.NewTextRegisterValue(c.ds.deviceConfig.Name(), register, value)
+	c.ds.stateOutput <- dataflow.NewTextRegisterValue(c.ds.deviceConfig.Name(), register, value)
 }
 
 func (c *ShellyEm3Device) number(category, registerName, description, unit string, value float64) {
@@ -118,7 +118,7 @@ func (c *ShellyEm3Device) number(category, registerName, description, unit strin
 	if register == nil {
 		return
 	}
-	c.ds.output <- dataflow.NewNumericRegisterValue(c.ds.deviceConfig.Name(), register, value)
+	c.ds.stateOutput <- dataflow.NewNumericRegisterValue(c.ds.deviceConfig.Name(), register, value)
 }
 
 func (c *ShellyEm3Device) boolean(category, registerName, description string, value bool) {
@@ -139,7 +139,7 @@ func (c *ShellyEm3Device) boolean(category, registerName, description string, va
 	if value {
 		intValue = 1
 	}
-	c.ds.output <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, intValue)
+	c.ds.stateOutput <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, intValue)
 }
 
 func (c *ShellyEm3Device) extractRegistersAndValues(s ShellyEm3StatusStruct) {

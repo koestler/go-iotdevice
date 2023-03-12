@@ -52,10 +52,16 @@ func filterByRegister(filter *Filter, register Register) bool {
 		filterByRegisterCategory(filter, register)
 }
 
+func filterByValue(filter *Filter, value Value) bool {
+	_, isNullValue := value.(NullRegisterValue)
+	return !(filter.SkipNull && isNullValue)
+}
+
 func filterValue(filter *Filter, value Value) bool {
 	register := value.Register()
 	return filterByDevice(filter, value.DeviceName()) &&
-		filterByRegister(filter, register)
+		filterByRegister(filter, register) &&
+		filterByValue(filter, value)
 }
 
 func (s *Subscription) forward(newValue Value) {

@@ -28,7 +28,8 @@ type DeviceStruct struct {
 	stateStorage   *dataflow.ValueStorageInstance
 	commandStorage *dataflow.ValueStorageInstance
 
-	output chan dataflow.Value
+	stateOutput   chan dataflow.Value
+	commandOutput chan dataflow.Value
 
 	httpClient  *http.Client
 	pollRequest *http.Request
@@ -49,19 +50,23 @@ func RunDevice(
 	stateStorage *dataflow.ValueStorageInstance,
 	commandStorage *dataflow.ValueStorageInstance,
 ) (device device.Device, err error) {
-	// setup output chain
-	output := make(chan dataflow.Value, 128)
+	// setup stateOutput chain and connect it to storage
+	stateOutput := make(chan dataflow.Value, 128)
+	stateSource := dataflow.CreateSource(stateOutput)
+	stateSource.Append(stateStorage)
 
-	// create source and connect to storage
-	source := dataflow.CreateSource(output)
-	source.Append(stateStorage)
+	// setup stateOutput chain and connect it to storage
+	commandOutput := make(chan dataflow.Value, 128)
+	commandSource := dataflow.CreateSource(commandOutput)
+	commandSource.Append(commandStorage)
 
 	ds := &DeviceStruct{
 		deviceConfig:   deviceConfig,
 		httpConfig:     teracomConfig,
 		stateStorage:   stateStorage,
 		commandStorage: commandStorage,
-		output:         output,
+		stateOutput:    stateOutput,
+		commandOutput:  commandOutput,
 
 		httpClient: &http.Client{
 			// this tool is designed to serve devices running on the local network
@@ -120,7 +125,7 @@ func (ds *DeviceStruct) mainRoutine() {
 		lastErrorMsg := ""
 		interval := ds.getPollInterval(errorsInARow)
 
-		defer close(ds.output)
+		defer close(ds.stateOutput)
 		pollTicker := time.NewTicker(interval)
 
 		ds.addRegister(device.GetAvailabilityRegister())
@@ -132,10 +137,10 @@ func (ds *DeviceStruct) mainRoutine() {
 					lastErrorMsg = errMsg
 				}
 				if errorsInARow > 1 {
-					device.SendDisconnected(ds.Config().Name(), ds.output)
+					device.SendDisconnected(ds.Config().Name(), ds.stateOutput)
 				}
 			} else {
-				device.SendConnteced(ds.Config().Name(), ds.output)
+				device.SendConnteced(ds.Config().Name(), ds.stateOutput)
 				errorsInARow = 0
 				lastErrorMsg = ""
 				if ds.Config().LogDebug() {
@@ -158,6 +163,7 @@ func (ds *DeviceStruct) mainRoutine() {
 
 		// setup subscription to listen for updates of controllable registers
 		filter := dataflow.Filter{
+			SkipNull:       true,
 			IncludeDevices: map[string]bool{ds.Config().Name(): true},
 		}
 		commandSubscription := ds.commandStorage.Subscribe(filter)
@@ -202,6 +208,8 @@ func (ds *DeviceStruct) mainRoutine() {
 				}
 			}
 
+			// reset the command; this allows the same command (eg. toggle) to be sent again
+			ds.commandOutput <- dataflow.NewNullRegisterValue(ds.Config().Name(), value.Register())
 		}
 
 		for {

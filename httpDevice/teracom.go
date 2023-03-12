@@ -210,7 +210,7 @@ func (c *TeracomDevice) text(category, registerName, description, value string) 
 	if register == nil {
 		return
 	}
-	c.ds.output <- dataflow.NewTextRegisterValue(c.ds.deviceConfig.Name(), register, value)
+	c.ds.stateOutput <- dataflow.NewTextRegisterValue(c.ds.deviceConfig.Name(), register, value)
 }
 
 func (c *TeracomDevice) number(category, registerName, description, unit string, value string) {
@@ -230,7 +230,7 @@ func (c *TeracomDevice) number(category, registerName, description, unit string,
 	if register == nil {
 		return
 	}
-	c.ds.output <- dataflow.NewNumericRegisterValue(c.ds.deviceConfig.Name(), register, floatValue)
+	c.ds.stateOutput <- dataflow.NewNumericRegisterValue(c.ds.deviceConfig.Name(), register, floatValue)
 }
 
 func (c *TeracomDevice) enum(
@@ -252,7 +252,7 @@ func (c *TeracomDevice) enum(
 		return -1
 	}(strValue)
 
-	c.ds.output <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, enumIdx)
+	c.ds.stateOutput <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, enumIdx)
 }
 
 func (c *TeracomDevice) relay(
@@ -287,7 +287,7 @@ func (c *TeracomDevice) alarm(category, registerName, description string, strVal
 		enumIdx = 1
 	}
 
-	c.ds.output <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, enumIdx)
+	c.ds.stateOutput <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, enumIdx)
 }
 
 func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
