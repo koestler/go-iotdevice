@@ -212,7 +212,7 @@ func (ds *DeviceStruct) controlRoutine() {
 						ds.Config().Name(), value.String(),
 					)
 				}
-				if request, err := ds.impl.ControlValueRequest(value); err != nil {
+				if request, onSuccess, err := ds.impl.ControlValueRequest(value); err != nil {
 					log.Printf(
 						"device[%s]: control request genration failed: %s",
 						ds.Config().Name(), err,
@@ -230,6 +230,11 @@ func (ds *DeviceStruct) controlRoutine() {
 							"device[%s]: control request failed with code: %d",
 							ds.Config().Name(), resp.StatusCode,
 						)
+					} else {
+						if ds.Config().LogDebug() {
+							log.Printf("device[%s]: control request successful", ds.Config().Name())
+						}
+						onSuccess()
 					}
 				}
 			}

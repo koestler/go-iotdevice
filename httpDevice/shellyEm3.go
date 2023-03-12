@@ -45,8 +45,8 @@ func (c *ShellyEm3Device) GetCategorySort(category string) int {
 	}
 }
 
-func (c *ShellyEm3Device) ControlValueRequest(value dataflow.Value) (*http.Request, error) {
-	return nil, errors.New("not implemented")
+func (c *ShellyEm3Device) ControlValueRequest(value dataflow.Value) (*http.Request, onControlSuccess, error) {
+	return nil, nil, errors.New("not implemented")
 }
 
 type ShellyEm3StatusStruct struct {

@@ -53,9 +53,9 @@ func (c *TeracomDevice) GetCategorySort(category string) int {
 	}
 }
 
-func (c *TeracomDevice) ControlValueRequest(value dataflow.Value) (*http.Request, error) {
+func (c *TeracomDevice) ControlValueRequest(value dataflow.Value) (*http.Request, onControlSuccess, error) {
 	if value.Register().RegisterType() != dataflow.EnumRegister {
-		return nil, fmt.Errorf("only enum implemented")
+		return nil, nil, fmt.Errorf("only enum implemented")
 	}
 
 	enum := value.(dataflow.EnumRegisterValue)
@@ -70,7 +70,7 @@ func (c *TeracomDevice) ControlValueRequest(value dataflow.Value) (*http.Request
 	case "in pulse":
 		cmd = "rpl"
 	default:
-		return nil, fmt.Errorf("unsupported value=%s", v)
+		return nil, nil, fmt.Errorf("unsupported value=%s", v)
 	}
 
 	var param string
@@ -84,13 +84,18 @@ func (c *TeracomDevice) ControlValueRequest(value dataflow.Value) (*http.Request
 	case "R4":
 		param = "8"
 	default:
-		return nil, fmt.Errorf("unsupported register Name=%s", name)
+		return nil, nil, fmt.Errorf("unsupported register Name=%s", name)
 	}
 
 	values := url.Values{}
 	values.Set(cmd, param)
 
-	return http.NewRequest("POST", "/monitor/monitor.htm", strings.NewReader(values.Encode()))
+	onSuccess := func() {
+		//c.relay(value.Register().Name(), value.Register().Description(), enum.Value(), value.Register().Controllable())
+	}
+
+	req, err := http.NewRequest("POST", "/monitor/monitor.htm", strings.NewReader(values.Encode()))
+	return req, onSuccess, err
 }
 
 type teracomSensorValueStruct struct {
@@ -250,6 +255,20 @@ func (c *TeracomDevice) enum(
 	c.ds.output <- dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, enumIdx, false)
 }
 
+func (c *TeracomDevice) relay(
+	registerName, description string, strValue string, controllable bool,
+) {
+	c.enum("Relays", registerName, description,
+		map[int]string{
+			0: "OFF",
+			1: "ON",
+			2: "in pulse",
+		},
+		strValue,
+		controllable,
+	)
+}
+
 func (c *TeracomDevice) alarm(category, registerName, description string, strValue string) {
 	enum := map[int]string{
 		0: "OK",
@@ -380,15 +399,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 		desc := r.Description
 
 		controllable := r.Control == "0"
-		c.enum("Relays", regName, desc,
-			map[int]string{
-				0: "OFF",
-				1: "ON",
-				2: "in pulse",
-			},
-			r.Value,
-			controllable,
-		)
+		c.relay(regName, desc, r.Value, controllable)
 		if !controllable {
 			c.text("Relays", regName+"Control", desc+" is controlled by", r.Control)
 		}
