@@ -18,16 +18,14 @@ type Config interface {
 type DeviceStruct struct {
 	deviceConfig device.Config
 	modbusConfig Config
-	storage      *dataflow.ValueStorageInstance
 
-	output chan dataflow.Value
-
-	registers        map[string]dataflow.Register
+	registers        ModbusRegisters
 	registersMutex   sync.RWMutex
 	lastUpdated      time.Time
 	lastUpdatedMutex sync.RWMutex
 
 	shutdown chan struct{}
+	closed   chan struct{}
 }
 
 func RunDevice(
@@ -35,35 +33,15 @@ func RunDevice(
 	modbusConfig Config,
 	storage *dataflow.ValueStorageInstance,
 ) (device device.Device, err error) {
-	// setup output chain
-	output := make(chan dataflow.Value, 128)
-	source := dataflow.CreateSource(output)
-	// pipe all data to next stage
-	source.Append(storage)
-
-	ds := &DeviceStruct{
-		deviceConfig: deviceConfig,
-		modbusConfig: modbusConfig,
-		storage:      storage,
-		output:       output,
-		registers:    make(map[string]dataflow.Register),
-		shutdown:     make(chan struct{}),
-	}
-
 	c := &DeviceStruct{
 		deviceConfig: deviceConfig,
 		modbusConfig: modbusConfig,
-		source:       source,
 		shutdown:     make(chan struct{}),
 		closed:       make(chan struct{}),
 	}
 
-	if modbusConfig.Kind() == config.ModbusVedirectKind {
-		err = startVedirect(c, output)
-	} else if modbusConfig.Kind() == config.ModbusRandomBmvKind {
-		err = startRandom(c, output, RegisterListBmv712)
-	} else if modbusConfig.Kind() == config.ModbusRandomSolarKind {
-		err = startRandom(c, output, RegisterListSolar)
+	if modbusConfig.Kind() == config.ModbusWaveshareRtuRelay8Kind {
+		err = startWaveshareRtuRelay8(c, storage)
 	} else {
 		return nil, fmt.Errorf("unknown device kind: %s", modbusConfig.Kind().String())
 	}
@@ -113,7 +91,7 @@ func (c *DeviceStruct) LastUpdated() time.Time {
 }
 
 func (c *DeviceStruct) Model() string {
-	return c.model
+	return c.modbusConfig.Kind().String()
 }
 
 func (c *DeviceStruct) Shutdown() {

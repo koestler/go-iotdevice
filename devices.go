@@ -5,6 +5,7 @@ import (
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/httpDevice"
+	"github.com/koestler/go-iotdevice/modbusDevice"
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/mqttDevice"
 	"github.com/koestler/go-iotdevice/victronDevice"
@@ -25,6 +26,19 @@ func runDevices(
 		}
 
 		if dev, err := victronDevice.RunDevice(deviceConfig, deviceConfig, stateStorage); err != nil {
+			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
+		} else {
+			device.RunMqttForwarders(dev, mqttClientPool, stateStorage)
+			devicePoolInstance.AddDevice(dev)
+		}
+	}
+
+	for _, deviceConfig := range cfg.ModbusDevices() {
+		if cfg.LogWorkerStart() {
+			log.Printf("device[%s]: start modbus type", deviceConfig.Name())
+		}
+
+		if dev, err := modbusDevice.RunDevice(deviceConfig, deviceConfig, stateStorage); err != nil {
 			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
 		} else {
 			device.RunMqttForwarders(dev, mqttClientPool, stateStorage)

@@ -29,6 +29,10 @@ func (c Config) VictronDevices() []*VictronDeviceConfig {
 	return c.victronDevices
 }
 
+func (c Config) ModbusDevices() []*ModbusDeviceConfig {
+	return c.modbusDevices
+}
+
 func (c Config) HttpDevices() []*HttpDeviceConfig {
 	return c.httpDevices
 }
