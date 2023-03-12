@@ -5,8 +5,6 @@
 - handle case of startup when usb-serial is present but no Victron device is connected
 - redo / check homeassistant integration using mqtt realtime messages
 - device: use context instead of shutdown channel?
-- add output registers
 - victron: fetch VoltageCompensation depending on firmware version
 - handle case when http device becomes unreachable (null all values, do not send telemetry)
 - shelly http: create available / unavailable state and remove values when unavailable
-- refactor device using generics
