@@ -66,7 +66,7 @@ func RunDevice(
 		httpClient: &http.Client{
 			// this tool is designed to serve devices running on the local network
 			// -> us a relatively short timeout
-			Timeout: 10 * time.Second,
+			Timeout: time.Second,
 		},
 
 		registers: make(map[string]dataflow.Register),
@@ -178,16 +178,22 @@ func (ds *DeviceStruct) mainRoutine() {
 						"httpDevice[%s]: control request failed: %s",
 						ds.Config().Name(), err,
 					)
-				} else if resp.StatusCode != http.StatusOK {
-					log.Printf(
-						"httpDevice[%s]: control request failed with code: %d",
-						ds.Config().Name(), resp.StatusCode,
-					)
 				} else {
-					if ds.Config().LogDebug() {
-						log.Printf("httpDevice[%s]: control request successful", ds.Config().Name())
+					// ready and discard response body
+					defer resp.Body.Close()
+					io.ReadAll(resp.Body)
+
+					if resp.StatusCode != http.StatusOK {
+						log.Printf(
+							"httpDevice[%s]: control request failed with code: %d",
+							ds.Config().Name(), resp.StatusCode,
+						)
+					} else {
+						if ds.Config().LogDebug() {
+							log.Printf("httpDevice[%s]: control request successful", ds.Config().Name())
+						}
+						onSuccess()
 					}
-					onSuccess()
 				}
 			}
 		}
@@ -223,17 +229,14 @@ func (ds *DeviceStruct) poll() error {
 	if err != nil {
 		return fmt.Errorf("GET %s failed", ds.pollRequest.URL.String())
 	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("cannot get response body: %s", err)
+	}
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("GET %s failed with code: %d", ds.pollRequest.URL.String(), resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err := resp.Body.Close(); err != nil {
-		return fmt.Errorf("error during body reader close: %s", err)
-	}
-	if err != nil {
-		return fmt.Errorf("cannot get response body: %s", err)
 	}
 
 	if err := ds.impl.HandleResponse(body); err != nil {
