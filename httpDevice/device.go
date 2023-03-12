@@ -123,6 +123,7 @@ func (ds *DeviceStruct) mainRoutine() {
 		defer close(ds.output)
 		pollTicker := time.NewTicker(interval)
 
+		ds.addRegister(device.GetAvailabilityRegister())
 		execPoll := func() {
 			if err := ds.poll(); err != nil {
 				errorsInARow += 1
@@ -130,7 +131,11 @@ func (ds *DeviceStruct) mainRoutine() {
 					log.Println(errMsg)
 					lastErrorMsg = errMsg
 				}
+				if errorsInARow > 1 {
+					device.SendDisconnected(ds.Config().Name(), ds.output)
+				}
 			} else {
+				device.SendConnteced(ds.Config().Name(), ds.output)
 				errorsInARow = 0
 				lastErrorMsg = ""
 				if ds.Config().LogDebug() {
@@ -292,12 +297,16 @@ func (ds *DeviceStruct) addIgnoreRegister(
 		controllable,
 	)
 
-	// add the register into the list
+	ds.addRegister(r)
+
+	return r
+}
+
+func (ds *DeviceStruct) addRegister(register dataflow.Register) {
 	ds.registersMutex.Lock()
 	defer ds.registersMutex.Unlock()
 
-	ds.registers[registerName] = r
-	return r
+	ds.registers[register.Name()] = register
 }
 
 func (ds *DeviceStruct) Registers() dataflow.Registers {
