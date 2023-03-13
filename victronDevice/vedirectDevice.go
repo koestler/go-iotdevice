@@ -56,6 +56,9 @@ func startVedirect(c *DeviceStruct, output dataflow.Fillable) error {
 		for {
 			select {
 			case <-c.shutdown:
+				if err := vd.Close(); err != nil {
+					log.Printf("device[%s]: vd.Close failed: %s", c.deviceConfig.Name(), err)
+				}
 				return
 			case <-ticker.C:
 				start := time.Now()
@@ -64,7 +67,7 @@ func startVedirect(c *DeviceStruct, output dataflow.Fillable) error {
 				vd.RecvFlush()
 
 				if err := vd.VeCommandPing(); err != nil {
-					log.Printf("device[%s]: source: VeCommandPing failed: %v", c.deviceConfig.Name(), err)
+					log.Printf("device[%s]: source: VeCommandPing failed: %s", c.deviceConfig.Name(), err)
 					continue
 				}
 
