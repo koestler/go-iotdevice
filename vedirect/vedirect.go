@@ -2,7 +2,6 @@ package vedirect
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"github.com/tarm/serial"
 	"log"
@@ -29,11 +28,11 @@ func Open(portName string, logDebug bool) (*Vedirect, error) {
 
 	ioHandle, err := serial.OpenPort(&options)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("cannot open port: %v", portName))
+		return nil, fmt.Errorf("cannot open port: %v", portName)
 	}
 
 	if logDebug {
-		log.Printf("vedirect: Open succeeded portName=%v, ioPort=%v", portName, ioHandle)
+		log.Printf("vedirect: Open succeeded portName=%v", portName)
 	}
 
 	return &Vedirect{ioHandle, bufio.NewReader(ioHandle), logDebug, 0}, nil
