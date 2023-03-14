@@ -1,6 +1,7 @@
 package modbusDevice
 
 import (
+	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/modbus"
 	"log"
@@ -45,10 +46,15 @@ func startWaveshareRtuRelay8(c *DeviceStruct, output dataflow.Fillable) error {
 			case <-ticker.C:
 				start := time.Now()
 
-				for _, register := range c.registers {
-					// fetch register
-					log.Printf("try to fetch register: %v", register)
+				// fetch registers
+				if state, err := md.ReadStateOfRelays(0x01); err != nil {
+					log.Printf("read failed: %s", err)
+				} else {
+					log.Printf("state is: %v", state)
 				}
+
+				//for _, register := range c.registers {
+				//}
 
 				c.SetLastUpdatedNow()
 
@@ -64,4 +70,24 @@ func startWaveshareRtuRelay8(c *DeviceStruct, output dataflow.Fillable) error {
 	}()
 
 	return nil
+}
+
+var RegisterListRtuRelay8 ModbusRegisters
+
+func init() {
+	enum := map[int]string{
+		0: "OPEN",
+		1: "CLOSED",
+	}
+	RegisterListRtuRelay8 = make(ModbusRegisters, 8)
+	for i := uint16(0); i < 8; i += 1 {
+		RegisterListRtuRelay8[i] = CreateEnumRegisterStruct(
+			"Relays",
+			fmt.Sprintf("CH%d", i+1),
+			fmt.Sprintf("Relay CH%d", i+1),
+			i,
+			enum,
+			int(i),
+		)
+	}
 }

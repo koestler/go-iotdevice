@@ -45,7 +45,7 @@ func (md *Modbus) Close() (err error) {
 	return
 }
 
-func (md *Modbus) read(b []byte) (n int, err error) {
+func (md *Modbus) Read(b []byte) (n int, err error) {
 	n, err = md.ioPort.Read(b)
 	if err != nil {
 		log.Printf("modbus: Read error: %v\n", err)
@@ -54,7 +54,7 @@ func (md *Modbus) read(b []byte) (n int, err error) {
 }
 
 func (md *Modbus) Write(b []byte) (n int, err error) {
-	md.debugPrintf("modbus: Write b=%s len=%v", b, len(b))
+	md.debugPrintf("modbus: Write b=%x len=%v", b, len(b))
 	n, err = md.ioPort.Write(b)
 	if err != nil {
 		log.Printf("modbus: Write error: %v\n", err)
