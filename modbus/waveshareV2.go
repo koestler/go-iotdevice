@@ -9,7 +9,7 @@ import (
 )
 
 type FunctionCode uint8
-type Address uint16
+type Address uint8
 
 const (
 	WaveshareFunctionReadRelay             FunctionCode = 0x01
@@ -22,17 +22,45 @@ const (
 type Command uint16
 
 const (
-	WaveshareCommandOpen                Command = 0xFF00
-	WaveshareCommandClose               Command = 0x0000
-	WaveshareCommandFlip                Command = 0x5500
-	WaveshareCommandReadDeviceAddress   Command = 0x400
-	WavesahreCommandReadSoftwareVersion Command = 0x8000
+	RelayOpen  Command = 0xFF00
+	RelayClose Command = 0x0000
+	RelayFlip  Command = 0x5500
 )
 
 var byteOrder = binary.LittleEndian
 
-func (md *Modbus) ReadStateOfRelays(deviceAddress Address) (state [8]bool, err error) {
-	response, err := md.CallFunction(
+func (md *Modbus) WriteRelay(deviceAddress Address, relayNr int, command Command) (err error) {
+	if relayNr > 7 {
+		return fmt.Errorf("invalid relayNr: %d, it must be between 0 and 7", relayNr)
+	}
+
+	// payload strucutre:
+	// 2 bytes for register address of controlled relay, 0x0000 - 0x0007
+	// 2 bytes for command: 0xFF00 open relay, 0x0000 close relay, 0x5500 flip relay
+	var payload bytes.Buffer
+
+	err = binary.Write(&payload, byteOrder, uint16(relayNr))
+	if err != nil {
+		return
+	}
+
+	err = binary.Write(&payload, byteOrder, command)
+	if err != nil {
+		return
+	}
+
+	_, err = md.callFunction(
+		deviceAddress,
+		WaveshareFunctionWriteRelay,
+		payload.Bytes(),
+		6,
+	)
+
+	return err
+}
+
+func (md *Modbus) ReadRelays(deviceAddress Address) (state [8]bool, err error) {
+	response, err := md.callFunction(
 		deviceAddress,
 		WaveshareFunctionReadRelay,
 		[]byte{
@@ -54,7 +82,7 @@ func (md *Modbus) ReadStateOfRelays(deviceAddress Address) (state [8]bool, err e
 	return
 }
 
-func (md *Modbus) CallFunction(
+func (md *Modbus) callFunction(
 	deviceAddress Address,
 	functionCode FunctionCode,
 	payload []byte,
@@ -64,35 +92,11 @@ func (md *Modbus) CallFunction(
 	md.RecvFlush()
 
 	// send request
-	err = md.SendFunctionCall(deviceAddress, functionCode, payload)
-	if err != nil {
-		return
-	}
-
-	// read response + checksum
-	response = make([]byte, responseLength+2)
-	_, err = io.ReadFull(md, response)
-	if err != nil {
-		return nil, err
-	}
-
-	// check checksum
-	received := byteOrder.Uint16(response[len(response)-2:])
-	computed := checksum(response[:len(response)-2])
-	if received != computed {
-		return nil, fmt.Errorf("checksum missmatch received != computed : %x != %x", received, computed)
-	}
-
-	return
-}
-
-func (md *Modbus) SendFunctionCall(deviceAddress Address, functionCode FunctionCode, payload []byte) (err error) {
 	// frame structure:
 	// 1 byte Device Address
 	// 1 byte Function Code
 	// n bytes payload
-	// 2 bytes crc16 checksum
-
+	// 2 bytes crc16 computeChecksum
 	var packet bytes.Buffer
 
 	err = binary.Write(&packet, byteOrder, deviceAddress)
@@ -110,21 +114,41 @@ func (md *Modbus) SendFunctionCall(deviceAddress Address, functionCode FunctionC
 		return
 	}
 
-	err = binary.Write(&packet, byteOrder, checksum(packet.Bytes()))
+	checksum := computeChecksum(packet.Bytes())
+	err = binary.Write(&packet, byteOrder, checksum)
 	if err != nil {
 		return
 	}
+
+	md.debugPrintf(
+		"sendFunctionCall: deviceAddress=%02x, functionCode=%02x, payload=%02x, checksum=%04x",
+		deviceAddress, functionCode, payload, checksum,
+	)
 
 	_, err = io.Copy(md, &packet)
 	if err != nil {
 		return
 	}
 
+	// read response + computeChecksum
+	response = make([]byte, responseLength+2)
+	_, err = io.ReadFull(md, response)
+	if err != nil {
+		return nil, err
+	}
+
+	// check computeChecksum
+	received := byteOrder.Uint16(response[len(response)-2:])
+	computed := computeChecksum(response[:len(response)-2])
+	if received != computed {
+		return nil, fmt.Errorf("computeChecksum missmatch received != computed : %x != %x", received, computed)
+	}
+
 	return
 }
 
-var crcTable = crc16.MakeTable(crc16.CRC16_MAXIM)
+var crcTable = crc16.MakeTable(crc16.CRC16_MODBUS)
 
-func checksum(data []byte) uint16 {
+func computeChecksum(data []byte) uint16 {
 	return crc16.Checksum(data, crcTable)
 }

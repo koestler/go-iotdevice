@@ -35,7 +35,7 @@ func startWaveshareRtuRelay8(c *DeviceStruct, output dataflow.Fillable) error {
 	go func() {
 		defer close(c.closed)
 
-		ticker := time.NewTicker(10000 * time.Millisecond)
+		ticker := time.NewTicker(5000 * time.Millisecond)
 		for {
 			select {
 			case <-c.shutdown:
@@ -47,14 +47,15 @@ func startWaveshareRtuRelay8(c *DeviceStruct, output dataflow.Fillable) error {
 				start := time.Now()
 
 				// fetch registers
-				if state, err := md.ReadStateOfRelays(0x01); err != nil {
+				if state, err := md.ReadRelays(0x01); err != nil {
 					log.Printf("read failed: %s", err)
 				} else {
 					log.Printf("state is: %v", state)
 				}
 
-				//for _, register := range c.registers {
-				//}
+				for i := range c.registers {
+					md.WriteRelay(0x01, i, modbus.RelayFlip)
+				}
 
 				c.SetLastUpdatedNow()
 
