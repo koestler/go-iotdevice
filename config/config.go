@@ -53,6 +53,37 @@ func (c Config) PrintConfig() (err error) {
 
 func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	var e []error
+
+	if c.Version == nil {
+		err = append(err, fmt.Errorf("Version must be defined. Use Version=1."))
+	} else {
+		ret.version = *c.Version
+		if ret.version != 1 {
+			err = append(err, fmt.Errorf("Version=%d is not supported.", ret.version))
+		}
+	}
+
+	if len(c.ProjectTitle) > 0 {
+		ret.projectTitle = c.ProjectTitle
+	} else {
+		ret.projectTitle = "go-iotdevice"
+	}
+
+	if c.LogConfig != nil && *c.LogConfig {
+		ret.logConfig = true
+	}
+
+	if c.LogWorkerStart != nil && *c.LogWorkerStart {
+		ret.logWorkerStart = true
+	}
+
+	if c.LogStorageDebug != nil && *c.LogStorageDebug {
+		ret.logStorageDebug = true
+	}
+
+	ret.httpServer, e = c.HttpServer.TransformAndValidate()
+	err = append(err, e...)
+
 	ret.authentication, e = c.Authentication.TransformAndValidate()
 	err = append(err, e...)
 
@@ -98,91 +129,6 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 
 	ret.views, e = c.Views.TransformAndValidate(ret.devices)
 	err = append(err, e...)
-
-	ret.httpServer, e = c.HttpServer.TransformAndValidate()
-	err = append(err, e...)
-
-	if c.Version == nil {
-		err = append(err, fmt.Errorf("Version must be defined. Use Version=1."))
-	} else {
-		ret.version = *c.Version
-		if ret.version != 1 {
-			err = append(err, fmt.Errorf("Version=%d is not supported.", ret.version))
-		}
-	}
-
-	if len(c.ProjectTitle) > 0 {
-		ret.projectTitle = c.ProjectTitle
-	} else {
-		ret.projectTitle = "go-iotdevice"
-	}
-
-	if c.LogConfig != nil && *c.LogConfig {
-		ret.logConfig = true
-	}
-
-	if c.LogWorkerStart != nil && *c.LogWorkerStart {
-		ret.logWorkerStart = true
-	}
-
-	if c.LogStorageDebug != nil && *c.LogStorageDebug {
-		ret.logStorageDebug = true
-	}
-
-	return
-}
-
-func (c *authenticationConfigRead) TransformAndValidate() (ret AuthenticationConfig, err []error) {
-	ret.enabled = false
-	ret.jwtValidityPeriod = time.Hour
-
-	if randString, e := randomString(64); err == nil {
-		ret.jwtSecret = []byte(randString)
-	} else {
-		err = append(err, fmt.Errorf("Authentication->JwtSecret: error while generating random secret: %s", e))
-	}
-
-	if c == nil {
-		return
-	}
-
-	ret.enabled = true
-
-	if c.JwtSecret != nil {
-		if len(*c.JwtSecret) < 32 {
-			err = append(err, fmt.Errorf("Authentication->JwtSecret must be empty ot >= 32 chars"))
-		} else {
-			ret.jwtSecret = []byte(*c.JwtSecret)
-		}
-	}
-
-	if len(c.JwtValidityPeriod) < 1 {
-		// use default
-	} else if authJwtValidityPeriod, e := time.ParseDuration(c.JwtValidityPeriod); e != nil {
-		err = append(err, fmt.Errorf("Authentication->JwtValidityPeriod='%s' parse error: %s",
-			c.JwtValidityPeriod, e,
-		))
-	} else if authJwtValidityPeriod < 0 {
-		err = append(err, fmt.Errorf("Authentication->JwtValidityPeriod='%s' must be positive",
-			c.JwtValidityPeriod,
-		))
-	} else {
-		ret.jwtValidityPeriod = authJwtValidityPeriod
-	}
-
-	if c.HtaccessFile != nil && len(*c.HtaccessFile) > 0 {
-		if info, e := os.Stat(*c.HtaccessFile); e != nil {
-			err = append(err, fmt.Errorf("Authentication->HtaccessFile='%s' cannot open file. error: %s",
-				*c.HtaccessFile, e,
-			))
-		} else if info.IsDir() {
-			err = append(err, fmt.Errorf("Authentication->HtaccessFile='%s' must be a file, not a directory",
-				*c.HtaccessFile,
-			))
-		}
-
-		ret.htaccessFile = *c.HtaccessFile
-	}
 
 	return
 }
@@ -249,6 +195,61 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 
 	if c.LogDebug != nil && *c.LogDebug {
 		ret.logDebug = true
+	}
+
+	return
+}
+
+func (c *authenticationConfigRead) TransformAndValidate() (ret AuthenticationConfig, err []error) {
+	ret.enabled = false
+	ret.jwtValidityPeriod = time.Hour
+
+	if randString, e := randomString(64); err == nil {
+		ret.jwtSecret = []byte(randString)
+	} else {
+		err = append(err, fmt.Errorf("Authentication->JwtSecret: error while generating random secret: %s", e))
+	}
+
+	if c == nil {
+		return
+	}
+
+	ret.enabled = true
+
+	if c.JwtSecret != nil {
+		if len(*c.JwtSecret) < 32 {
+			err = append(err, fmt.Errorf("Authentication->JwtSecret must be empty ot >= 32 chars"))
+		} else {
+			ret.jwtSecret = []byte(*c.JwtSecret)
+		}
+	}
+
+	if len(c.JwtValidityPeriod) < 1 {
+		// use default
+	} else if authJwtValidityPeriod, e := time.ParseDuration(c.JwtValidityPeriod); e != nil {
+		err = append(err, fmt.Errorf("Authentication->JwtValidityPeriod='%s' parse error: %s",
+			c.JwtValidityPeriod, e,
+		))
+	} else if authJwtValidityPeriod < 0 {
+		err = append(err, fmt.Errorf("Authentication->JwtValidityPeriod='%s' must be positive",
+			c.JwtValidityPeriod,
+		))
+	} else {
+		ret.jwtValidityPeriod = authJwtValidityPeriod
+	}
+
+	if c.HtaccessFile != nil && len(*c.HtaccessFile) > 0 {
+		if info, e := os.Stat(*c.HtaccessFile); e != nil {
+			err = append(err, fmt.Errorf("Authentication->HtaccessFile='%s' cannot open file. error: %s",
+				*c.HtaccessFile, e,
+			))
+		} else if info.IsDir() {
+			err = append(err, fmt.Errorf("Authentication->HtaccessFile='%s' must be a file, not a directory",
+				*c.HtaccessFile,
+			))
+		}
+
+		ret.htaccessFile = *c.HtaccessFile
 	}
 
 	return

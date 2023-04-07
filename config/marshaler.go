@@ -3,10 +3,19 @@ package config
 import "fmt"
 
 func (c Config) MarshalYAML() (interface{}, error) {
-
 	return configRead{
-		Version:      &c.version,
-		ProjectTitle: c.projectTitle,
+		Version:         &c.version,
+		ProjectTitle:    c.projectTitle,
+		LogConfig:       &c.logConfig,
+		LogWorkerStart:  &c.logWorkerStart,
+		LogStorageDebug: &c.logStorageDebug,
+		HttpServer: func() *httpServerConfigRead {
+			if !c.httpServer.enabled {
+				return nil
+			}
+			r := c.httpServer.convertToRead()
+			return &r
+		}(),
 		Authentication: func() *authenticationConfigRead {
 			if !c.authentication.enabled {
 				return nil
@@ -58,17 +67,25 @@ func (c Config) MarshalYAML() (interface{}, error) {
 			}
 			return views
 		}(),
-		HttpServer: func() *httpServerConfigRead {
-			if !c.httpServer.enabled {
-				return nil
-			}
-			r := c.httpServer.convertToRead()
-			return &r
-		}(),
-		LogConfig:       &c.logConfig,
-		LogWorkerStart:  &c.logWorkerStart,
-		LogStorageDebug: &c.logStorageDebug,
 	}, nil
+}
+
+func (c HttpServerConfig) convertToRead() httpServerConfigRead {
+	frontendProxy := ""
+	if c.frontendProxy != nil {
+		frontendProxy = c.frontendProxy.String()
+	}
+
+	return httpServerConfigRead{
+		Bind:            c.bind,
+		Port:            &c.port,
+		LogRequests:     &c.logRequests,
+		FrontendProxy:   frontendProxy,
+		FrontendPath:    c.frontendPath,
+		FrontendExpires: c.frontendExpires.String(),
+		ConfigExpires:   c.configExpires.String(),
+		LogDebug:        &c.logDebug,
+	}
 }
 
 func (c AuthenticationConfig) convertToRead() authenticationConfigRead {
@@ -186,22 +203,4 @@ func mapKeys(m map[string]struct{}) []string {
 		i++
 	}
 	return keys
-}
-
-func (c HttpServerConfig) convertToRead() httpServerConfigRead {
-	frontendProxy := ""
-	if c.frontendProxy != nil {
-		frontendProxy = c.frontendProxy.String()
-	}
-
-	return httpServerConfigRead{
-		Bind:            c.bind,
-		Port:            &c.port,
-		LogRequests:     &c.logRequests,
-		FrontendProxy:   frontendProxy,
-		FrontendPath:    c.frontendPath,
-		FrontendExpires: c.frontendExpires.String(),
-		ConfigExpires:   c.configExpires.String(),
-		LogDebug:        &c.logDebug,
-	}
 }

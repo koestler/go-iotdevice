@@ -32,7 +32,7 @@ func runHttpServer(
 			},
 			ProjectTitle:       cfg.ProjectTitle(),
 			Views:              cfg.Views(),
-			Authentication:     cfg.Auth(),
+			Authentication:     cfg.Authentication(),
 			DevicePoolInstance: devicePoolInstance,
 			StateStorage:       stateStorage,
 			CommandStorage:     commandStorage,

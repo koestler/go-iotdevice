@@ -3,6 +3,10 @@ package config
 type configRead struct {
 	Version         *int                       `yaml:"Version"`
 	ProjectTitle    string                     `yaml:"ProjectTitle"`
+	LogConfig       *bool                      `yaml:"LogConfig"`
+	LogWorkerStart  *bool                      `yaml:"LogWorkerStart"`
+	LogStorageDebug *bool                      `yaml:"LogStorageDebug"`
+	HttpServer      *httpServerConfigRead      `yaml:"HttpServer"`
 	Authentication  *authenticationConfigRead  `yaml:"Authentication"`
 	MqttClients     mqttClientConfigReadMap    `yaml:"MqttClients"`
 	VictronDevices  victronDeviceConfigReadMap `yaml:"VictronDevices"`
@@ -10,10 +14,17 @@ type configRead struct {
 	HttpDevices     httpDeviceConfigReadMap    `yaml:"HttpDevices"`
 	MqttDevices     mqttDeviceConfigReadMap    `yaml:"MqttDevices"`
 	Views           viewConfigReadList         `yaml:"Views"`
-	HttpServer      *httpServerConfigRead      `yaml:"HttpServer"`
-	LogConfig       *bool                      `yaml:"LogConfig"`
-	LogWorkerStart  *bool                      `yaml:"LogWorkerStart"`
-	LogStorageDebug *bool                      `yaml:"LogStorageDebug"`
+}
+
+type httpServerConfigRead struct {
+	Bind            string `yaml:"Bind"`
+	Port            *int   `yaml:"Port"`
+	LogRequests     *bool  `yaml:"LogRequests"`
+	FrontendProxy   string `yaml:"FrontendProxy"`
+	FrontendPath    string `yaml:"FrontendPath"`
+	FrontendExpires string `yaml:"FrontendExpires"`
+	ConfigExpires   string `yaml:"ConfigExpires"`
+	LogDebug        *bool  `yaml:"LogDebug"`
 }
 
 type authenticationConfigRead struct {
@@ -111,14 +122,3 @@ type viewConfigRead struct {
 }
 
 type viewConfigReadList []viewConfigRead
-
-type httpServerConfigRead struct {
-	Bind            string `yaml:"Bind"`
-	Port            *int   `yaml:"Port"`
-	LogRequests     *bool  `yaml:"LogRequests"`
-	FrontendProxy   string `yaml:"FrontendProxy"`
-	FrontendPath    string `yaml:"FrontendPath"`
-	FrontendExpires string `yaml:"FrontendExpires"`
-	ConfigExpires   string `yaml:"ConfigExpires"`
-	LogDebug        *bool  `yaml:"LogDebug"`
-}

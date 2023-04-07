@@ -8,6 +8,10 @@ import (
 type Config struct {
 	version         int                    // must be 1
 	projectTitle    string                 // optional: default go-iotdevice
+	logConfig       bool                   // optional: default False
+	logWorkerStart  bool                   // optional: default False
+	logStorageDebug bool                   // optional: default False
+	httpServer      HttpServerConfig       // optional: default Disabled
 	authentication  AuthenticationConfig   // optional: default Disabled
 	mqttClients     []*MqttClientConfig    // mandatory: at least 1 must be defined
 	devices         []*DeviceConfig        // aggregated over all types
@@ -16,10 +20,18 @@ type Config struct {
 	httpDevices     []*HttpDeviceConfig    // optional: default empty
 	mqttDevices     []*MqttDeviceConfig    // optional: default empty
 	views           []*ViewConfig          // mandatory: at least 1 must be defined
-	httpServer      HttpServerConfig       // optional: default Disabled
-	logConfig       bool                   // optional: default False
-	logWorkerStart  bool                   // optional: default False
-	logStorageDebug bool                   // optional: default False
+}
+
+type HttpServerConfig struct {
+	enabled         bool          // defined automatically if HttpServer section exists
+	bind            string        // optional: defaults to ::1 (ipv6 loopback)
+	port            int           // optional: defaults to 8000
+	logRequests     bool          // optional: default False
+	frontendProxy   *url.URL      // optional: default deactivated; otherwise an address of the frontend dev-server
+	frontendPath    string        // optional: default "frontend-build"; otherwise set to a path where the frontend build is located
+	frontendExpires time.Duration // optional: default 5min; what cache-control header to send for static frontend files
+	configExpires   time.Duration // optional: default 1min; what cache-control header to send for config endpoint
+	logDebug        bool          // optional: default false
 }
 
 type AuthenticationConfig struct {
@@ -105,18 +117,6 @@ type ViewConfig struct {
 	hidden         bool                // optional: if true, view is not shown in menu unless logged in
 	skipFields     []string            // optional: a list of fields that are not shown
 	skipCategories []string            // optional: a list of categories that are not shown
-}
-
-type HttpServerConfig struct {
-	enabled         bool          // defined automatically if HttpServer section exists
-	bind            string        // optional: defaults to ::1 (ipv6 loopback)
-	port            int           // optional: defaults to 8000
-	logRequests     bool          // optional: default False
-	frontendProxy   *url.URL      // optional: default deactivated; otherwise an address of the frontend dev-server
-	frontendPath    string        // optional: default "frontend-build"; otherwise set to a path where the frontend build is located
-	frontendExpires time.Duration // optional: default 5min; what cache-control header to send for static frontend files
-	configExpires   time.Duration // optional: default 1min; what cache-control header to send for config endpoint
-	logDebug        bool          // optional: default false
 }
 
 // victron device kind

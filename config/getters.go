@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+// Getters for Config struct
+
 func (c Config) Version() int {
 	return c.version
 }
@@ -13,7 +15,23 @@ func (c Config) ProjectTitle() string {
 	return c.projectTitle
 }
 
-func (c Config) Auth() AuthenticationConfig {
+func (c Config) LogConfig() bool {
+	return c.logConfig
+}
+
+func (c Config) LogWorkerStart() bool {
+	return c.logWorkerStart
+}
+
+func (c Config) LogStorageDebug() bool {
+	return c.logStorageDebug
+}
+
+func (c Config) HttpServer() HttpServerConfig {
+	return c.httpServer
+}
+
+func (c Config) Authentication() AuthenticationConfig {
 	return c.authentication
 }
 
@@ -45,21 +63,53 @@ func (c Config) Views() []*ViewConfig {
 	return c.views
 }
 
-func (c Config) HttpServer() HttpServerConfig {
-	return c.httpServer
+func (c Config) GetViewNames() (ret []string) {
+	ret = []string{}
+	for _, v := range c.Views() {
+		ret = append(ret, v.Name())
+	}
+	return
 }
 
-func (c Config) LogConfig() bool {
-	return c.logConfig
+// Getters for HttpServerConfig struct
+
+func (c HttpServerConfig) Enabled() bool {
+	return c.enabled
 }
 
-func (c Config) LogWorkerStart() bool {
-	return c.logWorkerStart
+func (c HttpServerConfig) Bind() string {
+	return c.bind
 }
 
-func (c Config) LogStorageDebug() bool {
-	return c.logStorageDebug
+func (c HttpServerConfig) Port() int {
+	return c.port
 }
+
+func (c HttpServerConfig) LogRequests() bool {
+	return c.logRequests
+}
+
+func (c HttpServerConfig) FrontendProxy() *url.URL {
+	return c.frontendProxy
+}
+
+func (c HttpServerConfig) FrontendPath() string {
+	return c.frontendPath
+}
+
+func (c HttpServerConfig) FrontendExpires() time.Duration {
+	return c.frontendExpires
+}
+
+func (c HttpServerConfig) ConfigExpires() time.Duration {
+	return c.configExpires
+}
+
+func (c HttpServerConfig) LogDebug() bool {
+	return c.logDebug
+}
+
+// Getters for Authentication struct
 
 func (c AuthenticationConfig) Enabled() bool {
 	return c.enabled
@@ -77,7 +127,7 @@ func (c AuthenticationConfig) HtaccessFile() string {
 	return c.htaccessFile
 }
 
-// getters for MqttClientConfig struct
+// Getters for MqttClientConfig struct
 
 func (c MqttClientConfig) Name() string {
 	return c.name
@@ -160,6 +210,8 @@ func (c MqttClientConfig) LogMessages() bool {
 	return c.logMessages
 }
 
+// Getters for DeviceConfig struct
+
 func (c DeviceConfig) Name() string {
 	return c.name
 }
@@ -188,6 +240,8 @@ func (c DeviceConfig) LogComDebug() bool {
 	return c.logComDebug
 }
 
+// Getters for VictronDeviceConfig struct
+
 func (c VictronDeviceConfig) Device() string {
 	return c.device
 }
@@ -195,6 +249,8 @@ func (c VictronDeviceConfig) Device() string {
 func (c VictronDeviceConfig) Kind() VictronDeviceKind {
 	return c.kind
 }
+
+// Getters for ModbusDeviceConfig struct
 
 func (c ModbusDeviceConfig) Device() string {
 	return c.device
@@ -207,6 +263,8 @@ func (c ModbusDeviceConfig) Kind() ModbusDeviceKind {
 func (c ModbusDeviceConfig) Address() uint {
 	return c.address
 }
+
+// Getters for HttpDeviceConfig struct
 
 func (c HttpDeviceConfig) Url() *url.URL {
 	return c.url
@@ -240,9 +298,13 @@ func (c MqttDeviceConfig) MqttTopics() []string {
 	return c.mqttTopics
 }
 
+// Getters for MqttDeviceConfig struct
+
 func (c MqttDeviceConfig) MqttClients() []string {
 	return c.mqttClients
 }
+
+// Getters for ViewDeviceConfig struct
 
 func (c ViewDeviceConfig) Name() string {
 	return c.name
@@ -251,6 +313,8 @@ func (c ViewDeviceConfig) Name() string {
 func (c ViewDeviceConfig) Title() string {
 	return c.title
 }
+
+// Getters for ViewConfig struct
 
 func (c ViewConfig) Name() string {
 	return c.name
@@ -295,48 +359,4 @@ func (c ViewConfig) SkipFields() []string {
 
 func (c ViewConfig) SkipCategories() []string {
 	return c.skipCategories
-}
-
-func (c HttpServerConfig) Enabled() bool {
-	return c.enabled
-}
-
-func (c HttpServerConfig) Bind() string {
-	return c.bind
-}
-
-func (c HttpServerConfig) Port() int {
-	return c.port
-}
-
-func (c HttpServerConfig) LogRequests() bool {
-	return c.logRequests
-}
-
-func (c HttpServerConfig) FrontendProxy() *url.URL {
-	return c.frontendProxy
-}
-
-func (c HttpServerConfig) FrontendPath() string {
-	return c.frontendPath
-}
-
-func (c HttpServerConfig) FrontendExpires() time.Duration {
-	return c.frontendExpires
-}
-
-func (c HttpServerConfig) ConfigExpires() time.Duration {
-	return c.configExpires
-}
-
-func (c HttpServerConfig) LogDebug() bool {
-	return c.logDebug
-}
-
-func (c Config) GetViewNames() (ret []string) {
-	ret = []string{}
-	for _, v := range c.Views() {
-		ret = append(ret, v.Name())
-	}
-	return
 }
