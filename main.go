@@ -109,13 +109,12 @@ func main() {
 		signal.Notify(gracefulStop, syscall.SIGINT)
 
 		// wait for something to trigger a shutdown
-		select {
-		case sig := <-gracefulStop:
-			if cfg.LogWorkerStart() {
-				log.Printf("main: graceful shutdown; caught signal: %+v", sig)
-			}
-			exitCode = ExitSuccess
+		sig := <-gracefulStop
+
+		if cfg.LogWorkerStart() {
+			log.Printf("main: graceful shutdown; caught signal: %+v", sig)
 		}
+		exitCode = ExitSuccess
 
 		// write memory profile; after that defer will run the shutdown methods
 		writeMemProfile(string(cmdOptions.MemProfile))
