@@ -5,7 +5,6 @@ import (
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
-	"github.com/koestler/go-iotdevice/vedirect"
 	"log"
 	"sync"
 	"time"
@@ -20,7 +19,6 @@ type DeviceStruct struct {
 	deviceConfig  device.Config
 	victronConfig Config
 
-	deviceId         vedirect.VeProduct
 	registers        VictronRegisters
 	lastUpdated      time.Time
 	lastUpdatedMutex sync.RWMutex

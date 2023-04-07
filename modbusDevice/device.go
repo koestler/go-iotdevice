@@ -20,7 +20,6 @@ type DeviceStruct struct {
 	modbusConfig Config
 
 	registers        ModbusRegisters
-	registersMutex   sync.RWMutex
 	lastUpdated      time.Time
 	lastUpdatedMutex sync.RWMutex
 

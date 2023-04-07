@@ -45,14 +45,6 @@ func (vd *Vedirect) Close() (err error) {
 	return
 }
 
-func (vd *Vedirect) read(b []byte) (n int, err error) {
-	n, err = vd.ioPort.Read(b)
-	if err != nil {
-		log.Printf("vedirect: Read error: %v\n", err)
-	}
-	return
-}
-
 func (vd *Vedirect) Write(b []byte) (n int, err error) {
 	vd.debugPrintf("vedirect: Write b=%s len=%v", b, len(b))
 	n, err = vd.ioPort.Write(b)

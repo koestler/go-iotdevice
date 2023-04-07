@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"gopkg.in/yaml.v2"
 	"net/http"
 	"strings"
 	"time"
@@ -51,21 +50,6 @@ func jsonGetResponse(c *gin.Context, obj interface{}) {
 
 	c.Header("ETag", "W/"+etag)
 	c.Data(http.StatusOK, "application/json; charset=utf-8", jsonBytes)
-}
-func yamlGetResponse(c *gin.Context, obj interface{}) {
-	yamlBytes, err := yaml.Marshal(obj)
-	if err != nil {
-		c.Status(http.StatusInternalServerError)
-	}
-	hash := md5.Sum(yamlBytes)
-	etag := hex.EncodeToString(hash[:])
-
-	if sendNotModified(c, etag) {
-		return
-	}
-
-	c.Header("ETag", "W/"+etag)
-	c.Data(http.StatusOK, "application/x-yaml; charset=utf-8", yamlBytes)
 }
 
 func setCacheControlPublic(c *gin.Context, maxAge time.Duration) {
