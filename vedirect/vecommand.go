@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -92,7 +91,7 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 	}
 
 	if len(responseData) < 7 {
-		err = errors.New(fmt.Sprintf("responseData too short, len(responseData)=%v", len(responseData)))
+		err = fmt.Errorf("responseData too short, len(responseData)=%v", len(responseData))
 		vd.debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	}
@@ -101,7 +100,7 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 	var response VeResponse
 	s := string(responseData[0])
 	if i, err := strconv.ParseUint(s, 16, 8); err != nil {
-		err = errors.New(fmt.Sprintf("cannot parse response, address=%x, s=%v, err=%v", address, s, err))
+		err = fmt.Errorf("cannot parse response, address=%x, s=%v, err=%v", address, s, err)
 		vd.debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	} else {
@@ -110,9 +109,8 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 
 	expectedResponse := ResponseForCommand(command)
 	if expectedResponse != response {
-		err = errors.New(fmt.Sprintf(
-			"expectedResponse != response, expectedResponse=%v, response=%v",
-			expectedResponse, response))
+		err = fmt.Errorf("expectedResponse != response, expectedResponse=%v, response=%v",
+			expectedResponse, response)
 		vd.debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	}
@@ -120,7 +118,7 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 	// extract data
 	hexData := responseData[1:]
 	if len(hexData)%2 != 0 {
-		err = errors.New(fmt.Sprintf("received an odd number of hex bytes, len(hexData)=%v", len(hexData)))
+		err = fmt.Errorf("received an odd number of hex bytes, len(hexData)=%v", len(hexData))
 		vd.debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	}
@@ -129,7 +127,7 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 	binData := make([]byte, numbBytes)
 
 	if n, err := hex.Decode(binData, hexData); err != nil || n != numbBytes {
-		err = errors.New(fmt.Sprintf("hex to bin conversion failed: n=%v, err=%v", n, err))
+		err = fmt.Errorf("hex to bin conversion failed: n=%v, err=%v", n, err)
 		vd.debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	}
@@ -140,7 +138,7 @@ func (vd *Vedirect) VeCommand(command VeCommand, address uint16) (values []byte,
 
 	checksum := computeChecksum(byte(response), values)
 	if checksum != responseChecksum {
-		err = errors.New(fmt.Sprintf("checksum != responseChecksum, checksum=%X, responseChecksum=%X", checksum, responseChecksum))
+		err = fmt.Errorf("checksum != responseChecksum, checksum=%X, responseChecksum=%X", checksum, responseChecksum)
 		vd.debugPrintf("vedirect: VeCommand end err=%v", err)
 		return nil, err
 	}
@@ -213,7 +211,7 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 		// check address
 		responseAddress := uint16(littleEndianBytesToUint(rawValues[0:2]))
 		if address != responseAddress {
-			err = errors.New(fmt.Sprintf("address != responseAddress, address=%x, responseAddress=%x", address, responseAddress))
+			err = fmt.Errorf("address != responseAddress, address=%x, responseAddress=%x", address, responseAddress)
 			if try > 0 {
 				log.Printf("vedirect: VeCommandGet(address=%x) retry try=%v err=%v", address, try, err)
 			}
@@ -223,7 +221,7 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 		// check flag
 		responseFlag := VeResponseFlag(littleEndianBytesToUint(rawValues[2:3]))
 		if VeResponseFlagOk != responseFlag {
-			err = errors.New(fmt.Sprintf("VeResponseFlagOk != responseFlag, responseFlag=%v", responseFlag))
+			err = fmt.Errorf("VeResponseFlagOk != responseFlag, responseFlag=%v", responseFlag)
 			if try > 0 {
 				log.Printf("vedirect: VeCommandGet(address=%x) retry try=%v err=%v", address, try, err)
 			}
@@ -236,7 +234,7 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 	}
 
 	vd.debugPrintf("vedirect: VeCommandGet(address=%x) end tries=%v last err=%v", address, numbTries, err)
-	err = errors.New(fmt.Sprintf("gave up after %v tries, last err=%v", numbTries, err))
+	err = fmt.Errorf("gave up after %v tries, last err=%v", numbTries, err)
 	return nil, err
 }
 
