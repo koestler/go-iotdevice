@@ -55,11 +55,11 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	var e []error
 
 	if c.Version == nil {
-		err = append(err, fmt.Errorf("Version must be defined. Use Version=1."))
+		err = append(err, fmt.Errorf("version must be defined. Use Version=1"))
 	} else {
 		ret.version = *c.Version
 		if ret.version != 1 {
-			err = append(err, fmt.Errorf("Version=%d is not supported.", ret.version))
+			err = append(err, fmt.Errorf("version=%d is not supported", ret.version))
 		}
 	}
 
@@ -687,7 +687,7 @@ func mqttClientExists(clientName string, mqttClients []*MqttClientConfig) bool {
 
 func (c viewConfigReadList) TransformAndValidate(devices []*DeviceConfig) (ret []*ViewConfig, err []error) {
 	if len(c) < 1 {
-		return ret, []error{fmt.Errorf("Views section must no be empty.")}
+		return ret, []error{fmt.Errorf("Views section must no be empty")}
 	}
 
 	ret = make([]*ViewConfig, len(c))
@@ -732,7 +732,7 @@ func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewC
 		var devicesErr []error
 		ret.devices, devicesErr = c.Devices.TransformAndValidate(devices)
 		for _, ce := range devicesErr {
-			err = append(err, fmt.Errorf("Views->%s: %s", c.Name, ce))
+			err = append(err, fmt.Errorf("section Views->%s: %s", c.Name, ce))
 		}
 	}
 
@@ -753,7 +753,7 @@ func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewC
 
 func (c viewDeviceConfigReadList) TransformAndValidate(devices []*DeviceConfig) (ret []*ViewDeviceConfig, err []error) {
 	if len(c) < 1 {
-		return ret, []error{fmt.Errorf("Clients section must no be empty.")}
+		return ret, []error{fmt.Errorf("clients section must no be empty")}
 	}
 
 	ret = make([]*ViewDeviceConfig, len(c))
@@ -770,7 +770,7 @@ func (c viewDeviceConfigRead) TransformAndValidate(
 	devices []*DeviceConfig,
 ) (ret ViewDeviceConfig, err []error) {
 	if !deviceExists(c.Name, devices) {
-		err = append(err, fmt.Errorf("Device='%s' is not defined", c.Name))
+		err = append(err, fmt.Errorf("device='%s' is not defined", c.Name))
 	}
 
 	ret = ViewDeviceConfig{
