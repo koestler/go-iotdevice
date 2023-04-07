@@ -17,7 +17,7 @@ type registerResponse struct {
 	Enum         map[int]string `json:"enum,omitempty"`
 	Unit         string         `json:"unit,omitempty" example:"W"`
 	Sort         int            `json:"sort" example:"100"`
-	Controllable bool           `json:"controllable" example:"false""`
+	Controllable bool           `json:"controllable" example:"false"`
 }
 
 // setupRegisters godoc
