@@ -20,6 +20,7 @@ func startRandom(c *DeviceStruct, output dataflow.Fillable, registers VictronReg
 		defer close(c.closed)
 
 		ticker := time.NewTicker(time.Second)
+		defer ticker.Stop()
 		for {
 			select {
 			case <-c.shutdown:

@@ -66,6 +66,7 @@ func RunMqttForwarders(d Device, mqttClientPool *mqttClient.ClientPool, storage 
 		if telemetryInterval := mc.Config().TelemetryInterval(); telemetryInterval > 0 {
 			go func() {
 				ticker := time.NewTicker(telemetryInterval)
+				defer ticker.Stop()
 				for {
 					select {
 					case <-d.ShutdownChan():

@@ -36,6 +36,7 @@ func startWaveshareRtuRelay8(c *DeviceStruct, output dataflow.Fillable) error {
 		defer close(c.closed)
 
 		ticker := time.NewTicker(5000 * time.Millisecond)
+		defer ticker.Stop()
 		for {
 			select {
 			case <-c.shutdown:

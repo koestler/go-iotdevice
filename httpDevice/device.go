@@ -110,6 +110,7 @@ func (ds *DeviceStruct) mainRoutine() {
 		lastErrorMsg := ""
 		interval := ds.getPollInterval(errorsInARow)
 		pollTicker := time.NewTicker(interval)
+		defer pollTicker.Stop()
 
 		ds.addRegister(device.GetAvailabilityRegister())
 		execPoll := func() {

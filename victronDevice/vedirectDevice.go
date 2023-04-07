@@ -53,6 +53,7 @@ func startVedirect(c *DeviceStruct, output dataflow.Fillable) error {
 
 		fetchStaticCounter := 0
 		ticker := time.NewTicker(100 * time.Millisecond)
+		defer ticker.Stop()
 		for {
 			select {
 			case <-c.shutdown:
