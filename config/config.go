@@ -686,10 +686,6 @@ func mqttClientExists(clientName string, mqttClients []*MqttClientConfig) bool {
 }
 
 func (c viewConfigReadList) TransformAndValidate(devices []*DeviceConfig) (ret []*ViewConfig, err []error) {
-	if len(c) < 1 {
-		return ret, []error{fmt.Errorf("Views section must no be empty")}
-	}
-
 	ret = make([]*ViewConfig, len(c))
 	j := 0
 	for _, cr := range c {

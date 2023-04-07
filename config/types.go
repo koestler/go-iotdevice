@@ -19,7 +19,7 @@ type Config struct {
 	modbusDevices   []*ModbusDeviceConfig  // optional: default empty
 	httpDevices     []*HttpDeviceConfig    // optional: default empty
 	mqttDevices     []*MqttDeviceConfig    // optional: default empty
-	views           []*ViewConfig          // mandatory: at least 1 must be defined
+	views           []*ViewConfig          // optional: default empty
 }
 
 type HttpServerConfig struct {
@@ -104,7 +104,7 @@ type MqttDeviceConfig struct {
 }
 
 type ViewDeviceConfig struct {
-	name  string // defined automatically by map key
+	name  string // mandatory: a technical name
 	title string // mandatory: a nice title for the frontend
 }
 
