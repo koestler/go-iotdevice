@@ -43,11 +43,11 @@ func (v NumericRegisterValue) GenericValue() interface{} {
 }
 
 func (v NumericRegisterValue) Equals(comp Value) bool {
-	b, ok := comp.(NumericRegisterValue)
+	numericComp, ok := comp.(NumericRegisterValue)
 	if !ok {
 		return false
 	}
-	return b.Register().Name() == b.Register().Name() && v.value == b.value
+	return v.Register().Name() == comp.Register().Name() && v.value == numericComp.value
 }
 
 func NewNumericRegisterValue(deviceName string, register Register, value float64) NumericRegisterValue {
@@ -78,11 +78,11 @@ func (v TextRegisterValue) GenericValue() interface{} {
 }
 
 func (v TextRegisterValue) Equals(comp Value) bool {
-	b, ok := comp.(TextRegisterValue)
+	textComp, ok := comp.(TextRegisterValue)
 	if !ok {
 		return false
 	}
-	return b.Register().Name() == b.Register().Name() && v.value == b.value
+	return v.Register().Name() == comp.Register().Name() && v.value == textComp.value
 }
 
 func NewTextRegisterValue(deviceName string, register Register, value string) TextRegisterValue {
@@ -119,11 +119,11 @@ func (v EnumRegisterValue) GenericValue() interface{} {
 }
 
 func (v EnumRegisterValue) Equals(comp Value) bool {
-	b, ok := comp.(EnumRegisterValue)
+	enumComp, ok := comp.(EnumRegisterValue)
 	if !ok {
 		return false
 	}
-	return b.Register().Name() == b.Register().Name() && v.value == b.value
+	return v.Register().Name() == comp.Register().Name() && v.value == enumComp.value
 }
 
 func NewEnumRegisterValue(deviceName string, register Register, value int) EnumRegisterValue {
