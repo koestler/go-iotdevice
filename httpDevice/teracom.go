@@ -1,7 +1,8 @@
 package httpDevice
 
 import (
-	"encoding/xml"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"net/http"
@@ -15,13 +16,17 @@ type TeracomDevice struct {
 }
 
 func (c *TeracomDevice) GetPath() string {
-	return "status.xml"
+	return "status.json"
 }
 
 func (c *TeracomDevice) HandleResponse(body []byte) error {
 	var status teracomStatusStruct
-	if err := xml.Unmarshal(body, &status); err != nil {
-		return fmt.Errorf("cannot parse xml: %s", err)
+
+	// trim Byte Order Mark (BOM) before decoding
+	body = bytes.TrimPrefix(body, []byte("\xef\xbb\xbf"))
+
+	if err := json.Unmarshal(body, &status); err != nil {
+		return fmt.Errorf("cannot parse json: %s", err)
 	}
 	c.extractRegistersAndValues(status)
 
@@ -99,104 +104,107 @@ func (c *TeracomDevice) ControlValueRequest(value dataflow.Value) (*http.Request
 }
 
 type teracomSensorValueStruct struct {
-	Value string `xml:"value"`
-	Unit  string `xml:"unit"`
-	Alarm string `xml:"alarm"`
-	Min   string `xml:"min"`
-	Max   string `xml:"max"`
-	Hys   string `xml:"hys"`
+	Value string `json:"value"`
+	Unit  string `json:"unit"`
+	Alarm string `json:"alarm"`
+	Min   string `json:"min"`
+	Max   string `json:"max"`
+	Hys   string `json:"hys"`
 }
 
 type teracomSensorStruct struct {
-	Description string                   `xml:"description"`
-	ID          string                   `xml:"id"`
-	Item1       teracomSensorValueStruct `xml:"item1"`
-	Item2       teracomSensorValueStruct `xml:"item2"`
+	Description string                   `json:"description"`
+	ID          string                   `json:"id"`
+	Item1       teracomSensorValueStruct `json:"item1"`
+	Item2       teracomSensorValueStruct `json:"item2"`
 }
 
 type teracomAnalogStruct struct {
-	Description string `xml:"description"`
-	Value       string `xml:"value"`
-	Unit        string `xml:"unit"`
-	Multiplier  string `xml:"multiplier"`
-	Offset      string `xml:"offset"`
-	Alarm       string `xml:"alarm"`
-	Min         string `xml:"min"`
-	Max         string `xml:"max"`
-	Hys         string `xml:"hys"`
+	Description string `json:"description"`
+	Value       string `json:"value"`
+	Unit        string `json:"unit"`
+	Multiplier  string `json:"multiplier"`
+	Offset      string `json:"offset"`
+	Alarm       string `json:"alarm"`
+	Min         string `json:"min"`
+	Max         string `json:"max"`
+	Hys         string `json:"hys"`
 }
 
 type teracomDigitalStruct struct {
-	Description string `xml:"description"`
-	Value       string `xml:"value"`
-	Valuebin    string `xml:"valuebin"`
-	AlarmState  string `xml:"alarmState"`
-	Alarm       string `xml:"alarm"`
+	Description string `json:"description"`
+	Value       string `json:"value"`
+	Valuebin    string `json:"valuebin"`
+	AlarmState  string `json:"alarmState"`
+	Alarm       string `json:"alarm"`
 }
 
 type teracomRelayStruct struct {
-	Description string `xml:"description"`
-	Value       string `xml:"value"`
-	Valuebin    string `xml:"valuebin"`
-	PulseWidth  string `xml:"pulseWidth"`
-	Control     string `xml:"control"`
+	Description string `json:"description"`
+	Value       string `json:"value"`
+	Valuebin    string `json:"valuebin"`
+	PulseWidth  string `json:"pulseWidth"`
+	Control     string `json:"control"`
 }
 
 type teracomStatusStruct struct {
-	DeviceInfo struct {
-		DeviceName  string `xml:"DeviceName"`
-		HostName    string `xml:"HostName"`
-		ID          string `xml:"ID"`
-		FwVer       string `xml:"FwVer"`
-		SysContact  string `xml:"SysContact"`
-		SysName     string `xml:"SysName"`
-		SysLocation string `xml:"SysLocation"`
-	} `xml:"DeviceInfo"`
-	S struct {
-		S1 teracomSensorStruct `xml:"S1"`
-		S2 teracomSensorStruct `xml:"S2"`
-		S3 teracomSensorStruct `xml:"S3"`
-		S4 teracomSensorStruct `xml:"S4"`
-		S5 teracomSensorStruct `xml:"S5"`
-		S6 teracomSensorStruct `xml:"S6"`
-		S7 teracomSensorStruct `xml:"S7"`
-		S8 teracomSensorStruct `xml:"S8"`
-	}
-	AI struct {
-		AI1 teracomAnalogStruct `xml:"AI1"`
-		AI2 teracomAnalogStruct `xml:"AI2"`
-		AI3 teracomAnalogStruct `xml:"AI3"`
-		AI4 teracomAnalogStruct `xml:"AI4"`
-	} `xml:"AI"`
-	VI struct {
-		VI1 teracomAnalogStruct `xml:"VI1"`
-		VI2 teracomAnalogStruct `xml:"VI2"`
-		VI3 teracomAnalogStruct `xml:"VI3"`
-		VI4 teracomAnalogStruct `xml:"VI4"`
-	} `xml:"VI"`
-	DI struct {
-		DI1 teracomDigitalStruct `xml:"DI1"`
-		DI2 teracomDigitalStruct `xml:"DI2"`
-		DI3 teracomDigitalStruct `xml:"DI3"`
-		DI4 teracomDigitalStruct `xml:"DI4"`
-	} `xml:"DI"`
-	R struct {
-		R1 teracomRelayStruct `xml:"R1"`
-		R2 teracomRelayStruct `xml:"R2"`
-		R3 teracomRelayStruct `xml:"R3"`
-		R4 teracomRelayStruct `xml:"R4"`
-	} `xml:"R"`
-	HTTPPush struct {
-		Key        string `xml:"Key"`
-		PushPeriod string `xml:"PushPeriod"`
-	} `xml:"HTTPPush"`
-	Hwerr   string `xml:"hwerr"`
-	Alarmed string `xml:"Alarmed"`
-	Scannig string `xml:"Scannig"`
-	Time    struct {
-		Date string `xml:"Date"`
-		Time string `xml:"Time"`
-	} `xml:"Time"`
+	Monitor struct {
+		DeviceInfo struct {
+			DeviceName  string `json:"DeviceName"`
+			HostName    string `json:"HostName"`
+			ID          string `json:"ID"`
+			FwVer       string `json:"FwVer"`
+			SysContact  string `json:"SysContact"`
+			SysName     string `json:"SysName"`
+			SysLocation string `json:"SysLocation"`
+		} `json:"DeviceInfo"`
+		S struct {
+			S1 teracomSensorStruct `json:"S1"`
+			S2 teracomSensorStruct `json:"S2"`
+			S3 teracomSensorStruct `json:"S3"`
+			S4 teracomSensorStruct `json:"S4"`
+			S5 teracomSensorStruct `json:"S5"`
+			S6 teracomSensorStruct `json:"S6"`
+			S7 teracomSensorStruct `json:"S7"`
+			S8 teracomSensorStruct `json:"S8"`
+		}
+		AI struct {
+			AI1 teracomAnalogStruct `json:"AI1"`
+			AI2 teracomAnalogStruct `json:"AI2"`
+			AI3 teracomAnalogStruct `json:"AI3"`
+			AI4 teracomAnalogStruct `json:"AI4"`
+		} `json:"AI"`
+		VI struct {
+			VI1 teracomAnalogStruct `json:"VI1"`
+			VI2 teracomAnalogStruct `json:"VI2"`
+			VI3 teracomAnalogStruct `json:"VI3"`
+			VI4 teracomAnalogStruct `json:"VI4"`
+		} `json:"VI"`
+		DI struct {
+			DI1 teracomDigitalStruct `json:"DI1"`
+			DI2 teracomDigitalStruct `json:"DI2"`
+			DI3 teracomDigitalStruct `json:"DI3"`
+			DI4 teracomDigitalStruct `json:"DI4"`
+		} `json:"DI"`
+		R struct {
+			R1 teracomRelayStruct `json:"R1"`
+			R2 teracomRelayStruct `json:"R2"`
+			R3 teracomRelayStruct `json:"R3"`
+			R4 teracomRelayStruct `json:"R4"`
+		} `json:"R"`
+		HTTPPush struct {
+			Key        string `json:"Key"`
+			PushPeriod string `json:"PushPeriod"`
+		} `json:"HTTPPush"`
+		Hwerr   string `json:"hwerr"`
+		Alarmed string `json:"Alarmed"`
+
+		Scannig string `json:"Scannig"`
+		Time    struct {
+			Date string `json:"Date"`
+			Time string `json:"Time"`
+		} `json:"Time"`
+	} `json:"Monitor"`
 }
 
 func (c *TeracomDevice) text(category, registerName, description, value string) {
@@ -291,22 +299,24 @@ func (c *TeracomDevice) alarm(category, registerName, description string, strVal
 }
 
 func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
+	m := s.Monitor
+
 	// device info
 	cat := "Device Info"
-	c.text(cat, "DeviceName", "Device Name", s.DeviceInfo.DeviceName)
-	c.text(cat, "HostName", "Host Name", s.DeviceInfo.HostName)
-	c.text(cat, "Id", "Id", s.DeviceInfo.ID)
-	c.text(cat, "FWVer", "Firmware Vesion", s.DeviceInfo.FwVer)
-	c.text(cat, "SysContact", "System Contact", s.DeviceInfo.SysContact)
-	c.text(cat, "SysName", "System Name", s.DeviceInfo.SysName)
-	c.text(cat, "SysLocation", "System Location", s.DeviceInfo.SysLocation)
+	c.text(cat, "DeviceName", "Device Name", m.DeviceInfo.DeviceName)
+	c.text(cat, "HostName", "Host Name", m.DeviceInfo.HostName)
+	c.text(cat, "Id", "Id", m.DeviceInfo.ID)
+	c.text(cat, "FWVer", "Firmware Vesion", m.DeviceInfo.FwVer)
+	c.text(cat, "SysContact", "System Contact", m.DeviceInfo.SysContact)
+	c.text(cat, "SysName", "System Name", m.DeviceInfo.SysName)
+	c.text(cat, "SysLocation", "System Location", m.DeviceInfo.SysLocation)
 
 	// general
 	cat = "General"
-	c.text(cat, "Hwerr", "Hardware Error", s.Hwerr)
-	c.alarm(cat, "Alarmed", "Alarmed", s.Alarmed)
-	c.text(cat, "Date", "Date", s.Time.Date)
-	c.text(cat, "Time", "Time", s.Time.Time)
+	c.text(cat, "Hwerr", "Hardware Error", m.Hwerr)
+	c.alarm(cat, "Alarmed", "Alarmed", m.Alarmed)
+	c.text(cat, "Date", "Date", m.Time.Date)
+	c.text(cat, "Time", "Time", m.Time.Time)
 
 	// sensors
 	sensor := func(sIdx int, s teracomSensorStruct) {
@@ -335,14 +345,14 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 		regName := fmt.Sprintf("S%d", sIdx)
 		c.text("Settings", regName+"Id", s.Description+" Id", s.ID)
 	}
-	sensor(1, s.S.S1)
-	sensor(2, s.S.S2)
-	sensor(3, s.S.S3)
-	sensor(4, s.S.S4)
-	sensor(5, s.S.S5)
-	sensor(6, s.S.S6)
-	sensor(7, s.S.S7)
-	sensor(8, s.S.S8)
+	sensor(1, m.S.S1)
+	sensor(2, m.S.S2)
+	sensor(3, m.S.S3)
+	sensor(4, m.S.S4)
+	sensor(5, m.S.S5)
+	sensor(6, m.S.S6)
+	sensor(7, m.S.S7)
+	sensor(8, m.S.S8)
 
 	// analog inputs
 	analog := func(regNamePrefix, valueCat string, sIdx int, a teracomAnalogStruct) {
@@ -362,16 +372,16 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 		c.number("Settings", regName+"Offset", desc+" Offset", a.Unit, a.Offset)
 		c.number("Settings", regName+"Multiplier", desc+" Multiplier", a.Unit, a.Multiplier)
 	}
-	analog("AI", "Analog Inputs", 1, s.AI.AI1)
-	analog("AI", "Analog Inputs", 2, s.AI.AI2)
-	analog("AI", "Analog Inputs", 3, s.AI.AI3)
-	analog("AI", "Analog Inputs", 4, s.AI.AI4)
+	analog("AI", "Analog Inputs", 1, m.AI.AI1)
+	analog("AI", "Analog Inputs", 2, m.AI.AI2)
+	analog("AI", "Analog Inputs", 3, m.AI.AI3)
+	analog("AI", "Analog Inputs", 4, m.AI.AI4)
 
 	// virtual inputs
-	analog("VI", "Virtual Inputs", 1, s.VI.VI1)
-	analog("VI", "Virtual Inputs", 2, s.VI.VI2)
-	analog("VI", "Virtual Inputs", 3, s.VI.VI3)
-	analog("VI", "Virtual Inputs", 4, s.VI.VI4)
+	analog("VI", "Virtual Inputs", 1, m.VI.VI1)
+	analog("VI", "Virtual Inputs", 2, m.VI.VI2)
+	analog("VI", "Virtual Inputs", 3, m.VI.VI3)
+	analog("VI", "Virtual Inputs", 4, m.VI.VI4)
 
 	// digital inputs
 	digital := func(sIdx int, a teracomDigitalStruct) {
@@ -388,10 +398,10 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 		)
 		c.alarm("Alarms", regName+"Alarm", desc, a.Alarm)
 	}
-	digital(1, s.DI.DI1)
-	digital(2, s.DI.DI2)
-	digital(3, s.DI.DI3)
-	digital(4, s.DI.DI4)
+	digital(1, m.DI.DI1)
+	digital(2, m.DI.DI2)
+	digital(3, m.DI.DI3)
+	digital(4, m.DI.DI4)
 
 	// relays
 	relay := func(sIdx int, r teracomRelayStruct) {
@@ -404,8 +414,8 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 			c.text("Relays", regName+"Control", desc+" is controlled by", r.Control)
 		}
 	}
-	relay(1, s.R.R1)
-	relay(2, s.R.R2)
-	relay(3, s.R.R3)
-	relay(4, s.R.R4)
+	relay(1, m.R.R1)
+	relay(2, m.R.R2)
+	relay(3, m.R.R3)
+	relay(4, m.R.R4)
 }
