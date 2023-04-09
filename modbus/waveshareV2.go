@@ -1,5 +1,7 @@
 package modbus
 
+// protocol documentation https://www.waveshare.com/wiki/Protocol_Manual_of_Modbus_RTU_Relay
+
 import (
 	"bytes"
 	"encoding/binary"
@@ -8,8 +10,7 @@ import (
 	"io"
 )
 
-type FunctionCode uint8
-type Address uint8
+type FunctionCode byte
 
 const (
 	WaveshareFunctionReadRelay             FunctionCode = 0x01
@@ -30,7 +31,7 @@ const (
 var byteOrder = binary.BigEndian
 var checksumByteOrder = binary.LittleEndian
 
-func (md *Modbus) WriteRelay(deviceAddress Address, relayNr int, command Command) (err error) {
+func (md *Modbus) WriteRelay(deviceAddress byte, relayNr int, command Command) (err error) {
 	if relayNr > 7 {
 		return fmt.Errorf("invalid relayNr: %d, it must be between 0 and 7", relayNr)
 	}
@@ -60,15 +61,37 @@ func (md *Modbus) WriteRelay(deviceAddress Address, relayNr int, command Command
 	return err
 }
 
-func (md *Modbus) ReadRelays(deviceAddress Address) (state [8]bool, err error) {
+func (md *Modbus) ReadSoftwareRevision(deviceAddress byte) (version string, err error) {
+	response, err := md.callFunction(
+		deviceAddress,
+		WaveshareFunctionReadAddressAndVersion,
+		[]byte{
+			0x20, 0x00, // ead software revision，0x0040: Read device address.
+			0x00, byte(deviceAddress), // device address again
+		},
+		4, // device address, command, number, revision of software
+	)
+
+	if err != nil {
+		return version, fmt.Errorf("cannot read state of realys: %s", err)
+	}
+
+	// extract version
+	// Convert it to DEX and multiply by 0.01 is the value of software revision.
+	version = fmt.Sprintf("V%d.%02d", response[3]/100, response[3]%100)
+
+	return
+}
+
+func (md *Modbus) ReadRelays(deviceAddress byte) (state [8]bool, err error) {
 	response, err := md.callFunction(
 		deviceAddress,
 		WaveshareFunctionReadRelay,
 		[]byte{
-			0x00, 0x00, // relay start address 0x0000
-			0x00, 0x08, // number of relays 0x0008
+			0x00, 0xFF, // fixed
+			0x00, 0x01, // fixed
 		},
-		2, // 1 byte for number of bytes returned, 1 byte with the state
+		4, // device address, command, number, state
 	)
 
 	if err != nil {
@@ -77,14 +100,14 @@ func (md *Modbus) ReadRelays(deviceAddress Address) (state [8]bool, err error) {
 
 	// extract bits of response into boolean state
 	for i := 0; i < 8; i += 1 {
-		state[i] = (response[1] & (1 << i)) != 0
+		state[i] = (response[3] & (1 << i)) != 0
 	}
 
 	return
 }
 
 func (md *Modbus) callFunction(
-	deviceAddress Address,
+	deviceAddress byte,
 	functionCode FunctionCode,
 	payload []byte,
 	responseLength int,

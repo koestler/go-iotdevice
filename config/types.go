@@ -84,7 +84,7 @@ type ModbusDeviceConfig struct {
 	DeviceConfig
 	device  string           // mandatory: the serial device path eg. /dev/ttyUSB0
 	kind    ModbusDeviceKind // mandatory: what connection protocol is used
-	address uint             // mandatory: the modbus address of the device; format: 0x0A
+	address byte             // mandatory: the modbus address of the device; format: 0x0A
 }
 
 type HttpDeviceConfig struct {

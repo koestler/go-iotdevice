@@ -260,7 +260,7 @@ func (c ModbusDeviceConfig) Kind() ModbusDeviceKind {
 	return c.kind
 }
 
-func (c ModbusDeviceConfig) Address() uint {
+func (c ModbusDeviceConfig) Address() byte {
 	return c.address
 }
 

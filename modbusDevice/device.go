@@ -13,6 +13,7 @@ import (
 type Config interface {
 	Device() string
 	Kind() config.ModbusDeviceKind
+	Address() byte
 }
 
 type DeviceStruct struct {

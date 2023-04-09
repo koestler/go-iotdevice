@@ -11,22 +11,18 @@ import (
 func startWaveshareRtuRelay8(c *DeviceStruct, output dataflow.Fillable) error {
 	log.Printf("device[%s]: start waveshare RTU Relay 8 source", c.deviceConfig.Name())
 
-	// open vedirect device
+	// open modbus device
 	md, err := modbus.Open(c.modbusConfig.Device(), c.deviceConfig.LogComDebug())
 	if err != nil {
 		return err
 	}
 
-	// send ping
-	//if err := vd.VeCommandPing(); err != nil {
-	//	return fmt.Errorf("ping failed: %s", err)
-	//}
-
-	// get deviceId
-	//deviceId, err := vd.VeCommandDeviceId()
-	//if err != nil {
-	//	return fmt.Errorf("cannot get DeviceId: %s", err)
-	//}
+	// get software version
+	if version, err := md.ReadSoftwareRevision(c.modbusConfig.Address()); err != nil {
+		return fmt.Errorf("device[%s]: ReadSoftwareRevision failed: %s", c.deviceConfig.Name(), err)
+	} else {
+		log.Printf("device[%s]: source: version=%s", c.deviceConfig.Name(), version)
+	}
 
 	// assign registers
 	c.registers = RegisterListRtuRelay8
@@ -35,7 +31,7 @@ func startWaveshareRtuRelay8(c *DeviceStruct, output dataflow.Fillable) error {
 	go func() {
 		defer close(c.closed)
 
-		ticker := time.NewTicker(2000 * time.Millisecond)
+		ticker := time.NewTicker(100 * time.Millisecond)
 		defer ticker.Stop()
 		for {
 			select {
@@ -48,17 +44,24 @@ func startWaveshareRtuRelay8(c *DeviceStruct, output dataflow.Fillable) error {
 				start := time.Now()
 
 				// fetch registers
-				if state, err := md.ReadRelays(0x01); err != nil {
-					log.Printf("read failed: %s", err)
-				} else {
-					log.Printf("state is: %v", state)
+				state, err := md.ReadRelays(c.modbusConfig.Address())
+				if err != nil {
+					log.Printf("device[%s]: read failed: %s", c.deviceConfig.Name(), err)
+					continue
 				}
 
-				/*
-									for i := range c.registers {
-						md.WriteRelay(0x01, i, modbus.RelayFlip)
+				for i, register := range c.registers {
+					value := 0
+					if state[i] {
+						value = 1
 					}
-				*/
+
+					output.Fill(dataflow.NewEnumRegisterValue(
+						c.deviceConfig.Name(),
+						register,
+						value,
+					))
+				}
 
 				c.SetLastUpdatedNow()
 
