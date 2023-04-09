@@ -27,7 +27,8 @@ const (
 	RelayFlip  Command = 0x5500
 )
 
-var byteOrder = binary.LittleEndian
+var byteOrder = binary.BigEndian
+var checksumByteOrder = binary.LittleEndian
 
 func (md *Modbus) WriteRelay(deviceAddress Address, relayNr int, command Command) (err error) {
 	if relayNr > 7 {
@@ -115,13 +116,13 @@ func (md *Modbus) callFunction(
 	}
 
 	checksum := computeChecksum(packet.Bytes())
-	err = binary.Write(&packet, byteOrder, checksum)
+	err = binary.Write(&packet, checksumByteOrder, checksum)
 	if err != nil {
 		return
 	}
 
 	md.debugPrintf(
-		"sendFunctionCall: deviceAddress=%02x, functionCode=%02x, payload=%02x, checksum=%04x",
+		"callFunction: request: deviceAddress=%02x, functionCode=%02x, payload=%02x, checksum=%04x",
 		deviceAddress, functionCode, payload, checksum,
 	)
 
@@ -137,8 +138,13 @@ func (md *Modbus) callFunction(
 		return nil, err
 	}
 
+	md.debugPrintf(
+		"callFunction: response=%02x",
+		response,
+	)
+
 	// check computeChecksum
-	received := byteOrder.Uint16(response[len(response)-2:])
+	received := checksumByteOrder.Uint16(response[len(response)-2:])
 	computed := computeChecksum(response[:len(response)-2])
 	if received != computed {
 		return nil, fmt.Errorf("computeChecksum missmatch received != computed : %x != %x", received, computed)
