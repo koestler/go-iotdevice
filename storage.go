@@ -1,16 +1,15 @@
 package main
 
 import (
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 )
 
-func runStorage(cfg *config.Config) *dataflow.ValueStorageInstance {
+func runStorage(logPrefix string) *dataflow.ValueStorageInstance {
 	storageInstance := dataflow.ValueStorageCreate()
 
-	if cfg.LogStorageDebug() {
+	if len(logPrefix) > 0 {
 		subscription := storageInstance.Subscribe(dataflow.Filter{})
-		dataflow.SinkLog("storage", subscription.GetOutput())
+		dataflow.SinkLog(logPrefix, subscription.GetOutput())
 	}
 
 	return storageInstance

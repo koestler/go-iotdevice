@@ -85,9 +85,16 @@ func main() {
 		}
 
 		// start storage
-		stateStorage := runStorage(cfg)
+		stateStorageLogPrefix := ""
+		commandStorageLogPrefix := ""
+		if cfg.LogStorageDebug() {
+			stateStorageLogPrefix = "stateStorage"
+			commandStorageLogPrefix = "commandStorage"
+		}
+
+		stateStorage := runStorage(stateStorageLogPrefix)
 		defer stateStorage.Shutdown()
-		commandStorage := runStorage(cfg)
+		commandStorage := runStorage(commandStorageLogPrefix)
 		defer commandStorage.Shutdown()
 
 		// start mqtt clients
