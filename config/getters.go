@@ -264,6 +264,10 @@ func (c ModbusDeviceConfig) Address() byte {
 	return c.address
 }
 
+func (c ModbusDeviceConfig) PollInterval() time.Duration {
+	return c.pollInterval
+}
+
 // Getters for HttpDeviceConfig struct
 
 func (c HttpDeviceConfig) Url() *url.URL {

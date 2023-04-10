@@ -15,6 +15,7 @@ type Config interface {
 	Device() string
 	Kind() config.ModbusDeviceKind
 	Address() byte
+	PollInterval() time.Duration
 }
 
 type DeviceStruct struct {

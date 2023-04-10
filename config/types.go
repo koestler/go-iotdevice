@@ -82,9 +82,10 @@ type VictronDeviceConfig struct {
 
 type ModbusDeviceConfig struct {
 	DeviceConfig
-	device  string           // mandatory: the serial device path eg. /dev/ttyUSB0
-	kind    ModbusDeviceKind // mandatory: what connection protocol is used
-	address byte             // mandatory: the modbus address of the device; format: 0x0A
+	device       string           // mandatory: the serial device path eg. /dev/ttyUSB0
+	kind         ModbusDeviceKind // mandatory: what connection protocol is used
+	address      byte             // mandatory: the modbus address of the device; format: 0x0A
+	pollInterval time.Duration    // optional: default 1s
 }
 
 type HttpDeviceConfig struct {

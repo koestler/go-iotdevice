@@ -114,6 +114,10 @@ func (v EnumRegisterValue) Value() string {
 	return ""
 }
 
+func (v EnumRegisterValue) EnumIdx() int {
+	return v.value
+}
+
 func (v EnumRegisterValue) GenericValue() interface{} {
 	return v.value
 }

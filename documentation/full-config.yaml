@@ -71,6 +71,7 @@ ModbusDevices:                                             # optional, a list of
     Device: /dev/ttyACM0                                   # mandatory, the serial device path e.g. /dev/ttyUSB0
     Kind: WaveshareRtuRelay8                               # mandatory, type/model of the device; possibilities: WaveshareRtuRelay8
     Address: 0x01                                          # mandatory, the modbus address of the device in hex as a string, e.g. 0x0A
+    PollInterval: 1s                                       # optional, default 1s, how often to fetch the device status
 
 HttpDevices:                                               # optional, a list of devices controlled via http
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections

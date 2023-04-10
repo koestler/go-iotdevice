@@ -22,16 +22,18 @@ const (
 
 type Command uint16
 
+// Open / closed is reversed compared to the documentation of Waveshare.
+// However, I opened the unit and found that sending a FF00 energize the relay and the LED.
 const (
-	RelayOpen  Command = 0xFF00
-	RelayClose Command = 0x0000
+	RelayOpen  Command = 0x0000
+	RelayClose Command = 0xFF00
 	RelayFlip  Command = 0x5500
 )
 
 var byteOrder = binary.BigEndian
 var checksumByteOrder = binary.LittleEndian
 
-func (md *Modbus) WriteRelay(deviceAddress byte, relayNr int, command Command) (err error) {
+func (md *Modbus) WriteRelay(deviceAddress byte, relayNr uint16, command Command) (err error) {
 	if relayNr > 7 {
 		return fmt.Errorf("invalid relayNr: %d, it must be between 0 and 7", relayNr)
 	}
@@ -41,7 +43,7 @@ func (md *Modbus) WriteRelay(deviceAddress byte, relayNr int, command Command) (
 	// 2 bytes for command: 0xFF00 open relay, 0x0000 close relay, 0x5500 flip relay
 	var payload bytes.Buffer
 
-	err = binary.Write(&payload, byteOrder, uint16(relayNr))
+	err = binary.Write(&payload, byteOrder, relayNr)
 	if err != nil {
 		return
 	}

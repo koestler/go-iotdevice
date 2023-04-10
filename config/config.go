@@ -594,6 +594,21 @@ func (c modbusDeviceConfigRead) TransformAndValidate(name string, mqttClients []
 		err = append(err, fmt.Errorf("ModbusDevices->%s->Adress=%s is invalid: %s", name, c.Address, e))
 	}
 
+	if len(c.PollInterval) < 1 {
+		// use default 1s
+		ret.pollInterval = time.Second
+	} else if pollInterval, e := time.ParseDuration(c.PollInterval); e != nil {
+		err = append(err, fmt.Errorf("HttpDevices->%s->PollInterval='%s' parse error: %s",
+			name, c.PollInterval, e,
+		))
+	} else if pollInterval < time.Millisecond {
+		err = append(err, fmt.Errorf("HttpDevices->%s->PollInterval='%s' must be >=1ms",
+			name, c.PollInterval,
+		))
+	} else {
+		ret.pollInterval = pollInterval
+	}
+
 	return
 }
 

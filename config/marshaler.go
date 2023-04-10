@@ -142,10 +142,11 @@ func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 
 func (c ModbusDeviceConfig) convertToRead() modbusDeviceConfigRead {
 	return modbusDeviceConfigRead{
-		General: c.DeviceConfig.convertToRead(),
-		Device:  c.device,
-		Kind:    c.kind.String(),
-		Address: fmt.Sprintf("0x%02x", c.address),
+		General:      c.DeviceConfig.convertToRead(),
+		Device:       c.device,
+		Kind:         c.kind.String(),
+		Address:      fmt.Sprintf("0x%02x", c.address),
+		PollInterval: c.pollInterval.String(),
 	}
 }
 
