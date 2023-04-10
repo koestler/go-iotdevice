@@ -38,7 +38,7 @@ func runDevices(
 			log.Printf("device[%s]: start modbus type", deviceConfig.Name())
 		}
 
-		if dev, err := modbusDevice.RunDevice(deviceConfig, deviceConfig, stateStorage); err != nil {
+		if dev, err := modbusDevice.RunDevice(deviceConfig, deviceConfig, stateStorage, commandStorage); err != nil {
 			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
 		} else {
 			device.RunMqttForwarders(dev, mqttClientPool, stateStorage)

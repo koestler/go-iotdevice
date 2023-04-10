@@ -48,7 +48,7 @@ func (md *Modbus) Close() (err error) {
 func (md *Modbus) Read(b []byte) (n int, err error) {
 	n, err = md.ioPort.Read(b)
 	if err != nil {
-		log.Printf("modbus: Read error: %v\n", err)
+		md.debugPrintf("modbus: Read error: %v\n", err)
 	}
 	md.debugPrintf("modbus: Read b=%x len=%v", b, len(b))
 	return

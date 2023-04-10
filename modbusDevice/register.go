@@ -26,7 +26,7 @@ func CreateEnumRegisterStruct(
 			enum,
 			"",
 			sort,
-			false,
+			true,
 		),
 		address,
 	}

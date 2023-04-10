@@ -5,6 +5,7 @@ import (
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
+	"github.com/koestler/go-iotdevice/modbus"
 	"log"
 	"sync"
 	"time"
@@ -17,8 +18,12 @@ type Config interface {
 }
 
 type DeviceStruct struct {
-	deviceConfig device.Config
-	modbusConfig Config
+	deviceConfig   device.Config
+	modbusConfig   Config
+	stateStorage   *dataflow.ValueStorageInstance
+	commandStorage *dataflow.ValueStorageInstance
+
+	modbus *modbus.Modbus
 
 	registers        ModbusRegisters
 	lastUpdated      time.Time
@@ -31,17 +36,20 @@ type DeviceStruct struct {
 func RunDevice(
 	deviceConfig device.Config,
 	modbusConfig Config,
-	storage *dataflow.ValueStorageInstance,
+	stateStorage *dataflow.ValueStorageInstance,
+	commandStorage *dataflow.ValueStorageInstance,
 ) (device device.Device, err error) {
 	c := &DeviceStruct{
-		deviceConfig: deviceConfig,
-		modbusConfig: modbusConfig,
-		shutdown:     make(chan struct{}),
-		closed:       make(chan struct{}),
+		deviceConfig:   deviceConfig,
+		modbusConfig:   modbusConfig,
+		stateStorage:   stateStorage,
+		commandStorage: commandStorage,
+		shutdown:       make(chan struct{}),
+		closed:         make(chan struct{}),
 	}
 
 	if modbusConfig.Kind() == config.ModbusWaveshareRtuRelay8Kind {
-		err = startWaveshareRtuRelay8(c, storage)
+		err = startWaveshareRtuRelay8(c)
 	} else {
 		return nil, fmt.Errorf("unknown device kind: %s", modbusConfig.Kind().String())
 	}
@@ -62,10 +70,11 @@ func (c *DeviceStruct) ShutdownChan() chan struct{} {
 }
 
 func (c *DeviceStruct) Registers() dataflow.Registers {
-	ret := make(dataflow.Registers, len(c.registers))
+	ret := make(dataflow.Registers, len(c.registers)+1)
 	for i, r := range c.registers {
 		ret[i] = r.(dataflow.Register)
 	}
+	ret[len(c.registers)] = device.GetAvailabilityRegister()
 	return ret
 }
 
@@ -96,6 +105,9 @@ func (c *DeviceStruct) Model() string {
 
 func (c *DeviceStruct) Shutdown() {
 	close(c.shutdown)
+	if err := c.modbus.Close(); err != nil {
+		log.Printf("device[%s]: modbus.Close failed: %s", c.deviceConfig.Name(), err)
+	}
 	<-c.closed
 	log.Printf("device[%s]: shutdown completed", c.deviceConfig.Name())
 }
