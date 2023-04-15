@@ -14,6 +14,7 @@ type Config struct {
 	httpServer      HttpServerConfig       // optional: default Disabled
 	authentication  AuthenticationConfig   // optional: default Disabled
 	mqttClients     []*MqttClientConfig    // mandatory: at least 1 must be defined
+	modbus          []*ModbusConfig        // optional: default empty
 	devices         []*DeviceConfig        // aggregated over all types
 	victronDevices  []*VictronDeviceConfig // optional: default empty
 	modbusDevices   []*ModbusDeviceConfig  // optional: default empty
@@ -64,6 +65,13 @@ type MqttClientConfig struct {
 	logMessages       bool          // optional: default False
 }
 
+type ModbusConfig struct {
+	name        string        // defined automatically by map key
+	device      string        // mandatory: the serial device path eg. /dev/ttyUSB0
+	baudRate    int           // optional: default 9600
+	readTimeout time.Duration // optional: default 100ms
+}
+
 type DeviceConfig struct {
 	name                    string   // defined automatically by map key
 	skipFields              []string // optional: a list of fields that shall be ignored (Eg. Temperature when no sensor is connected)
@@ -82,9 +90,10 @@ type VictronDeviceConfig struct {
 
 type ModbusDeviceConfig struct {
 	DeviceConfig
-	device       string           // mandatory: the serial device path eg. /dev/ttyUSB0
+	bus          string           // mandatory: id of the modbus
 	kind         ModbusDeviceKind // mandatory: what connection protocol is used
 	address      byte             // mandatory: the modbus address of the device; format: 0x0A
+	relays       map[uint]string  // optional: default 8 relays
 	pollInterval time.Duration    // optional: default 1s
 }
 

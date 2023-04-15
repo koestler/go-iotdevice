@@ -39,6 +39,10 @@ func (c Config) MqttClients() []*MqttClientConfig {
 	return c.mqttClients
 }
 
+func (c Config) Modbus() []*ModbusConfig {
+	return c.modbus
+}
+
 func (c Config) Devices() []*DeviceConfig {
 	return c.devices
 }
@@ -210,6 +214,24 @@ func (c MqttClientConfig) LogMessages() bool {
 	return c.logMessages
 }
 
+// Getters for ModbusConfig struct
+
+func (c ModbusConfig) Name() string {
+	return c.name
+}
+
+func (c ModbusConfig) Device() string {
+	return c.device
+}
+
+func (c ModbusConfig) BaudRate() int {
+	return c.baudRate
+}
+
+func (c ModbusConfig) ReadTimeout() time.Duration {
+	return c.readTimeout
+}
+
 // Getters for DeviceConfig struct
 
 func (c DeviceConfig) Name() string {
@@ -252,8 +274,8 @@ func (c VictronDeviceConfig) Kind() VictronDeviceKind {
 
 // Getters for ModbusDeviceConfig struct
 
-func (c ModbusDeviceConfig) Device() string {
-	return c.device
+func (c ModbusDeviceConfig) Bus() string {
+	return c.bus
 }
 
 func (c ModbusDeviceConfig) Kind() ModbusDeviceKind {
@@ -262,6 +284,10 @@ func (c ModbusDeviceConfig) Kind() ModbusDeviceKind {
 
 func (c ModbusDeviceConfig) Address() byte {
 	return c.address
+}
+
+func (c ModbusDeviceConfig) Relays() map[uint]string {
+	return c.relays
 }
 
 func (c ModbusDeviceConfig) PollInterval() time.Duration {

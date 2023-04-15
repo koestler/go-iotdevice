@@ -9,6 +9,7 @@ type configRead struct {
 	HttpServer      *httpServerConfigRead      `yaml:"HttpServer"`
 	Authentication  *authenticationConfigRead  `yaml:"Authentication"`
 	MqttClients     mqttClientConfigReadMap    `yaml:"MqttClients"`
+	Modbus          modbusConfigReadMap        `yaml:"ModbusConfigReadMap"`
 	VictronDevices  victronDeviceConfigReadMap `yaml:"VictronDevices"`
 	ModbusDevices   modbusDeviceConfigReadMap  `yaml:"ModbusDevices"`
 	HttpDevices     httpDeviceConfigReadMap    `yaml:"HttpDevices"`
@@ -57,6 +58,14 @@ type mqttClientConfigRead struct {
 
 type mqttClientConfigReadMap map[string]mqttClientConfigRead
 
+type modbusConfigRead struct {
+	Device      string `yaml:"Device"`
+	BaudRate    int    `yaml:"BaudRate"`
+	ReadTimeout string `yaml:"ReadTimeout"`
+}
+
+type modbusConfigReadMap map[string]modbusConfigRead
+
 type deviceConfigRead struct {
 	SkipFields              []string `yaml:"SkipFields"`
 	SkipCategories          []string `yaml:"SkipCategories"`
@@ -76,9 +85,10 @@ type victronDeviceConfigReadMap map[string]victronDeviceConfigRead
 
 type modbusDeviceConfigRead struct {
 	General      deviceConfigRead `yaml:"General"`
-	Device       string           `yaml:"Device"`
+	Bus          string           `yaml:"Bus"`
 	Kind         string           `yaml:"Kind"`
 	Address      string           `yaml:"Address"`
+	Relays       map[uint]string  `yaml:"Relays"`
 	PollInterval string           `yaml:"PollInterval"`
 }
 

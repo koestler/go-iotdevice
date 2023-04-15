@@ -30,6 +30,13 @@ func (c Config) MarshalYAML() (interface{}, error) {
 			}
 			return mqttClients
 		}(),
+		Modbus: func() modbusConfigReadMap {
+			modbus := make(modbusConfigReadMap, len(c.modbus))
+			for _, c := range c.modbus {
+				modbus[c.name] = c.convertToRead()
+			}
+			return modbus
+		}(),
 		VictronDevices: func() victronDeviceConfigReadMap {
 			devices := make(victronDeviceConfigReadMap, len(c.devices))
 			for _, c := range c.victronDevices {
@@ -121,6 +128,14 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 	}
 }
 
+func (c ModbusConfig) convertToRead() modbusConfigRead {
+	return modbusConfigRead{
+		Device:      c.device,
+		BaudRate:    c.baudRate,
+		ReadTimeout: c.readTimeout.String(),
+	}
+}
+
 func (c DeviceConfig) convertToRead() deviceConfigRead {
 	return deviceConfigRead{
 		SkipFields:              c.skipFields,
@@ -143,9 +158,10 @@ func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 func (c ModbusDeviceConfig) convertToRead() modbusDeviceConfigRead {
 	return modbusDeviceConfigRead{
 		General:      c.DeviceConfig.convertToRead(),
-		Device:       c.device,
+		Bus:          c.bus,
 		Kind:         c.kind.String(),
 		Address:      fmt.Sprintf("0x%02x", c.address),
+		Relays:       c.relays,
 		PollInterval: c.pollInterval.String(),
 	}
 }

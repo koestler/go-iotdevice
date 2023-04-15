@@ -90,10 +90,13 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	ret.mqttClients, e = c.MqttClients.TransformAndValidate()
 	err = append(err, e...)
 
+	ret.modbus, e = c.Modbus.TransformAndValidate()
+	err = append(err, e...)
+
 	ret.victronDevices, e = c.VictronDevices.TransformAndValidate(ret.mqttClients)
 	err = append(err, e...)
 
-	ret.modbusDevices, e = c.ModbusDevices.TransformAndValidate(ret.mqttClients)
+	ret.modbusDevices, e = c.ModbusDevices.TransformAndValidate(ret.mqttClients, ret.modbus)
 	err = append(err, e...)
 
 	ret.httpDevices, e = c.HttpDevices.TransformAndValidate(ret.mqttClients)
@@ -453,7 +456,9 @@ func (c victronDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClie
 	return
 }
 
-func (c modbusDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClientConfig) (ret []*ModbusDeviceConfig, err []error) {
+func (c modbusDeviceConfigReadMap) TransformAndValidate(
+	mqttClients []*MqttClientConfig, modbus []*ModbusConfig,
+) (ret []*ModbusDeviceConfig, err []error) {
 	// order map keys by name
 	keys := make([]string, len(c))
 	i := 0
@@ -466,7 +471,7 @@ func (c modbusDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClien
 	ret = make([]*ModbusDeviceConfig, len(c))
 	j := 0
 	for _, name := range keys {
-		r, e := c[name].TransformAndValidate(name, mqttClients)
+		r, e := c[name].TransformAndValidate(name, mqttClients, modbus)
 		ret[j] = &r
 		err = append(err, e...)
 		j++
@@ -516,6 +521,27 @@ func (c mqttDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClientC
 	return
 }
 
+func (c modbusConfigReadMap) TransformAndValidate() (ret []*ModbusConfig, err []error) {
+	// order map keys by name
+	keys := make([]string, len(c))
+	i := 0
+	for k := range c {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+
+	ret = make([]*ModbusConfig, len(c))
+	j := 0
+	for _, name := range keys {
+		r, e := c[name].TransformAndValidate(name)
+		ret[j] = &r
+		err = append(err, e...)
+		j++
+	}
+	return
+}
+
 func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret DeviceConfig, err []error) {
 	ret = DeviceConfig{
 		name:                    name,
@@ -530,12 +556,12 @@ func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttC
 	}
 
 	for _, clientName := range ret.telemetryViaMqttClients {
-		if !mqttClientExists(clientName, mqttClients) {
+		if !existsByName(clientName, mqttClients) {
 			err = append(err, fmt.Errorf("Devices->%s->TelemetryViaMqttClients client='%s' is not defined", name, clientName))
 		}
 	}
 	for _, clientName := range ret.realtimeViaMqttClients {
-		if !mqttClientExists(clientName, mqttClients) {
+		if !existsByName(clientName, mqttClients) {
 			err = append(err, fmt.Errorf("Devices->%s->RealtimeViaMqttClients client='%s' is not defined", name, clientName))
 		}
 	}
@@ -572,10 +598,13 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients [
 	return
 }
 
-func (c modbusDeviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret ModbusDeviceConfig, err []error) {
+func (c modbusDeviceConfigRead) TransformAndValidate(
+	name string, mqttClients []*MqttClientConfig, modbus []*ModbusConfig,
+) (ret ModbusDeviceConfig, err []error) {
 	ret = ModbusDeviceConfig{
 		kind:   ModbusDeviceKindFromString(c.Kind),
-		device: c.Device,
+		bus:    c.Bus,
+		relays: c.Relays,
 	}
 
 	var e []error
@@ -586,8 +615,8 @@ func (c modbusDeviceConfigRead) TransformAndValidate(name string, mqttClients []
 		err = append(err, fmt.Errorf("ModbusDevices->%s->Kind='%s' is invalid", name, c.Kind))
 	}
 
-	if len(c.Device) < 1 {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->Device must not be empty", name))
+	if !existsByName(c.Bus, modbus) {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->Bus='%s' is not defidnedd", name, c.Bus))
 	}
 
 	if n, e := fmt.Sscanf(c.Address, "0x%x", &ret.address); n != 1 || e != nil {
@@ -683,7 +712,7 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []*M
 	err = append(err, e...)
 
 	for _, clientName := range ret.mqttClients {
-		if !mqttClientExists(clientName, mqttClients) {
+		if !existsByName(clientName, mqttClients) {
 			err = append(err, fmt.Errorf("MqttDevices->%s->mqttClients client='%s' is not defined", name, clientName))
 		}
 	}
@@ -691,13 +720,41 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []*M
 	return
 }
 
-func mqttClientExists(clientName string, mqttClients []*MqttClientConfig) bool {
-	for _, client := range mqttClients {
-		if clientName == client.name {
-			return true
-		}
+func (c modbusConfigRead) TransformAndValidate(name string) (ret ModbusConfig, err []error) {
+	ret = ModbusConfig{
+		name:     name,
+		device:   c.Device,
+		baudRate: c.BaudRate,
 	}
-	return false
+
+	if !nameMatcher.MatchString(ret.name) {
+		err = append(err, fmt.Errorf("Modbus->Name='%s' does not match %s", ret.name, NameRegexp))
+	}
+
+	if len(c.Device) < 1 {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->Device must not be empty", name))
+	}
+
+	if c.BaudRate < 1 {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->BaudRate must be positiv", name))
+	}
+
+	if len(c.ReadTimeout) < 1 {
+		// use default 100ms
+		ret.readTimeout = 100 * time.Millisecond
+	} else if readTimeout, e := time.ParseDuration(c.ReadTimeout); e != nil {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->ReadTimeout='%s' parse error: %s",
+			name, c.ReadTimeout, e,
+		))
+	} else if readTimeout < time.Millisecond {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->ReadTimeout='%s' must be >=1ms",
+			name, c.ReadTimeout,
+		))
+	} else {
+		ret.readTimeout = readTimeout
+	}
+
+	return
 }
 
 func (c viewConfigReadList) TransformAndValidate(devices []*DeviceConfig) (ret []*ViewConfig, err []error) {
@@ -780,21 +837,25 @@ func (c viewDeviceConfigReadList) TransformAndValidate(devices []*DeviceConfig) 
 func (c viewDeviceConfigRead) TransformAndValidate(
 	devices []*DeviceConfig,
 ) (ret ViewDeviceConfig, err []error) {
-	if !deviceExists(c.Name, devices) {
-		err = append(err, fmt.Errorf("device='%s' is not defined", c.Name))
-	}
-
 	ret = ViewDeviceConfig{
 		name:  c.Name,
 		title: c.Title,
 	}
 
+	if !existsByName(c.Name, devices) {
+		err = append(err, fmt.Errorf("device='%s' is not defined", c.Name))
+	}
+
 	return
 }
 
-func deviceExists(deviceName string, devices []*DeviceConfig) bool {
-	for _, client := range devices {
-		if deviceName == client.name {
+type Nameable interface {
+	Name() string
+}
+
+func existsByName[N Nameable](needle string, haystack []N) bool {
+	for _, t := range haystack {
+		if needle == t.Name() {
 			return true
 		}
 	}
