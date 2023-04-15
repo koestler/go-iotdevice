@@ -68,14 +68,14 @@ func (md *Modbus) ReadSoftwareRevision(deviceAddress byte) (version string, err 
 		deviceAddress,
 		WaveshareFunctionReadAddressAndVersion,
 		[]byte{
-			0x20, 0x00, // ead software revision，0x0040: Read device address.
-			0x00, byte(deviceAddress), // device address again
+			0x20, 0x00, // 0x0200 read software revision
+			0x00, 0x01, // number of bytes, Fixed 0x0001
 		},
 		4, // device address, command, number, revision of software
 	)
 
 	if err != nil {
-		return version, fmt.Errorf("cannot read state of realys: %s", err)
+		return version, fmt.Errorf("cannot read address and version: %s", err)
 	}
 
 	// extract version
