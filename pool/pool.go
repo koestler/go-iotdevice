@@ -1,6 +1,7 @@
 package pool
 
 import (
+	"golang.org/x/exp/maps"
 	"sync"
 )
 
@@ -28,30 +29,45 @@ func (p *Pool[I]) Shutdown() {
 	}
 }
 
-func (p *Pool[I]) AddDevice(item I) {
+func (p *Pool[I]) Add(item I) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	p.items[item.Name()] = item
 }
 
-func (p *Pool[I]) RemoveDevice(item I) {
+func (p *Pool[I]) Remove(item I) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	delete(p.items, item.Name())
 }
 
-func (p *Pool[I]) GetDevice(deviceName string) I {
+func (p *Pool[I]) GetAll() map[string]I {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
-	return p.items[deviceName]
+	return maps.Clone(p.items)
 }
 
-func (p *Pool[I]) GetDevices() map[string]I {
+func (p *Pool[I]) GetByName(name string) I {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
-	ret := make(map[string]I, len(p.items))
-	for name, item := range p.items {
-		ret[name] = item
+	return p.items[name]
+}
+
+func (p *Pool[I]) GetByNames(names []string) []I {
+	p.mutex.RLock()
+	defer p.mutex.RUnlock()
+
+	if len(names) < 1 {
+		// return all
+		return maps.Values(p.items)
+	}
+
+	// copy only those in the names list
+	ret := make([]I, 0, len(p.items))
+	for _, name := range names {
+		if i, ok := p.items[name]; ok {
+			ret = append(ret, i)
+		}
 	}
 	return ret
 }

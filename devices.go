@@ -30,7 +30,7 @@ func runDevices(
 			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
 		} else {
 			device.RunMqttForwarders(dev, mqttClientPool, stateStorage)
-			devicePoolInstance.AddDevice(dev)
+			devicePoolInstance.Add(dev)
 		}
 	}
 
@@ -43,7 +43,7 @@ func runDevices(
 			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
 		} else {
 			device.RunMqttForwarders(dev, mqttClientPool, stateStorage)
-			devicePoolInstance.AddDevice(dev)
+			devicePoolInstance.Add(dev)
 		}
 	}
 
@@ -56,7 +56,7 @@ func runDevices(
 			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
 		} else {
 			device.RunMqttForwarders(dev, mqttClientPool, stateStorage)
-			devicePoolInstance.AddDevice(dev)
+			devicePoolInstance.Add(dev)
 		}
 	}
 
@@ -69,7 +69,7 @@ func runDevices(
 			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
 		} else {
 			device.RunMqttForwarders(dev, mqttClientPool, stateStorage)
-			devicePoolInstance.AddDevice(dev)
+			devicePoolInstance.Add(dev)
 		}
 	}
 

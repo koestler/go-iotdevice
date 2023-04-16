@@ -37,7 +37,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 	for _, v := range env.Views {
 		view := v
 		for _, deviceName := range view.DeviceNames() {
-			device := env.DevicePoolInstance.GetDevice(deviceName)
+			device := env.DevicePoolInstance.GetByName(deviceName)
 			if device == nil {
 				continue
 			}
