@@ -6,6 +6,7 @@ import (
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
+	"github.com/koestler/go-iotdevice/pool"
 	"log"
 	"strings"
 	"sync"
@@ -35,7 +36,7 @@ func RunDevice(
 	deviceConfig device.Config,
 	mqttConfig Config,
 	storage *dataflow.ValueStorageInstance,
-	mqttClientPool *mqttClient.ClientPool,
+	mqttClientPool *pool.Pool[mqttClient.Client],
 ) (device device.Device, err error) {
 	c := &DeviceStruct{
 		deviceConfig: deviceConfig,
@@ -47,7 +48,7 @@ func RunDevice(
 
 	// setup mqtt listeners
 	counter := 0
-	for _, mc := range mqttClientPool.GetClientsByNames(mqttConfig.MqttClients()) {
+	for _, mc := range mqttClientPool.GetByNames(mqttConfig.MqttClients()) {
 		for _, topic := range mqttConfig.MqttTopics() {
 			log.Printf("mqttDevice[%s] subscribe to mqttClient=%s topic=%s", deviceConfig.Name(), mc.Config().Name(), topic)
 			mc.AddRoute(topic, func(m mqttClient.Message) {

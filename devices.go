@@ -15,7 +15,7 @@ import (
 
 func runDevices(
 	cfg *config.Config,
-	mqttClientPool *mqttClient.ClientPool,
+	mqttClientPool *pool.Pool[mqttClient.Client],
 	stateStorage *dataflow.ValueStorageInstance,
 	commandStorage *dataflow.ValueStorageInstance,
 ) (devicePoolInstance *pool.Pool[device.Device]) {

@@ -3,14 +3,15 @@ package main
 import (
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/mqttClient"
+	"github.com/koestler/go-iotdevice/pool"
 	"log"
 )
 
 func runMqttClient(
 	cfg *config.Config,
-) (mqttClientPoolInstance *mqttClient.ClientPool) {
+) (mqttClientPoolInstance *pool.Pool[mqttClient.Client]) {
 	// run pool
-	mqttClientPoolInstance = mqttClient.RunPool()
+	mqttClientPoolInstance = pool.RunPool[mqttClient.Client]()
 
 	for _, mqttClientConfig := range cfg.MqttClients() {
 		if cfg.LogWorkerStart() {
@@ -21,7 +22,8 @@ func runMqttClient(
 		}
 
 		client := mqttClient.CreateV5(mqttClientConfig)
-		mqttClientPoolInstance.AddClient(client)
+		client.Run()
+		mqttClientPoolInstance.Add(client)
 	}
 
 	return

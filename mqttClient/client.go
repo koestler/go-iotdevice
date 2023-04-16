@@ -29,6 +29,10 @@ type subscription struct {
 	messageHandler MessageHandler
 }
 
+func (c *ClientStruct) Name() string {
+	return c.cfg.Name()
+}
+
 func (c *ClientStruct) Config() Config {
 	return c.cfg
 }

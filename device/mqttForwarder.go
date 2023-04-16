@@ -4,15 +4,16 @@ import (
 	"encoding/json"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/mqttClient"
+	"github.com/koestler/go-iotdevice/pool"
 	"log"
 	"time"
 )
 
-func RunMqttForwarders(d Device, mqttClientPool *mqttClient.ClientPool, storage *dataflow.ValueStorageInstance) {
+func RunMqttForwarders(d Device, mqttClientPool *pool.Pool[mqttClient.Client], storage *dataflow.ValueStorageInstance) {
 	deviceFilter := dataflow.Filter{IncludeDevices: map[string]bool{d.Config().Name(): true}}
 
 	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
-	for _, mc := range mqttClientPool.GetClientsByNames(d.Config().RealtimeViaMqttClients()) {
+	for _, mc := range mqttClientPool.GetByNames(d.Config().RealtimeViaMqttClients()) {
 		if !mc.Config().RealtimeEnable() {
 			continue
 		}
@@ -62,7 +63,7 @@ func RunMqttForwarders(d Device, mqttClientPool *mqttClient.ClientPool, storage 
 	}
 
 	// start mqtt forwarders for telemetry messages
-	for _, mc := range mqttClientPool.GetClientsByNames(d.Config().TelemetryViaMqttClients()) {
+	for _, mc := range mqttClientPool.GetByNames(d.Config().TelemetryViaMqttClients()) {
 		if telemetryInterval := mc.Config().TelemetryInterval(); telemetryInterval > 0 {
 			go func() {
 				ticker := time.NewTicker(telemetryInterval)

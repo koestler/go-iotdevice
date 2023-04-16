@@ -28,6 +28,7 @@ type Config interface {
 }
 
 type Client interface {
+	Name() string
 	Config() Config
 	Run()
 	Shutdown()
