@@ -1,6 +1,9 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+	"golang.org/x/exp/maps"
+)
 
 func (c Config) MarshalYAML() (interface{}, error) {
 	return configRead{
@@ -205,19 +208,9 @@ func (c ViewConfig) convertToRead() viewConfigRead {
 			return views
 		}(),
 		Autoplay:       &c.autoplay,
-		AllowedUsers:   mapKeys(c.allowedUsers),
+		AllowedUsers:   maps.Keys(c.allowedUsers),
 		Hidden:         &c.hidden,
 		SkipFields:     c.skipFields,
 		SkipCategories: c.skipCategories,
 	}
-}
-
-func mapKeys(m map[string]struct{}) []string {
-	keys := make([]string, len(m))
-	i := 0
-	for k := range m {
-		keys[i] = k
-		i++
-	}
-	return keys
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/google/uuid"
+	"golang.org/x/exp/maps"
 	"gopkg.in/yaml.v2"
 	"log"
 	"net/url"
@@ -87,22 +88,52 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	ret.authentication, e = c.Authentication.TransformAndValidate()
 	err = append(err, e...)
 
-	ret.mqttClients, e = c.MqttClients.TransformAndValidate()
+	ret.mqttClients, e = TransformAndValidateMap(
+		c.MqttClients,
+		func(inp mqttClientConfigRead, name string) (MqttClientConfig, []error) {
+			return inp.TransformAndValidate(name)
+		},
+	)
 	err = append(err, e...)
 
-	ret.modbus, e = c.Modbus.TransformAndValidate()
+	ret.modbus, e = TransformAndValidateMap(
+		c.Modbus,
+		func(inp modbusConfigRead, name string) (ModbusConfig, []error) {
+			return inp.TransformAndValidate(name)
+		},
+	)
 	err = append(err, e...)
 
-	ret.victronDevices, e = c.VictronDevices.TransformAndValidate(ret.mqttClients)
+	ret.victronDevices, e = TransformAndValidateMap(
+		c.VictronDevices,
+		func(inp victronDeviceConfigRead, name string) (VictronDeviceConfig, []error) {
+			return inp.TransformAndValidate(name, ret.mqttClients)
+		},
+	)
 	err = append(err, e...)
 
-	ret.modbusDevices, e = c.ModbusDevices.TransformAndValidate(ret.mqttClients, ret.modbus)
+	ret.modbusDevices, e = TransformAndValidateMap(
+		c.ModbusDevices,
+		func(inp modbusDeviceConfigRead, name string) (ModbusDeviceConfig, []error) {
+			return inp.TransformAndValidate(name, ret.mqttClients, ret.modbus)
+		},
+	)
 	err = append(err, e...)
 
-	ret.httpDevices, e = c.HttpDevices.TransformAndValidate(ret.mqttClients)
+	ret.httpDevices, e = TransformAndValidateMap(
+		c.HttpDevices,
+		func(inp httpDeviceConfigRead, name string) (HttpDeviceConfig, []error) {
+			return inp.TransformAndValidate(name, ret.mqttClients)
+		},
+	)
 	err = append(err, e...)
 
-	ret.mqttDevices, e = c.MqttDevices.TransformAndValidate(ret.mqttClients)
+	ret.mqttDevices, e = TransformAndValidateMap(
+		c.MqttDevices,
+		func(inp mqttDeviceConfigRead, name string) (MqttDeviceConfig, []error) {
+			return inp.TransformAndValidate(name, ret.mqttClients)
+		},
+	)
 	err = append(err, e...)
 
 	{
@@ -130,7 +161,12 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 		}
 	}
 
-	ret.views, e = c.Views.TransformAndValidate(ret.devices)
+	ret.views, e = TransformAndValidateList(
+		c.Views,
+		func(inp viewConfigRead) (ViewConfig, []error) {
+			return inp.TransformAndValidate(ret.devices)
+		},
+	)
 	err = append(err, e...)
 
 	return
@@ -255,29 +291,6 @@ func (c *authenticationConfigRead) TransformAndValidate() (ret AuthenticationCon
 		ret.htaccessFile = *c.HtaccessFile
 	}
 
-	return
-}
-
-func (c mqttClientConfigReadMap) getOrderedKeys() (ret []string) {
-	ret = make([]string, len(c))
-	i := 0
-	for k := range c {
-		ret[i] = k
-		i++
-	}
-	sort.Strings(ret)
-	return
-}
-
-func (c mqttClientConfigReadMap) TransformAndValidate() (ret []*MqttClientConfig, err []error) {
-	ret = make([]*MqttClientConfig, len(c))
-	j := 0
-	for _, name := range c.getOrderedKeys() {
-		r, e := c[name].TransformAndValidate(name)
-		ret[j] = &r
-		err = append(err, e...)
-		j++
-	}
 	return
 }
 
@@ -432,113 +445,6 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.logMessages = true
 	}
 
-	return
-}
-
-func (c victronDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClientConfig) (ret []*VictronDeviceConfig, err []error) {
-	// order map keys by name
-	keys := make([]string, len(c))
-	i := 0
-	for k := range c {
-		keys[i] = k
-		i++
-	}
-	sort.Strings(keys)
-
-	ret = make([]*VictronDeviceConfig, len(c))
-	j := 0
-	for _, name := range keys {
-		r, e := c[name].TransformAndValidate(name, mqttClients)
-		ret[j] = &r
-		err = append(err, e...)
-		j++
-	}
-	return
-}
-
-func (c modbusDeviceConfigReadMap) TransformAndValidate(
-	mqttClients []*MqttClientConfig, modbus []*ModbusConfig,
-) (ret []*ModbusDeviceConfig, err []error) {
-	// order map keys by name
-	keys := make([]string, len(c))
-	i := 0
-	for k := range c {
-		keys[i] = k
-		i++
-	}
-	sort.Strings(keys)
-
-	ret = make([]*ModbusDeviceConfig, len(c))
-	j := 0
-	for _, name := range keys {
-		r, e := c[name].TransformAndValidate(name, mqttClients, modbus)
-		ret[j] = &r
-		err = append(err, e...)
-		j++
-	}
-	return
-}
-
-func (c httpDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClientConfig) (ret []*HttpDeviceConfig, err []error) {
-	// order map keys by name
-	keys := make([]string, len(c))
-	i := 0
-	for k := range c {
-		keys[i] = k
-		i++
-	}
-	sort.Strings(keys)
-
-	ret = make([]*HttpDeviceConfig, len(c))
-	j := 0
-	for _, name := range keys {
-		r, e := c[name].TransformAndValidate(name, mqttClients)
-		ret[j] = &r
-		err = append(err, e...)
-		j++
-	}
-	return
-}
-
-func (c mqttDeviceConfigReadMap) TransformAndValidate(mqttClients []*MqttClientConfig) (ret []*MqttDeviceConfig, err []error) {
-	// order map keys by name
-	keys := make([]string, len(c))
-	i := 0
-	for k := range c {
-		keys[i] = k
-		i++
-	}
-	sort.Strings(keys)
-
-	ret = make([]*MqttDeviceConfig, len(c))
-	j := 0
-	for _, name := range keys {
-		r, e := c[name].TransformAndValidate(name, mqttClients)
-		ret[j] = &r
-		err = append(err, e...)
-		j++
-	}
-	return
-}
-
-func (c modbusConfigReadMap) TransformAndValidate() (ret []*ModbusConfig, err []error) {
-	// order map keys by name
-	keys := make([]string, len(c))
-	i := 0
-	for k := range c {
-		keys[i] = k
-		i++
-	}
-	sort.Strings(keys)
-
-	ret = make([]*ModbusConfig, len(c))
-	j := 0
-	for _, name := range keys {
-		r, e := c[name].TransformAndValidate(name)
-		ret[j] = &r
-		err = append(err, e...)
-		j++
-	}
 	return
 }
 
@@ -757,27 +663,6 @@ func (c modbusConfigRead) TransformAndValidate(name string) (ret ModbusConfig, e
 	return
 }
 
-func (c viewConfigReadList) TransformAndValidate(devices []*DeviceConfig) (ret []*ViewConfig, err []error) {
-	ret = make([]*ViewConfig, len(c))
-	j := 0
-	for _, cr := range c {
-		r, e := cr.TransformAndValidate(devices)
-
-		// check for duplicate name
-		for i := 0; i < j; i++ {
-			if r.Name() == ret[i].Name() {
-				err = append(err, fmt.Errorf("Views->Name='%s': name must be unique", r.Name()))
-			}
-		}
-
-		ret[j] = &r
-		err = append(err, e...)
-		j++
-	}
-
-	return
-}
-
 func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewConfig, err []error) {
 	ret = ViewConfig{
 		name:           c.Name,
@@ -798,7 +683,13 @@ func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewC
 
 	{
 		var devicesErr []error
-		ret.devices, devicesErr = c.Devices.TransformAndValidate(devices)
+		ret.devices, devicesErr = TransformAndValidateList(
+			c.Devices,
+			func(inp viewDeviceConfigRead) (ViewDeviceConfig, []error) {
+				return inp.TransformAndValidate(devices)
+			},
+		)
+
 		for _, ce := range devicesErr {
 			err = append(err, fmt.Errorf("section Views->%s: %s", c.Name, ce))
 		}
@@ -819,21 +710,6 @@ func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewC
 	return
 }
 
-func (c viewDeviceConfigReadList) TransformAndValidate(devices []*DeviceConfig) (ret []*ViewDeviceConfig, err []error) {
-	if len(c) < 1 {
-		return ret, []error{fmt.Errorf("clients section must no be empty")}
-	}
-
-	ret = make([]*ViewDeviceConfig, len(c))
-	for i, device := range c {
-		r, e := device.TransformAndValidate(devices)
-		ret[i] = &r
-		err = append(err, e...)
-	}
-	return
-
-}
-
 func (c viewDeviceConfigRead) TransformAndValidate(
 	devices []*DeviceConfig,
 ) (ret ViewDeviceConfig, err []error) {
@@ -849,13 +725,46 @@ func (c viewDeviceConfigRead) TransformAndValidate(
 	return
 }
 
-type Nameable interface {
-	Name() string
+func TransformAndValidateMap[I any, O any](
+	inp map[string]I,
+	transformer func(inp I, name string) (ret O, err []error),
+) (ret []*O, err []error) {
+	keys := maps.Keys(inp)
+	sort.Strings(keys)
+
+	ret = make([]*O, len(inp))
+	j := 0
+	for _, name := range keys {
+		r, e := transformer(inp[name], name)
+		ret[j] = &r
+		err = append(err, e...)
+		j++
+	}
+	return
 }
 
-func existsByName[N Nameable](needle string, haystack []N) bool {
+func TransformAndValidateList[I any, O Nameable](
+	inp []I,
+	transformer func(inp I) (ret O, err []error),
+) (ret []*O, err []error) {
+	ret = make([]*O, 0, len(inp))
+	for _, cr := range inp {
+		r, e := transformer(cr)
+
+		if existsByName(r.Name(), ret) {
+			err = append(err, fmt.Errorf("duplicate name='%s'", r.Name()))
+		}
+
+		ret = append(ret, &r)
+		err = append(err, e...)
+	}
+
+	return
+}
+
+func existsByName[N Nameable](needle string, haystack []*N) bool {
 	for _, t := range haystack {
-		if needle == t.Name() {
+		if needle == (*t).Name() {
 			return true
 		}
 	}
