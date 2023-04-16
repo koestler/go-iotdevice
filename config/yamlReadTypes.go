@@ -1,20 +1,20 @@
 package config
 
 type configRead struct {
-	Version         *int                       `yaml:"Version"`
-	ProjectTitle    string                     `yaml:"ProjectTitle"`
-	LogConfig       *bool                      `yaml:"LogConfig"`
-	LogWorkerStart  *bool                      `yaml:"LogWorkerStart"`
-	LogStorageDebug *bool                      `yaml:"LogStorageDebug"`
-	HttpServer      *httpServerConfigRead      `yaml:"HttpServer"`
-	Authentication  *authenticationConfigRead  `yaml:"Authentication"`
-	MqttClients     mqttClientConfigReadMap    `yaml:"MqttClients"`
-	Modbus          modbusConfigReadMap        `yaml:"ModbusConfigReadMap"`
-	VictronDevices  victronDeviceConfigReadMap `yaml:"VictronDevices"`
-	ModbusDevices   modbusDeviceConfigReadMap  `yaml:"ModbusDevices"`
-	HttpDevices     httpDeviceConfigReadMap    `yaml:"HttpDevices"`
-	MqttDevices     mqttDeviceConfigReadMap    `yaml:"MqttDevices"`
-	Views           viewConfigReadList         `yaml:"Views"`
+	Version         *int                               `yaml:"Version"`
+	ProjectTitle    string                             `yaml:"ProjectTitle"`
+	LogConfig       *bool                              `yaml:"LogConfig"`
+	LogWorkerStart  *bool                              `yaml:"LogWorkerStart"`
+	LogStorageDebug *bool                              `yaml:"LogStorageDebug"`
+	HttpServer      *httpServerConfigRead              `yaml:"HttpServer"`
+	Authentication  *authenticationConfigRead          `yaml:"Authentication"`
+	MqttClients     map[string]mqttClientConfigRead    `yaml:"MqttClients"`
+	Modbus          map[string]modbusConfigRead        `yaml:"Modbus"`
+	VictronDevices  map[string]victronDeviceConfigRead `yaml:"VictronDevices"`
+	ModbusDevices   map[string]modbusDeviceConfigRead  `yaml:"ModbusDevices"`
+	HttpDevices     map[string]httpDeviceConfigRead    `yaml:"HttpDevices"`
+	MqttDevices     map[string]mqttDeviceConfigRead    `yaml:"MqttDevices"`
+	Views           []viewConfigRead                   `yaml:"Views"`
 }
 
 type httpServerConfigRead struct {
@@ -56,15 +56,11 @@ type mqttClientConfigRead struct {
 	LogMessages       *bool   `yaml:"LogMessages"`
 }
 
-type mqttClientConfigReadMap map[string]mqttClientConfigRead
-
 type modbusConfigRead struct {
 	Device      string `yaml:"Device"`
 	BaudRate    int    `yaml:"BaudRate"`
 	ReadTimeout string `yaml:"ReadTimeout"`
 }
-
-type modbusConfigReadMap map[string]modbusConfigRead
 
 type deviceConfigRead struct {
 	SkipFields              []string `yaml:"SkipFields"`
@@ -81,8 +77,6 @@ type victronDeviceConfigRead struct {
 	Kind    string           `yaml:"Kind"`
 }
 
-type victronDeviceConfigReadMap map[string]victronDeviceConfigRead
-
 type modbusDeviceConfigRead struct {
 	General      deviceConfigRead `yaml:"General"`
 	Bus          string           `yaml:"Bus"`
@@ -91,8 +85,6 @@ type modbusDeviceConfigRead struct {
 	Relays       map[uint]string  `yaml:"Relays"`
 	PollInterval string           `yaml:"PollInterval"`
 }
-
-type modbusDeviceConfigReadMap map[string]modbusDeviceConfigRead
 
 type httpDeviceConfigRead struct {
 	General                deviceConfigRead `yaml:"General"`
@@ -104,32 +96,24 @@ type httpDeviceConfigRead struct {
 	PollIntervalMaxBackoff string           `yaml:"PollIntervalMaxBackoff"`
 }
 
-type httpDeviceConfigReadMap map[string]httpDeviceConfigRead
-
 type mqttDeviceConfigRead struct {
 	General     deviceConfigRead `yaml:"General"`
 	MqttTopics  []string         `yaml:"MqttTopics"`
 	MqttClients []string         `yaml:"MqttClients"`
 }
 
-type mqttDeviceConfigReadMap map[string]mqttDeviceConfigRead
-
 type viewDeviceConfigRead struct {
 	Name  string `yaml:"Name"`
 	Title string `yaml:"Title"`
 }
 
-type viewDeviceConfigReadList []viewDeviceConfigRead
-
 type viewConfigRead struct {
-	Name           string                   `yaml:"Name"`
-	Title          string                   `yaml:"Title"`
-	Devices        viewDeviceConfigReadList `yaml:"Devices"`
-	Autoplay       *bool                    `yaml:"Autoplay"`
-	AllowedUsers   []string                 `yaml:"AllowedUsers"`
-	Hidden         *bool                    `yaml:"Hidden"`
-	SkipFields     []string                 `yaml:"SkipFields"`
-	SkipCategories []string                 `yaml:"SkipCategories"`
+	Name           string                 `yaml:"Name"`
+	Title          string                 `yaml:"Title"`
+	Devices        []viewDeviceConfigRead `yaml:"Devices"`
+	Autoplay       *bool                  `yaml:"Autoplay"`
+	AllowedUsers   []string               `yaml:"AllowedUsers"`
+	Hidden         *bool                  `yaml:"Hidden"`
+	SkipFields     []string               `yaml:"SkipFields"`
+	SkipCategories []string               `yaml:"SkipCategories"`
 }
-
-type viewConfigReadList []viewConfigRead
