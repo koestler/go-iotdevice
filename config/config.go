@@ -161,13 +161,18 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 		}
 	}
 
-	ret.views, e = TransformAndValidateList(
-		c.Views,
-		func(inp viewConfigRead) (ViewConfig, []error) {
-			return inp.TransformAndValidate(ret.devices)
-		},
-	)
-	err = append(err, e...)
+	{
+		var viewsErr []error
+		ret.views, viewsErr = TransformAndValidateList(
+			c.Views,
+			func(inp viewConfigRead) (ViewConfig, []error) {
+				return inp.TransformAndValidate(ret.devices)
+			},
+		)
+		for _, ve := range viewsErr {
+			err = append(err, fmt.Errorf("section Views: %s", ve))
+		}
+	}
 
 	return
 }
@@ -463,12 +468,12 @@ func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttC
 
 	for _, clientName := range ret.telemetryViaMqttClients {
 		if !existsByName(clientName, mqttClients) {
-			err = append(err, fmt.Errorf("Devices->%s->TelemetryViaMqttClients client='%s' is not defined", name, clientName))
+			err = append(err, fmt.Errorf("Devices->%s->TelemetryViaMqttClients: client='%s' is not defined", name, clientName))
 		}
 	}
 	for _, clientName := range ret.realtimeViaMqttClients {
 		if !existsByName(clientName, mqttClients) {
-			err = append(err, fmt.Errorf("Devices->%s->RealtimeViaMqttClients client='%s' is not defined", name, clientName))
+			err = append(err, fmt.Errorf("Devices->%s->RealtimeViaMqttClients: client='%s' is not defined", name, clientName))
 		}
 	}
 
@@ -522,11 +527,11 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 	}
 
 	if !existsByName(c.Bus, modbus) {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->Bus='%s' is not defidnedd", name, c.Bus))
+		err = append(err, fmt.Errorf("ModbusDevices->%s: Bus='%s' is not defidnedd", name, c.Bus))
 	}
 
 	if n, e := fmt.Sscanf(c.Address, "0x%x", &ret.address); n != 1 || e != nil {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->Adress=%s is invalid: %s", name, c.Address, e))
+		err = append(err, fmt.Errorf("ModbusDevices->%s: Adress=%s is invalid: %s", name, c.Address, e))
 	}
 
 	if len(c.PollInterval) < 1 {
@@ -619,7 +624,7 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []*M
 
 	for _, clientName := range ret.mqttClients {
 		if !existsByName(clientName, mqttClients) {
-			err = append(err, fmt.Errorf("MqttDevices->%s->mqttClients client='%s' is not defined", name, clientName))
+			err = append(err, fmt.Errorf("MqttDevices->%s->mqttClients: Client='%s' is not defined", name, clientName))
 		}
 	}
 
