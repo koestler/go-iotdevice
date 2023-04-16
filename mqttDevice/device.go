@@ -97,6 +97,10 @@ func parsePayload(payload []byte) (msg device.RealtimeMessage, err error) {
 	return
 }
 
+func (c *DeviceStruct) Name() string {
+	return c.deviceConfig.Name()
+}
+
 func (c *DeviceStruct) Config() device.Config {
 	return c.deviceConfig
 }

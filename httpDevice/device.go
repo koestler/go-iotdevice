@@ -245,6 +245,10 @@ func (ds *DeviceStruct) poll() error {
 	return nil
 }
 
+func (ds *DeviceStruct) Name() string {
+	return ds.deviceConfig.Name()
+}
+
 func (ds *DeviceStruct) Config() device.Config {
 	return ds.deviceConfig
 }

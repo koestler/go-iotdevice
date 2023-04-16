@@ -12,7 +12,7 @@ import (
 )
 
 type Config interface {
-	Device() string
+	Bus() string
 	Kind() config.ModbusDeviceKind
 	Address() byte
 	PollInterval() time.Duration
@@ -60,6 +60,10 @@ func RunDevice(
 	}
 
 	return c, nil
+}
+
+func (c *DeviceStruct) Name() string {
+	return c.deviceConfig.Name()
 }
 
 func (c *DeviceStruct) Config() device.Config {

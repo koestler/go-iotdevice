@@ -14,7 +14,7 @@ func startWaveshareRtuRelay8(c *DeviceStruct) error {
 
 	// open modbus device
 	var err error
-	c.modbus, err = modbus.Open(c.modbusConfig.Device(), c.deviceConfig.LogComDebug())
+	c.modbus, err = modbus.Open("todo", c.deviceConfig.LogComDebug())
 	if err != nil {
 		return err
 	}

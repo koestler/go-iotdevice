@@ -16,6 +16,7 @@ type Config interface {
 }
 
 type Device interface {
+	Name() string
 	Config() Config
 	Registers() dataflow.Registers
 	GetRegister(registerName string) dataflow.Register

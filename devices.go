@@ -8,6 +8,7 @@ import (
 	"github.com/koestler/go-iotdevice/modbusDevice"
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/mqttDevice"
+	"github.com/koestler/go-iotdevice/pool"
 	"github.com/koestler/go-iotdevice/victronDevice"
 	"log"
 )
@@ -17,8 +18,8 @@ func runDevices(
 	mqttClientPool *mqttClient.ClientPool,
 	stateStorage *dataflow.ValueStorageInstance,
 	commandStorage *dataflow.ValueStorageInstance,
-) (devicePoolInstance *device.DevicePool) {
-	devicePoolInstance = device.RunPool()
+) (devicePoolInstance *pool.Pool[device.Device]) {
+	devicePoolInstance = pool.RunPool[device.Device]()
 
 	for _, deviceConfig := range cfg.VictronDevices() {
 		if cfg.LogWorkerStart() {
