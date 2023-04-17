@@ -1,4 +1,8 @@
 # Todos
+- RunDevice: merge deviceConfig / modbusConfig into single interface
+- RunDevice: stateStorage should be interface not pointer; use same pattern as with *ModbusStruct & modbus.Modbus
+- Device: Remove c.shutdown ? use context instead?
+- Device: implement supervisor which restarts devices on crash etc.; make it usable for modbus as well 
 - extend documentation
   - how to configure the tool
   - how to set up Victron usb-to-serial converters
