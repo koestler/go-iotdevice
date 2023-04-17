@@ -60,6 +60,7 @@ type modbusConfigRead struct {
 	Device      string `yaml:"Device"`
 	BaudRate    int    `yaml:"BaudRate"`
 	ReadTimeout string `yaml:"ReadTimeout"`
+	LogDebug    *bool  `yaml:"LogDebug"`
 }
 
 type deviceConfigRead struct {

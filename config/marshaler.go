@@ -120,6 +120,7 @@ func (c ModbusConfig) ConvertToRead() modbusConfigRead {
 		Device:      c.device,
 		BaudRate:    c.baudRate,
 		ReadTimeout: c.readTimeout.String(),
+		LogDebug:    &c.logDebug,
 	}
 }
 

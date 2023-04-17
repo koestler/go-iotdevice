@@ -1,4 +1,4 @@
-package modbus
+package modbusDevice
 
 // protocol documentation https://www.waveshare.com/wiki/Protocol_Manual_of_Modbus_RTU_Relay
 
@@ -7,8 +7,9 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/sigurn/crc16"
-	"io"
 )
+
+type WriteReadBusFunc func(request []byte, responseBuf []byte) error
 
 type FunctionCode byte
 
@@ -33,7 +34,7 @@ const (
 var byteOrder = binary.BigEndian
 var checksumByteOrder = binary.LittleEndian
 
-func (md *Modbus) WriteRelay(deviceAddress byte, relayNr uint16, command Command) (err error) {
+func WriteRelay(writeRead WriteReadBusFunc, deviceAddress byte, relayNr uint16, command Command) (err error) {
 	if relayNr > 7 {
 		return fmt.Errorf("invalid relayNr: %d, it must be between 0 and 7", relayNr)
 	}
@@ -53,7 +54,8 @@ func (md *Modbus) WriteRelay(deviceAddress byte, relayNr uint16, command Command
 		return
 	}
 
-	_, err = md.callFunction(
+	_, err = callFunction(
+		writeRead,
 		deviceAddress,
 		WaveshareFunctionWriteRelay,
 		payload.Bytes(),
@@ -63,8 +65,9 @@ func (md *Modbus) WriteRelay(deviceAddress byte, relayNr uint16, command Command
 	return err
 }
 
-func (md *Modbus) ReadSoftwareRevision(deviceAddress byte) (version string, err error) {
-	response, err := md.callFunction(
+func ReadSoftwareRevision(writeRead WriteReadBusFunc, deviceAddress byte) (version string, err error) {
+	response, err := callFunction(
+		writeRead,
 		deviceAddress,
 		WaveshareFunctionReadAddressAndVersion,
 		[]byte{
@@ -85,8 +88,9 @@ func (md *Modbus) ReadSoftwareRevision(deviceAddress byte) (version string, err 
 	return
 }
 
-func (md *Modbus) ReadRelays(deviceAddress byte) (state [8]bool, err error) {
-	response, err := md.callFunction(
+func ReadRelays(writeRead WriteReadBusFunc, deviceAddress byte) (state [8]bool, err error) {
+	response, err := callFunction(
+		writeRead,
 		deviceAddress,
 		WaveshareFunctionReadRelay,
 		[]byte{
@@ -108,65 +112,49 @@ func (md *Modbus) ReadRelays(deviceAddress byte) (state [8]bool, err error) {
 	return
 }
 
-func (md *Modbus) callFunction(
+func callFunction(
+	writeRead WriteReadBusFunc,
 	deviceAddress byte,
 	functionCode FunctionCode,
 	payload []byte,
 	responseLength int,
 ) (response []byte, err error) {
-	// flush any unread bytes in the receive buffer
-	md.RecvFlush()
-
 	// send request
 	// frame structure:
 	// 1 byte Device Address
 	// 1 byte Function Code
 	// n bytes payload
 	// 2 bytes crc16 computeChecksum
-	var packet bytes.Buffer
+	var request bytes.Buffer
 
-	err = binary.Write(&packet, byteOrder, deviceAddress)
+	err = binary.Write(&request, byteOrder, deviceAddress)
 	if err != nil {
 		return
 	}
 
-	err = binary.Write(&packet, byteOrder, functionCode)
+	err = binary.Write(&request, byteOrder, functionCode)
 	if err != nil {
 		return
 	}
 
-	err = binary.Write(&packet, byteOrder, payload)
+	err = binary.Write(&request, byteOrder, payload)
 	if err != nil {
 		return
 	}
 
-	checksum := computeChecksum(packet.Bytes())
-	err = binary.Write(&packet, checksumByteOrder, checksum)
+	checksum := computeChecksum(request.Bytes())
+	err = binary.Write(&request, checksumByteOrder, checksum)
 	if err != nil {
 		return
 	}
 
-	md.debugPrintf(
-		"callFunction: request: deviceAddress=%02x, functionCode=%02x, payload=%02x, checksum=%04x",
-		deviceAddress, functionCode, payload, checksum,
-	)
-
-	_, err = io.Copy(md, &packet)
-	if err != nil {
-		return
-	}
-
-	// read response + computeChecksum
+	// length: read response + computeChecksum
 	response = make([]byte, responseLength+2)
-	_, err = io.ReadFull(md, response)
-	if err != nil {
-		return nil, err
-	}
 
-	md.debugPrintf(
-		"callFunction: response=%02x",
-		response,
-	)
+	err = writeRead(request.Bytes(), response)
+	if err != nil {
+		return
+	}
 
 	// check computeChecksum
 	received := checksumByteOrder.Uint16(response[len(response)-2:])

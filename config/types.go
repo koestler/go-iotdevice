@@ -74,6 +74,7 @@ type ModbusConfig struct {
 	device      string        // mandatory: the serial device path eg. /dev/ttyUSB0
 	baudRate    int           // optional: default 9600
 	readTimeout time.Duration // optional: default 100ms
+	logDebug    bool          // optional: default False
 }
 
 type DeviceConfig struct {

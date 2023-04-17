@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
-	"github.com/koestler/go-iotdevice/modbus"
 	"log"
 	"time"
 )
@@ -12,15 +11,8 @@ import (
 func startWaveshareRtuRelay8(c *DeviceStruct) error {
 	log.Printf("device[%s]: start waveshare RTU Relay 8 source", c.deviceConfig.Name())
 
-	// open modbus device
-	var err error
-	c.modbus, err = modbus.Open("todo", c.deviceConfig.LogComDebug())
-	if err != nil {
-		return err
-	}
-
 	// get software version
-	if version, err := c.modbus.ReadSoftwareRevision(c.modbusConfig.Address()); err != nil {
+	if version, err := ReadSoftwareRevision(c.modbus.WriteRead, c.modbusConfig.Address()); err != nil {
 		return fmt.Errorf("waveshareDevice[%s]: ReadSoftwareRevision failed: %s", c.deviceConfig.Name(), err)
 	} else {
 		log.Printf("waveshareDevice[%s]: source: version=%s", c.deviceConfig.Name(), version)
@@ -45,7 +37,7 @@ func (c *DeviceStruct) mainRoutine() {
 			start := time.Now()
 
 			// fetch registers
-			state, err := c.modbus.ReadRelays(c.modbusConfig.Address())
+			state, err := ReadRelays(c.modbus.WriteRead, c.modbusConfig.Address())
 			if err != nil {
 				if c.deviceConfig.LogDebug() {
 					log.Printf("waveshareDevice[%s]: read failed: %s", c.deviceConfig.Name(), err)
@@ -106,12 +98,12 @@ func (c *DeviceStruct) mainRoutine() {
 				return
 			}
 
-			var command modbus.Command
+			var command Command
 			switch enumValue.Value() {
 			case "OPEN":
-				command = modbus.RelayOpen
+				command = RelayOpen
 			case "CLOSED":
-				command = modbus.RelayClose
+				command = RelayClose
 			default:
 				return
 			}
@@ -131,7 +123,7 @@ func (c *DeviceStruct) mainRoutine() {
 				relayNr = modbusRegister.Address()
 			}
 
-			if err := c.modbus.WriteRelay(c.modbusConfig.Address(), relayNr, command); err != nil {
+			if err := WriteRelay(c.modbus.WriteRead, c.modbusConfig.Address(), relayNr, command); err != nil {
 				log.Printf(
 					"waveshareDevice[%s]: control request genration failed: %s",
 					c.Config().Name(), err,

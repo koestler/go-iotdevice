@@ -665,6 +665,10 @@ func (c modbusConfigRead) TransformAndValidate(name string) (ret ModbusConfig, e
 		ret.readTimeout = readTimeout
 	}
 
+	if c.LogDebug != nil && *c.LogDebug {
+		ret.logDebug = true
+	}
+
 	return
 }
 

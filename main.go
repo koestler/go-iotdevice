@@ -101,8 +101,12 @@ func main() {
 		mqttClientPoolInstance := runMqttClient(cfg)
 		defer mqttClientPoolInstance.Shutdown()
 
+		// start modbus device handlers
+		modbusPoolInstance := runModbus(cfg)
+		defer modbusPoolInstance.Shutdown()
+
 		// start devices
-		devicePoolInstance := runDevices(cfg, mqttClientPoolInstance, stateStorage, commandStorage)
+		devicePoolInstance := runDevices(cfg, mqttClientPoolInstance, modbusPoolInstance, stateStorage, commandStorage)
 		defer devicePoolInstance.Shutdown()
 
 		// start http server

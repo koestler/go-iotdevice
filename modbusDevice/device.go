@@ -24,7 +24,7 @@ type DeviceStruct struct {
 	stateStorage   *dataflow.ValueStorageInstance
 	commandStorage *dataflow.ValueStorageInstance
 
-	modbus *modbus.Modbus
+	modbus modbus.Modbus
 
 	registers        ModbusRegisters
 	lastUpdated      time.Time
@@ -37,6 +37,7 @@ type DeviceStruct struct {
 func RunDevice(
 	deviceConfig device.Config,
 	modbusConfig Config,
+	modbus modbus.Modbus,
 	stateStorage *dataflow.ValueStorageInstance,
 	commandStorage *dataflow.ValueStorageInstance,
 ) (device device.Device, err error) {
@@ -45,6 +46,7 @@ func RunDevice(
 		modbusConfig:   modbusConfig,
 		stateStorage:   stateStorage,
 		commandStorage: commandStorage,
+		modbus:         modbus,
 		shutdown:       make(chan struct{}),
 		closed:         make(chan struct{}),
 	}
@@ -110,9 +112,6 @@ func (c *DeviceStruct) Model() string {
 
 func (c *DeviceStruct) Shutdown() {
 	close(c.shutdown)
-	if err := c.modbus.Close(); err != nil {
-		log.Printf("device[%s]: modbus.Close failed: %s", c.deviceConfig.Name(), err)
-	}
 	<-c.closed
 	log.Printf("device[%s]: shutdown completed", c.deviceConfig.Name())
 }

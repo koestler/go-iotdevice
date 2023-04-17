@@ -232,6 +232,10 @@ func (c ModbusConfig) ReadTimeout() time.Duration {
 	return c.readTimeout
 }
 
+func (c ModbusConfig) LogDebug() bool {
+	return c.logDebug
+}
+
 // Getters for DeviceConfig struct
 
 func (c DeviceConfig) Name() string {

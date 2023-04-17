@@ -4,73 +4,105 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/tarm/serial"
+	"io"
 	"log"
-	"time"
+	"sync"
 )
 
-type Modbus struct {
-	ioPort         *serial.Port
-	reader         *bufio.Reader
-	logDebug       bool
+type ModbusStruct struct {
+	cfg Config
+
+	ioPort *serial.Port
+	reader *bufio.Reader
+
+	mutex sync.Mutex
+
 	logDebugIndent int
 }
 
-func Open(portName string, logDebug bool) (*Modbus, error) {
-	if logDebug {
-		log.Printf("modbus: Open portName=%v", portName)
+func Create(cfg Config) (*ModbusStruct, error) {
+	if cfg.LogDebug() {
+		log.Printf("modbus[%s]: create device=%v", cfg.Name(), cfg.Device())
 	}
 
 	options := serial.Config{
-		Name:        portName,
-		Baud:        9600,
-		ReadTimeout: time.Millisecond * 200,
+		Name:        cfg.Device(),
+		Baud:        cfg.BaudRate(),
+		ReadTimeout: cfg.ReadTimeout(),
 	}
 
 	ioHandle, err := serial.OpenPort(&options)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open port: %v", portName)
+		return nil, fmt.Errorf("cannot open device: %v", cfg.Device())
 	}
 
-	if logDebug {
-		log.Printf("modbus: Open succeeded portName=%v", portName)
+	if cfg.LogDebug() {
+		log.Printf("modbus[%s]: Open succeeded", cfg.Name())
 	}
 
-	return &Modbus{ioHandle, bufio.NewReader(ioHandle), logDebug, 0}, nil
+	return &ModbusStruct{
+		cfg:            cfg,
+		ioPort:         ioHandle,
+		reader:         bufio.NewReader(ioHandle),
+		logDebugIndent: 0,
+	}, nil
 }
 
-func (md *Modbus) Close() (err error) {
-	md.debugPrintf("modbus: Close begin")
-	err = md.ioPort.Close()
-	md.debugPrintf("modbus: Close end err=%v", err)
+func (md *ModbusStruct) Name() string {
+	return md.cfg.Name()
+}
+
+func (md *ModbusStruct) Shutdown() {
+	md.debugPrintf("Shutdown begin")
+	if err := md.ioPort.Close(); err != nil {
+		md.debugPrintf("Shutdown end err=%v", err)
+	} else {
+		md.debugPrintf("Shutdown end")
+	}
 	return
 }
 
-func (md *Modbus) Read(b []byte) (n int, err error) {
+func (md *ModbusStruct) WriteRead(request []byte, responseBuf []byte) error {
+	md.mutex.Lock()
+	defer md.mutex.Unlock()
+
+	// flush receiver
+	md.RecvFlush()
+
+	// send request
+	if _, err := md.Write(request); err != nil {
+		return err
+	}
+
+	// read response or return error
+	_, err := io.ReadFull(md, responseBuf)
+	return err
+}
+
+func (md *ModbusStruct) Read(b []byte) (n int, err error) {
 	n, err = md.ioPort.Read(b)
 	if err != nil {
-		md.debugPrintf("modbus: Read error: %v\n", err)
+		md.debugPrintf("Read error: %v\n", err)
 	}
-	md.debugPrintf("modbus: Read b=%x len=%v", b, len(b))
+	md.debugPrintf("Read b=%x len=%v", b, len(b))
 	return
 }
 
-func (md *Modbus) Write(b []byte) (n int, err error) {
-	md.debugPrintf("modbus: Write b=%x len=%v", b, len(b))
+func (md *ModbusStruct) Write(b []byte) (n int, err error) {
+	md.debugPrintf("Write b=%x len=%v", b, len(b))
 	n, err = md.ioPort.Write(b)
 	if err != nil {
-		log.Printf("modbus: Write error: %v\n", err)
+		log.Printf("Write error: %v\n", err)
 		return 0, err
 	}
 	return
 }
 
-func (md *Modbus) RecvFlush() {
-	md.debugPrintf("modbus: RecvFlush begin")
-
+func (md *ModbusStruct) RecvFlush() {
+	md.debugPrintf("RecvFlush begin")
 	if err := md.ioPort.Flush(); err != nil {
-		md.debugPrintf("modbus: RecvFlush err=%v", err)
+		md.debugPrintf("RecvFlush err=%v", err)
 	}
 	md.reader.Reset(md.ioPort)
-
-	md.debugPrintf("modbus: RecvFlush end")
+	md.debugPrintf("RecvFlush end")
 }

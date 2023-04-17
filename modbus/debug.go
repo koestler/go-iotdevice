@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-func (md *Modbus) debugPrintf(format string, v ...interface{}) {
+func (md *ModbusStruct) debugPrintf(format string, v ...interface{}) {
 	// check if debug output is enabled
-	if !md.logDebug {
+	if !md.cfg.LogDebug() {
 		return
 	}
 
@@ -21,7 +21,7 @@ func (md *Modbus) debugPrintf(format string, v ...interface{}) {
 	s := fmt.Sprintf(format, v...)
 	s = strings.Replace(s, "\n", "\\n", -1)
 
-	log.Print(strings.Repeat("  ", md.logDebugIndent) + s)
+	log.Printf("modbus[%s]: %s", md.cfg.Name(), strings.Repeat("  ", md.logDebugIndent)+s)
 
 	if md.logDebugIndent < 64 && strings.Contains(intro, " begin") {
 		md.logDebugIndent += 1
