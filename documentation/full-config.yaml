@@ -15,6 +15,13 @@ HttpServer:                                                # optional, when miss
   ConfigExpires: 1m                                        # optional, default 1min, what cache-control header to send for configuration endpoints
   LogDebug: false                                          # optional, default false, output debug messages related to the http server
 
+Modbus:                                                    # optional, when empty, no modbus handler is started
+  bus0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
+    Device: /dev/ttyACM0                                   # mandatory, the RS485 serial device
+    BaudRate: 9600                                         # optional, default 9600, the baud rate of the bus
+    ReadTimeout: 100ms                                     # optional, default 100ms, how long to wait for a response
+    LogDebug: false                                        # optional, default false, verbose debug log
+
 Authentication:                                            # optional, when missing: login is disabled
   #JwtSecret: 'insert a random string here and uncomment'  # optional, default random, used to sign the JWT tokens
   JwtValidityPeriod: 1h                                    # optional, default 1h, users are logged out after this time
@@ -68,7 +75,7 @@ ModbusDevices:                                             # optional, a list of
       RealtimeViaMqttClients:                              # optional, default all clients, to what mqtt servers shall realtime messages be sent to
       LogDebug: false                                      # optional, default false, enable debug log output
       LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
-    Device: /dev/ttyACM0                                   # mandatory, the serial device path e.g. /dev/ttyUSB0
+    Bus: bus0                                              # mandatory, the identifier of the modbus to use
     Kind: WaveshareRtuRelay8                               # mandatory, type/model of the device; possibilities: WaveshareRtuRelay8
     Address: 0x01                                          # mandatory, the modbus address of the device in hex as a string, e.g. 0x0A
     PollInterval: 1s                                       # optional, default 1s, how often to fetch the device status
