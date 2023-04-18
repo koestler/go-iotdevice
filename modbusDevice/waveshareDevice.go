@@ -77,10 +77,6 @@ func (c *DeviceStruct) mainRoutine() {
 			SkipNull:       true,
 			IncludeDevices: map[string]bool{c.Config().Name(): true},
 		}
-		log.Printf(
-			"waveshareDevice[%s]: subscribe: %v",
-			c.Config().Name(), filter,
-		)
 		commandSubscription := c.commandStorage.Subscribe(filter)
 		defer commandSubscription.Shutdown()
 
