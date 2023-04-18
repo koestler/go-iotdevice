@@ -34,6 +34,7 @@ The following protocols are supported:
 * [Victron Energy](https://www.victronenergy.com/) [VE.Direct](https://www.victronenergy.com/live/vedirect_protocol:faq)
 * HTTP GET json / xml files
 * MQTT
+* Modbus
 
 The following devices are supported:
 * via a VE.Direct:
@@ -49,6 +50,8 @@ The following devices are supported:
 * via MQTT:
   * Another go-iotdevice instance connected to the same MQTT broker. This allows to connect devices
     to different linux machines at different location but still having one single frontend showing all devices.
+* via Modbus
+  * [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay.htm), a cheap relay board with programmable address (up to 255 on one bus)
 
 ## Configuration
 The tool supports command line options to for profiling. See:
