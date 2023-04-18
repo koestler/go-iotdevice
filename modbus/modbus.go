@@ -16,8 +16,6 @@ type ModbusStruct struct {
 	reader *bufio.Reader
 
 	mutex sync.Mutex
-
-	logDebugIndent int
 }
 
 func Create(cfg Config) (*ModbusStruct, error) {
@@ -41,10 +39,9 @@ func Create(cfg Config) (*ModbusStruct, error) {
 	}
 
 	return &ModbusStruct{
-		cfg:            cfg,
-		ioPort:         ioHandle,
-		reader:         bufio.NewReader(ioHandle),
-		logDebugIndent: 0,
+		cfg:    cfg,
+		ioPort: ioHandle,
+		reader: bufio.NewReader(ioHandle),
 	}, nil
 }
 
@@ -53,13 +50,11 @@ func (md *ModbusStruct) Name() string {
 }
 
 func (md *ModbusStruct) Shutdown() {
-	md.debugPrintf("Shutdown begin")
 	if err := md.ioPort.Close(); err != nil {
-		md.debugPrintf("Shutdown end err=%v", err)
+		md.debugPrintf("Shutdown err=%v", err)
 	} else {
-		md.debugPrintf("Shutdown end")
+		md.debugPrintf("Shutdown successful")
 	}
-	return
 }
 
 func (md *ModbusStruct) WriteRead(request []byte, responseBuf []byte) error {
@@ -99,10 +94,10 @@ func (md *ModbusStruct) Write(b []byte) (n int, err error) {
 }
 
 func (md *ModbusStruct) RecvFlush() {
-	md.debugPrintf("RecvFlush begin")
 	if err := md.ioPort.Flush(); err != nil {
-		md.debugPrintf("RecvFlush err=%v", err)
+		md.debugPrintf("Flush err=%v", err)
+	} else {
+		md.debugPrintf("Flush err=%v", err)
 	}
 	md.reader.Reset(md.ioPort)
-	md.debugPrintf("RecvFlush end")
 }
