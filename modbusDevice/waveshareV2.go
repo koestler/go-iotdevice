@@ -17,8 +17,6 @@ const (
 	WaveshareFunctionReadRelay             FunctionCode = 0x01
 	WaveshareFunctionReadAddressAndVersion FunctionCode = 0x03
 	WaveshareFunctionWriteRelay            FunctionCode = 0x05
-	WaveshareFunctionSetBaudRateAndAddress FunctionCode = 0x06
-	WaveshareFunctionWriteAllRelays        FunctionCode = 0x0F
 )
 
 type Command uint16
@@ -28,7 +26,6 @@ type Command uint16
 const (
 	RelayOpen  Command = 0x0000
 	RelayClose Command = 0xFF00
-	RelayFlip  Command = 0x5500
 )
 
 var byteOrder = binary.BigEndian
