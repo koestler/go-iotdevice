@@ -290,8 +290,8 @@ func (c ModbusDeviceConfig) Address() byte {
 	return c.address
 }
 
-func (c ModbusDeviceConfig) Relays() map[uint]string {
-	return c.relays
+func (c ModbusDeviceConfig) Descriptions() map[string]string {
+	return c.descriptions
 }
 
 func (c ModbusDeviceConfig) PollInterval() time.Duration {

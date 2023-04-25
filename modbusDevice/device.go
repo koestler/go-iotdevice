@@ -15,6 +15,7 @@ type Config interface {
 	Bus() string
 	Kind() config.ModbusDeviceKind
 	Address() byte
+	Descriptions() map[string]string
 	PollInterval() time.Duration
 }
 

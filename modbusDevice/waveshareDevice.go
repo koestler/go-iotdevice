@@ -19,7 +19,7 @@ func startWaveshareRtuRelay8(c *DeviceStruct) error {
 	}
 
 	// assign registers
-	c.registers = RegisterListRtuRelay8
+	c.registers = getRegisters(c.modbusConfig.Descriptions())
 
 	c.mainRoutine()
 
@@ -158,22 +158,31 @@ func (c *DeviceStruct) mainRoutine() {
 
 }
 
-var RegisterListRtuRelay8 ModbusRegisters
-
-func init() {
+func getRegisters(descriptions map[string]string) (registers ModbusRegisters) {
 	enum := map[int]string{
 		0: "OPEN",
 		1: "CLOSED",
 	}
-	RegisterListRtuRelay8 = make(ModbusRegisters, 8)
+	registers = make(ModbusRegisters, 8)
 	for i := uint16(0); i < 8; i += 1 {
-		RegisterListRtuRelay8[i] = CreateEnumRegisterStruct(
+		name := fmt.Sprintf("CH%d", i+1)
+
+		var description string
+		if v, ok := descriptions[name]; ok {
+			description = v
+		} else {
+			description = fmt.Sprintf("Relay CH%d", i+1)
+		}
+
+		registers[i] = CreateEnumRegisterStruct(
 			"Relays",
-			fmt.Sprintf("CH%d", i+1),
-			fmt.Sprintf("Relay CH%d", i+1),
+			name,
+			description,
 			i,
 			enum,
 			int(i),
 		)
 	}
+
+	return
 }

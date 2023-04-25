@@ -513,9 +513,9 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 	name string, mqttClients []*MqttClientConfig, modbus []*ModbusConfig,
 ) (ret ModbusDeviceConfig, err []error) {
 	ret = ModbusDeviceConfig{
-		kind:   ModbusDeviceKindFromString(c.Kind),
-		bus:    c.Bus,
-		relays: c.Relays,
+		kind:         ModbusDeviceKindFromString(c.Kind),
+		bus:          c.Bus,
+		descriptions: c.Descriptions,
 	}
 
 	var e []error

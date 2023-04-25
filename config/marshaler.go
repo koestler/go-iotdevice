@@ -149,7 +149,7 @@ func (c ModbusDeviceConfig) ConvertToRead() modbusDeviceConfigRead {
 		Bus:          c.bus,
 		Kind:         c.kind.String(),
 		Address:      fmt.Sprintf("0x%02x", c.address),
-		Relays:       c.relays,
+		Descriptions: c.descriptions,
 		PollInterval: c.pollInterval.String(),
 	}
 }

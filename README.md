@@ -156,6 +156,8 @@ ModbusDevices:                                             # optional, a list of
     Bus: bus0                                              # mandatory, the identifier of the modbus to use
     Kind: WaveshareRtuRelay8                               # mandatory, type/model of the device; possibilities: WaveshareRtuRelay8
     Address: 0x01                                          # mandatory, the modbus address of the device in hex as a string, e.g. 0x0A
+    Descriptions:                                          # optional: a map of relay name (CH1, CH2, ...) to descriptions
+      CH1: Lamp                                            # optional: show the CH1 relay as "Lamp" in the frontend
     PollInterval: 1s                                       # optional, default 1s, how often to fetch the device status
 
 HttpDevices:                                               # optional, a list of devices controlled via http
