@@ -96,7 +96,7 @@ HttpServer:                                                # optional, when miss
 Modbus:                                                    # optional, when empty, no modbus handler is started
   bus0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Device: /dev/ttyACM0                                   # mandatory, the RS485 serial device
-    BaudRate: 9600                                         # optional, default 9600, the baud rate of the bus
+    BaudRate: 9600                                         # mandatory, eg. 9600
     ReadTimeout: 100ms                                     # optional, default 100ms, how long to wait for a response
     LogDebug: false                                        # optional, default false, verbose debug log
 
