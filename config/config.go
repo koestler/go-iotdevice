@@ -186,6 +186,7 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 	ret.enabled = false
 	ret.bind = "[::1]"
 	ret.port = 8000
+	ret.logRequests = true
 
 	if c == nil {
 		return
@@ -201,8 +202,8 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 		ret.port = *c.Port
 	}
 
-	if c.LogRequests != nil && *c.LogRequests {
-		ret.logRequests = true
+	if c.LogRequests != nil && !*c.LogRequests {
+		ret.logRequests = false
 	}
 
 	if len(c.FrontendProxy) > 0 {
