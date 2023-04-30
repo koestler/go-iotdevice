@@ -47,9 +47,9 @@ func (c *DeviceStruct) mainRoutine() {
 			}
 			device.SendConnteced(c.Config().Name(), c.stateStorage)
 
-			for i, register := range c.registers {
+			for _, register := range c.registers {
 				value := 0
-				if state[i] {
+				if state[register.Address()] {
 					value = 1
 				}
 
@@ -160,7 +160,7 @@ func (c *DeviceStruct) mainRoutine() {
 
 func (c *DeviceStruct) getRegisters() (registers ModbusRegisters) {
 	category := "Relays"
-	registers = make(ModbusRegisters, 8)
+	registers = make(ModbusRegisters, 0, 8)
 	for i := uint16(0); i < 8; i += 1 {
 		name := fmt.Sprintf("CH%d", i+1)
 
@@ -174,7 +174,7 @@ func (c *DeviceStruct) getRegisters() (registers ModbusRegisters) {
 			1: c.modbusConfig.RelayClosedLabel(name),
 		}
 
-		registers[i] = CreateEnumRegisterStruct(
+		r := CreateEnumRegisterStruct(
 			category,
 			name,
 			description,
@@ -182,6 +182,7 @@ func (c *DeviceStruct) getRegisters() (registers ModbusRegisters) {
 			enum,
 			int(i),
 		)
+		registers = append(registers, r)
 	}
 
 	return
