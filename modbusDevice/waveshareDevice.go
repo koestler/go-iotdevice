@@ -95,10 +95,10 @@ func (c *DeviceStruct) mainRoutine() {
 			}
 
 			var command Command
-			switch enumValue.Value() {
-			case "OPEN":
+			switch enumValue.EnumIdx() {
+			case 0:
 				command = RelayOpen
-			case "CLOSED":
+			case 1:
 				command = RelayClose
 			default:
 				return
