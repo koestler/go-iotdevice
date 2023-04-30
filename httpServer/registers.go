@@ -36,7 +36,9 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 	// add dynamic routes
 	for _, v := range env.Views {
 		view := v
-		for _, viewDevice := range view.Devices() {
+		for _, vd := range view.Devices() {
+			viewDevice := vd
+
 			device := env.DevicePoolInstance.GetByName(viewDevice.Name())
 			if device == nil {
 				continue
