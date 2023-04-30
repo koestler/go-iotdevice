@@ -123,7 +123,7 @@ Views:                                                     # optional, a list of
         Title: Battery Monitor                             # mandatory, a nice title displayed in the frontend
       - Name: modbus-rtu0                                  # mandatory, the arbitrary names defined above
         Title: Relay Board                                 # mandatory, a nice title displayed in the frontend
-    Autoplay: false                                        # optional, default false, when true, live updates are enabled automatically when the view is open in the frontend
+    Autoplay: true                                         # optional, default true, when true, live updates are enabled automatically when the view is open in the frontend
     AllowedUsers:                                          # optional, if empty, all users of the HtaccessFile are considered valid, otherwise only those listed here
       - test0                                              # username which is allowed to access this view
     Hidden: false                                          # optional, default false, if true, this view is not shown in the menu unless the user is logged in

@@ -53,6 +53,11 @@ func (c Config) PrintConfig() (err error) {
 }
 
 func (c configRead) TransformAndValidate() (ret Config, err []error) {
+	ret = Config{
+		logConfig:      true,
+		logWorkerStart: true,
+	}
+
 	var e []error
 
 	if c.Version == nil {
@@ -70,12 +75,12 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 		ret.projectTitle = "go-iotdevice"
 	}
 
-	if c.LogConfig != nil && *c.LogConfig {
-		ret.logConfig = true
+	if c.LogConfig != nil && !*c.LogConfig {
+		ret.logConfig = false
 	}
 
-	if c.LogWorkerStart != nil && *c.LogWorkerStart {
-		ret.logWorkerStart = true
+	if c.LogWorkerStart != nil && !*c.LogWorkerStart {
+		ret.logWorkerStart = false
 	}
 
 	if c.LogStorageDebug != nil && *c.LogStorageDebug {
@@ -707,6 +712,7 @@ func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewC
 		title:          c.Title,
 		allowedUsers:   make(map[string]struct{}),
 		hidden:         false,
+		autoplay:       true,
 		skipFields:     c.SkipFields,
 		skipCategories: c.SkipCategories,
 	}
@@ -733,8 +739,8 @@ func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewC
 		}
 	}
 
-	if c.Autoplay != nil && *c.Autoplay {
-		ret.autoplay = true
+	if c.Autoplay != nil && !*c.Autoplay {
+		ret.autoplay = false
 	}
 
 	for _, user := range c.AllowedUsers {

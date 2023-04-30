@@ -12,8 +12,8 @@ type Nameable interface {
 type Config struct {
 	version         int                    // must be 1
 	projectTitle    string                 // optional: default go-iotdevice
-	logConfig       bool                   // optional: default False
-	logWorkerStart  bool                   // optional: default False
+	logConfig       bool                   // optional: default True
+	logWorkerStart  bool                   // optional: default True
 	logStorageDebug bool                   // optional: default False
 	httpServer      HttpServerConfig       // optional: default Disabled
 	authentication  AuthenticationConfig   // optional: default Disabled
