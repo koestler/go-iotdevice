@@ -40,7 +40,7 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 			filter := getFilter([]*config.ViewDeviceConfig{viewDevice})
 			r.GET(relativePath, func(c *gin.Context) {
 				// check authorization
-				if !isViewAuthenticated(view, c) {
+				if !isViewAuthenticated(view, c, true) {
 					jsonErrorResponse(c, http.StatusForbidden, errors.New("User is not allowed here"))
 					return
 				}
@@ -79,7 +79,7 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 			relativePath := "views/" + view.Name() + "/devices/" + deviceName + "/values"
 			r.PATCH(relativePath, func(c *gin.Context) {
 				// check authorization
-				if !isViewAuthenticated(view, c) {
+				if !isViewAuthenticated(view, c, false) {
 					jsonErrorResponse(c, http.StatusForbidden, errors.New("User is not allowed here"))
 					return
 				}

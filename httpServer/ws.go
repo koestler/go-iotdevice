@@ -80,7 +80,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 						if err := json.Unmarshal(msg, &authMsg); err == nil {
 							if user, err := checkToken(authMsg.AuthToken, env.Authentication.JwtSecret()); err == nil {
 								log.Printf("httpServer: %s%s: user=%s authenticated", r.BasePath(), relativePath, user)
-								authenticated <- isViewAuthenticatedByUser(view, user)
+								authenticated <- isViewAuthenticatedByUser(view, user, true)
 								authenticationCompleted = true
 							}
 						}
