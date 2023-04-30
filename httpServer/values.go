@@ -3,6 +3,7 @@ package httpServer
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/pkg/errors"
 	"log"
@@ -25,17 +26,17 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 	// add dynamic routes
 	for _, v := range env.Views {
 		view := v
-		for _, deviceName := range view.DeviceNames() {
+		for _, viewDevice := range view.Devices() {
 
-			device := env.DevicePoolInstance.GetByName(deviceName)
+			device := env.DevicePoolInstance.GetByName(viewDevice.Name())
 			if device == nil {
 				continue
 			}
 
-			relativePath := "views/" + view.Name() + "/devices/" + deviceName + "/values"
+			relativePath := "views/" + view.Name() + "/devices/" + viewDevice.Name() + "/values"
 
 			// the following line uses a loop variable; it must be outside the closure
-			filter := getFilter([]string{deviceName}, view.SkipFields(), view.SkipCategories())
+			filter := getFilter([]*config.ViewDeviceConfig{viewDevice})
 			r.GET(relativePath, func(c *gin.Context) {
 				// check authorization
 				if !isViewAuthenticated(view, c) {
@@ -166,20 +167,27 @@ func append2DResponseValue(response map[string]map[string]valueResponse, value d
 	response[d0][d1] = value.GenericValue()
 }
 
-func getFilter(deviceNames, skipFields, skipCategories []string) dataflow.Filter {
-	includeDevices := make(map[string]bool, len(deviceNames))
-	for _, id := range deviceNames {
-		includeDevices[id] = true
-	}
+func getFilter(viewDevices []*config.ViewDeviceConfig) dataflow.Filter {
+	includeDevices := make(map[string]bool, len(viewDevices))
+	skipRegisterNames := make(map[dataflow.SkipRegisterNameStruct]bool)
+	skipRegisterCategories := make(map[dataflow.SkipRegisterCategoryStruct]bool)
 
-	skipRegisterNames := make(map[string]bool, len(skipFields))
-	for _, id := range skipFields {
-		skipRegisterNames[id] = true
-	}
+	for _, vd := range viewDevices {
+		includeDevices[vd.Name()] = true
 
-	skipRegisterCategories := make(map[string]bool, len(skipCategories))
-	for _, id := range skipCategories {
-		skipRegisterCategories[id] = true
+		for _, register := range vd.SkipFields() {
+			skipRegisterNames[dataflow.SkipRegisterNameStruct{
+				Device:   vd.Name(),
+				Register: register,
+			}] = true
+		}
+
+		for _, category := range vd.SkipCategories() {
+			skipRegisterCategories[dataflow.SkipRegisterCategoryStruct{
+				Device:   vd.Name(),
+				Category: category,
+			}] = true
+		}
 	}
 
 	return dataflow.Filter{

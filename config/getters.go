@@ -365,6 +365,14 @@ func (c ViewDeviceConfig) Title() string {
 	return c.title
 }
 
+func (c ViewDeviceConfig) SkipFields() []string {
+	return c.skipFields
+}
+
+func (c ViewDeviceConfig) SkipCategories() []string {
+	return c.skipCategories
+}
+
 // Getters for ViewConfig struct
 
 func (c ViewConfig) Name() string {
@@ -402,12 +410,4 @@ func (c ViewConfig) IsPublic() bool {
 
 func (c ViewConfig) Hidden() bool {
 	return c.hidden
-}
-
-func (c ViewConfig) SkipFields() []string {
-	return c.skipFields
-}
-
-func (c ViewConfig) SkipCategories() []string {
-	return c.skipCategories
 }

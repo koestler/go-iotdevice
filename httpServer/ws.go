@@ -31,7 +31,9 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 	for _, v := range env.Views {
 		view := v
 		relativePath := "views/" + view.Name() + "/ws"
-		filter := getFilter(view.DeviceNames(), view.SkipFields(), view.SkipCategories())
+
+		view.Devices()
+		filter := getFilter(view.Devices())
 
 		// the follow line uses a loop variable; it must be outside the closure
 		r.GET(relativePath, func(c *gin.Context) {

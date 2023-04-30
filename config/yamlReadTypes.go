@@ -110,17 +110,17 @@ type mqttDeviceConfigRead struct {
 }
 
 type viewDeviceConfigRead struct {
-	Name  string `yaml:"Name"`
-	Title string `yaml:"Title"`
+	Name           string   `yaml:"Name"`
+	Title          string   `yaml:"Title"`
+	SkipFields     []string `yaml:"SkipFields"`
+	SkipCategories []string `yaml:"SkipCategories"`
 }
 
 type viewConfigRead struct {
-	Name           string                 `yaml:"Name"`
-	Title          string                 `yaml:"Title"`
-	Devices        []viewDeviceConfigRead `yaml:"Devices"`
-	Autoplay       *bool                  `yaml:"Autoplay"`
-	AllowedUsers   []string               `yaml:"AllowedUsers"`
-	Hidden         *bool                  `yaml:"Hidden"`
-	SkipFields     []string               `yaml:"SkipFields"`
-	SkipCategories []string               `yaml:"SkipCategories"`
+	Name         string                 `yaml:"Name"`
+	Title        string                 `yaml:"Title"`
+	Devices      []viewDeviceConfigRead `yaml:"Devices"`
+	Autoplay     *bool                  `yaml:"Autoplay"`
+	AllowedUsers []string               `yaml:"AllowedUsers"`
+	Hidden       *bool                  `yaml:"Hidden"`
 }

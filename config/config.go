@@ -709,13 +709,11 @@ func (c modbusConfigRead) TransformAndValidate(name string) (ret ModbusConfig, e
 
 func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewConfig, err []error) {
 	ret = ViewConfig{
-		name:           c.Name,
-		title:          c.Title,
-		allowedUsers:   make(map[string]struct{}),
-		hidden:         false,
-		autoplay:       true,
-		skipFields:     c.SkipFields,
-		skipCategories: c.SkipCategories,
+		name:         c.Name,
+		title:        c.Title,
+		allowedUsers: make(map[string]struct{}),
+		hidden:       false,
+		autoplay:     true,
 	}
 
 	if !nameMatcher.MatchString(ret.name) {
@@ -759,8 +757,10 @@ func (c viewDeviceConfigRead) TransformAndValidate(
 	devices []*DeviceConfig,
 ) (ret ViewDeviceConfig, err []error) {
 	ret = ViewDeviceConfig{
-		name:  c.Name,
-		title: c.Title,
+		name:           c.Name,
+		title:          c.Title,
+		skipFields:     c.SkipFields,
+		skipCategories: c.SkipCategories,
 	}
 
 	if !existsByName(c.Name, devices) {

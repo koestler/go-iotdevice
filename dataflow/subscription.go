@@ -25,31 +25,37 @@ func filterByDevice(filter *Filter, deviceName string) bool {
 	return ok && v
 }
 
-func filterByRegisterName(filter *Filter, register Register) bool {
+func filterByRegisterName(filter *Filter, deviceName string, register Register) bool {
 	// list is empty -> every device is ok
 	if len(filter.SkipRegisterNames) < 1 {
 		return true
 	}
 
 	// keep all but those that are present and false
-	v, ok := filter.SkipRegisterNames[register.Name()]
+	v, ok := filter.SkipRegisterNames[SkipRegisterNameStruct{
+		Device:   deviceName,
+		Register: register.Name(),
+	}]
 	return !(ok && v)
 }
 
-func filterByRegisterCategory(filter *Filter, register Register) bool {
+func filterByRegisterCategory(filter *Filter, deviceName string, register Register) bool {
 	// list is empty -> every device is ok
 	if len(filter.SkipRegisterCategories) < 1 {
 		return true
 	}
 
 	// keep all but those that are present and false
-	v, ok := filter.SkipRegisterCategories[register.Category()]
+	v, ok := filter.SkipRegisterCategories[SkipRegisterCategoryStruct{
+		Device:   deviceName,
+		Category: register.Category(),
+	}]
 	return !(ok && v)
 }
 
-func filterByRegister(filter *Filter, register Register) bool {
-	return filterByRegisterName(filter, register) &&
-		filterByRegisterCategory(filter, register)
+func filterByRegister(filter *Filter, deviceName string, register Register) bool {
+	return filterByRegisterName(filter, deviceName, register) &&
+		filterByRegisterCategory(filter, deviceName, register)
 }
 
 func filterByValue(filter *Filter, value Value) bool {
@@ -60,7 +66,7 @@ func filterByValue(filter *Filter, value Value) bool {
 func filterValue(filter *Filter, value Value) bool {
 	register := value.Register()
 	return filterByDevice(filter, value.DeviceName()) &&
-		filterByRegister(filter, register) &&
+		filterByRegister(filter, value.DeviceName(), register) &&
 		filterByValue(filter, value)
 }
 

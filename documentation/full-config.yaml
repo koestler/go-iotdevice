@@ -96,8 +96,8 @@ HttpDevices:                                               # optional, a list of
       LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
     Url: http://control0/                                  # mandatory, URL to the device; supported protocol is http/https; e.g. http://device0.local/
     Kind: Teracom                                          # mandatory, type/model of the device; possibilities: Teracom, Shelly3m
-    Username: admin                                        # optional, username used to login
-    Password: my-secret                                    # optional, password used to login
+    Username: admin                                        # optional, username used to log in
+    Password: my-secret                                    # optional, password used to log in
     PollInterval: 1s                                       # optional, default 1s, how often to fetch the device status
     PollIntervalMaxBackoff: 10s                            # optional, default 10s; when connection fails, the poll interval is exponentially increased up to this maximum
 
@@ -121,11 +121,11 @@ Views:                                                     # optional, a list of
     Devices:                                               # mandatory, a list of devices using
       - Name: bmv0                                         # mandatory, the arbitrary names defined above
         Title: Battery Monitor                             # mandatory, a nice title displayed in the frontend
+        SkipFields:                                        # optional, default empty, field names that are omitted when displaying this view
+        SkipCategories:                                    # optional, default empty, category names that are omitted when displaying this view
       - Name: modbus-rtu0                                  # mandatory, the arbitrary names defined above
         Title: Relay Board                                 # mandatory, a nice title displayed in the frontend
     Autoplay: true                                         # optional, default true, when true, live updates are enabled automatically when the view is open in the frontend
     AllowedUsers:                                          # optional, if empty, all users of the HtaccessFile are considered valid, otherwise only those listed here
       - test0                                              # username which is allowed to access this view
     Hidden: false                                          # optional, default false, if true, this view is not shown in the menu unless the user is logged in
-    SkipFields:                                            # optional, default empty, field names that are omitted when displaying this view
-    SkipCategories:                                        # optional, default empty, category names that are omitted when displaying this view

@@ -17,10 +17,20 @@ type ValueStorageInstance struct {
 	shutdown chan struct{}
 }
 
+type SkipRegisterNameStruct struct {
+	Device   string
+	Register string
+}
+
+type SkipRegisterCategoryStruct struct {
+	Device   string
+	Category string
+}
+
 type Filter struct {
 	IncludeDevices         map[string]bool
-	SkipRegisterNames      map[string]bool
-	SkipRegisterCategories map[string]bool
+	SkipRegisterNames      map[SkipRegisterNameStruct]bool
+	SkipRegisterCategories map[SkipRegisterCategoryStruct]bool
 	SkipNull               bool
 }
 
@@ -86,7 +96,7 @@ func (instance *ValueStorageInstance) handleNewReadStateRequest(newReadStateRequ
 		response[deviceName] = make(ValueMap)
 
 		for registerName, value := range deviceState {
-			if !filterByRegister(filter, value.Register()) {
+			if !filterByRegister(filter, deviceName, value.Register()) {
 				continue
 			}
 

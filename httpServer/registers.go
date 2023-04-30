@@ -36,13 +36,13 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 	// add dynamic routes
 	for _, v := range env.Views {
 		view := v
-		for _, deviceName := range view.DeviceNames() {
-			device := env.DevicePoolInstance.GetByName(deviceName)
+		for _, viewDevice := range view.Devices() {
+			device := env.DevicePoolInstance.GetByName(viewDevice.Name())
 			if device == nil {
 				continue
 			}
 
-			relativePath := "views/" + view.Name() + "/devices/" + deviceName + "/registers"
+			relativePath := "views/" + view.Name() + "/devices/" + viewDevice.Name() + "/registers"
 			r.GET(relativePath, func(c *gin.Context) {
 				// check authorization
 				if !isViewAuthenticated(view, c) {
@@ -51,7 +51,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 				}
 
 				registers := device.Registers()
-				registers = dataflow.FilterRegisters(registers, view.SkipFields(), view.SkipCategories())
+				registers = dataflow.FilterRegisters(registers, viewDevice.SkipFields(), viewDevice.SkipCategories())
 				dataflow.SortRegisters(registers)
 				response := make([]registerResponse, len(registers))
 				for i, v := range registers {
