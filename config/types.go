@@ -95,11 +95,17 @@ type VictronDeviceConfig struct {
 
 type ModbusDeviceConfig struct {
 	DeviceConfig
-	bus          string            // mandatory: id of the modbus
-	kind         ModbusDeviceKind  // mandatory: what connection protocol is used
-	address      byte              // mandatory: the modbus address of the device; format: 0x0A
-	descriptions map[string]string // optional: custom descriptions for the relays
-	pollInterval time.Duration     // optional: default 1s
+	bus          string                 // mandatory: id of the modbus
+	kind         ModbusDeviceKind       // mandatory: what connection protocol is used
+	address      byte                   // mandatory: the modbus address of the device; format: 0x0A
+	relays       map[string]RelayConfig // optional: custom labels for the relays
+	pollInterval time.Duration          // optional: default 1s
+}
+
+type RelayConfig struct {
+	description string // optional: default channel name
+	openLabel   string // optional: default:"open"
+	closedLabel string // optional: default "closed"
 }
 
 type HttpDeviceConfig struct {

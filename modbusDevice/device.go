@@ -15,7 +15,9 @@ type Config interface {
 	Bus() string
 	Kind() config.ModbusDeviceKind
 	Address() byte
-	Descriptions() map[string]string
+	RelayDescription(name string) string
+	RelayOpenLabel(name string) string
+	RelayClosedLabel(name string) string
 	PollInterval() time.Duration
 }
 

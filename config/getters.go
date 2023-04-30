@@ -290,8 +290,25 @@ func (c ModbusDeviceConfig) Address() byte {
 	return c.address
 }
 
-func (c ModbusDeviceConfig) Descriptions() map[string]string {
-	return c.descriptions
+func (c ModbusDeviceConfig) RelayDescription(name string) string {
+	if v, ok := c.relays[name]; ok {
+		return v.description
+	}
+	return name
+}
+
+func (c ModbusDeviceConfig) RelayOpenLabel(name string) string {
+	if v, ok := c.relays[name]; ok {
+		return v.openLabel
+	}
+	return "open"
+}
+
+func (c ModbusDeviceConfig) RelayClosedLabel(name string) string {
+	if v, ok := c.relays[name]; ok {
+		return v.closedLabel
+	}
+	return "closed"
 }
 
 func (c ModbusDeviceConfig) PollInterval() time.Duration {

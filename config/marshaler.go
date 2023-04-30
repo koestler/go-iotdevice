@@ -145,12 +145,26 @@ func (c VictronDeviceConfig) ConvertToRead() victronDeviceConfigRead {
 
 func (c ModbusDeviceConfig) ConvertToRead() modbusDeviceConfigRead {
 	return modbusDeviceConfigRead{
-		General:      c.DeviceConfig.ConvertToRead(),
-		Bus:          c.bus,
-		Kind:         c.kind.String(),
-		Address:      fmt.Sprintf("0x%02x", c.address),
-		Descriptions: c.descriptions,
+		General: c.DeviceConfig.ConvertToRead(),
+		Bus:     c.bus,
+		Kind:    c.kind.String(),
+		Address: fmt.Sprintf("0x%02x", c.address),
+		Relays: func(inp map[string]RelayConfig) (oup map[string]relayConfigRead) {
+			oup = make(map[string]relayConfigRead, len(inp))
+			for k, v := range inp {
+				oup[k] = v.ConvertToRead()
+			}
+			return oup
+		}(c.relays),
 		PollInterval: c.pollInterval.String(),
+	}
+}
+
+func (c RelayConfig) ConvertToRead() relayConfigRead {
+	return relayConfigRead{
+		Description: &c.description,
+		OpenLabel:   &c.openLabel,
+		ClosedLabel: &c.closedLabel,
 	}
 }
 

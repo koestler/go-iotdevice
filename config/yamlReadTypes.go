@@ -79,12 +79,18 @@ type victronDeviceConfigRead struct {
 }
 
 type modbusDeviceConfigRead struct {
-	General      deviceConfigRead  `yaml:"General"`
-	Bus          string            `yaml:"Bus"`
-	Kind         string            `yaml:"Kind"`
-	Address      string            `yaml:"Address"`
-	Descriptions map[string]string `yaml:"Descriptions"`
-	PollInterval string            `yaml:"PollInterval"`
+	General      deviceConfigRead           `yaml:"General"`
+	Bus          string                     `yaml:"Bus"`
+	Kind         string                     `yaml:"Kind"`
+	Address      string                     `yaml:"Address"`
+	Relays       map[string]relayConfigRead `yaml:"Relays"`
+	PollInterval string                     `yaml:"PollInterval"`
+}
+
+type relayConfigRead struct {
+	Description *string `yaml:"Description"`
+	OpenLabel   *string `yaml:"OpenLabel"`
+	ClosedLabel *string `yaml:"ClosedLabel"`
 }
 
 type httpDeviceConfigRead struct {

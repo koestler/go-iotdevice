@@ -88,7 +88,7 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	ret.authentication, e = c.Authentication.TransformAndValidate()
 	err = append(err, e...)
 
-	ret.mqttClients, e = TransformAndValidateMap(
+	ret.mqttClients, e = TransformAndValidateMapToList(
 		c.MqttClients,
 		func(inp mqttClientConfigRead, name string) (MqttClientConfig, []error) {
 			return inp.TransformAndValidate(name)
@@ -96,7 +96,7 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	)
 	err = append(err, e...)
 
-	ret.modbus, e = TransformAndValidateMap(
+	ret.modbus, e = TransformAndValidateMapToList(
 		c.Modbus,
 		func(inp modbusConfigRead, name string) (ModbusConfig, []error) {
 			return inp.TransformAndValidate(name)
@@ -104,7 +104,7 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	)
 	err = append(err, e...)
 
-	ret.victronDevices, e = TransformAndValidateMap(
+	ret.victronDevices, e = TransformAndValidateMapToList(
 		c.VictronDevices,
 		func(inp victronDeviceConfigRead, name string) (VictronDeviceConfig, []error) {
 			return inp.TransformAndValidate(name, ret.mqttClients)
@@ -112,7 +112,7 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	)
 	err = append(err, e...)
 
-	ret.modbusDevices, e = TransformAndValidateMap(
+	ret.modbusDevices, e = TransformAndValidateMapToList(
 		c.ModbusDevices,
 		func(inp modbusDeviceConfigRead, name string) (ModbusDeviceConfig, []error) {
 			return inp.TransformAndValidate(name, ret.mqttClients, ret.modbus)
@@ -120,7 +120,7 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	)
 	err = append(err, e...)
 
-	ret.httpDevices, e = TransformAndValidateMap(
+	ret.httpDevices, e = TransformAndValidateMapToList(
 		c.HttpDevices,
 		func(inp httpDeviceConfigRead, name string) (HttpDeviceConfig, []error) {
 			return inp.TransformAndValidate(name, ret.mqttClients)
@@ -128,7 +128,7 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	)
 	err = append(err, e...)
 
-	ret.mqttDevices, e = TransformAndValidateMap(
+	ret.mqttDevices, e = TransformAndValidateMapToList(
 		c.MqttDevices,
 		func(inp mqttDeviceConfigRead, name string) (MqttDeviceConfig, []error) {
 			return inp.TransformAndValidate(name, ret.mqttClients)
@@ -513,9 +513,8 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 	name string, mqttClients []*MqttClientConfig, modbus []*ModbusConfig,
 ) (ret ModbusDeviceConfig, err []error) {
 	ret = ModbusDeviceConfig{
-		kind:         ModbusDeviceKindFromString(c.Kind),
-		bus:          c.Bus,
-		descriptions: c.Descriptions,
+		kind: ModbusDeviceKindFromString(c.Kind),
+		bus:  c.Bus,
 	}
 
 	var e []error
@@ -534,6 +533,14 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 		err = append(err, fmt.Errorf("ModbusDevices->%s: Adress=%s is invalid: %s", name, c.Address, e))
 	}
 
+	ret.relays, e = TransformAndValidateMap(
+		c.Relays,
+		func(inp relayConfigRead, name string) (RelayConfig, []error) {
+			return inp.TransformAndValidate(name)
+		},
+	)
+	err = append(err, e...)
+
 	if len(c.PollInterval) < 1 {
 		// use default 1s
 		ret.pollInterval = time.Second
@@ -547,6 +554,28 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 		))
 	} else {
 		ret.pollInterval = pollInterval
+	}
+
+	return
+}
+
+func (c relayConfigRead) TransformAndValidate(name string) (ret RelayConfig, err []error) {
+	ret = RelayConfig{
+		description: "",
+		openLabel:   "",
+		closedLabel: "",
+	}
+
+	if c.Description != nil {
+		ret.description = *c.Description
+	}
+
+	if c.OpenLabel != nil {
+		ret.openLabel = *c.OpenLabel
+	}
+
+	if c.ClosedLabel != nil {
+		ret.closedLabel = *c.ClosedLabel
 	}
 
 	return
@@ -734,7 +763,7 @@ func (c viewDeviceConfigRead) TransformAndValidate(
 	return
 }
 
-func TransformAndValidateMap[I any, O any](
+func TransformAndValidateMapToList[I any, O any](
 	inp map[string]I,
 	transformer func(inp I, name string) (ret O, err []error),
 ) (ret []*O, err []error) {
@@ -748,6 +777,19 @@ func TransformAndValidateMap[I any, O any](
 		ret[j] = &r
 		err = append(err, e...)
 		j++
+	}
+	return
+}
+
+func TransformAndValidateMap[I any, O any](
+	inp map[string]I,
+	transformer func(inp I, name string) (ret O, err []error),
+) (ret map[string]O, err []error) {
+	ret = make(map[string]O, len(inp))
+	for k, v := range inp {
+		r, e := transformer(v, k)
+		ret[k] = r
+		err = append(err, e...)
 	}
 	return
 }
