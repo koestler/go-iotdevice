@@ -14,21 +14,16 @@
 - shelly http: create available / unavailable state and remove values when unavailable
 - handle serial device reconnect
 
-Apr 19 10:06:19 srv1 kernel: [10075864.906581] usb 1-1.2.2: Detected FT-X
-Apr 19 10:06:19 srv1 kernel: [10075864.909191] usb 1-1.2.2: FTDI USB Serial Device converter now attached to ttyUSB0
-Apr 19 10:06:19 srv1 mtp-probe: checking bus 1, device 41: "/sys/devices/platform/soc/3f980000.usb/usb1/1-1/1-1.2/1-1.2.2"
-Apr 19 10:06:19 srv1 mtp-probe: bus: 1, device: 41 was not an MTP device
-Apr 19 10:06:19 srv1 mtp-probe: checking bus 1, device 41: "/sys/devices/platform/soc/3f980000.usb/usb1/1-1/1-1.2/1-1.2.2"
-Apr 19 10:06:19 srv1 mtp-probe: bus: 1, device: 41 was not an MTP device
-Apr 19 10:16:08 srv1 rngd[529]: stats: bits received from HRNG source: 84060064
-Apr 19 10:16:08 srv1 rngd[529]: stats: bits sent to kernel pool: 83929728
-Apr 19 10:16:08 srv1 rngd[529]: stats: entropy added to kernel pool: 83929728
-Apr 19 10:16:08 srv1 rngd[529]: stats: FIPS 140-2 successes: 4199
-Apr 19 10:16:08 srv1 rngd[529]: stats: FIPS 140-2 failures: 4
-Apr 19 10:16:08 srv1 rngd[529]: stats: FIPS 140-2(2001-10-10) Monobit: 0
-Apr 19 10:16:08 srv1 rngd[529]: stats: FIPS 140-2(2001-10-10) Poker: 1
-Apr 19 10:16:08 srv1 rngd[529]: stats: FIPS 140-2(2001-10-10) Runs: 1
-Apr 19 10:16:08 srv1 rngd[529]: stats: FIPS 140-2(2001-10-10) Long run: 2
-Apr 19 10:16:08 srv1 rngd[529]: stats: FIPS 140-2(2001-10-10) Continuous run: 0
-Apr 19 10:16:08 srv1 rngd[529]: stats: HRNG source speed: (min=331.797; avg=848.653; max=882.210)Kibits/s
-Apr 19 10:16:08 srv1 rngd[529]: stats: FIPS tests speed: (min=4.252; avg=32.
+May  2 14:24:44 srv2 kernel: [594489.793425] usb 1-1.2-port2: disabled by hub (EMI?), re-enabling...
+May  2 14:24:44 srv2 kernel: [594489.793955] usb 1-1.2.2: USB disconnect, device number 6
+May  2 14:24:44 srv2 kernel: [594489.795267] ftdi_sio ttyUSB1: FTDI USB Serial Device converter now disconnected from ttyUSB1
+May  2 14:24:44 srv2 kernel: [594489.795378] ftdi_sio 1-1.2.2:1.0: device disconnected
+May  2 14:24:44 srv2 kernel: [594490.022584] usb 1-1.2.2: new full-speed USB device number 9 using xhci-hcd
+May  2 14:24:44 srv2 kernel: [594490.131626] usb 1-1.2.2: New USB device found, idVendor=0403, idProduct=6015, bcdDevice=10.00
+May  2 14:24:44 srv2 kernel: [594490.131662] usb 1-1.2.2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+May  2 14:24:44 srv2 kernel: [594490.131678] usb 1-1.2.2: Product: VE Direct cable
+May  2 14:24:44 srv2 kernel: [594490.131690] usb 1-1.2.2: Manufacturer: VictronEnergy BV
+May  2 14:24:44 srv2 kernel: [594490.131703] usb 1-1.2.2: SerialNumber: VE6GBH44
+May  2 14:24:44 srv2 kernel: [594490.135852] ftdi_sio 1-1.2.2:1.0: FTDI USB Serial Device converter detected
+May  2 14:24:44 srv2 kernel: [594490.136064] usb 1-1.2.2: Detected FT-X
+May  2 14:24:44 srv2 kernel: [594490.137538] usb 1-1.2.2: FTDI USB Serial Device converter now attached to ttyUSB4
