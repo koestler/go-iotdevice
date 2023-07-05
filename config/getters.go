@@ -258,6 +258,14 @@ func (c DeviceConfig) RealtimeViaMqttClients() []string {
 	return c.realtimeViaMqttClients
 }
 
+func (c DeviceConfig) RestartInterval() time.Duration {
+	return c.restartInterval
+}
+
+func (c DeviceConfig) RestartIntervalMaxBackoff() time.Duration {
+	return c.restartIntervalMaxBackoff
+}
+
 func (c DeviceConfig) LogDebug() bool {
 	return c.logDebug
 }
@@ -335,10 +343,6 @@ func (c HttpDeviceConfig) Password() string {
 
 func (c HttpDeviceConfig) PollInterval() time.Duration {
 	return c.pollInterval
-}
-
-func (c HttpDeviceConfig) PollIntervalMaxBackoff() time.Duration {
-	return c.pollIntervalMaxBackoff
 }
 
 func (c HttpDeviceConfig) LogDebug() bool {

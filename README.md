@@ -139,6 +139,8 @@ VictronDevices:                                            # optional, a list of
         - local                                            # state the arbitrary name of the mqtt client as defined in the MqttClients section of this file
       RealtimeViaMqttClients:                              # optional, default all clients, to what mqtt servers shall realtime messages be sent to
         - local
+      RestartInterval: 200ms                               # optional, default 200ms, how fast to restart the device if it fails / disconnects
+      RestartIntervalMaxBackoff: 1m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
       LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
     Device: /dev/serial/by-id/usb-VictronEnergy_BV_VE_Direct_cable_VEHTVQT-if00-port0 # mandatory except if Kind: Random*, the path to the usb-to-serial converter
@@ -151,6 +153,8 @@ ModbusDevices:                                             # optional, a list of
       SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
       TelemetryViaMqttClients:                             # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
       RealtimeViaMqttClients:                              # optional, default all clients, to what mqtt servers shall realtime messages be sent to
+      RestartInterval: 200ms                               # optional, default 200ms, how fast to restart the device if it fails / disconnects
+      RestartIntervalMaxBackoff: 1m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
       LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
     Bus: bus0                                              # mandatory, the identifier of the modbus to use
@@ -170,14 +174,15 @@ HttpDevices:                                               # optional, a list of
       SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
       TelemetryViaMqttClients:                             # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
       RealtimeViaMqttClients:                              # optional, default all clients, to what mqtt servers shall realtime messages be sent to
+      RestartInterval: 200ms                               # optional, default 200ms, how fast to restart the device if it fails / disconnects
+      RestartIntervalMaxBackoff: 1m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
       LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
     Url: http://control0/                                  # mandatory, URL to the device; supported protocol is http/https; e.g. http://device0.local/
     Kind: Teracom                                          # mandatory, type/model of the device; possibilities: Teracom, Shelly3m
-    Username: admin                                        # optional, username used to login
-    Password: my-secret                                    # optional, password used to login
+    Username: admin                                        # optional, username used to log in
+    Password: my-secret                                    # optional, password used to log in
     PollInterval: 1s                                       # optional, default 1s, how often to fetch the device status
-    PollIntervalMaxBackoff: 10s                            # optional, default 10s; when connection fails, the poll interval is exponentially increased up to this maximum
 
 MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
@@ -186,6 +191,8 @@ MqttDevices:                                               # optional, a list of
       SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
       TelemetryViaMqttClients:                             # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
       RealtimeViaMqttClients:                              # optional, default all clients, to what mqtt servers shall realtime messages be sent to
+      RestartInterval: 200ms                               # optional, default 200ms, how fast to restart the device if it fails / disconnects
+      RestartIntervalMaxBackoff: 1m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
       LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
     MqttTopics:                                            # mandatory, at least 1 topic must be defined
@@ -199,14 +206,14 @@ Views:                                                     # optional, a list of
     Devices:                                               # mandatory, a list of devices using
       - Name: bmv0                                         # mandatory, the arbitrary names defined above
         Title: Battery Monitor                             # mandatory, a nice title displayed in the frontend
+        SkipFields:                                        # optional, default empty, field names that are omitted when displaying this view
+        SkipCategories:                                    # optional, default empty, category names that are omitted when displaying this view
       - Name: modbus-rtu0                                  # mandatory, the arbitrary names defined above
         Title: Relay Board                                 # mandatory, a nice title displayed in the frontend
     Autoplay: true                                         # optional, default true, when true, live updates are enabled automatically when the view is open in the frontend
     AllowedUsers:                                          # optional, if empty, all users of the HtaccessFile are considered valid, otherwise only those listed here
       - test0                                              # username which is allowed to access this view
     Hidden: false                                          # optional, default false, if true, this view is not shown in the menu unless the user is logged in
-    SkipFields:                                            # optional, default empty, field names that are omitted when displaying this view
-    SkipCategories:                                        # optional, default empty, category names that are omitted when displaying this view
 ```
 
 ## Authentication

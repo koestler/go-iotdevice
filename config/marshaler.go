@@ -126,12 +126,14 @@ func (c ModbusConfig) ConvertToRead() modbusConfigRead {
 
 func (c DeviceConfig) ConvertToRead() deviceConfigRead {
 	return deviceConfigRead{
-		SkipFields:              c.skipFields,
-		SkipCategories:          c.skipCategories,
-		TelemetryViaMqttClients: c.telemetryViaMqttClients,
-		RealtimeViaMqttClients:  c.realtimeViaMqttClients,
-		LogDebug:                &c.logDebug,
-		LogComDebug:             &c.logComDebug,
+		SkipFields:                c.skipFields,
+		SkipCategories:            c.skipCategories,
+		TelemetryViaMqttClients:   c.telemetryViaMqttClients,
+		RealtimeViaMqttClients:    c.realtimeViaMqttClients,
+		RestartInterval:           c.restartInterval.String(),
+		RestartIntervalMaxBackoff: c.restartIntervalMaxBackoff.String(),
+		LogDebug:                  &c.logDebug,
+		LogComDebug:               &c.logComDebug,
 	}
 }
 
@@ -170,13 +172,12 @@ func (c RelayConfig) ConvertToRead() relayConfigRead {
 
 func (c HttpDeviceConfig) ConvertToRead() httpDeviceConfigRead {
 	return httpDeviceConfigRead{
-		General:                c.DeviceConfig.ConvertToRead(),
-		Url:                    c.url.String(),
-		Kind:                   c.kind.String(),
-		Username:               c.username,
-		Password:               c.password,
-		PollInterval:           c.pollInterval.String(),
-		PollIntervalMaxBackoff: c.pollIntervalMaxBackoff.String(),
+		General:      c.DeviceConfig.ConvertToRead(),
+		Url:          c.url.String(),
+		Kind:         c.kind.String(),
+		Username:     c.username,
+		Password:     c.password,
+		PollInterval: c.pollInterval.String(),
 	}
 }
 
