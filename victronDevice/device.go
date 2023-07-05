@@ -1,11 +1,11 @@
 package victronDevice
 
 import (
+	"context"
 	"fmt"
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
-	"log"
 	"sync"
 	"time"
 )
@@ -24,9 +24,6 @@ type DeviceStruct struct {
 	lastUpdated      time.Time
 	lastUpdatedMutex sync.RWMutex
 	model            string
-
-	shutdown chan struct{}
-	closed   chan struct{}
 }
 
 func CreateDevice(
@@ -38,18 +35,16 @@ func CreateDevice(
 		deviceConfig:  deviceConfig,
 		victronConfig: victronConfig,
 		storage:       storage,
-		shutdown:      make(chan struct{}),
-		closed:        make(chan struct{}),
 	}
 }
 
-func (c *DeviceStruct) Run() (err error) {
+func (c *DeviceStruct) Run(ctx context.Context) (err error) {
 	if c.victronConfig.Kind() == config.VictronVedirectKind {
-		return runVedirect(c, c.storage)
+		return runVedirect(ctx, c, c.storage)
 	} else if c.victronConfig.Kind() == config.VictronRandomBmvKind {
-		return runRandom(c, c.storage, RegisterListBmv712)
+		return runRandom(ctx, c, c.storage, RegisterListBmv712)
 	} else if c.victronConfig.Kind() == config.VictronRandomSolarKind {
-		return runRandom(c, c.storage, RegisterListSolar)
+		return runRandom(ctx, c, c.storage, RegisterListSolar)
 	} else {
 		return fmt.Errorf("unknown device kind: %s", c.victronConfig.Kind().String())
 	}
@@ -61,10 +56,6 @@ func (c *DeviceStruct) Name() string {
 
 func (c *DeviceStruct) Config() device.Config {
 	return c.deviceConfig
-}
-
-func (c *DeviceStruct) ShutdownChan() chan struct{} {
-	return c.shutdown
 }
 
 func (c *DeviceStruct) Registers() dataflow.Registers {
@@ -98,10 +89,4 @@ func (c *DeviceStruct) LastUpdated() time.Time {
 
 func (c *DeviceStruct) Model() string {
 	return c.model
-}
-
-func (c *DeviceStruct) Shutdown() {
-	close(c.shutdown)
-	<-c.closed
-	log.Printf("device[%s]: shutdown completed", c.deviceConfig.Name())
 }

@@ -1,13 +1,14 @@
 package victronDevice
 
 import (
+	"context"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"log"
 	"math/rand"
 	"time"
 )
 
-func runRandom(c *DeviceStruct, output dataflow.Fillable, registers VictronRegisters) error {
+func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, registers VictronRegisters) error {
 	// filter registers by skip list
 	c.registers = FilterRegisters(registers, c.deviceConfig.SkipFields(), c.deviceConfig.SkipCategories())
 
@@ -16,13 +17,11 @@ func runRandom(c *DeviceStruct, output dataflow.Fillable, registers VictronRegis
 	}
 
 	// start source loop
-	defer close(c.closed)
-
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	for {
 		select {
-		case <-c.shutdown:
+		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
 			for _, r := range registers {

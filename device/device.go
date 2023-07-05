@@ -1,6 +1,7 @@
 package device
 
 import (
+	"context"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"time"
 )
@@ -22,7 +23,5 @@ type Device interface {
 	GetRegister(registerName string) dataflow.Register
 	LastUpdated() time.Time
 	Model() string
-	Run() error
-	Shutdown()
-	ShutdownChan() chan struct{}
+	Run(ctx context.Context) error
 }

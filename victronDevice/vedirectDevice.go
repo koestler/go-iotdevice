@@ -1,6 +1,7 @@
 package victronDevice
 
 import (
+	"context"
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/vedirect"
@@ -9,7 +10,7 @@ import (
 	"time"
 )
 
-func runVedirect(c *DeviceStruct, output dataflow.Fillable) error {
+func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable) error {
 	log.Printf("device[%s]: start vedirect source", c.deviceConfig.Name())
 
 	// open vedirect device
@@ -48,14 +49,12 @@ func runVedirect(c *DeviceStruct, output dataflow.Fillable) error {
 	}
 
 	// start polling loop
-	defer close(c.closed)
-
 	fetchStaticCounter := 0
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for {
 		select {
-		case <-c.shutdown:
+		case <-ctx.Done():
 			if err := vd.Close(); err != nil {
 				log.Printf("device[%s]: vd.Close failed: %s", c.deviceConfig.Name(), err)
 			}

@@ -26,8 +26,7 @@ func RunMqttForwarders(d Device, mqttClientPool *pool.Pool[mqttClient.Client], s
 
 			for {
 				select {
-				case <-d.ShutdownChan():
-					return
+				//todo: handle termination / handel context of devie
 				case value := <-subscription.GetOutput():
 					if d.Config().LogDebug() {
 						log.Printf(
@@ -70,8 +69,7 @@ func RunMqttForwarders(d Device, mqttClientPool *pool.Pool[mqttClient.Client], s
 				defer ticker.Stop()
 				for {
 					select {
-					case <-d.ShutdownChan():
-						return
+					//todo: handle termination / handel context of devie
 					case <-ticker.C:
 						if d.Config().LogDebug() {
 							log.Printf(
