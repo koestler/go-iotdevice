@@ -5,7 +5,6 @@ import (
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
-	"github.com/koestler/go-iotdevice/modbus"
 	"log"
 	"sync"
 	"time"
@@ -21,13 +20,19 @@ type Config interface {
 	PollInterval() time.Duration
 }
 
+type Modbus interface {
+	Name() string
+	Shutdown()
+	WriteRead(request []byte, responseBuf []byte) error
+}
+
 type DeviceStruct struct {
 	deviceConfig   device.Config
 	modbusConfig   Config
 	stateStorage   *dataflow.ValueStorageInstance
 	commandStorage *dataflow.ValueStorageInstance
 
-	modbus modbus.Modbus
+	modbus Modbus
 
 	registers        ModbusRegisters
 	lastUpdated      time.Time
@@ -40,7 +45,7 @@ type DeviceStruct struct {
 func RunDevice(
 	deviceConfig device.Config,
 	modbusConfig Config,
-	modbus modbus.Modbus,
+	modbus Modbus,
 	stateStorage *dataflow.ValueStorageInstance,
 	commandStorage *dataflow.ValueStorageInstance,
 ) (device device.Device, err error) {

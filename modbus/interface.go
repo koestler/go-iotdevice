@@ -9,9 +9,3 @@ type Config interface {
 	ReadTimeout() time.Duration
 	LogDebug() bool
 }
-
-type Modbus interface {
-	Name() string
-	Shutdown()
-	WriteRead(request []byte, responseBuf []byte) error
-}

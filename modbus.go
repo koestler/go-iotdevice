@@ -9,9 +9,9 @@ import (
 
 func runModbus(
 	cfg *config.Config,
-) (modbusPoolInstance *pool.Pool[modbus.Modbus]) {
+) (modbusPoolInstance *pool.Pool[*modbus.ModbusStruct]) {
 	// run pool
-	modbusPoolInstance = pool.RunPool[modbus.Modbus]()
+	modbusPoolInstance = pool.RunPool[*modbus.ModbusStruct]()
 
 	for _, mbCfg := range cfg.Modbus() {
 		if cfg.LogWorkerStart() {
