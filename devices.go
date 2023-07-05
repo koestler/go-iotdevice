@@ -7,8 +7,8 @@ import (
 	"github.com/koestler/go-iotdevice/modbus"
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/pool"
+	"github.com/koestler/go-iotdevice/restarter"
 	"github.com/koestler/go-iotdevice/victronDevice"
-	"github.com/koestler/go-iotdevice/watcher"
 	"log"
 )
 
@@ -18,8 +18,8 @@ func runDevices(
 	modbusPoolInstance *pool.Pool[*modbus.ModbusStruct],
 	stateStorage *dataflow.ValueStorageInstance,
 	commandStorage *dataflow.ValueStorageInstance,
-) (devicePoolInstance *pool.Pool[*watcher.Watcher[device.Device]]) {
-	devicePoolInstance = pool.RunPool[*watcher.Watcher[device.Device]]()
+) (devicePoolInstance *pool.Pool[*restarter.Restarter[device.Device]]) {
+	devicePoolInstance = pool.RunPool[*restarter.Restarter[device.Device]]()
 
 	for _, deviceConfig := range cfg.VictronDevices() {
 		if cfg.LogWorkerStart() {
@@ -27,7 +27,7 @@ func runDevices(
 		}
 
 		dev := victronDevice.CreateDevice(deviceConfig, deviceConfig, stateStorage)
-		watchedDev := watcher.RunWatcher[device.Device](dev)
+		watchedDev := restarter.RunRestarter[device.Device](dev)
 		device.RunMqttForwarders(dev, mqttClientPool, stateStorage)
 		devicePoolInstance.Add(watchedDev)
 	}

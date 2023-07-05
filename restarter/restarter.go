@@ -1,6 +1,6 @@
-// Package watcher implements a watchdog for long-running go routines. Whenever the routine stops and return an error,
+// Package restarter implements a watchdog for long-running go routines. Whenever the routine stops and return an error,
 // it is restarted periodically.
-package watcher
+package restarter
 
 import (
 	"context"
@@ -9,12 +9,12 @@ import (
 	"time"
 )
 
-type Watchable interface {
+type Restartable interface {
 	Name() string
 	Run(ctx context.Context) error
 }
 
-type Watcher[S Watchable] struct {
+type Restarter[S Restartable] struct {
 	service   S
 	isRunning bool
 
@@ -23,9 +23,9 @@ type Watcher[S Watchable] struct {
 	wg     sync.WaitGroup
 }
 
-func RunWatcher[S Watchable](service S) (w *Watcher[S]) {
+func RunRestarter[S Restartable](service S) (w *Restarter[S]) {
 	ctx, cancel := context.WithCancel(context.Background())
-	w = &Watcher[S]{
+	w = &Restarter[S]{
 		service: service,
 		ctx:     ctx,
 		cancel:  cancel,
@@ -36,13 +36,13 @@ func RunWatcher[S Watchable](service S) (w *Watcher[S]) {
 		defer w.wg.Done()
 
 		for {
-			log.Printf("watcher[%s]: start", service.Name())
+			log.Printf("restarter[%s]: start", service.Name())
 
 			err := service.Run(w.ctx)
 			if err != nil {
-				log.Printf("watcher[%s]: terminated with error: %s", service.Name(), err)
+				log.Printf("restarter[%s]: terminated with error: %s", service.Name(), err)
 			} else {
-				log.Printf("watcher[%s]: terminated", service.Name())
+				log.Printf("restarter[%s]: terminated", service.Name())
 			}
 
 			// wait 2s for restart
@@ -57,19 +57,19 @@ func RunWatcher[S Watchable](service S) (w *Watcher[S]) {
 	return
 }
 
-func (w *Watcher[S]) Shutdown() {
+func (w *Restarter[S]) Shutdown() {
 	w.cancel()
 	w.wg.Wait()
 }
 
-func (w *Watcher[S]) Name() string {
+func (w *Restarter[S]) Name() string {
 	return w.service.Name()
 }
 
-func (w *Watcher[S]) Service() S {
+func (w *Restarter[S]) Service() S {
 	return w.service
 }
 
-func (w *Watcher[S]) IsRunning() bool {
+func (w *Restarter[S]) IsRunning() bool {
 	return w.isRunning
 }
