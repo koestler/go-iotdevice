@@ -40,7 +40,9 @@ func RunWatcher[S Watchable](service S) (w *Watcher[S]) {
 
 			err := service.Run(w.ctx)
 			if err != nil {
-				log.Printf("watcher[%s]: failed: %s", service.Name(), err)
+				log.Printf("watcher[%s]: terminated with error: %s", service.Name(), err)
+			} else {
+				log.Printf("watcher[%s]: terminated", service.Name())
 			}
 
 			// wait 2s for restart

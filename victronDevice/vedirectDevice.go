@@ -18,6 +18,11 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if err := vd.Close(); err != nil {
+			log.Printf("device[%s]: vd.Close failed: %s", c.deviceConfig.Name(), err)
+		}
+	}()
 
 	// send ping
 	if err := vd.VeCommandPing(); err != nil {
@@ -55,9 +60,6 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	for {
 		select {
 		case <-ctx.Done():
-			if err := vd.Close(); err != nil {
-				log.Printf("device[%s]: vd.Close failed: %s", c.deviceConfig.Name(), err)
-			}
 			return nil
 		case <-ticker.C:
 			start := time.Now()
@@ -65,14 +67,19 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 			// flush async data
 			vd.RecvFlush()
 
-			if err := vd.VeCommandPing(); err != nil {
-				return fmt.Errorf("device[%s]: source: VeCommandPing failed: %s", c.deviceConfig.Name(), err)
-			}
+			// execute a Ping at the beginning and after each error
+			pingNeeded := true
 
 			for _, register := range c.registers {
 				// only fetch static registers seldomly
 				if register.Static() && (fetchStaticCounter%60 != 0) {
 					continue
+				}
+
+				if pingNeeded {
+					if err := vd.VeCommandPing(); err != nil {
+						return fmt.Errorf("device[%s]: source: VeCommandPing failed: %s", c.deviceConfig.Name(), err)
+					}
 				}
 
 				switch register.RegisterType() {
@@ -123,6 +130,8 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 						))
 					}
 				}
+
+				pingNeeded = err != nil
 			}
 
 			c.SetLastUpdatedNow()
