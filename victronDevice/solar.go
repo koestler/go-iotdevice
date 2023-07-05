@@ -321,19 +321,6 @@ var RegisterListSolarSettings = VictronRegisters{
 		"°C",
 		519,
 	),
-	/*
-		// todo: fetch depending on firmware version
-		CreateNumberRegisterStruct(
-			"Settings",
-			"VoltageCompensation",
-			"Voltage compensation",
-			0xEDCA,
-			true,
-			false,
-			100,
-			"V",
-		),
-	*/
 }
 
 var RegisterListSolarChargerData = VictronRegisters{
