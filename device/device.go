@@ -22,6 +22,7 @@ type Device interface {
 	GetRegister(registerName string) dataflow.Register
 	LastUpdated() time.Time
 	Model() string
+	Run() error
 	Shutdown()
 	ShutdownChan() chan struct{}
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/pool"
+	"github.com/koestler/go-iotdevice/watcher"
 	"log"
 	"net/http"
 	"net/url"
@@ -25,7 +26,7 @@ type Environment struct {
 	ProjectTitle       string
 	Views              []*config.ViewConfig
 	Authentication     config.AuthenticationConfig
-	DevicePoolInstance *pool.Pool[device.Device]
+	DevicePoolInstance *pool.Pool[*watcher.Watcher[device.Device]]
 	StateStorage       *dataflow.ValueStorageInstance
 	CommandStorage     *dataflow.ValueStorageInstance
 }

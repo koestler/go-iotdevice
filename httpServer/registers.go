@@ -39,8 +39,8 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 		for _, vd := range view.Devices() {
 			viewDevice := vd
 
-			device := env.DevicePoolInstance.GetByName(viewDevice.Name())
-			if device == nil {
+			deviceWatcher := env.DevicePoolInstance.GetByName(viewDevice.Name())
+			if deviceWatcher == nil {
 				continue
 			}
 
@@ -52,7 +52,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 					return
 				}
 
-				registers := device.Registers()
+				registers := deviceWatcher.Service().Registers()
 				registers = dataflow.FilterRegisters(registers, viewDevice.SkipFields(), viewDevice.SkipCategories())
 				dataflow.SortRegisters(registers)
 				response := make([]registerResponse, len(registers))

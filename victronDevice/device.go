@@ -18,6 +18,7 @@ type Config interface {
 type DeviceStruct struct {
 	deviceConfig  device.Config
 	victronConfig Config
+	storage       *dataflow.ValueStorageInstance
 
 	registers        VictronRegisters
 	lastUpdated      time.Time
@@ -28,33 +29,30 @@ type DeviceStruct struct {
 	closed   chan struct{}
 }
 
-func RunDevice(
+func CreateDevice(
 	deviceConfig device.Config,
 	victronConfig Config,
 	storage *dataflow.ValueStorageInstance,
-) (device device.Device, err error) {
-	c := &DeviceStruct{
+) *DeviceStruct {
+	return &DeviceStruct{
 		deviceConfig:  deviceConfig,
 		victronConfig: victronConfig,
+		storage:       storage,
 		shutdown:      make(chan struct{}),
 		closed:        make(chan struct{}),
 	}
+}
 
-	if victronConfig.Kind() == config.VictronVedirectKind {
-		err = startVedirect(c, storage)
-	} else if victronConfig.Kind() == config.VictronRandomBmvKind {
-		err = startRandom(c, storage, RegisterListBmv712)
-	} else if victronConfig.Kind() == config.VictronRandomSolarKind {
-		err = startRandom(c, storage, RegisterListSolar)
+func (c *DeviceStruct) Run() (err error) {
+	if c.victronConfig.Kind() == config.VictronVedirectKind {
+		return runVedirect(c, c.storage)
+	} else if c.victronConfig.Kind() == config.VictronRandomBmvKind {
+		return runRandom(c, c.storage, RegisterListBmv712)
+	} else if c.victronConfig.Kind() == config.VictronRandomSolarKind {
+		return runRandom(c, c.storage, RegisterListSolar)
 	} else {
-		return nil, fmt.Errorf("unknown device kind: %s", victronConfig.Kind().String())
+		return fmt.Errorf("unknown device kind: %s", c.victronConfig.Kind().String())
 	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
 }
 
 func (c *DeviceStruct) Name() string {

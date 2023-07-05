@@ -6,12 +6,13 @@ import (
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/httpServer"
 	"github.com/koestler/go-iotdevice/pool"
+	"github.com/koestler/go-iotdevice/watcher"
 	"log"
 )
 
 func runHttpServer(
 	cfg *config.Config,
-	devicePoolInstance *pool.Pool[device.Device],
+	devicePoolInstance *pool.Pool[*watcher.Watcher[device.Device]],
 	stateStorage *dataflow.ValueStorageInstance,
 	commandStorage *dataflow.ValueStorageInstance,
 ) *httpServer.HttpServer {
