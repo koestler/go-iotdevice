@@ -43,30 +43,38 @@ func RunRestarter[S Restartable](config Config, service S) (w *Restarter[S]) {
 		defer w.wg.Done()
 
 		immediateErrorsInARow := 0
+		first := true
 		for {
-			log.Printf("restarter[%s]: start", service.Name())
+			if first {
+				first = false
+			} else {
+				log.Printf("restarter[%s]: start", service.Name())
+			}
 
 			start := time.Now()
 			err, immediateError := service.Run(w.ctx)
-			if err != nil {
-				log.Printf("restarter[%s]: terminated with error: %s", service.Name(), err)
-			}
-			runningFor := time.Since(start)
-
-			if immediateError {
-				immediateErrorsInARow += 1
-			} else {
-				immediateErrorsInARow = 0
-			}
-
-			retryIn := w.getRestartInterval(immediateErrorsInARow)
-
-			log.Printf("restarter[%s]: error after %s, expoential backoff, retry in %s", service.Name(), runningFor, retryIn)
-
-			select {
-			case <-ctx.Done():
+			if err == nil {
+				// shutdown
 				return
-			case <-time.After(retryIn):
+			} else {
+				log.Printf("restarter[%s]: terminated with error: %s", service.Name(), err)
+				runningFor := time.Since(start)
+
+				if immediateError {
+					immediateErrorsInARow += 1
+				} else {
+					immediateErrorsInARow = 0
+				}
+
+				retryIn := w.getRestartInterval(immediateErrorsInARow)
+
+				log.Printf("restarter[%s]: error after %s, expoential backoff, retry in %s", service.Name(), runningFor, retryIn)
+
+				select {
+				case <-ctx.Done():
+					return
+				case <-time.After(retryIn):
+				}
 			}
 		}
 	}()
