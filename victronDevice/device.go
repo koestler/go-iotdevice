@@ -39,13 +39,14 @@ func CreateDevice(
 }
 
 func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
-	if c.victronConfig.Kind() == config.VictronVedirectKind {
+	switch c.victronConfig.Kind() {
+	case config.VictronVedirectKind:
 		return runVedirect(ctx, c, c.storage)
-	} else if c.victronConfig.Kind() == config.VictronRandomBmvKind {
+	case config.VictronRandomBmvKind:
 		return runRandom(ctx, c, c.storage, RegisterListBmv712)
-	} else if c.victronConfig.Kind() == config.VictronRandomSolarKind {
+	case config.VictronRandomSolarKind:
 		return runRandom(ctx, c, c.storage, RegisterListSolar)
-	} else {
+	default:
 		return fmt.Errorf("unknown device kind: %s", c.victronConfig.Kind().String()), true
 	}
 }

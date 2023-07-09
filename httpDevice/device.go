@@ -1,6 +1,7 @@
 package httpDevice
 
 import (
+	"context"
 	"fmt"
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
@@ -36,16 +37,14 @@ type DeviceStruct struct {
 	registersMutex   sync.RWMutex
 	lastUpdated      time.Time
 	lastUpdatedMutex sync.RWMutex
-
-	shutdown chan struct{}
 }
 
-func RunDevice(
+func CreateDevice(
 	deviceConfig device.Config,
 	teracomConfig Config,
 	stateStorage *dataflow.ValueStorageInstance,
 	commandStorage *dataflow.ValueStorageInstance,
-) (device device.Device, err error) {
+) *DeviceStruct {
 	ds := &DeviceStruct{
 		deviceConfig:   deviceConfig,
 		httpConfig:     teracomConfig,
@@ -60,20 +59,106 @@ func RunDevice(
 
 		registers: make(map[string]dataflow.Register),
 		sort:      make(map[string]int),
-		shutdown:  make(chan struct{}),
 	}
 
 	// setup impl
 	ds.impl = implementationFactory(ds)
 
+	return ds
+}
+
+func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
 	// setup request
-	if ds.pollRequest, err = ds.GetRequest(ds.impl.GetPath()); err != nil {
-		return
+	if c.pollRequest, err = c.GetRequest(c.impl.GetPath()); err != nil {
+		return err, true
 	}
 
-	ds.mainRoutine()
+	if c.deviceConfig.LogDebug() {
+		log.Printf("httpDevice[%s]: start polling, interval=%s", c.deviceConfig.Name(), c.httpConfig.PollInterval())
+	}
 
-	return ds, nil
+	c.addRegister(device.GetAvailabilityRegister())
+	execPoll := func() error {
+		if err := c.poll(); err != nil {
+			return fmt.Errorf("httpDevice[%s]: error: %s", c.deviceConfig.Name(), err)
+			device.SendDisconnected(c.Config().Name(), c.stateStorage)
+		} else {
+			device.SendConnteced(c.Config().Name(), c.stateStorage)
+			if c.Config().LogDebug() {
+				log.Printf("httpDevice[%s]: poll request successful", c.Config().Name())
+			}
+		}
+		return nil
+	}
+	if err := execPoll(); err != nil {
+		return err, true
+	}
+
+	// setup subscription to listen for updates of controllable registers
+	filter := dataflow.Filter{
+		SkipNull:       true,
+		IncludeDevices: map[string]bool{c.Config().Name(): true},
+	}
+	commandSubscription := c.commandStorage.Subscribe(filter)
+	defer commandSubscription.Shutdown()
+
+	execCommand := func(value dataflow.Value) {
+		if c.Config().LogDebug() {
+			log.Printf(
+				"httpDevice[%s]: controllable command: %s",
+				c.Config().Name(), value.String(),
+			)
+		}
+		if request, onSuccess, err := c.impl.ControlValueRequest(value); err != nil {
+			log.Printf(
+				"httpDevice[%s]: control request genration failed: %s",
+				c.Config().Name(), err,
+			)
+		} else {
+			request.URL = c.httpConfig.Url().JoinPath(request.URL.String())
+			request.SetBasicAuth(c.httpConfig.Username(), c.httpConfig.Password())
+			if resp, err := c.httpClient.Do(request); err != nil {
+				log.Printf(
+					"httpDevice[%s]: control request failed: %s",
+					c.Config().Name(), err,
+				)
+			} else {
+				// ready and discard response body
+				defer resp.Body.Close()
+				io.ReadAll(resp.Body)
+
+				if resp.StatusCode != http.StatusOK {
+					log.Printf(
+						"httpDevice[%s]: control request failed with code: %d",
+						c.Config().Name(), resp.StatusCode,
+					)
+				} else {
+					if c.Config().LogDebug() {
+						log.Printf("httpDevice[%s]: control request successful", c.Config().Name())
+					}
+					onSuccess()
+				}
+			}
+		}
+
+		// reset the command; this allows the same command (eg. toggle) to be sent again
+		c.commandStorage.Fill(dataflow.NewNullRegisterValue(c.Config().Name(), value.Register()))
+	}
+
+	pollTicker := time.NewTicker(c.httpConfig.PollInterval())
+	defer pollTicker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, false
+		case <-pollTicker.C:
+			if err := execPoll(); err != nil {
+				return err, false
+			}
+		case value := <-commandSubscription.GetOutput():
+			execCommand(value)
+		}
+	}
 }
 
 func (ds *DeviceStruct) GetRequest(path string) (request *http.Request, err error) {
@@ -96,93 +181,6 @@ func (ds *DeviceStruct) getRegisterSort(category string) int {
 		ds.sort[category] += 1
 		return offset + count
 	}
-}
-
-func (ds *DeviceStruct) mainRoutine() {
-	if ds.deviceConfig.LogDebug() {
-		log.Printf("httpDevice[%s]: start polling, interval=%s", ds.deviceConfig.Name(), ds.httpConfig.PollInterval())
-	}
-
-	go func() {
-		pollTicker := time.NewTicker(ds.httpConfig.PollInterval())
-		defer pollTicker.Stop()
-
-		ds.addRegister(device.GetAvailabilityRegister())
-		execPoll := func() {
-			if err := ds.poll(); err != nil {
-				return fmt.Errorf("httpDevice[%s]: error: %s", ds.deviceConfig.Name(), err)
-				device.SendDisconnected(ds.Config().Name(), ds.stateStorage)
-			} else {
-				device.SendConnteced(ds.Config().Name(), ds.stateStorage)
-				if ds.Config().LogDebug() {
-					log.Printf("httpDevice[%s]: poll request successful", ds.Config().Name())
-				}
-			}
-		}
-		execPoll()
-
-		// setup subscription to listen for updates of controllable registers
-		filter := dataflow.Filter{
-			SkipNull:       true,
-			IncludeDevices: map[string]bool{ds.Config().Name(): true},
-		}
-		commandSubscription := ds.commandStorage.Subscribe(filter)
-		defer commandSubscription.Shutdown()
-
-		execCommand := func(value dataflow.Value) {
-			if ds.Config().LogDebug() {
-				log.Printf(
-					"httpDevice[%s]: controllable command: %s",
-					ds.Config().Name(), value.String(),
-				)
-			}
-			if request, onSuccess, err := ds.impl.ControlValueRequest(value); err != nil {
-				log.Printf(
-					"httpDevice[%s]: control request genration failed: %s",
-					ds.Config().Name(), err,
-				)
-			} else {
-				request.URL = ds.httpConfig.Url().JoinPath(request.URL.String())
-				request.SetBasicAuth(ds.httpConfig.Username(), ds.httpConfig.Password())
-				if resp, err := ds.httpClient.Do(request); err != nil {
-					log.Printf(
-						"httpDevice[%s]: control request failed: %s",
-						ds.Config().Name(), err,
-					)
-				} else {
-					// ready and discard response body
-					defer resp.Body.Close()
-					io.ReadAll(resp.Body)
-
-					if resp.StatusCode != http.StatusOK {
-						log.Printf(
-							"httpDevice[%s]: control request failed with code: %d",
-							ds.Config().Name(), resp.StatusCode,
-						)
-					} else {
-						if ds.Config().LogDebug() {
-							log.Printf("httpDevice[%s]: control request successful", ds.Config().Name())
-						}
-						onSuccess()
-					}
-				}
-			}
-
-			// reset the command; this allows the same command (eg. toggle) to be sent again
-			ds.commandStorage.Fill(dataflow.NewNullRegisterValue(ds.Config().Name(), value.Register()))
-		}
-
-		for {
-			select {
-			case <-ds.shutdown:
-				return
-			case <-pollTicker.C:
-				execPoll()
-			case value := <-commandSubscription.GetOutput():
-				execCommand(value)
-			}
-		}
-	}()
 }
 
 func (ds *DeviceStruct) poll() error {
@@ -214,10 +212,6 @@ func (ds *DeviceStruct) Name() string {
 
 func (ds *DeviceStruct) Config() device.Config {
 	return ds.deviceConfig
-}
-
-func (ds *DeviceStruct) ShutdownChan() chan struct{} {
-	return ds.shutdown
 }
 
 func (ds *DeviceStruct) addIgnoreRegister(
@@ -306,9 +300,4 @@ func (ds *DeviceStruct) LastUpdated() time.Time {
 
 func (ds *DeviceStruct) Model() string {
 	return ds.httpConfig.Kind().String()
-}
-
-func (ds *DeviceStruct) Shutdown() {
-	close(ds.shutdown)
-	log.Printf("httpDevice[%s]: shutdown completed", ds.deviceConfig.Name())
 }
