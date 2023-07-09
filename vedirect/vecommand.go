@@ -218,7 +218,7 @@ func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 		return nil
 	}()
 	if err != nil {
-		vd.debugPrintf("vedirect: VeCommandGet end err=%s", address, err)
+		vd.debugPrintf("vedirect: VeCommandGet end err=%s", err)
 		return nil, err
 	}
 

@@ -67,25 +67,25 @@ func CreateDevice(
 	return ds
 }
 
-func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
+func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
 	// setup request
-	if c.pollRequest, err = c.GetRequest(c.impl.GetPath()); err != nil {
+	if ds.pollRequest, err = ds.GetRequest(ds.impl.GetPath()); err != nil {
 		return err, true
 	}
 
-	if c.deviceConfig.LogDebug() {
-		log.Printf("httpDevice[%s]: start polling, interval=%s", c.deviceConfig.Name(), c.httpConfig.PollInterval())
+	if ds.deviceConfig.LogDebug() {
+		log.Printf("httpDevice[%s]: start polling, interval=%s", ds.deviceConfig.Name(), ds.httpConfig.PollInterval())
 	}
 
-	c.addRegister(device.GetAvailabilityRegister())
+	ds.addRegister(device.GetAvailabilityRegister())
 	execPoll := func() error {
-		if err := c.poll(); err != nil {
-			return fmt.Errorf("httpDevice[%s]: error: %s", c.deviceConfig.Name(), err)
-			device.SendDisconnected(c.Config().Name(), c.stateStorage)
+		if err := ds.poll(); err != nil {
+			device.SendDisconnected(ds.Config().Name(), ds.stateStorage)
+			return fmt.Errorf("httpDevice[%s]: error: %s", ds.deviceConfig.Name(), err)
 		} else {
-			device.SendConnteced(c.Config().Name(), c.stateStorage)
-			if c.Config().LogDebug() {
-				log.Printf("httpDevice[%s]: poll request successful", c.Config().Name())
+			device.SendConnteced(ds.Config().Name(), ds.stateStorage)
+			if ds.Config().LogDebug() {
+				log.Printf("httpDevice[%s]: poll request successful", ds.Config().Name())
 			}
 		}
 		return nil
@@ -97,30 +97,30 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	// setup subscription to listen for updates of controllable registers
 	filter := dataflow.Filter{
 		SkipNull:       true,
-		IncludeDevices: map[string]bool{c.Config().Name(): true},
+		IncludeDevices: map[string]bool{ds.Config().Name(): true},
 	}
-	commandSubscription := c.commandStorage.Subscribe(filter)
+	commandSubscription := ds.commandStorage.Subscribe(filter)
 	defer commandSubscription.Shutdown()
 
 	execCommand := func(value dataflow.Value) {
-		if c.Config().LogDebug() {
+		if ds.Config().LogDebug() {
 			log.Printf(
 				"httpDevice[%s]: controllable command: %s",
-				c.Config().Name(), value.String(),
+				ds.Config().Name(), value.String(),
 			)
 		}
-		if request, onSuccess, err := c.impl.ControlValueRequest(value); err != nil {
+		if request, onSuccess, err := ds.impl.ControlValueRequest(value); err != nil {
 			log.Printf(
 				"httpDevice[%s]: control request genration failed: %s",
-				c.Config().Name(), err,
+				ds.Config().Name(), err,
 			)
 		} else {
-			request.URL = c.httpConfig.Url().JoinPath(request.URL.String())
-			request.SetBasicAuth(c.httpConfig.Username(), c.httpConfig.Password())
-			if resp, err := c.httpClient.Do(request); err != nil {
+			request.URL = ds.httpConfig.Url().JoinPath(request.URL.String())
+			request.SetBasicAuth(ds.httpConfig.Username(), ds.httpConfig.Password())
+			if resp, err := ds.httpClient.Do(request); err != nil {
 				log.Printf(
 					"httpDevice[%s]: control request failed: %s",
-					c.Config().Name(), err,
+					ds.Config().Name(), err,
 				)
 			} else {
 				// ready and discard response body
@@ -130,11 +130,11 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 				if resp.StatusCode != http.StatusOK {
 					log.Printf(
 						"httpDevice[%s]: control request failed with code: %d",
-						c.Config().Name(), resp.StatusCode,
+						ds.Config().Name(), resp.StatusCode,
 					)
 				} else {
-					if c.Config().LogDebug() {
-						log.Printf("httpDevice[%s]: control request successful", c.Config().Name())
+					if ds.Config().LogDebug() {
+						log.Printf("httpDevice[%s]: control request successful", ds.Config().Name())
 					}
 					onSuccess()
 				}
@@ -142,10 +142,10 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		}
 
 		// reset the command; this allows the same command (eg. toggle) to be sent again
-		c.commandStorage.Fill(dataflow.NewNullRegisterValue(c.Config().Name(), value.Register()))
+		ds.commandStorage.Fill(dataflow.NewNullRegisterValue(ds.Config().Name(), value.Register()))
 	}
 
-	pollTicker := time.NewTicker(c.httpConfig.PollInterval())
+	pollTicker := time.NewTicker(ds.httpConfig.PollInterval())
 	defer pollTicker.Stop()
 	for {
 		select {
