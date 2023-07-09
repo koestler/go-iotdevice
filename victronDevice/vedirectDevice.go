@@ -10,13 +10,13 @@ import (
 	"time"
 )
 
-func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable) error {
+func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable) (err error, immediateError bool) {
 	log.Printf("device[%s]: start vedirect source", c.deviceConfig.Name())
 
 	// open vedirect device
 	vd, err := vedirect.Open(c.victronConfig.Device(), c.deviceConfig.LogComDebug())
 	if err != nil {
-		return err
+		return err, true
 	}
 	defer func() {
 		if err := vd.Close(); err != nil {
@@ -26,18 +26,18 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 
 	// send ping
 	if err := vd.VeCommandPing(); err != nil {
-		return fmt.Errorf("ping failed: %s", err)
+		return fmt.Errorf("ping failed: %s", err), true
 	}
 
 	// get deviceId
 	deviceId, err := vd.VeCommandDeviceId()
 	if err != nil {
-		return fmt.Errorf("cannot get DeviceId: %s", err)
+		return fmt.Errorf("cannot get DeviceId: %s", err), true
 	}
 
 	deviceString := deviceId.String()
 	if len(deviceString) < 1 {
-		return fmt.Errorf("unknown deviceId=%x", err)
+		return fmt.Errorf("unknown deviceId=%x", err), true
 	}
 
 	log.Printf("device[%s]: source: connect to %s", c.deviceConfig.Name(), deviceString)
@@ -47,7 +47,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	{
 		registers := RegisterFactoryByProduct(deviceId)
 		if registers == nil {
-			return fmt.Errorf("no registers found for deviceId=%x", deviceId)
+			return fmt.Errorf("no registers found for deviceId=%x", deviceId), true
 		}
 		// filter registers by skip list
 		c.registers = FilterRegisters(registers, c.deviceConfig.SkipFields(), c.deviceConfig.SkipCategories())
@@ -60,7 +60,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			return nil, false
 		case <-ticker.C:
 			start := time.Now()
 
@@ -78,7 +78,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 
 				if pingNeeded {
 					if err := vd.VeCommandPing(); err != nil {
-						return fmt.Errorf("device[%s]: source: VeCommandPing failed: %s", c.deviceConfig.Name(), err)
+						return fmt.Errorf("device[%s]: source: VeCommandPing failed: %s", c.deviceConfig.Name(), err), false
 					}
 				}
 

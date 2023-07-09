@@ -23,5 +23,5 @@ type Device interface {
 	GetRegister(registerName string) dataflow.Register
 	LastUpdated() time.Time
 	Model() string
-	Run(ctx context.Context) error
+	Run(ctx context.Context) (err error, immediateError bool)
 }

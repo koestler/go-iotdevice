@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, registers VictronRegisters) error {
+func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, registers VictronRegisters) (err error, immediateError bool) {
 	// filter registers by skip list
 	c.registers = FilterRegisters(registers, c.deviceConfig.SkipFields(), c.deviceConfig.SkipCategories())
 
@@ -22,7 +22,7 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			return nil, false
 		case <-ticker.C:
 			for _, r := range registers {
 				switch r.RegisterType() {

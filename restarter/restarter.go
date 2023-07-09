@@ -16,7 +16,7 @@ type Config interface {
 
 type Restartable interface {
 	Name() string
-	Run(ctx context.Context) error
+	Run(ctx context.Context) (err error, immediateError bool)
 }
 
 type Restarter[S Restartable] struct {
@@ -42,24 +42,24 @@ func RunRestarter[S Restartable](config Config, service S) (w *Restarter[S]) {
 		w.wg.Add(1)
 		defer w.wg.Done()
 
-		errorsInARow := 0
+		immediateErrorsInARow := 0
 		for {
 			log.Printf("restarter[%s]: start", service.Name())
 
 			start := time.Now()
-			err := service.Run(w.ctx)
+			err, immediateError := service.Run(w.ctx)
 			if err != nil {
 				log.Printf("restarter[%s]: terminated with error: %s", service.Name(), err)
 			}
 			runningFor := time.Since(start)
 
-			if runningFor > w.config.RestartInterval() {
-				errorsInARow = 0
+			if immediateError {
+				immediateErrorsInARow += 1
 			} else {
-				errorsInARow += 1
+				immediateErrorsInARow = 0
 			}
 
-			retryIn := w.getRestartInterval(errorsInARow)
+			retryIn := w.getRestartInterval(immediateErrorsInARow)
 
 			log.Printf("restarter[%s]: error after %s, expoential backoff, retry in %s", service.Name(), runningFor, retryIn)
 
