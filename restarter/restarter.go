@@ -9,12 +9,18 @@ import (
 	"time"
 )
 
+type Config interface {
+	RestartInterval() time.Duration
+	RestartIntervalMaxBackoff() time.Duration
+}
+
 type Restartable interface {
 	Name() string
 	Run(ctx context.Context) error
 }
 
 type Restarter[S Restartable] struct {
+	config    Config
 	service   S
 	isRunning bool
 
@@ -23,9 +29,10 @@ type Restarter[S Restartable] struct {
 	wg     sync.WaitGroup
 }
 
-func RunRestarter[S Restartable](service S) (w *Restarter[S]) {
+func RunRestarter[S Restartable](config Config, service S) (w *Restarter[S]) {
 	ctx, cancel := context.WithCancel(context.Background())
 	w = &Restarter[S]{
+		config:  config,
 		service: service,
 		ctx:     ctx,
 		cancel:  cancel,
@@ -35,21 +42,31 @@ func RunRestarter[S Restartable](service S) (w *Restarter[S]) {
 		w.wg.Add(1)
 		defer w.wg.Done()
 
+		errorsInARow := 0
 		for {
 			log.Printf("restarter[%s]: start", service.Name())
 
+			start := time.Now()
 			err := service.Run(w.ctx)
 			if err != nil {
 				log.Printf("restarter[%s]: terminated with error: %s", service.Name(), err)
+			}
+			runningFor := time.Since(start)
+
+			if runningFor > w.config.RestartInterval() {
+				errorsInARow = 0
 			} else {
-				log.Printf("restarter[%s]: terminated", service.Name())
+				errorsInARow += 1
 			}
 
-			// wait 2s for restart
+			retryIn := w.getRestartInterval(errorsInARow)
+
+			log.Printf("restarter[%s]: error after %s, expoential backoff, retry in %s", service.Name(), runningFor, retryIn)
+
 			select {
 			case <-ctx.Done():
 				return
-			case <-time.After(2 * time.Second):
+			case <-time.After(retryIn):
 			}
 		}
 	}()
@@ -72,4 +89,17 @@ func (w *Restarter[S]) Service() S {
 
 func (w *Restarter[S]) IsRunning() bool {
 	return w.isRunning
+}
+
+func (w *Restarter[S]) getRestartInterval(errorsInARow int) time.Duration {
+	if errorsInARow > 16 {
+		errorsInARow = 16
+	}
+	var backoffFactor uint64 = 1 << errorsInARow // 2^errorsInARow
+	interval := w.config.RestartInterval() * time.Duration(backoffFactor)
+	max := w.config.RestartIntervalMaxBackoff()
+	if interval > max {
+		return max
+	}
+	return interval
 }

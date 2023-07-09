@@ -27,7 +27,7 @@ func runDevices(
 		}
 
 		dev := victronDevice.CreateDevice(deviceConfig, deviceConfig, stateStorage)
-		watchedDev := restarter.RunRestarter[device.Device](dev)
+		watchedDev := restarter.RunRestarter[device.Device](deviceConfig, dev)
 		device.RunMqttForwarders(dev, mqttClientPool, stateStorage)
 		devicePoolInstance.Add(watchedDev)
 	}

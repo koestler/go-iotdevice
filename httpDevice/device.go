@@ -19,7 +19,6 @@ type Config interface {
 	Username() string
 	Password() string
 	PollInterval() time.Duration
-	PollIntervalMaxBackoff() time.Duration
 }
 
 type DeviceStruct struct {
@@ -105,41 +104,18 @@ func (ds *DeviceStruct) mainRoutine() {
 	}
 
 	go func() {
-		// setup polling interval and logging
-		errorsInARow := 0
-		lastErrorMsg := ""
-		interval := ds.getPollInterval(errorsInARow)
-		pollTicker := time.NewTicker(interval)
+		pollTicker := time.NewTicker(ds.httpConfig.PollInterval())
 		defer pollTicker.Stop()
 
 		ds.addRegister(device.GetAvailabilityRegister())
 		execPoll := func() {
 			if err := ds.poll(); err != nil {
-				errorsInARow += 1
-				if errMsg := fmt.Sprintf("httpDevice[%s]: error: %s", ds.deviceConfig.Name(), err); errMsg != lastErrorMsg {
-					log.Println(errMsg)
-					lastErrorMsg = errMsg
-				}
-				if errorsInARow > 1 {
-					device.SendDisconnected(ds.Config().Name(), ds.stateStorage)
-				}
+				return fmt.Errorf("httpDevice[%s]: error: %s", ds.deviceConfig.Name(), err)
+				device.SendDisconnected(ds.Config().Name(), ds.stateStorage)
 			} else {
 				device.SendConnteced(ds.Config().Name(), ds.stateStorage)
-				errorsInARow = 0
-				lastErrorMsg = ""
 				if ds.Config().LogDebug() {
 					log.Printf("httpDevice[%s]: poll request successful", ds.Config().Name())
-				}
-			}
-
-			// change poll interval on error
-			if newInterval := ds.getPollInterval(errorsInARow); interval != newInterval {
-				interval = newInterval
-				pollTicker.Reset(interval)
-				if errorsInARow == 0 {
-					log.Printf("httpDevice[%s]: recoverd, next poll in: %s", ds.deviceConfig.Name(), interval)
-				} else {
-					log.Printf("httpDevice[%s]: exponential backoff, retry in: %s", ds.deviceConfig.Name(), interval)
 				}
 			}
 		}
@@ -207,19 +183,6 @@ func (ds *DeviceStruct) mainRoutine() {
 			}
 		}
 	}()
-}
-
-func (ds *DeviceStruct) getPollInterval(errorsInARow int) time.Duration {
-	if errorsInARow > 16 {
-		errorsInARow = 16
-	}
-	var backoffFactor uint64 = 1 << errorsInARow // 2^errorsInARow
-	interval := ds.httpConfig.PollInterval() * time.Duration(backoffFactor)
-	max := ds.httpConfig.PollIntervalMaxBackoff()
-	if interval > max {
-		return max
-	}
-	return interval
 }
 
 func (ds *DeviceStruct) poll() error {
