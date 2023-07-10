@@ -38,8 +38,8 @@ func RunRestarter[S Restartable](config Config, service S) (w *Restarter[S]) {
 		cancel:  cancel,
 	}
 
+	w.wg.Add(1)
 	go func() {
-		w.wg.Add(1)
 		defer w.wg.Done()
 
 		immediateErrorsInARow := 0
