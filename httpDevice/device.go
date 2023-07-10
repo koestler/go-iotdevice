@@ -23,20 +23,18 @@ type Config interface {
 }
 
 type DeviceStruct struct {
-	deviceConfig   device.Config
-	httpConfig     Config
-	stateStorage   *dataflow.ValueStorageInstance
+	device.DeviceState
+	httpConfig Config
+
 	commandStorage *dataflow.ValueStorageInstance
 
 	httpClient  *http.Client
 	pollRequest *http.Request
 	impl        Implementation
 
-	registers        map[string]dataflow.Register
-	sort             map[string]int
-	registersMutex   sync.RWMutex
-	lastUpdated      time.Time
-	lastUpdatedMutex sync.RWMutex
+	registers      map[string]dataflow.Register
+	sort           map[string]int
+	registersMutex sync.RWMutex
 }
 
 func CreateDevice(
@@ -46,9 +44,11 @@ func CreateDevice(
 	commandStorage *dataflow.ValueStorageInstance,
 ) *DeviceStruct {
 	ds := &DeviceStruct{
-		deviceConfig:   deviceConfig,
+		DeviceState: device.CreateDevice(
+			deviceConfig,
+			stateStorage,
+		),
 		httpConfig:     teracomConfig,
-		stateStorage:   stateStorage,
 		commandStorage: commandStorage,
 
 		httpClient: &http.Client{
@@ -73,13 +73,13 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 		return err, true
 	}
 
-	if ds.deviceConfig.LogDebug() {
-		log.Printf("httpDevice[%s]: start polling, interval=%s", ds.deviceConfig.Name(), ds.httpConfig.PollInterval())
+	if ds.Config().LogDebug() {
+		log.Printf("httpDevice[%s]: start polling, interval=%s", ds.Name(), ds.httpConfig.PollInterval())
 	}
 
 	execPoll := func() error {
 		if err := ds.poll(); err != nil {
-			return fmt.Errorf("httpDevice[%s]: error: %s", ds.deviceConfig.Name(), err)
+			return fmt.Errorf("httpDevice[%s]: error: %s", ds.Name(), err)
 		} else {
 			if ds.Config().LogDebug() {
 				log.Printf("httpDevice[%s]: poll request successful", ds.Config().Name())
@@ -92,9 +92,9 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 	}
 
 	// send connected now, disconnected when this routine stops
-	device.SendConnteced(ds.Config().Name(), ds.stateStorage)
+	ds.SetAvailable(true)
 	defer func() {
-		device.SendDisconnected(ds.Config().Name(), ds.stateStorage)
+		ds.SetAvailable(false)
 	}()
 
 	// setup subscription to listen for updates of controllable registers
@@ -109,13 +109,13 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 		if ds.Config().LogDebug() {
 			log.Printf(
 				"httpDevice[%s]: controllable command: %s",
-				ds.Config().Name(), value.String(),
+				ds.Name(), value.String(),
 			)
 		}
 		if request, onSuccess, err := ds.impl.ControlValueRequest(value); err != nil {
 			log.Printf(
 				"httpDevice[%s]: control request genration failed: %s",
-				ds.Config().Name(), err,
+				ds.Name(), err,
 			)
 		} else {
 			request.URL = ds.httpConfig.Url().JoinPath(request.URL.String())
@@ -123,7 +123,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 			if resp, err := ds.httpClient.Do(request); err != nil {
 				log.Printf(
 					"httpDevice[%s]: control request failed: %s",
-					ds.Config().Name(), err,
+					ds.Name(), err,
 				)
 			} else {
 				// ready and discard response body
@@ -209,14 +209,6 @@ func (ds *DeviceStruct) poll() error {
 	return nil
 }
 
-func (ds *DeviceStruct) Name() string {
-	return ds.deviceConfig.Name()
-}
-
-func (ds *DeviceStruct) Config() device.Config {
-	return ds.deviceConfig
-}
-
 func (ds *DeviceStruct) addIgnoreRegister(
 	category, registerName, description, unit string,
 	registerType dataflow.RegisterType,
@@ -237,7 +229,7 @@ func (ds *DeviceStruct) addIgnoreRegister(
 	ds.registersMutex.RUnlock()
 
 	// check if register is on ignore list
-	if device.IsExcluded(registerName, category, ds.deviceConfig) {
+	if device.IsExcluded(registerName, category, ds.Config()) {
 		return nil
 	}
 
@@ -288,18 +280,6 @@ func (ds *DeviceStruct) GetRegister(registerName string) dataflow.Register {
 		return r
 	}
 	return nil
-}
-
-func (ds *DeviceStruct) SetLastUpdatedNow() {
-	ds.lastUpdatedMutex.Lock()
-	defer ds.lastUpdatedMutex.Unlock()
-	ds.lastUpdated = time.Now()
-}
-
-func (ds *DeviceStruct) LastUpdated() time.Time {
-	ds.lastUpdatedMutex.RLock()
-	defer ds.lastUpdatedMutex.RUnlock()
-	return ds.lastUpdated
 }
 
 func (ds *DeviceStruct) Model() string {

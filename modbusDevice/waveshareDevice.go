@@ -10,13 +10,13 @@ import (
 )
 
 func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, immediateError bool) {
-	log.Printf("device[%s]: start waveshare RTU Relay 8 source", c.deviceConfig.Name())
+	log.Printf("device[%s]: start waveshare RTU Relay 8 source", c.Name())
 
 	// get software version
 	if version, err := ReadSoftwareRevision(c.modbus.WriteRead, c.modbusConfig.Address()); err != nil {
-		return fmt.Errorf("waveshareDevice[%s]: ReadSoftwareRevision failed: %s", c.deviceConfig.Name(), err), true
+		return fmt.Errorf("waveshareDevice[%s]: ReadSoftwareRevision failed: %s", c.Name(), err), true
 	} else {
-		log.Printf("waveshareDevice[%s]: source: version=%s", c.deviceConfig.Name(), version)
+		log.Printf("waveshareDevice[%s]: source: version=%s", c.Name(), version)
 	}
 
 	// assign registers
@@ -29,7 +29,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 		// fetch registers
 		state, err := ReadRelays(c.modbus.WriteRead, c.modbusConfig.Address())
 		if err != nil {
-			return fmt.Errorf("waveshareDevice[%s]: read failed: %s", c.deviceConfig.Name(), err)
+			return fmt.Errorf("waveshareDevice[%s]: read failed: %s", c.Name(), err)
 		}
 
 		for _, register := range c.registers {
@@ -38,8 +38,8 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 				value = 1
 			}
 
-			c.stateStorage.Fill(dataflow.NewEnumRegisterValue(
-				c.deviceConfig.Name(),
+			c.StateStorage().Fill(dataflow.NewEnumRegisterValue(
+				c.Name(),
 				register,
 				value,
 			))
@@ -47,10 +47,10 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 
 		c.SetLastUpdatedNow()
 
-		if c.deviceConfig.LogDebug() {
+		if c.Config().LogDebug() {
 			log.Printf(
 				"waveshareDevice[%s]: registers fetched, took=%.3fs",
-				c.deviceConfig.Name(),
+				c.Name(),
 				time.Since(start).Seconds(),
 			)
 		}
@@ -63,9 +63,9 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	}
 
 	// send connected now, disconnected when this routine stops
-	device.SendConnteced(c.Config().Name(), c.stateStorage)
+	c.SetAvailable(true)
 	defer func() {
-		device.SendDisconnected(c.Config().Name(), c.stateStorage)
+		c.SetAvailable(false)
 	}()
 
 	// setup subscription to listen for updates of controllable registers
@@ -122,8 +122,8 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 			)
 		} else {
 			// set the current state immediately after a successful write
-			c.stateStorage.Fill(dataflow.NewEnumRegisterValue(
-				c.deviceConfig.Name(),
+			c.StateStorage().Fill(dataflow.NewEnumRegisterValue(
+				c.Name(),
 				value.Register(),
 				enumValue.EnumIdx(),
 			))
@@ -159,7 +159,7 @@ func (c *DeviceStruct) getModbusRegisters() (registers ModbusRegisters) {
 	for i := uint16(0); i < 8; i += 1 {
 		name := fmt.Sprintf("CH%d", i+1)
 
-		if device.IsExcluded(name, category, c.deviceConfig) {
+		if device.IsExcluded(name, category, c.Config()) {
 			continue
 		}
 

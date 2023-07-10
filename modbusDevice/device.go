@@ -6,7 +6,6 @@ import (
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
-	"sync"
 	"time"
 )
 
@@ -27,16 +26,13 @@ type Modbus interface {
 }
 
 type DeviceStruct struct {
-	deviceConfig   device.Config
-	modbusConfig   Config
-	stateStorage   *dataflow.ValueStorageInstance
+	device.DeviceState
+	modbusConfig Config
+
 	commandStorage *dataflow.ValueStorageInstance
 
-	modbus Modbus
-
-	registers        ModbusRegisters
-	lastUpdated      time.Time
-	lastUpdatedMutex sync.RWMutex
+	modbus    Modbus
+	registers ModbusRegisters
 }
 
 func CreateDevice(
@@ -47,9 +43,11 @@ func CreateDevice(
 	commandStorage *dataflow.ValueStorageInstance,
 ) *DeviceStruct {
 	return &DeviceStruct{
-		deviceConfig:   deviceConfig,
+		DeviceState: device.CreateDevice(
+			deviceConfig,
+			stateStorage,
+		),
 		modbusConfig:   modbusConfig,
-		stateStorage:   stateStorage,
 		commandStorage: commandStorage,
 		modbus:         modbus,
 	}
@@ -62,14 +60,6 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	default:
 		return fmt.Errorf("unknown device kind: %s", c.modbusConfig.Kind().String()), true
 	}
-}
-
-func (c *DeviceStruct) Name() string {
-	return c.deviceConfig.Name()
-}
-
-func (c *DeviceStruct) Config() device.Config {
-	return c.deviceConfig
 }
 
 func (c *DeviceStruct) Registers() dataflow.Registers {
@@ -88,18 +78,6 @@ func (c *DeviceStruct) GetRegister(registerName string) dataflow.Register {
 		}
 	}
 	return nil
-}
-
-func (c *DeviceStruct) SetLastUpdatedNow() {
-	c.lastUpdatedMutex.Lock()
-	defer c.lastUpdatedMutex.Unlock()
-	c.lastUpdated = time.Now()
-}
-
-func (c *DeviceStruct) LastUpdated() time.Time {
-	c.lastUpdatedMutex.RLock()
-	defer c.lastUpdatedMutex.RUnlock()
-	return c.lastUpdated
 }
 
 func (c *DeviceStruct) Model() string {

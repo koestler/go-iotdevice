@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/vedirect"
 	"log"
 	"strings"
@@ -12,16 +11,16 @@ import (
 )
 
 func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable) (err error, immediateError bool) {
-	log.Printf("device[%s]: start vedirect source", c.deviceConfig.Name())
+	log.Printf("device[%s]: start vedirect source", c.Name())
 
 	// open vedirect device
-	vd, err := vedirect.Open(c.victronConfig.Device(), c.deviceConfig.LogComDebug())
+	vd, err := vedirect.Open(c.victronConfig.Device(), c.Config().LogComDebug())
 	if err != nil {
 		return err, true
 	}
 	defer func() {
 		if err := vd.Close(); err != nil {
-			log.Printf("device[%s]: vd.Close failed: %s", c.deviceConfig.Name(), err)
+			log.Printf("device[%s]: vd.Close failed: %s", c.Name(), err)
 		}
 	}()
 
@@ -31,9 +30,9 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	}
 
 	// send connected now, disconnected when this routine stops
-	device.SendConnteced(c.Config().Name(), output)
+	c.SetAvailable(true)
 	defer func() {
-		device.SendDisconnected(c.Config().Name(), output)
+		c.SetAvailable(false)
 	}()
 
 	// get deviceId
@@ -47,7 +46,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 		return fmt.Errorf("unknown deviceId=%x", err), true
 	}
 
-	log.Printf("device[%s]: source: connect to %s", c.deviceConfig.Name(), deviceString)
+	log.Printf("device[%s]: source: connect to %s", c.Name(), deviceString)
 	c.model = deviceString
 
 	// get relevant registers
@@ -57,7 +56,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 			return fmt.Errorf("no registers found for deviceId=%x", deviceId), true
 		}
 		// filter registers by skip list
-		c.registers = FilterRegisters(registers, c.deviceConfig.SkipFields(), c.deviceConfig.SkipCategories())
+		c.registers = FilterRegisters(registers, c.Config().SkipFields(), c.Config().SkipCategories())
 	}
 
 	// start polling loop
@@ -85,7 +84,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 
 				if pingNeeded {
 					if err := vd.VeCommandPing(); err != nil {
-						return fmt.Errorf("device[%s]: source: VeCommandPing failed: %s", c.deviceConfig.Name(), err), false
+						return fmt.Errorf("device[%s]: source: VeCommandPing failed: %s", c.Name(), err), false
 					}
 				}
 
@@ -103,10 +102,10 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 					}
 
 					if err != nil {
-						log.Printf("device[%s]: fetching number register failed: %v", c.deviceConfig.Name(), err)
+						log.Printf("device[%s]: fetching number register failed: %v", c.Name(), err)
 					} else {
 						output.Fill(dataflow.NewNumericRegisterValue(
-							c.deviceConfig.Name(),
+							c.Name(),
 							register,
 							value/float64(register.Factor())+register.Offset(),
 						))
@@ -115,10 +114,10 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 					value, err := vd.VeCommandGetString(register.Address())
 
 					if err != nil {
-						log.Printf("device[%s]: fetching text register failed: %v", c.deviceConfig.Name(), err)
+						log.Printf("device[%s]: fetching text register failed: %v", c.Name(), err)
 					} else {
 						output.Fill(dataflow.NewTextRegisterValue(
-							c.deviceConfig.Name(),
+							c.Name(),
 							register,
 							strings.TrimSpace(value),
 						))
@@ -128,10 +127,10 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 					intValue, err = vd.VeCommandGetUint(register.Address())
 
 					if err != nil {
-						log.Printf("device[%s]: fetching enum register failed: %v", c.deviceConfig.Name(), err)
+						log.Printf("device[%s]: fetching enum register failed: %v", c.Name(), err)
 					} else {
 						output.Fill(dataflow.NewEnumRegisterValue(
-							c.deviceConfig.Name(),
+							c.Name(),
 							register,
 							int(intValue),
 						))
@@ -145,10 +144,10 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 
 			fetchStaticCounter++
 
-			if c.deviceConfig.LogDebug() {
+			if c.Config().LogDebug() {
 				log.Printf(
 					"device[%s]: registers fetched, took=%.3fs",
-					c.deviceConfig.Name(),
+					c.Name(),
 					time.Since(start).Seconds(),
 				)
 			}

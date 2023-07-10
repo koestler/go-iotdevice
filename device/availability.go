@@ -19,11 +19,3 @@ var availabilityRegister = dataflow.CreateRegisterStruct(
 func GetAvailabilityRegister() dataflow.Register {
 	return availabilityRegister
 }
-
-func SendDisconnected(deviceName string, fillable dataflow.Fillable) {
-	fillable.Fill(dataflow.NewEnumRegisterValue(deviceName, GetAvailabilityRegister(), 0))
-}
-
-func SendConnteced(deviceName string, fillable dataflow.Fillable) {
-	fillable.Fill(dataflow.NewEnumRegisterValue(deviceName, GetAvailabilityRegister(), 1))
-}

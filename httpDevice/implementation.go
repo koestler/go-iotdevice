@@ -6,13 +6,13 @@ import (
 	"net/http"
 )
 
-type onControlSuccess func()
+type OnControlSuccess func()
 
 type Implementation interface {
 	GetPath() string
 	HandleResponse(body []byte) error
 	GetCategorySort(category string) int
-	ControlValueRequest(value dataflow.Value) (*http.Request, onControlSuccess, error)
+	ControlValueRequest(value dataflow.Value) (*http.Request, OnControlSuccess, error)
 }
 
 func implementationFactory(ds *DeviceStruct) Implementation {

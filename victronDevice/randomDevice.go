@@ -3,7 +3,6 @@ package victronDevice
 import (
 	"context"
 	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/device"
 	"log"
 	"math/rand"
 	"time"
@@ -11,16 +10,16 @@ import (
 
 func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, registers VictronRegisters) (err error, immediateError bool) {
 	// send connected now, disconnected when this routine stops
-	device.SendConnteced(c.Config().Name(), output)
+	c.SetAvailable(true)
 	defer func() {
-		device.SendDisconnected(c.Config().Name(), output)
+		c.SetAvailable(false)
 	}()
 
 	// filter registers by skip list
-	c.registers = FilterRegisters(registers, c.deviceConfig.SkipFields(), c.deviceConfig.SkipCategories())
+	c.registers = FilterRegisters(registers, c.Config().SkipFields(), c.Config().SkipCategories())
 
-	if c.deviceConfig.LogDebug() {
-		log.Printf("device[%s]: start random source", c.deviceConfig.Name())
+	if c.Config().LogDebug() {
+		log.Printf("device[%s]: start random source", c.Name())
 	}
 
 	// start source loop
@@ -40,11 +39,11 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 					} else {
 						value = 1e2*rand.Float64()/float64(r.Factor()) + r.Offset()
 					}
-					output.Fill(dataflow.NewNumericRegisterValue(c.deviceConfig.Name(), r, value))
+					output.Fill(dataflow.NewNumericRegisterValue(c.Name(), r, value))
 				case dataflow.TextRegister:
-					output.Fill(dataflow.NewTextRegisterValue(c.deviceConfig.Name(), r, randomString(8)))
+					output.Fill(dataflow.NewTextRegisterValue(c.Name(), r, randomString(8)))
 				case dataflow.EnumRegister:
-					output.Fill(dataflow.NewEnumRegisterValue(c.deviceConfig.Name(), r, randomEnum(r.Enum())))
+					output.Fill(dataflow.NewEnumRegisterValue(c.Name(), r, randomEnum(r.Enum())))
 				}
 			}
 			c.SetLastUpdatedNow()

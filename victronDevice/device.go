@@ -6,8 +6,6 @@ import (
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
-	"sync"
-	"time"
 )
 
 type Config interface {
@@ -16,14 +14,11 @@ type Config interface {
 }
 
 type DeviceStruct struct {
-	deviceConfig  device.Config
+	device.DeviceState
 	victronConfig Config
-	stateStorage  *dataflow.ValueStorageInstance
 
-	registers        VictronRegisters
-	lastUpdated      time.Time
-	lastUpdatedMutex sync.RWMutex
-	model            string
+	registers VictronRegisters
+	model     string
 }
 
 func CreateDevice(
@@ -32,31 +27,25 @@ func CreateDevice(
 	stateStorage *dataflow.ValueStorageInstance,
 ) *DeviceStruct {
 	return &DeviceStruct{
-		deviceConfig:  deviceConfig,
+		DeviceState: device.CreateDevice(
+			deviceConfig,
+			stateStorage,
+		),
 		victronConfig: victronConfig,
-		stateStorage:  stateStorage,
 	}
 }
 
 func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
 	switch c.victronConfig.Kind() {
 	case config.VictronVedirectKind:
-		return runVedirect(ctx, c, c.stateStorage)
+		return runVedirect(ctx, c, c.StateStorage())
 	case config.VictronRandomBmvKind:
-		return runRandom(ctx, c, c.stateStorage, RegisterListBmv712)
+		return runRandom(ctx, c, c.StateStorage(), RegisterListBmv712)
 	case config.VictronRandomSolarKind:
-		return runRandom(ctx, c, c.stateStorage, RegisterListSolar)
+		return runRandom(ctx, c, c.StateStorage(), RegisterListSolar)
 	default:
 		return fmt.Errorf("unknown device kind: %s", c.victronConfig.Kind().String()), true
 	}
-}
-
-func (c *DeviceStruct) Name() string {
-	return c.deviceConfig.Name()
-}
-
-func (c *DeviceStruct) Config() device.Config {
-	return c.deviceConfig
 }
 
 func (c *DeviceStruct) Registers() dataflow.Registers {
@@ -75,18 +64,6 @@ func (c *DeviceStruct) GetRegister(registerName string) dataflow.Register {
 		}
 	}
 	return nil
-}
-
-func (c *DeviceStruct) SetLastUpdatedNow() {
-	c.lastUpdatedMutex.Lock()
-	defer c.lastUpdatedMutex.Unlock()
-	c.lastUpdated = time.Now()
-}
-
-func (c *DeviceStruct) LastUpdated() time.Time {
-	c.lastUpdatedMutex.RLock()
-	defer c.lastUpdatedMutex.RUnlock()
-	return c.lastUpdated
 }
 
 func (c *DeviceStruct) Model() string {
