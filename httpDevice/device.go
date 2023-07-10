@@ -1,6 +1,7 @@
 package httpDevice
 
 import (
+	"context"
 	"fmt"
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
@@ -19,38 +20,35 @@ type Config interface {
 	Username() string
 	Password() string
 	PollInterval() time.Duration
-	PollIntervalMaxBackoff() time.Duration
 }
 
 type DeviceStruct struct {
-	deviceConfig   device.Config
-	httpConfig     Config
-	stateStorage   *dataflow.ValueStorageInstance
+	device.State
+	httpConfig Config
+
 	commandStorage *dataflow.ValueStorageInstance
 
 	httpClient  *http.Client
 	pollRequest *http.Request
 	impl        Implementation
 
-	registers        map[string]dataflow.Register
-	sort             map[string]int
-	registersMutex   sync.RWMutex
-	lastUpdated      time.Time
-	lastUpdatedMutex sync.RWMutex
-
-	shutdown chan struct{}
+	registers      map[string]dataflow.Register
+	sort           map[string]int
+	registersMutex sync.RWMutex
 }
 
-func RunDevice(
+func CreateDevice(
 	deviceConfig device.Config,
 	teracomConfig Config,
 	stateStorage *dataflow.ValueStorageInstance,
 	commandStorage *dataflow.ValueStorageInstance,
-) (device device.Device, err error) {
+) *DeviceStruct {
 	ds := &DeviceStruct{
-		deviceConfig:   deviceConfig,
+		State: device.CreateState(
+			deviceConfig,
+			stateStorage,
+		),
 		httpConfig:     teracomConfig,
-		stateStorage:   stateStorage,
 		commandStorage: commandStorage,
 
 		httpClient: &http.Client{
@@ -61,20 +59,109 @@ func RunDevice(
 
 		registers: make(map[string]dataflow.Register),
 		sort:      make(map[string]int),
-		shutdown:  make(chan struct{}),
 	}
 
 	// setup impl
 	ds.impl = implementationFactory(ds)
 
+	return ds
+}
+
+func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
 	// setup request
 	if ds.pollRequest, err = ds.GetRequest(ds.impl.GetPath()); err != nil {
-		return
+		return err, true
 	}
 
-	ds.mainRoutine()
+	if ds.Config().LogDebug() {
+		log.Printf("httpDevice[%s]: start polling, interval=%s", ds.Name(), ds.httpConfig.PollInterval())
+	}
 
-	return ds, nil
+	execPoll := func() error {
+		if err := ds.poll(); err != nil {
+			return fmt.Errorf("httpDevice[%s]: error: %s", ds.Name(), err)
+		} else {
+			if ds.Config().LogDebug() {
+				log.Printf("httpDevice[%s]: poll request successful", ds.Config().Name())
+			}
+		}
+		return nil
+	}
+	if err := execPoll(); err != nil {
+		return err, true
+	}
+
+	// send connected now, disconnected when this routine stops
+	ds.SetAvailable(true)
+	defer func() {
+		ds.SetAvailable(false)
+	}()
+
+	// setup subscription to listen for updates of controllable registers
+	filter := dataflow.Filter{
+		SkipNull:       true,
+		IncludeDevices: map[string]bool{ds.Config().Name(): true},
+	}
+	commandSubscription := ds.commandStorage.Subscribe(filter)
+	defer commandSubscription.Shutdown()
+
+	execCommand := func(value dataflow.Value) {
+		if ds.Config().LogDebug() {
+			log.Printf(
+				"httpDevice[%s]: controllable command: %s",
+				ds.Name(), value.String(),
+			)
+		}
+		if request, onSuccess, err := ds.impl.ControlValueRequest(value); err != nil {
+			log.Printf(
+				"httpDevice[%s]: control request genration failed: %s",
+				ds.Name(), err,
+			)
+		} else {
+			request.URL = ds.httpConfig.Url().JoinPath(request.URL.String())
+			request.SetBasicAuth(ds.httpConfig.Username(), ds.httpConfig.Password())
+			if resp, err := ds.httpClient.Do(request); err != nil {
+				log.Printf(
+					"httpDevice[%s]: control request failed: %s",
+					ds.Name(), err,
+				)
+			} else {
+				// ready and discard response body
+				defer resp.Body.Close()
+				io.ReadAll(resp.Body)
+
+				if resp.StatusCode != http.StatusOK {
+					log.Printf(
+						"httpDevice[%s]: control request failed with code: %d",
+						ds.Config().Name(), resp.StatusCode,
+					)
+				} else {
+					if ds.Config().LogDebug() {
+						log.Printf("httpDevice[%s]: control request successful", ds.Config().Name())
+					}
+					onSuccess()
+				}
+			}
+		}
+
+		// reset the command; this allows the same command (eg. toggle) to be sent again
+		ds.commandStorage.Fill(dataflow.NewNullRegisterValue(ds.Config().Name(), value.Register()))
+	}
+
+	pollTicker := time.NewTicker(ds.httpConfig.PollInterval())
+	defer pollTicker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, false
+		case <-pollTicker.C:
+			if err := execPoll(); err != nil {
+				return err, false
+			}
+		case value := <-commandSubscription.GetOutput():
+			execCommand(value)
+		}
+	}
 }
 
 func (ds *DeviceStruct) GetRequest(path string) (request *http.Request, err error) {
@@ -97,129 +184,6 @@ func (ds *DeviceStruct) getRegisterSort(category string) int {
 		ds.sort[category] += 1
 		return offset + count
 	}
-}
-
-func (ds *DeviceStruct) mainRoutine() {
-	if ds.deviceConfig.LogDebug() {
-		log.Printf("httpDevice[%s]: start polling, interval=%s", ds.deviceConfig.Name(), ds.httpConfig.PollInterval())
-	}
-
-	go func() {
-		// setup polling interval and logging
-		errorsInARow := 0
-		lastErrorMsg := ""
-		interval := ds.getPollInterval(errorsInARow)
-		pollTicker := time.NewTicker(interval)
-		defer pollTicker.Stop()
-
-		ds.addRegister(device.GetAvailabilityRegister())
-		execPoll := func() {
-			if err := ds.poll(); err != nil {
-				errorsInARow += 1
-				if errMsg := fmt.Sprintf("httpDevice[%s]: error: %s", ds.deviceConfig.Name(), err); errMsg != lastErrorMsg {
-					log.Println(errMsg)
-					lastErrorMsg = errMsg
-				}
-				if errorsInARow > 1 {
-					device.SendDisconnected(ds.Config().Name(), ds.stateStorage)
-				}
-			} else {
-				device.SendConnteced(ds.Config().Name(), ds.stateStorage)
-				errorsInARow = 0
-				lastErrorMsg = ""
-				if ds.Config().LogDebug() {
-					log.Printf("httpDevice[%s]: poll request successful", ds.Config().Name())
-				}
-			}
-
-			// change poll interval on error
-			if newInterval := ds.getPollInterval(errorsInARow); interval != newInterval {
-				interval = newInterval
-				pollTicker.Reset(interval)
-				if errorsInARow == 0 {
-					log.Printf("httpDevice[%s]: recoverd, next poll in: %s", ds.deviceConfig.Name(), interval)
-				} else {
-					log.Printf("httpDevice[%s]: exponential backoff, retry in: %s", ds.deviceConfig.Name(), interval)
-				}
-			}
-		}
-		execPoll()
-
-		// setup subscription to listen for updates of controllable registers
-		filter := dataflow.Filter{
-			SkipNull:       true,
-			IncludeDevices: map[string]bool{ds.Config().Name(): true},
-		}
-		commandSubscription := ds.commandStorage.Subscribe(filter)
-		defer commandSubscription.Shutdown()
-
-		execCommand := func(value dataflow.Value) {
-			if ds.Config().LogDebug() {
-				log.Printf(
-					"httpDevice[%s]: controllable command: %s",
-					ds.Config().Name(), value.String(),
-				)
-			}
-			if request, onSuccess, err := ds.impl.ControlValueRequest(value); err != nil {
-				log.Printf(
-					"httpDevice[%s]: control request genration failed: %s",
-					ds.Config().Name(), err,
-				)
-			} else {
-				request.URL = ds.httpConfig.Url().JoinPath(request.URL.String())
-				request.SetBasicAuth(ds.httpConfig.Username(), ds.httpConfig.Password())
-				if resp, err := ds.httpClient.Do(request); err != nil {
-					log.Printf(
-						"httpDevice[%s]: control request failed: %s",
-						ds.Config().Name(), err,
-					)
-				} else {
-					// ready and discard response body
-					defer resp.Body.Close()
-					io.ReadAll(resp.Body)
-
-					if resp.StatusCode != http.StatusOK {
-						log.Printf(
-							"httpDevice[%s]: control request failed with code: %d",
-							ds.Config().Name(), resp.StatusCode,
-						)
-					} else {
-						if ds.Config().LogDebug() {
-							log.Printf("httpDevice[%s]: control request successful", ds.Config().Name())
-						}
-						onSuccess()
-					}
-				}
-			}
-
-			// reset the command; this allows the same command (eg. toggle) to be sent again
-			ds.commandStorage.Fill(dataflow.NewNullRegisterValue(ds.Config().Name(), value.Register()))
-		}
-
-		for {
-			select {
-			case <-ds.shutdown:
-				return
-			case <-pollTicker.C:
-				execPoll()
-			case value := <-commandSubscription.GetOutput():
-				execCommand(value)
-			}
-		}
-	}()
-}
-
-func (ds *DeviceStruct) getPollInterval(errorsInARow int) time.Duration {
-	if errorsInARow > 16 {
-		errorsInARow = 16
-	}
-	var backoffFactor uint64 = 1 << errorsInARow // 2^errorsInARow
-	interval := ds.httpConfig.PollInterval() * time.Duration(backoffFactor)
-	max := ds.httpConfig.PollIntervalMaxBackoff()
-	if interval > max {
-		return max
-	}
-	return interval
 }
 
 func (ds *DeviceStruct) poll() error {
@@ -245,18 +209,6 @@ func (ds *DeviceStruct) poll() error {
 	return nil
 }
 
-func (ds *DeviceStruct) Name() string {
-	return ds.deviceConfig.Name()
-}
-
-func (ds *DeviceStruct) Config() device.Config {
-	return ds.deviceConfig
-}
-
-func (ds *DeviceStruct) ShutdownChan() chan struct{} {
-	return ds.shutdown
-}
-
 func (ds *DeviceStruct) addIgnoreRegister(
 	category, registerName, description, unit string,
 	registerType dataflow.RegisterType,
@@ -277,7 +229,7 @@ func (ds *DeviceStruct) addIgnoreRegister(
 	ds.registersMutex.RUnlock()
 
 	// check if register is on ignore list
-	if device.IsExcluded(registerName, category, ds.deviceConfig) {
+	if device.IsExcluded(registerName, category, ds.Config()) {
 		return nil
 	}
 
@@ -310,12 +262,13 @@ func (ds *DeviceStruct) Registers() dataflow.Registers {
 	ds.registersMutex.RLock()
 	defer ds.registersMutex.RUnlock()
 
-	ret := make(dataflow.Registers, len(ds.registers))
+	ret := make(dataflow.Registers, len(ds.registers)+1)
 	i := 0
 	for _, r := range ds.registers {
 		ret[i] = r
 		i += 1
 	}
+	ret[len(ds.registers)] = device.GetAvailabilityRegister()
 	return ret
 }
 
@@ -329,23 +282,6 @@ func (ds *DeviceStruct) GetRegister(registerName string) dataflow.Register {
 	return nil
 }
 
-func (ds *DeviceStruct) SetLastUpdatedNow() {
-	ds.lastUpdatedMutex.Lock()
-	defer ds.lastUpdatedMutex.Unlock()
-	ds.lastUpdated = time.Now()
-}
-
-func (ds *DeviceStruct) LastUpdated() time.Time {
-	ds.lastUpdatedMutex.RLock()
-	defer ds.lastUpdatedMutex.RUnlock()
-	return ds.lastUpdated
-}
-
 func (ds *DeviceStruct) Model() string {
 	return ds.httpConfig.Kind().String()
-}
-
-func (ds *DeviceStruct) Shutdown() {
-	close(ds.shutdown)
-	log.Printf("httpDevice[%s]: shutdown completed", ds.deviceConfig.Name())
 }

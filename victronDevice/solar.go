@@ -60,7 +60,7 @@ var RegisterListSolarGeneric = VictronRegisters{
 	),
 	CreateEnumRegisterStruct(
 		"Essential",
-		"DeviceState",
+		"State",
 		"Device state",
 		0x0201,
 		false,

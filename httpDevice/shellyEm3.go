@@ -45,7 +45,7 @@ func (c *ShellyEm3Device) GetCategorySort(category string) int {
 	}
 }
 
-func (c *ShellyEm3Device) ControlValueRequest(value dataflow.Value) (*http.Request, onControlSuccess, error) {
+func (c *ShellyEm3Device) ControlValueRequest(value dataflow.Value) (*http.Request, OnControlSuccess, error) {
 	return nil, nil, errors.New("not implemented")
 }
 
@@ -108,7 +108,7 @@ func (c *ShellyEm3Device) text(category, registerName, description, value string
 	if register == nil {
 		return
 	}
-	c.ds.stateStorage.Fill(dataflow.NewTextRegisterValue(c.ds.deviceConfig.Name(), register, value))
+	c.ds.StateStorage().Fill(dataflow.NewTextRegisterValue(c.ds.Name(), register, value))
 }
 
 func (c *ShellyEm3Device) number(category, registerName, description, unit string, value float64) {
@@ -118,7 +118,7 @@ func (c *ShellyEm3Device) number(category, registerName, description, unit strin
 	if register == nil {
 		return
 	}
-	c.ds.stateStorage.Fill(dataflow.NewNumericRegisterValue(c.ds.deviceConfig.Name(), register, value))
+	c.ds.StateStorage().Fill(dataflow.NewNumericRegisterValue(c.ds.Name(), register, value))
 }
 
 func (c *ShellyEm3Device) boolean(category, registerName, description string, value bool) {
@@ -139,7 +139,7 @@ func (c *ShellyEm3Device) boolean(category, registerName, description string, va
 	if value {
 		intValue = 1
 	}
-	c.ds.stateStorage.Fill(dataflow.NewEnumRegisterValue(c.ds.deviceConfig.Name(), register, intValue))
+	c.ds.StateStorage().Fill(dataflow.NewEnumRegisterValue(c.ds.Name(), register, intValue))
 }
 
 func (c *ShellyEm3Device) extractRegistersAndValues(s ShellyEm3StatusStruct) {

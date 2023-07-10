@@ -1,6 +1,7 @@
 package mqttDevice
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
@@ -10,7 +11,6 @@ import (
 	"log"
 	"strings"
 	"sync"
-	"time"
 )
 
 type Config interface {
@@ -19,56 +19,56 @@ type Config interface {
 }
 
 type DeviceStruct struct {
-	deviceConfig device.Config
-	mqttConfig   Config
+	device.State
+	mqttConfig Config
 
-	fillable dataflow.Fillable
+	mqttClientPool *pool.Pool[mqttClient.Client]
 
-	registers        map[string]dataflow.Register
-	registersMutex   sync.RWMutex
-	lastUpdated      time.Time
-	lastUpdatedMutex sync.RWMutex
-
-	shutdown chan struct{}
+	registers      map[string]dataflow.Register
+	registersMutex sync.RWMutex
 }
 
-func RunDevice(
+func CreateDevice(
 	deviceConfig device.Config,
 	mqttConfig Config,
-	storage *dataflow.ValueStorageInstance,
+	stateStorage *dataflow.ValueStorageInstance,
 	mqttClientPool *pool.Pool[mqttClient.Client],
-) (device device.Device, err error) {
-	c := &DeviceStruct{
-		deviceConfig: deviceConfig,
-		mqttConfig:   mqttConfig,
-		fillable:     storage,
-		registers:    make(map[string]dataflow.Register),
-		shutdown:     make(chan struct{}),
+) *DeviceStruct {
+	return &DeviceStruct{
+		State: device.CreateState(
+			deviceConfig,
+			stateStorage,
+		),
+		mqttConfig:     mqttConfig,
+		mqttClientPool: mqttClientPool,
+		registers:      make(map[string]dataflow.Register),
 	}
+}
 
+func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
 	// setup mqtt listeners
 	counter := 0
-	for _, mc := range mqttClientPool.GetByNames(mqttConfig.MqttClients()) {
-		for _, topic := range mqttConfig.MqttTopics() {
-			log.Printf("mqttDevice[%s] subscribe to mqttClient=%s topic=%s", deviceConfig.Name(), mc.Config().Name(), topic)
+	for _, mc := range c.mqttClientPool.GetByNames(c.mqttConfig.MqttClients()) {
+		for _, topic := range c.mqttConfig.MqttTopics() {
+			log.Printf("mqttDevice[%s] subscribe to mqttClient=%s topic=%s", c.Name(), mc.Config().Name(), topic)
 			mc.AddRoute(topic, func(m mqttClient.Message) {
 				registerName, err := parseTopic(m.Topic())
 				if err != nil {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse topic: %s", deviceConfig.Name(), mc.Config().Name(), err)
+					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse topic: %s", c.Name(), mc.Config().Name(), err)
 					return
 				}
 				realtimeMessage, err := parsePayload(m.Payload())
 				if err != nil {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse payload: %s", deviceConfig.Name(), mc.Config().Name(), err)
+					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse payload: %s", c.Name(), mc.Config().Name(), err)
 					return
 				}
 
 				register := c.addIgnoreRegister(registerName, realtimeMessage)
 				if register != nil {
 					if v := realtimeMessage.NumericValue; v != nil {
-						c.fillable.Fill(dataflow.NewNumericRegisterValue(deviceConfig.Name(), register, *v))
+						c.StateStorage().Fill(dataflow.NewNumericRegisterValue(c.Name(), register, *v))
 					} else if v := realtimeMessage.TextValue; v != nil {
-						c.fillable.Fill(dataflow.NewTextRegisterValue(deviceConfig.Name(), register, *v))
+						c.StateStorage().Fill(dataflow.NewTextRegisterValue(c.Name(), register, *v))
 					}
 					c.SetLastUpdatedNow()
 				}
@@ -78,10 +78,11 @@ func RunDevice(
 	}
 
 	if counter < 1 {
-		return nil, fmt.Errorf("no listener was starrted")
+		log.Printf("mqttDevice[%s]: no listener was starrted", c.Name())
 	}
 
-	return c, nil
+	<-ctx.Done()
+	return nil, false
 }
 
 func parseTopic(topic string) (registerName string, err error) {
@@ -96,18 +97,6 @@ func parseTopic(topic string) (registerName string, err error) {
 func parsePayload(payload []byte) (msg device.RealtimeMessage, err error) {
 	err = json.Unmarshal(payload, &msg)
 	return
-}
-
-func (c *DeviceStruct) Name() string {
-	return c.deviceConfig.Name()
-}
-
-func (c *DeviceStruct) Config() device.Config {
-	return c.deviceConfig
-}
-
-func (c *DeviceStruct) ShutdownChan() chan struct{} {
-	return c.shutdown
 }
 
 func (c *DeviceStruct) Registers() dataflow.Registers {
@@ -148,7 +137,7 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 	c.registersMutex.RUnlock()
 
 	// check if register is on ignore list
-	if device.IsExcluded(registerName, msg.Category, c.deviceConfig) {
+	if device.IsExcluded(registerName, msg.Category, c.Config()) {
 		return nil
 	}
 
@@ -179,23 +168,6 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 	return r
 }
 
-func (c *DeviceStruct) SetLastUpdatedNow() {
-	c.lastUpdatedMutex.Lock()
-	defer c.lastUpdatedMutex.Unlock()
-	c.lastUpdated = time.Now()
-}
-
-func (c *DeviceStruct) LastUpdated() time.Time {
-	c.lastUpdatedMutex.RLock()
-	defer c.lastUpdatedMutex.RUnlock()
-	return c.lastUpdated
-}
-
 func (c *DeviceStruct) Model() string {
 	return "mqtt"
-}
-
-func (c *DeviceStruct) Shutdown() {
-	close(c.shutdown)
-	log.Printf("mqttDevice[%s]: shutdown completed", c.deviceConfig.Name())
 }

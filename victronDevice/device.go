@@ -1,13 +1,11 @@
 package victronDevice
 
 import (
+	"context"
 	"fmt"
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
-	"log"
-	"sync"
-	"time"
 )
 
 type Config interface {
@@ -16,64 +14,46 @@ type Config interface {
 }
 
 type DeviceStruct struct {
-	deviceConfig  device.Config
+	device.State
 	victronConfig Config
 
-	registers        VictronRegisters
-	lastUpdated      time.Time
-	lastUpdatedMutex sync.RWMutex
-	model            string
-
-	shutdown chan struct{}
-	closed   chan struct{}
+	registers VictronRegisters
+	model     string
 }
 
-func RunDevice(
+func CreateDevice(
 	deviceConfig device.Config,
 	victronConfig Config,
-	storage *dataflow.ValueStorageInstance,
-) (device device.Device, err error) {
-	c := &DeviceStruct{
-		deviceConfig:  deviceConfig,
+	stateStorage *dataflow.ValueStorageInstance,
+) *DeviceStruct {
+	return &DeviceStruct{
+		State: device.CreateState(
+			deviceConfig,
+			stateStorage,
+		),
 		victronConfig: victronConfig,
-		shutdown:      make(chan struct{}),
-		closed:        make(chan struct{}),
 	}
-
-	if victronConfig.Kind() == config.VictronVedirectKind {
-		err = startVedirect(c, storage)
-	} else if victronConfig.Kind() == config.VictronRandomBmvKind {
-		err = startRandom(c, storage, RegisterListBmv712)
-	} else if victronConfig.Kind() == config.VictronRandomSolarKind {
-		err = startRandom(c, storage, RegisterListSolar)
-	} else {
-		return nil, fmt.Errorf("unknown device kind: %s", victronConfig.Kind().String())
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
 }
 
-func (c *DeviceStruct) Name() string {
-	return c.deviceConfig.Name()
-}
-
-func (c *DeviceStruct) Config() device.Config {
-	return c.deviceConfig
-}
-
-func (c *DeviceStruct) ShutdownChan() chan struct{} {
-	return c.shutdown
+func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
+	switch c.victronConfig.Kind() {
+	case config.VictronVedirectKind:
+		return runVedirect(ctx, c, c.StateStorage())
+	case config.VictronRandomBmvKind:
+		return runRandom(ctx, c, c.StateStorage(), RegisterListBmv712)
+	case config.VictronRandomSolarKind:
+		return runRandom(ctx, c, c.StateStorage(), RegisterListSolar)
+	default:
+		return fmt.Errorf("unknown device kind: %s", c.victronConfig.Kind().String()), true
+	}
 }
 
 func (c *DeviceStruct) Registers() dataflow.Registers {
-	ret := make(dataflow.Registers, len(c.registers))
+	ret := make(dataflow.Registers, len(c.registers)+1)
 	for i, r := range c.registers {
 		ret[i] = r.(dataflow.Register)
 	}
+	ret[len(c.registers)] = device.GetAvailabilityRegister()
 	return ret
 }
 
@@ -86,24 +66,6 @@ func (c *DeviceStruct) GetRegister(registerName string) dataflow.Register {
 	return nil
 }
 
-func (c *DeviceStruct) SetLastUpdatedNow() {
-	c.lastUpdatedMutex.Lock()
-	defer c.lastUpdatedMutex.Unlock()
-	c.lastUpdated = time.Now()
-}
-
-func (c *DeviceStruct) LastUpdated() time.Time {
-	c.lastUpdatedMutex.RLock()
-	defer c.lastUpdatedMutex.RUnlock()
-	return c.lastUpdated
-}
-
 func (c *DeviceStruct) Model() string {
 	return c.model
-}
-
-func (c *DeviceStruct) Shutdown() {
-	close(c.shutdown)
-	<-c.closed
-	log.Printf("device[%s]: shutdown completed", c.deviceConfig.Name())
 }

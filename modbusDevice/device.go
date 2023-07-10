@@ -1,12 +1,11 @@
 package modbusDevice
 
 import (
+	"context"
 	"fmt"
 	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
-	"log"
-	"sync"
 	"time"
 )
 
@@ -27,61 +26,40 @@ type Modbus interface {
 }
 
 type DeviceStruct struct {
-	deviceConfig   device.Config
-	modbusConfig   Config
-	stateStorage   *dataflow.ValueStorageInstance
+	device.State
+	modbusConfig Config
+
 	commandStorage *dataflow.ValueStorageInstance
 
-	modbus Modbus
-
-	registers        ModbusRegisters
-	lastUpdated      time.Time
-	lastUpdatedMutex sync.RWMutex
-
-	shutdown chan struct{}
-	closed   chan struct{}
+	modbus    Modbus
+	registers ModbusRegisters
 }
 
-func RunDevice(
+func CreateDevice(
 	deviceConfig device.Config,
 	modbusConfig Config,
 	modbus Modbus,
 	stateStorage *dataflow.ValueStorageInstance,
 	commandStorage *dataflow.ValueStorageInstance,
-) (device device.Device, err error) {
-	c := &DeviceStruct{
-		deviceConfig:   deviceConfig,
+) *DeviceStruct {
+	return &DeviceStruct{
+		State: device.CreateState(
+			deviceConfig,
+			stateStorage,
+		),
 		modbusConfig:   modbusConfig,
-		stateStorage:   stateStorage,
 		commandStorage: commandStorage,
 		modbus:         modbus,
-		shutdown:       make(chan struct{}),
-		closed:         make(chan struct{}),
 	}
-
-	if modbusConfig.Kind() == config.ModbusWaveshareRtuRelay8Kind {
-		err = startWaveshareRtuRelay8(c)
-	} else {
-		return nil, fmt.Errorf("unknown device kind: %s", modbusConfig.Kind().String())
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
 }
 
-func (c *DeviceStruct) Name() string {
-	return c.deviceConfig.Name()
-}
-
-func (c *DeviceStruct) Config() device.Config {
-	return c.deviceConfig
-}
-
-func (c *DeviceStruct) ShutdownChan() chan struct{} {
-	return c.shutdown
+func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
+	switch c.modbusConfig.Kind() {
+	case config.ModbusWaveshareRtuRelay8Kind:
+		return runWaveshareRtuRelay8(ctx, c)
+	default:
+		return fmt.Errorf("unknown device kind: %s", c.modbusConfig.Kind().String()), true
+	}
 }
 
 func (c *DeviceStruct) Registers() dataflow.Registers {
@@ -102,24 +80,6 @@ func (c *DeviceStruct) GetRegister(registerName string) dataflow.Register {
 	return nil
 }
 
-func (c *DeviceStruct) SetLastUpdatedNow() {
-	c.lastUpdatedMutex.Lock()
-	defer c.lastUpdatedMutex.Unlock()
-	c.lastUpdated = time.Now()
-}
-
-func (c *DeviceStruct) LastUpdated() time.Time {
-	c.lastUpdatedMutex.RLock()
-	defer c.lastUpdatedMutex.RUnlock()
-	return c.lastUpdated
-}
-
 func (c *DeviceStruct) Model() string {
 	return c.modbusConfig.Kind().String()
-}
-
-func (c *DeviceStruct) Shutdown() {
-	close(c.shutdown)
-	<-c.closed
-	log.Printf("device[%s]: shutdown completed", c.deviceConfig.Name())
 }

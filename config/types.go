@@ -78,13 +78,15 @@ type ModbusConfig struct {
 }
 
 type DeviceConfig struct {
-	name                    string   // defined automatically by map key
-	skipFields              []string // optional: a list of fields that shall be ignored (Eg. Temperature when no sensor is connected)
-	skipCategories          []string // optional: a list of categories that shall be ignored (Eg. Historic)
-	telemetryViaMqttClients []string // optional: default empty
-	realtimeViaMqttClients  []string // optional: default empty
-	logDebug                bool     // optional: default False
-	logComDebug             bool     // optional: default False
+	name                      string        // defined automatically by map key
+	skipFields                []string      // optional: a list of fields that shall be ignored (Eg. Temperature when no sensor is connected)
+	skipCategories            []string      // optional: a list of categories that shall be ignored (Eg. Historic)
+	telemetryViaMqttClients   []string      // optional: default empty
+	realtimeViaMqttClients    []string      // optional: default empty
+	restartInterval           time.Duration // optional: default 200ms
+	restartIntervalMaxBackoff time.Duration // optional: default 1m
+	logDebug                  bool          // optional: default False
+	logComDebug               bool          // optional: default False
 }
 
 type VictronDeviceConfig struct {
@@ -110,12 +112,11 @@ type RelayConfig struct {
 
 type HttpDeviceConfig struct {
 	DeviceConfig
-	url                    *url.URL       // mandatory: how to connect to the device. eg. http://device0.local/
-	kind                   HttpDeviceKind // mandatory: what connection protocol is used
-	username               string         // optional: username used to login
-	password               string         // optional: password used to login
-	pollInterval           time.Duration  // optional: default 1s
-	pollIntervalMaxBackoff time.Duration  // optional: default 10s
+	url          *url.URL       // mandatory: how to connect to the device. eg. http://device0.local/
+	kind         HttpDeviceKind // mandatory: what connection protocol is used
+	username     string         // optional: username used to login
+	password     string         // optional: password used to login
+	pollInterval time.Duration  // optional: default 1s
 }
 
 type MqttDeviceConfig struct {

@@ -483,6 +483,36 @@ func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttC
 		}
 	}
 
+	if len(c.RestartInterval) < 1 {
+		// use default 200ms
+		ret.restartInterval = 200 * time.Millisecond
+	} else if restartInterval, e := time.ParseDuration(c.RestartInterval); e != nil {
+		err = append(err, fmt.Errorf("Devices->%s->RestartInterval='%s' parse error: %s",
+			name, c.RestartInterval, e,
+		))
+	} else if restartInterval < 10*time.Millisecond {
+		err = append(err, fmt.Errorf("Devices->%s->RestartInterval='%s' must be >=10ms",
+			name, c.RestartInterval,
+		))
+	} else {
+		ret.restartInterval = restartInterval
+	}
+
+	if len(c.RestartIntervalMaxBackoff) < 1 {
+		// use default 1min
+		ret.restartIntervalMaxBackoff = time.Minute
+	} else if restartIntervalMaxBackoff, e := time.ParseDuration(c.RestartIntervalMaxBackoff); e != nil {
+		err = append(err, fmt.Errorf("Devices->%s->RestartIntervalMaxBackoff='%s' parse error: %s",
+			name, c.RestartIntervalMaxBackoff, e,
+		))
+	} else if restartIntervalMaxBackoff < 10*time.Millisecond {
+		err = append(err, fmt.Errorf("Devices->%s->RestartIntervalMaxBackoff='%s' must be >=10ms",
+			name, c.RestartIntervalMaxBackoff,
+		))
+	} else {
+		ret.restartIntervalMaxBackoff = restartIntervalMaxBackoff
+	}
+
 	if c.LogDebug != nil && *c.LogDebug {
 		ret.logDebug = true
 	}
@@ -627,21 +657,6 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string, mqttClients []*M
 		))
 	} else {
 		ret.pollInterval = pollInterval
-	}
-
-	if len(c.PollIntervalMaxBackoff) < 1 {
-		// use default 10s
-		ret.pollIntervalMaxBackoff = 10 * time.Second
-	} else if pollIntervalMaxBackoff, e := time.ParseDuration(c.PollIntervalMaxBackoff); e != nil {
-		err = append(err, fmt.Errorf("HttpDevices->%s->PollIntervalMaxBackoff='%s' parse error: %s",
-			name, c.PollIntervalMaxBackoff, e,
-		))
-	} else if pollIntervalMaxBackoff < 100*time.Millisecond {
-		err = append(err, fmt.Errorf("HttpDevices->%s->PollIntervalMaxBackoff='%s' must be >=100ms",
-			name, c.PollIntervalMaxBackoff,
-		))
-	} else {
-		ret.pollIntervalMaxBackoff = pollIntervalMaxBackoff
 	}
 
 	return

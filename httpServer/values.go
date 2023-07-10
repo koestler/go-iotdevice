@@ -71,8 +71,8 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 		for _, dn := range view.DeviceNames() {
 			// the following line uses a loop variable; it must be outside the closure
 			deviceName := dn
-			device := env.DevicePoolInstance.GetByName(deviceName)
-			if device == nil {
+			deviceWatcher := env.DevicePoolInstance.GetByName(deviceName)
+			if deviceWatcher == nil {
 				continue
 			}
 
@@ -93,7 +93,7 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 				// check all inputs
 				inputs := make([]dataflow.Value, 0, len(req))
 				for registerName, value := range req {
-					register := device.GetRegister(registerName)
+					register := deviceWatcher.Service().GetRegister(registerName)
 					if register == nil {
 						jsonErrorResponse(c, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
 						return

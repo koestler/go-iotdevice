@@ -64,12 +64,14 @@ type modbusConfigRead struct {
 }
 
 type deviceConfigRead struct {
-	SkipFields              []string `yaml:"SkipFields"`
-	SkipCategories          []string `yaml:"SkipCategories"`
-	TelemetryViaMqttClients []string `yaml:"TelemetryViaMqttClients"`
-	RealtimeViaMqttClients  []string `yaml:"RealtimeViaMqttClients"`
-	LogDebug                *bool    `yaml:"LogDebug"`
-	LogComDebug             *bool    `yaml:"LogComDebug"`
+	SkipFields                []string `yaml:"SkipFields"`
+	SkipCategories            []string `yaml:"SkipCategories"`
+	TelemetryViaMqttClients   []string `yaml:"TelemetryViaMqttClients"`
+	RealtimeViaMqttClients    []string `yaml:"RealtimeViaMqttClients"`
+	RestartInterval           string   `yaml:"RestartInterval"`
+	RestartIntervalMaxBackoff string   `yaml:"RestartIntervalMaxBackoff"`
+	LogDebug                  *bool    `yaml:"LogDebug"`
+	LogComDebug               *bool    `yaml:"LogComDebug"`
 }
 
 type victronDeviceConfigRead struct {
@@ -94,13 +96,12 @@ type relayConfigRead struct {
 }
 
 type httpDeviceConfigRead struct {
-	General                deviceConfigRead `yaml:"General"`
-	Url                    string           `yaml:"Url"`
-	Kind                   string           `yaml:"Kind"`
-	Username               string           `yaml:"Username"`
-	Password               string           `yaml:"Password"`
-	PollInterval           string           `yaml:"PollInterval"`
-	PollIntervalMaxBackoff string           `yaml:"PollIntervalMaxBackoff"`
+	General      deviceConfigRead `yaml:"General"`
+	Url          string           `yaml:"Url"`
+	Kind         string           `yaml:"Kind"`
+	Username     string           `yaml:"Username"`
+	Password     string           `yaml:"Password"`
+	PollInterval string           `yaml:"PollInterval"`
 }
 
 type mqttDeviceConfigRead struct {

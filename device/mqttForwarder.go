@@ -1,6 +1,7 @@
 package device
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/mqttClient"
@@ -9,7 +10,12 @@ import (
 	"time"
 )
 
-func RunMqttForwarders(d Device, mqttClientPool *pool.Pool[mqttClient.Client], storage *dataflow.ValueStorageInstance) {
+func RunMqttForwarders(
+	ctx context.Context,
+	d Device,
+	mqttClientPool *pool.Pool[mqttClient.Client],
+	storage *dataflow.ValueStorageInstance,
+) {
 	deviceFilter := dataflow.Filter{IncludeDevices: map[string]bool{d.Config().Name(): true}}
 
 	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
@@ -26,7 +32,13 @@ func RunMqttForwarders(d Device, mqttClientPool *pool.Pool[mqttClient.Client], s
 
 			for {
 				select {
-				case <-d.ShutdownChan():
+				case <-ctx.Done():
+					if d.Config().LogDebug() {
+						log.Printf(
+							"device[%s]->mqttClient[%s]: context canceled, exit transmit realtime",
+							d.Config().Name(), mc.Config().Name(),
+						)
+					}
 					return
 				case value := <-subscription.GetOutput():
 					if d.Config().LogDebug() {
@@ -70,7 +82,13 @@ func RunMqttForwarders(d Device, mqttClientPool *pool.Pool[mqttClient.Client], s
 				defer ticker.Stop()
 				for {
 					select {
-					case <-d.ShutdownChan():
+					case <-ctx.Done():
+						if d.Config().LogDebug() {
+							log.Printf(
+								"device[%s]->mqttClient[%s]: context canceled, exit transmit telemetry",
+								d.Config().Name(), mc.Config().Name(),
+							)
+						}
 						return
 					case <-ticker.C:
 						if d.Config().LogDebug() {
@@ -78,6 +96,11 @@ func RunMqttForwarders(d Device, mqttClientPool *pool.Pool[mqttClient.Client], s
 								"device[%s]->mqttClient[%s]: telemetry tick",
 								d.Config().Name(), mc.Config().Name(),
 							)
+						}
+
+						if !d.IsAvailable() {
+							// do not send telemetry when device is disconnected
+							continue
 						}
 
 						values := storage.GetSlice(deviceFilter)
