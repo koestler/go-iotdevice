@@ -3,12 +3,19 @@ package victronDevice
 import (
 	"context"
 	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/device"
 	"log"
 	"math/rand"
 	"time"
 )
 
 func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, registers VictronRegisters) (err error, immediateError bool) {
+	// send connected now, disconnected when this routine stops
+	device.SendConnteced(c.Config().Name(), output)
+	defer func() {
+		device.SendDisconnected(c.Config().Name(), output)
+	}()
+
 	// filter registers by skip list
 	c.registers = FilterRegisters(registers, c.deviceConfig.SkipFields(), c.deviceConfig.SkipCategories())
 

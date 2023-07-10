@@ -18,7 +18,7 @@ type Config interface {
 type DeviceStruct struct {
 	deviceConfig  device.Config
 	victronConfig Config
-	storage       *dataflow.ValueStorageInstance
+	stateStorage  *dataflow.ValueStorageInstance
 
 	registers        VictronRegisters
 	lastUpdated      time.Time
@@ -29,23 +29,23 @@ type DeviceStruct struct {
 func CreateDevice(
 	deviceConfig device.Config,
 	victronConfig Config,
-	storage *dataflow.ValueStorageInstance,
+	stateStorage *dataflow.ValueStorageInstance,
 ) *DeviceStruct {
 	return &DeviceStruct{
 		deviceConfig:  deviceConfig,
 		victronConfig: victronConfig,
-		storage:       storage,
+		stateStorage:  stateStorage,
 	}
 }
 
 func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
 	switch c.victronConfig.Kind() {
 	case config.VictronVedirectKind:
-		return runVedirect(ctx, c, c.storage)
+		return runVedirect(ctx, c, c.stateStorage)
 	case config.VictronRandomBmvKind:
-		return runRandom(ctx, c, c.storage, RegisterListBmv712)
+		return runRandom(ctx, c, c.stateStorage, RegisterListBmv712)
 	case config.VictronRandomSolarKind:
-		return runRandom(ctx, c, c.storage, RegisterListSolar)
+		return runRandom(ctx, c, c.stateStorage, RegisterListSolar)
 	default:
 		return fmt.Errorf("unknown device kind: %s", c.victronConfig.Kind().String()), true
 	}
@@ -60,10 +60,11 @@ func (c *DeviceStruct) Config() device.Config {
 }
 
 func (c *DeviceStruct) Registers() dataflow.Registers {
-	ret := make(dataflow.Registers, len(c.registers))
+	ret := make(dataflow.Registers, len(c.registers)+1)
 	for i, r := range c.registers {
 		ret[i] = r.(dataflow.Register)
 	}
+	ret[len(c.registers)] = device.GetAvailabilityRegister()
 	return ret
 }
 

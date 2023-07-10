@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/vedirect"
 	"log"
 	"strings"
@@ -28,6 +29,12 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	if err := vd.VeCommandPing(); err != nil {
 		return fmt.Errorf("ping failed: %s", err), true
 	}
+
+	// send connected now, disconnected when this routine stops
+	device.SendConnteced(c.Config().Name(), output)
+	defer func() {
+		device.SendDisconnected(c.Config().Name(), output)
+	}()
 
 	// get deviceId
 	deviceId, err := vd.VeCommandDeviceId()

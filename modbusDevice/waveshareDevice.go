@@ -20,7 +20,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	}
 
 	// assign registers
-	c.registers = c.getRegisters()
+	c.registers = c.getModbusRegisters()
 
 	// setup polling
 	execPoll := func() error {
@@ -29,10 +29,8 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 		// fetch registers
 		state, err := ReadRelays(c.modbus.WriteRead, c.modbusConfig.Address())
 		if err != nil {
-			device.SendDisconnected(c.Config().Name(), c.stateStorage)
 			return fmt.Errorf("waveshareDevice[%s]: read failed: %s", c.deviceConfig.Name(), err)
 		}
-		device.SendConnteced(c.Config().Name(), c.stateStorage)
 
 		for _, register := range c.registers {
 			value := 0
@@ -63,6 +61,12 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	if err := execPoll(); err != nil {
 		return err, true
 	}
+
+	// send connected now, disconnected when this routine stops
+	device.SendConnteced(c.Config().Name(), c.stateStorage)
+	defer func() {
+		device.SendDisconnected(c.Config().Name(), c.stateStorage)
+	}()
 
 	// setup subscription to listen for updates of controllable registers
 	filter := dataflow.Filter{
@@ -149,7 +153,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	}
 }
 
-func (c *DeviceStruct) getRegisters() (registers ModbusRegisters) {
+func (c *DeviceStruct) getModbusRegisters() (registers ModbusRegisters) {
 	category := "Relays"
 	registers = make(ModbusRegisters, 0, 8)
 	for i := uint16(0); i < 8; i += 1 {

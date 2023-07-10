@@ -77,13 +77,10 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 		log.Printf("httpDevice[%s]: start polling, interval=%s", ds.deviceConfig.Name(), ds.httpConfig.PollInterval())
 	}
 
-	ds.addRegister(device.GetAvailabilityRegister())
 	execPoll := func() error {
 		if err := ds.poll(); err != nil {
-			device.SendDisconnected(ds.Config().Name(), ds.stateStorage)
 			return fmt.Errorf("httpDevice[%s]: error: %s", ds.deviceConfig.Name(), err)
 		} else {
-			device.SendConnteced(ds.Config().Name(), ds.stateStorage)
 			if ds.Config().LogDebug() {
 				log.Printf("httpDevice[%s]: poll request successful", ds.Config().Name())
 			}
@@ -93,6 +90,12 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 	if err := execPoll(); err != nil {
 		return err, true
 	}
+
+	// send connected now, disconnected when this routine stops
+	device.SendConnteced(ds.Config().Name(), ds.stateStorage)
+	defer func() {
+		device.SendDisconnected(ds.Config().Name(), ds.stateStorage)
+	}()
 
 	// setup subscription to listen for updates of controllable registers
 	filter := dataflow.Filter{
@@ -267,12 +270,13 @@ func (ds *DeviceStruct) Registers() dataflow.Registers {
 	ds.registersMutex.RLock()
 	defer ds.registersMutex.RUnlock()
 
-	ret := make(dataflow.Registers, len(ds.registers))
+	ret := make(dataflow.Registers, len(ds.registers)+1)
 	i := 0
 	for _, r := range ds.registers {
 		ret[i] = r
 		i += 1
 	}
+	ret[len(ds.registers)] = device.GetAvailabilityRegister()
 	return ret
 }
 
