@@ -87,6 +87,10 @@ func (w *Restarter[S]) Shutdown() {
 	w.wg.Wait()
 }
 
+func (w *Restarter[S]) GetCtx() context.Context {
+	return w.ctx
+}
+
 func (w *Restarter[S]) Name() string {
 	return w.service.Name()
 }
