@@ -26,7 +26,7 @@ type Modbus interface {
 }
 
 type DeviceStruct struct {
-	device.DeviceState
+	device.State
 	modbusConfig Config
 
 	commandStorage *dataflow.ValueStorageInstance
@@ -43,7 +43,7 @@ func CreateDevice(
 	commandStorage *dataflow.ValueStorageInstance,
 ) *DeviceStruct {
 	return &DeviceStruct{
-		DeviceState: device.CreateDevice(
+		State: device.CreateState(
 			deviceConfig,
 			stateStorage,
 		),

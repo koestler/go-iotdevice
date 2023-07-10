@@ -19,7 +19,7 @@ type Config interface {
 }
 
 type DeviceStruct struct {
-	device.DeviceState
+	device.State
 	mqttConfig Config
 
 	mqttClientPool *pool.Pool[mqttClient.Client]
@@ -35,7 +35,7 @@ func CreateDevice(
 	mqttClientPool *pool.Pool[mqttClient.Client],
 ) *DeviceStruct {
 	return &DeviceStruct{
-		DeviceState: device.CreateDevice(
+		State: device.CreateState(
 			deviceConfig,
 			stateStorage,
 		),

@@ -28,7 +28,7 @@ type Device interface {
 	Run(ctx context.Context) (err error, immediateError bool)
 }
 
-type DeviceState struct {
+type State struct {
 	deviceConfig Config
 	stateStorage *dataflow.ValueStorageInstance
 
@@ -38,38 +38,38 @@ type DeviceState struct {
 	availableMutex   sync.RWMutex
 }
 
-func CreateDevice(deviceConfig Config, stateStorage *dataflow.ValueStorageInstance) DeviceState {
-	return DeviceState{
+func CreateState(deviceConfig Config, stateStorage *dataflow.ValueStorageInstance) State {
+	return State{
 		deviceConfig: deviceConfig,
 		stateStorage: stateStorage,
 	}
 }
 
-func (c *DeviceState) Name() string {
+func (c *State) Name() string {
 	return c.deviceConfig.Name()
 }
 
-func (c *DeviceState) Config() Config {
+func (c *State) Config() Config {
 	return c.deviceConfig
 }
 
-func (c *DeviceState) StateStorage() *dataflow.ValueStorageInstance {
+func (c *State) StateStorage() *dataflow.ValueStorageInstance {
 	return c.stateStorage
 }
 
-func (c *DeviceState) SetLastUpdatedNow() {
+func (c *State) SetLastUpdatedNow() {
 	c.lastUpdatedMutex.Lock()
 	defer c.lastUpdatedMutex.Unlock()
 	c.lastUpdated = time.Now()
 }
 
-func (c *DeviceState) LastUpdated() time.Time {
+func (c *State) LastUpdated() time.Time {
 	c.lastUpdatedMutex.RLock()
 	defer c.lastUpdatedMutex.RUnlock()
 	return c.lastUpdated
 }
 
-func (c *DeviceState) SetAvailable(available bool) {
+func (c *State) SetAvailable(available bool) {
 	c.availableMutex.Lock()
 	defer c.availableMutex.Unlock()
 	c.available = available
@@ -80,7 +80,7 @@ func (c *DeviceState) SetAvailable(available bool) {
 	}
 }
 
-func (c *DeviceState) IsAvailable() bool {
+func (c *State) IsAvailable() bool {
 	c.availableMutex.RLock()
 	defer c.availableMutex.RUnlock()
 	return c.available

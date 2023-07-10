@@ -14,7 +14,7 @@ type Config interface {
 }
 
 type DeviceStruct struct {
-	device.DeviceState
+	device.State
 	victronConfig Config
 
 	registers VictronRegisters
@@ -27,7 +27,7 @@ func CreateDevice(
 	stateStorage *dataflow.ValueStorageInstance,
 ) *DeviceStruct {
 	return &DeviceStruct{
-		DeviceState: device.CreateDevice(
+		State: device.CreateState(
 			deviceConfig,
 			stateStorage,
 		),

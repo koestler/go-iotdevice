@@ -23,7 +23,7 @@ type Config interface {
 }
 
 type DeviceStruct struct {
-	device.DeviceState
+	device.State
 	httpConfig Config
 
 	commandStorage *dataflow.ValueStorageInstance
@@ -44,7 +44,7 @@ func CreateDevice(
 	commandStorage *dataflow.ValueStorageInstance,
 ) *DeviceStruct {
 	ds := &DeviceStruct{
-		DeviceState: device.CreateDevice(
+		State: device.CreateState(
 			deviceConfig,
 			stateStorage,
 		),
