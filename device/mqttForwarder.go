@@ -98,6 +98,11 @@ func RunMqttForwarders(
 							)
 						}
 
+						if !d.IsAvailable() {
+							// do not send telemetry when device is disconnected
+							continue
+						}
+
 						values := storage.GetSlice(deviceFilter)
 
 						now := time.Now()
