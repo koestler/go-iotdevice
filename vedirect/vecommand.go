@@ -195,36 +195,47 @@ func littleEndianBytesToInt(input []byte) (res int64) {
 func (vd *Vedirect) VeCommandGet(address uint16) (value []byte, err error) {
 	vd.debugPrintf("vedirect: VeCommandGet begin address=%x", address)
 
-	var rawValues []byte
-
-	err = func() error {
+	// fetch response using multiple tries to
+	// deal with old data in the tx buffer of the ve device and our rx buffer
+	const numbTries = 8
+	for try := 0; try < numbTries; try++ {
+		var rawValues []byte
 		rawValues, err = vd.VeCommand(VeCommandGet, address)
 		if err != nil {
-			return err
+			if try > 0 {
+				log.Printf("vedirect: VeCommandGet(address=%x) retry try=%v err=%v", address, try, err)
+			}
+			continue
 		}
 
 		// check address
 		responseAddress := uint16(littleEndianBytesToUint(rawValues[0:2]))
 		if address != responseAddress {
-			return fmt.Errorf("address != responseAddress, address=%x, responseAddress=%x", address, responseAddress)
+			err = fmt.Errorf("address != responseAddress, address=%x, responseAddress=%x", address, responseAddress)
+			if try > 0 {
+				log.Printf("vedirect: VeCommandGet(address=%x) retry try=%v err=%v", address, try, err)
+			}
+			continue
 		}
 
 		// check flag
 		responseFlag := VeResponseFlag(littleEndianBytesToUint(rawValues[2:3]))
 		if VeResponseFlagOk != responseFlag {
-			return fmt.Errorf("VeResponseFlagOk != responseFlag, responseFlag=%v", responseFlag)
+			err = fmt.Errorf("VeResponseFlagOk != responseFlag, responseFlag=%v", responseFlag)
+			if try > 0 {
+				log.Printf("vedirect: VeCommandGet(address=%x) retry try=%v err=%v", address, try, err)
+			}
+			continue
 		}
 
-		return nil
-	}()
-	if err != nil {
-		vd.debugPrintf("vedirect: VeCommandGet end err=%s", err)
-		return nil, err
+		// extract value
+		vd.debugPrintf("vedirect: VeCommandGet end")
+		return rawValues[3:], nil
 	}
 
-	// extract value
-	vd.debugPrintf("vedirect: VeCommandGet end")
-	return rawValues[3:], nil
+	vd.debugPrintf("vedirect: VeCommandGet(address=%x) end tries=%v last err=%v", address, numbTries, err)
+	err = fmt.Errorf("gave up after %v tries, last err=%v", numbTries, err)
+	return nil, err
 }
 
 func (vd *Vedirect) VeCommandGetUint(address uint16) (value uint64, err error) {
