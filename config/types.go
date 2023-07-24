@@ -41,9 +41,9 @@ type HttpServerConfig struct {
 
 type AuthenticationConfig struct {
 	enabled           bool          // defined automatically if Authentication section exists
-	jwtSecret         []byte        `yaml:"JwtSecret"`         // optional: default new random string on startup
-	jwtValidityPeriod time.Duration `yaml:"JwtValidityPeriod"` // optional: default 1h
-	htaccessFile      string        `yaml:"HtaccessFile"`      // optional: default no valid users
+	jwtSecret         []byte        // optional: default new random string on startup
+	jwtValidityPeriod time.Duration // optional: default 1h
+	htaccessFile      string        // optional: default no valid users
 }
 
 type MqttClientConfig struct {
