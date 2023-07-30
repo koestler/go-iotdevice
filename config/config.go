@@ -168,7 +168,7 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 
 	{
 		var viewsErr []error
-		ret.views, viewsErr = TransformAndValidateList(
+		ret.views, viewsErr = TransformAndValidateListUnique(
 			c.Views,
 			func(inp viewConfigRead) (ViewConfig, []error) {
 				return inp.TransformAndValidate(ret.devices)
@@ -448,12 +448,55 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.realtimeRetain = *c.RealtimeRetain
 	}
 
+	{
+		var e []error
+		ret.hassDiscovery, e = TransformAndValidateList(
+			c.HassDiscovery,
+			func(inp hassDiscoveryRead) (HassDiscovery, []error) {
+				return inp.TransformAndValidate()
+			},
+		)
+		err = append(err, e...)
+	}
+
 	if c.LogDebug != nil && *c.LogDebug {
 		ret.logDebug = true
 	}
 
 	if c.LogMessages != nil && *c.LogMessages {
 		ret.logMessages = true
+	}
+
+	return
+}
+
+func (c hassDiscoveryRead) TransformAndValidate() (ret HassDiscovery, err []error) {
+	if c.TopicPrefix == nil {
+		ret.topicPrefix = "homeassistant"
+	} else {
+		ret.topicPrefix = *c.TopicPrefix
+	}
+
+	var e []error
+
+	ret.devices, e = stringToRegexp(c.Devices)
+	err = append(err, e...)
+
+	ret.registers, e = stringToRegexp(c.Registers)
+	err = append(err, e...)
+
+	return
+}
+
+func stringToRegexp(inp []string) (ret []*regexp.Regexp, err []error) {
+	ret = make([]*regexp.Regexp, 0, len(inp))
+	for i, v := range inp {
+		if r, e := regexp.Compile(v); e != nil {
+			err = append(err, fmt.Errorf("invalid regexp: %s", e))
+		} else {
+			ret[i] = r
+		}
+
 	}
 
 	return
@@ -741,7 +784,7 @@ func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewC
 
 	{
 		var devicesErr []error
-		ret.devices, devicesErr = TransformAndValidateList(
+		ret.devices, devicesErr = TransformAndValidateListUnique(
 			c.Devices,
 			func(inp viewDeviceConfigRead) (ViewDeviceConfig, []error) {
 				return inp.TransformAndValidate(devices)
@@ -816,7 +859,22 @@ func TransformAndValidateMap[I any, O any](
 	return
 }
 
-func TransformAndValidateList[I any, O Nameable](
+func TransformAndValidateList[I any, O any](
+	inp []I,
+	transformer func(inp I) (ret O, err []error),
+) (ret []*O, err []error) {
+	ret = make([]*O, 0, len(inp))
+	for _, cr := range inp {
+		r, e := transformer(cr)
+
+		ret = append(ret, &r)
+		err = append(err, e...)
+	}
+
+	return
+}
+
+func TransformAndValidateListUnique[I any, O Nameable](
 	inp []I,
 	transformer func(inp I) (ret O, err []error),
 ) (ret []*O, err []error) {

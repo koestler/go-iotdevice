@@ -2,6 +2,7 @@ package config
 
 import (
 	"net/url"
+	"regexp"
 	"time"
 )
 
@@ -47,26 +48,33 @@ type AuthenticationConfig struct {
 }
 
 type MqttClientConfig struct {
-	name              string        // defined automatically by map key
-	broker            *url.URL      // mandatory
-	protocolVersion   int           // optional: default 5
-	user              string        // optional: default empty
-	password          string        // optional: default empty
-	clientId          string        // optional: default go-iotdevice-UUID
-	qos               byte          // optional: default 1, must be 0, 1, 2
-	keepAlive         time.Duration // optional: default 60s
-	connectRetryDelay time.Duration // optional: default 10s
-	connectTimeout    time.Duration // optional: default 5s
-	availabilityTopic string        // optional: default %Prefix%tele/%ClientId%/status
-	telemetryInterval time.Duration // optional: "10s"
-	telemetryTopic    string        // optional: "%Prefix%tele/go-iotdevice/%DeviceName%/state"
-	telemetryRetain   bool          // optional: default false
-	realtimeEnable    bool          // default: false
-	realtimeTopic     string        // optional: default "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%"
-	realtimeRetain    bool          // optional: default true
-	topicPrefix       string        // optional: default empty
-	logDebug          bool          // optional: default False
-	logMessages       bool          // optional: default False
+	name              string           // defined automatically by map key
+	broker            *url.URL         // mandatory
+	protocolVersion   int              // optional: default 5
+	user              string           // optional: default empty
+	password          string           // optional: default empty
+	clientId          string           // optional: default go-iotdevice-UUID
+	qos               byte             // optional: default 1, must be 0, 1, 2
+	keepAlive         time.Duration    // optional: default 60s
+	connectRetryDelay time.Duration    // optional: default 10s
+	connectTimeout    time.Duration    // optional: default 5s
+	availabilityTopic string           // optional: default %Prefix%tele/%ClientId%/status
+	telemetryInterval time.Duration    // optional: "10s"
+	telemetryTopic    string           // optional: "%Prefix%tele/go-iotdevice/%DeviceName%/state"
+	telemetryRetain   bool             // optional: default false
+	realtimeEnable    bool             // default: false
+	realtimeTopic     string           // optional: default "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%"
+	realtimeRetain    bool             // optional: default true
+	topicPrefix       string           // optional: default empty
+	hassDiscovery     []*HassDiscovery // optional: default Disabled
+	logDebug          bool             // optional: default False
+	logMessages       bool             // optional: default False
+}
+
+type HassDiscovery struct {
+	topicPrefix string // optional: default "homeassistant"
+	devices     []*regexp.Regexp
+	registers   []*regexp.Regexp
 }
 
 type ModbusConfig struct {
