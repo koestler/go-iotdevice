@@ -490,11 +490,11 @@ func (c hassDiscoveryRead) TransformAndValidate() (ret HassDiscovery, err []erro
 
 func stringToRegexp(inp []string) (ret []*regexp.Regexp, err []error) {
 	ret = make([]*regexp.Regexp, 0, len(inp))
-	for i, v := range inp {
+	for _, v := range inp {
 		if r, e := regexp.Compile(v); e != nil {
 			err = append(err, fmt.Errorf("invalid regexp: %s", e))
 		} else {
-			ret[i] = r
+			ret = append(ret, r)
 		}
 
 	}
