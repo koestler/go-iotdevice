@@ -46,6 +46,10 @@ MqttClients:                                               # optional, when empt
     RealtimeTopic: '%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%' # optional, what topic to use for realtime messages
     RealtimeRetain: true                                   # optional, default true, the mqtt retain flag for realtime messages
     TopicPrefix:                                           # optional, default empty, %Prefix% is replaced with this string
+    HassDiscovery:                                         # optional, default, empty, defines which registers should be advertised via the homeassistant discovery mechanism
+      - TopicPrefix:                                       # optional, default 'homeassistant', the mqtt topic used for the disovery messages
+        Devices:                                           # mandatory: a list of regular expressions against which devices names are matched (eg. "device1" or user ".*" for all devices)
+        Registers:                                         # mandatory: a list of regular expressions against which register names are matched
     LogMessages: false                                     # optional, default false, log all incoming mqtt messages
     LogDebug: false                                        # optional, default false, very verbose debug log of the mqtt connection
 
