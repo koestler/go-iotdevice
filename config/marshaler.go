@@ -15,6 +15,7 @@ func (c Config) MarshalYAML() (interface{}, error) {
 		HttpServer:      ConvertEnableableToRead[HttpServerConfig, httpServerConfigRead](c.httpServer),
 		Authentication:  ConvertEnableableToRead[AuthenticationConfig, authenticationConfigRead](c.authentication),
 		MqttClients:     ConvertMapToRead[MqttClientConfig, mqttClientConfigRead](c.mqttClients),
+		HassDiscovery:   ConvertListToRead[HassDiscovery, hassDiscoveryRead](c.hassDiscovery),
 		Modbus:          ConvertMapToRead[ModbusConfig, modbusConfigRead](c.modbus),
 		VictronDevices:  ConvertMapToRead[VictronDeviceConfig, victronDeviceConfigRead](c.victronDevices),
 		ModbusDevices:   ConvertMapToRead[ModbusDeviceConfig, modbusDeviceConfigRead](c.modbusDevices),
@@ -112,6 +113,16 @@ func (c MqttClientConfig) ConvertToRead() mqttClientConfigRead {
 		TopicPrefix:       c.topicPrefix,
 		LogDebug:          &c.logDebug,
 		LogMessages:       &c.logMessages,
+	}
+}
+
+func (c HassDiscovery) ConvertToRead() hassDiscoveryRead {
+	return hassDiscoveryRead{
+		TopicPrefix:    &c.topicPrefix,
+		ViaMqttClients: c.viaMqttClients,
+		Devices:        c.devices,
+		Categories:     c.categories,
+		Registers:      c.registers,
 	}
 }
 

@@ -9,6 +9,7 @@ type configRead struct {
 	HttpServer      *httpServerConfigRead              `yaml:"HttpServer"`
 	Authentication  *authenticationConfigRead          `yaml:"Authentication"`
 	MqttClients     map[string]mqttClientConfigRead    `yaml:"MqttClients"`
+	HassDiscovery   []hassDiscoveryRead                `yaml:"HassDiscovery"`
 	Modbus          map[string]modbusConfigRead        `yaml:"Modbus"`
 	VictronDevices  map[string]victronDeviceConfigRead `yaml:"VictronDevices"`
 	ModbusDevices   map[string]modbusDeviceConfigRead  `yaml:"ModbusDevices"`
@@ -35,32 +36,33 @@ type authenticationConfigRead struct {
 }
 
 type mqttClientConfigRead struct {
-	Broker            string              `yaml:"Broker"`
-	ProtocolVersion   *int                `yaml:"ProtocolVersion"`
-	User              string              `yaml:"User"`
-	Password          string              `yaml:"Password"`
-	ClientId          *string             `yaml:"ClientId"`
-	Qos               *byte               `yaml:"Qos"`
-	KeepAlive         string              `yaml:"KeepAlive"`
-	ConnectRetryDelay string              `yaml:"ConnectRetryDelay"`
-	ConnectTimeout    string              `yaml:"ConnectTimeout"`
-	AvailabilityTopic *string             `yaml:"AvailabilityTopic"`
-	TelemetryInterval string              `yaml:"TelemetryInterval"`
-	TelemetryTopic    *string             `yaml:"TelemetryTopic"`
-	TelemetryRetain   *bool               `yaml:"TelemetryRetain"`
-	RealtimeEnable    *bool               `yaml:"RealtimeEnable"`
-	RealtimeTopic     *string             `yaml:"RealtimeTopic"`
-	RealtimeRetain    *bool               `yaml:"RealtimeRetain"`
-	TopicPrefix       string              `yaml:"TopicPrefix"`
-	HassDiscovery     []hassDiscoveryRead `yaml:"HassDiscovery"`
-	LogDebug          *bool               `yaml:"LogDebug"`
-	LogMessages       *bool               `yaml:"LogMessages"`
+	Broker            string  `yaml:"Broker"`
+	ProtocolVersion   *int    `yaml:"ProtocolVersion"`
+	User              string  `yaml:"User"`
+	Password          string  `yaml:"Password"`
+	ClientId          *string `yaml:"ClientId"`
+	Qos               *byte   `yaml:"Qos"`
+	KeepAlive         string  `yaml:"KeepAlive"`
+	ConnectRetryDelay string  `yaml:"ConnectRetryDelay"`
+	ConnectTimeout    string  `yaml:"ConnectTimeout"`
+	AvailabilityTopic *string `yaml:"AvailabilityTopic"`
+	TelemetryInterval string  `yaml:"TelemetryInterval"`
+	TelemetryTopic    *string `yaml:"TelemetryTopic"`
+	TelemetryRetain   *bool   `yaml:"TelemetryRetain"`
+	RealtimeEnable    *bool   `yaml:"RealtimeEnable"`
+	RealtimeTopic     *string `yaml:"RealtimeTopic"`
+	RealtimeRetain    *bool   `yaml:"RealtimeRetain"`
+	TopicPrefix       string  `yaml:"TopicPrefix"`
+	LogDebug          *bool   `yaml:"LogDebug"`
+	LogMessages       *bool   `yaml:"LogMessages"`
 }
 
 type hassDiscoveryRead struct {
-	TopicPrefix *string  `yaml:"TopicPrefix"`
-	Devices     []string `yaml:"Devices"`
-	Registers   []string `yaml:"Registers"`
+	TopicPrefix    *string  `yaml:"TopicPrefix"`
+	ViaMqttClients []string `yaml:"ViaMqttClients"`
+	Devices        []string `yaml:"Devices"`
+	Categories     []string `yaml:"Categories"`
+	Registers      []string `yaml:"Registers"`
 }
 
 type modbusConfigRead struct {

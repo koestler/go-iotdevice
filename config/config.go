@@ -101,6 +101,14 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	)
 	err = append(err, e...)
 
+	ret.hassDiscovery, e = TransformAndValidateList(
+		c.HassDiscovery,
+		func(inp hassDiscoveryRead) (HassDiscovery, []error) {
+			return inp.TransformAndValidate(ret.mqttClients)
+		},
+	)
+	err = append(err, e...)
+
 	ret.modbus, e = TransformAndValidateMapToList(
 		c.Modbus,
 		func(inp modbusConfigRead, name string) (ModbusConfig, []error) {
@@ -448,17 +456,6 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.realtimeRetain = *c.RealtimeRetain
 	}
 
-	{
-		var e []error
-		ret.hassDiscovery, e = TransformAndValidateList(
-			c.HassDiscovery,
-			func(inp hassDiscoveryRead) (HassDiscovery, []error) {
-				return inp.TransformAndValidate()
-			},
-		)
-		err = append(err, e...)
-	}
-
 	if c.LogDebug != nil && *c.LogDebug {
 		ret.logDebug = true
 	}
@@ -470,7 +467,14 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	return
 }
 
-func (c hassDiscoveryRead) TransformAndValidate() (ret HassDiscovery, err []error) {
+func (c hassDiscoveryRead) TransformAndValidate(mqttClients []*MqttClientConfig) (ret HassDiscovery, err []error) {
+	ret = HassDiscovery{
+		viaMqttClients: c.ViaMqttClients,
+		devices:        c.Devices,
+		categories:     c.Categories,
+		registers:      c.Registers,
+	}
+
 	if c.TopicPrefix == nil {
 		ret.topicPrefix = "homeassistant"
 	} else {
@@ -479,10 +483,19 @@ func (c hassDiscoveryRead) TransformAndValidate() (ret HassDiscovery, err []erro
 
 	var e []error
 
-	ret.devices, e = stringToRegexp(c.Devices)
+	for _, clientName := range ret.viaMqttClients {
+		if !existsByName(clientName, mqttClients) {
+			err = append(err, fmt.Errorf("HassDisovery->MqttClients: client='%s' is not defined", clientName))
+		}
+	}
+
+	ret.devicesMatcher, e = stringToRegexp(c.Devices)
 	err = append(err, e...)
 
-	ret.registers, e = stringToRegexp(c.Registers)
+	ret.categoriesMatcher, e = stringToRegexp(c.Categories)
+	err = append(err, e...)
+
+	ret.registersMatcher, e = stringToRegexp(c.Registers)
 	err = append(err, e...)
 
 	return
