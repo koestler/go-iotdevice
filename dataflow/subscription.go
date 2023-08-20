@@ -4,6 +4,7 @@ type Subscription struct {
 	shutdownChannel chan struct{}
 	outputChannel   chan Value
 	filter          Filter
+	sentOnce        map[OnlyOnceKey]bool
 }
 
 func (s *Subscription) Shutdown() {
