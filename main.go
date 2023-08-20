@@ -115,7 +115,9 @@ func main() {
 
 		// start http server
 		httpServerInstance := runHttpServer(cfg, devicePoolInstance, stateStorage, commandStorage)
-		defer httpServerInstance.Shutdown()
+		if httpServerInstance != nil {
+			defer httpServerInstance.Shutdown()
+		}
 
 		// setup SIGTERM, SIGINT handlers
 		gracefulStop := make(chan os.Signal, 1)
