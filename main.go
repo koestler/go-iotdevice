@@ -103,7 +103,9 @@ func main() {
 
 		// start hass discovery
 		hassDiscoveryInstance := runHassDisovery(cfg, stateStorage, mqttClientPoolInstance)
-		defer hassDiscoveryInstance.Shutdown()
+		if hassDiscoveryInstance != nil {
+			defer hassDiscoveryInstance.Shutdown()
+		}
 
 		// start modbus device handlers
 		modbusPoolInstance := runModbus(cfg)
