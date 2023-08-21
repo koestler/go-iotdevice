@@ -54,7 +54,7 @@ func RunMqttForwarders(
 							d.Config().Name(), mc.Config().Name(), err,
 						)
 					} else if err := mc.Publish(
-						getRealtimeTopic(mc.Config().RealtimeTopic(), d, value.Register()),
+						GetRealtimeTopic(mc.Config().RealtimeTopic(), d.Config().Name(), value.Register()),
 						payload,
 						mc.Config().Qos(),
 						mc.Config().RealtimeRetain(),

@@ -181,6 +181,7 @@ func (instance *ValueStorageInstance) Subscribe(filter Filter) Subscription {
 		shutdownChannel: make(chan struct{}),
 		outputChannel:   make(chan Value, 128),
 		filter:          filter,
+		sentOnce:        make(map[OnlyOnceKey]bool),
 	}
 
 	instance.subscriptionChannel <- &s

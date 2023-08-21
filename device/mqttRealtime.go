@@ -36,12 +36,12 @@ func convertValueToRealtimeMessage(value dataflow.Value) interface{} {
 	return ret
 }
 
-func getRealtimeTopic(
+func GetRealtimeTopic(
 	topic string,
-	device Device,
+	deviceName string,
 	register dataflow.Register,
 ) string {
-	topic = strings.Replace(topic, "%DeviceName%", device.Config().Name(), 1)
+	topic = strings.Replace(topic, "%DeviceName%", deviceName, 1)
 	topic = strings.Replace(topic, "%ValueName%", register.Name(), 1)
 	if valueUnit := register.Unit(); valueUnit != "" {
 		topic = strings.Replace(topic, "%ValueUnit%", valueUnit, 1)

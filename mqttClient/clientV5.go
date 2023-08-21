@@ -130,7 +130,7 @@ func (c *ClientStruct) Shutdown() {
 func (c *ClientStruct) Publish(topic string, payload []byte, qos byte, retain bool) (err error) {
 	_, err = c.cm.Publish(c.ctx, &paho.Publish{
 		QoS:     qos,
-		Topic:   replaceTemplate(topic, c.cfg),
+		Topic:   ReplaceTemplate(topic, c.cfg),
 		Payload: payload,
 		Retain:  retain,
 	})

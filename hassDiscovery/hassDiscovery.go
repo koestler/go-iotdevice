@@ -2,9 +2,11 @@ package hassDiscovery
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/pool"
+	"log"
 	"regexp"
 	"sync"
 )
@@ -57,10 +59,29 @@ func (hd *HassDiscovery) Run() {
 	go func() {
 		defer hd.wg.Done()
 
+		filter := dataflow.Filter{OnlyOnce: true}
+		subscription := hd.stateStorage.Subscribe(filter)
+		defer subscription.Shutdown()
+
+		log.Printf("hassDiscovery: filter: %+v", filter)
+
+		configItem := hd.configItems[0]
+
+		log.Printf("hassDiscovery: run main routine")
+
 		for {
 			select {
 			case <-hd.ctx.Done():
 				return
+			case value := <-subscription.GetOutput():
+				log.Printf("hassDiscovery: value received: %v", value)
+
+				hd.handleRegister(
+					configItem.TopicPrefix(),
+					hd.mqttClientPool.GetByName(configItem.ViaMqttClients()[0]),
+					value.DeviceName(),
+					value.Register(),
+				)
 			}
 		}
 	}()
@@ -69,4 +90,40 @@ func (hd *HassDiscovery) Run() {
 func (hd *HassDiscovery) Shutdown() {
 	hd.cancel()
 	hd.wg.Wait()
+}
+
+func (hd *HassDiscovery) handleRegister(
+	discoveryPrefix string,
+	mc mqttClient.Client,
+	deviceName string,
+	register dataflow.Register,
+) {
+	var topic string
+	var msg discoveryMessage
+
+	switch register.RegisterType() {
+	case dataflow.NumberRegister:
+		topic, msg = getSensorMessage(
+			discoveryPrefix,
+			mc.Config(),
+			deviceName,
+			register,
+		)
+	default:
+		return
+	}
+
+	log.Printf("hassDiscovery: send %s %#v", topic, msg)
+
+	if payload, err := json.Marshal(msg); err != nil {
+		log.Printf("hassDiscovery: cannot generate discovery message: %s", err)
+	} else if err := mc.Publish(
+		topic,
+		payload,
+		mc.Config().Qos(),
+		mc.Config().RealtimeRetain(),
+	); err != nil {
+		log.Printf("hassDiscovery: cannot publish realtime: %s", err)
+	}
+
 }
