@@ -30,7 +30,7 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 		case <-ctx.Done():
 			return nil, false
 		case <-ticker.C:
-			for _, r := range registers {
+			for _, r := range c.registers {
 				switch r.RegisterType() {
 				case dataflow.NumberRegister:
 					var value float64
