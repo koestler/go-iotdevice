@@ -29,13 +29,22 @@ type Restarter[S Restartable] struct {
 	wg     sync.WaitGroup
 }
 
-func RunRestarter[S Restartable](config Config, service S) (w *Restarter[S]) {
+func CreateRestarter[S Restartable](config Config, service S) (w *Restarter[S]) {
 	ctx, cancel := context.WithCancel(context.Background())
 	w = &Restarter[S]{
 		config:  config,
 		service: service,
 		ctx:     ctx,
 		cancel:  cancel,
+	}
+
+	return
+}
+
+func (w *Restarter[S]) Run() {
+	// check if context is already canceled
+	if w.ctx.Err() != nil {
+		return
 	}
 
 	w.wg.Add(1)
@@ -48,16 +57,16 @@ func RunRestarter[S Restartable](config Config, service S) (w *Restarter[S]) {
 			if first {
 				first = false
 			} else {
-				log.Printf("restarter[%s]: start", service.Name())
+				log.Printf("restarter[%s]: start", w.service.Name())
 			}
 
 			start := time.Now()
-			err, immediateError := service.Run(w.ctx)
+			err, immediateError := w.service.Run(w.ctx)
 			if err == nil {
 				// shutdown
 				return
 			} else {
-				log.Printf("restarter[%s]: terminated with error: %s", service.Name(), err)
+				log.Printf("restarter[%s]: terminated with error: %s", w.service.Name(), err)
 				runningFor := time.Since(start)
 
 				if immediateError {
@@ -68,18 +77,16 @@ func RunRestarter[S Restartable](config Config, service S) (w *Restarter[S]) {
 
 				retryIn := w.getRestartInterval(immediateErrorsInARow)
 
-				log.Printf("restarter[%s]: error after %s, expoential backoff, retry in %s", service.Name(), runningFor, retryIn)
+				log.Printf("restarter[%s]: error after %s, expoential backoff, retry in %s", w.service.Name(), runningFor, retryIn)
 
 				select {
-				case <-ctx.Done():
+				case <-w.ctx.Done():
 					return
 				case <-time.After(retryIn):
 				}
 			}
 		}
 	}()
-
-	return
 }
 
 func (w *Restarter[S]) Shutdown() {

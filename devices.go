@@ -30,8 +30,9 @@ func runDevices(
 		}
 
 		dev := victronDevice.CreateDevice(deviceConfig, deviceConfig, stateStorage)
-		watchedDev := restarter.RunRestarter[device.Device](deviceConfig, dev)
+		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
+		watchedDev.Run()
 		devicePoolInstance.Add(watchedDev)
 	}
 
@@ -47,8 +48,9 @@ func runDevices(
 		}
 
 		dev := modbusDevice.CreateDevice(deviceConfig, deviceConfig, modbusInstance, stateStorage, commandStorage)
-		watchedDev := restarter.RunRestarter[device.Device](deviceConfig, dev)
+		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
+		watchedDev.Run()
 		devicePoolInstance.Add(watchedDev)
 	}
 
@@ -58,8 +60,9 @@ func runDevices(
 		}
 
 		dev := mqttDevice.CreateDevice(deviceConfig, deviceConfig, stateStorage, mqttClientPool)
-		watchedDev := restarter.RunRestarter[device.Device](deviceConfig, dev)
+		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
+		watchedDev.Run()
 		devicePoolInstance.Add(watchedDev)
 	}
 
@@ -69,8 +72,9 @@ func runDevices(
 		}
 
 		dev := httpDevice.CreateDevice(deviceConfig, deviceConfig, stateStorage, commandStorage)
-		watchedDev := restarter.RunRestarter[device.Device](deviceConfig, dev)
+		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
+		watchedDev.Run()
 		devicePoolInstance.Add(watchedDev)
 	}
 
