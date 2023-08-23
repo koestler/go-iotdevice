@@ -20,7 +20,7 @@ type ClientStruct struct {
 	cliCfg         autopaho.ClientConfig
 	cm             *autopaho.ConnectionManager
 	router         *paho.StandardRouter
-	publishBacklog queue.FifoQueue[*paho.Publish]
+	publishBacklog queue.Fifo[*paho.Publish]
 
 	ctx    context.Context
 	cancel context.CancelFunc

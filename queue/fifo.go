@@ -1,44 +1,44 @@
 package queue
 
 import (
-	"container/list"
+	"github.com/koestler/go-iotdevice/list"
 	"sync"
 )
 
-type FifoQueue[T any] struct {
-	maxLength     int
-	containerList list.List
-	lock          sync.Mutex
+type Fifo[T any] struct {
+	maxLength int
+	list      list.List[T]
+	lock      sync.Mutex
 }
 
-func NewFifoQueue[T any](maxLength int) FifoQueue[T] {
-	return FifoQueue[T]{maxLength: maxLength}
+func NewFifo[T any](maxLength int) Fifo[T] {
+	return Fifo[T]{maxLength: maxLength}
 }
 
-func (q *FifoQueue[T]) Enqueue(value T) {
+func (q *Fifo[T]) Enqueue(value T) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
-	q.containerList.PushBack(value)
+	q.list.PushBack(value)
 
 	// when list gets to long; truncate first element
-	if q.containerList.Len() > q.maxLength {
-		if elem := q.containerList.Front(); elem != nil {
-			q.containerList.Remove(elem)
+	if q.list.Len() > q.maxLength {
+		if elem := q.list.Front(); elem != nil {
+			q.list.Remove(elem)
 		}
 	}
 }
 
-func (q *FifoQueue[T]) Dequeue() (value T, ok bool) {
+func (q *Fifo[T]) Dequeue() (value T, ok bool) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
-	elem := q.containerList.Front()
+	elem := q.list.Front()
 	if elem == nil {
 		var empty T
 		return empty, false
 	}
 
-	q.containerList.Remove(elem)
-	return elem.Value.(T), true
+	v := q.list.Remove(elem)
+	return v, true
 }
