@@ -53,15 +53,12 @@ func RunMqttForwarders(
 							"device[%s]->mqttClient[%s]: cannot generate realtime message: %s",
 							d.Config().Name(), mc.Config().Name(), err,
 						)
-					} else if err := mc.Publish(
-						GetRealtimeTopic(mc.Config().RealtimeTopic(), d.Config().Name(), value.Register()),
-						payload,
-						mc.Config().Qos(),
-						mc.Config().RealtimeRetain(),
-					); err != nil {
-						log.Printf(
-							"device[%s]->mqttClient[%s]: cannot publish realtime: %s",
-							d.Config().Name(), mc.Config().Name(), err,
+					} else {
+						mc.Publish(
+							GetRealtimeTopic(mc.Config().RealtimeTopic(), d.Config().Name(), value.Register()),
+							payload,
+							mc.Config().Qos(),
+							mc.Config().RealtimeRetain(),
 						)
 					}
 				}
@@ -120,15 +117,12 @@ func RunMqttForwarders(
 								"device[%s]->mqttClient[%s]: cannot generate telemetry message: %s",
 								d.Config().Name(), mc.Config().Name(), err,
 							)
-						} else if err := mc.Publish(
-							getTelemetryTopic(mc.Config().TelemetryTopic(), d),
-							payload,
-							mc.Config().Qos(),
-							mc.Config().TelemetryRetain(),
-						); err != nil {
-							log.Printf(
-								"device[%s]->mqttClient[%s]: cannot publish telemetry: %s",
-								d.Config().Name(), mc.Config().Name(), err,
+						} else {
+							mc.Publish(
+								getTelemetryTopic(mc.Config().TelemetryTopic(), d),
+								payload,
+								mc.Config().Qos(),
+								mc.Config().TelemetryRetain(),
 							)
 						}
 					}

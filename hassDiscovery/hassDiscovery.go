@@ -117,13 +117,12 @@ func (hd *HassDiscovery) handleRegister(
 
 	if payload, err := json.Marshal(msg); err != nil {
 		log.Printf("hassDiscovery: cannot generate discovery message: %s", err)
-	} else if err := mc.Publish(
-		topic,
-		payload,
-		mc.Config().Qos(),
-		mc.Config().RealtimeRetain(),
-	); err != nil {
-		log.Printf("hassDiscovery: cannot publish realtime: %s", err)
+	} else {
+		mc.Publish(
+			topic,
+			payload,
+			mc.Config().Qos(),
+			mc.Config().RealtimeRetain(),
+		)
 	}
-
 }

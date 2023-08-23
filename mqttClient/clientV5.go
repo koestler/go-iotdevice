@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
+	"github.com/koestler/go-iotdevice/queue"
 	"log"
 	"net/url"
 	"time"
@@ -18,7 +19,9 @@ func CreateV5(
 		cfg:      cfg,
 		shutdown: make(chan struct{}),
 
-		router: paho.NewStandardRouter(),
+		router:         paho.NewStandardRouter(),
+		publishBacklog: queue.NewFifoQueue[*paho.Publish](64),
+
 		ctx:    ctx,
 		cancel: cancel,
 	}
@@ -71,15 +74,6 @@ func (c *ClientStruct) Run() {
 func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Connack) {
 	return func(cm *autopaho.ConnectionManager, conack *paho.Connack) {
 		log.Printf("mqttClientV5[%s]: connection is up", c.cfg.Name())
-		// publish online
-		if c.AvailabilityEnabled() {
-			go func() {
-				_, err := cm.Publish(c.ctx, c.availabilityMsg(availabilityOnline))
-				if err != nil {
-					log.Printf("mqttClientV5[%s]: error during publish: %s", c.cfg.Name(), err)
-				}
-			}()
-		}
 		// subscribe topics
 		if len(c.subscriptions) > 0 {
 			if _, err := cm.Subscribe(c.ctx, &paho.Subscribe{
@@ -99,6 +93,32 @@ func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.
 			}
 		}
 
+		// publish in separate routine to allow for parallel reception of messages
+		go func() {
+			// publish availability online
+			if c.AvailabilityEnabled() {
+				_, err := cm.Publish(c.ctx, c.availabilityMsg(availabilityOnline))
+				if err != nil {
+					log.Printf("mqttClientV5[%s]: error during publish: %s", c.cfg.Name(), err)
+				}
+			}
+
+			// publish messages in the backlog
+			if l := c.publishBacklog.Len(); l > 0 {
+				if c.Config().LogDebug() {
+					log.Printf("mqttClientV5[%s]: published backlog of size %d", c.cfg.Name(), l)
+				}
+				for {
+					p, ok := c.publishBacklog.Dequeue()
+					if !ok {
+						break
+					}
+					if _, err := c.cm.Publish(c.ctx, p); err != nil {
+						log.Printf("mqttClientV5[%s]: cannot publish backlog, truncating: %s", c.cfg.Name(), err)
+					}
+				}
+			}
+		}()
 	}
 }
 
@@ -127,14 +147,21 @@ func (c *ClientStruct) Shutdown() {
 	log.Printf("mqttClientV5[%s]: shutdown completed", c.cfg.Name())
 }
 
-func (c *ClientStruct) Publish(topic string, payload []byte, qos byte, retain bool) (err error) {
-	_, err = c.cm.Publish(c.ctx, &paho.Publish{
+func (c *ClientStruct) Publish(topic string, payload []byte, qos byte, retain bool) {
+	p := &paho.Publish{
 		QoS:     qos,
 		Topic:   ReplaceTemplate(topic, c.cfg),
 		Payload: payload,
 		Retain:  retain,
-	})
-	return
+	}
+
+	_, err := c.cm.Publish(c.ctx, p)
+	if err != nil {
+		c.publishBacklog.Enqueue(p)
+		if c.Config().LogDebug() {
+			log.Printf("mqttClientV5[%s]: error during publish, add to backlog: %s", c.cfg.Name(), err)
+		}
+	}
 }
 
 func (c *ClientStruct) availabilityMsg(payload string) *paho.Publish {
