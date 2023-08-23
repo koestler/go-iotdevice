@@ -56,7 +56,7 @@ func Run(env *Environment) (httpServer *HttpServer) {
 	engine.Use(gin.Recovery())
 	engine.Use(authJwtMiddleware(env))
 
-	addApiV1Routes(engine, cfg, env)
+	addApiV2Routes(engine, env)
 	setupFrontend(engine, cfg)
 
 	server := &http.Server{
@@ -88,7 +88,7 @@ func (s *HttpServer) Shutdown() {
 	}
 }
 
-func addApiV1Routes(r *gin.Engine, config Config, env *Environment) {
+func addApiV2Routes(r *gin.Engine, env *Environment) {
 	v2 := r.Group("/api/v2/")
 	v2.Use(gzip.Gzip(gzip.BestCompression))
 	setupConfig(v2, env)
