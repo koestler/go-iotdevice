@@ -104,18 +104,17 @@ func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.
 			}
 
 			// publish messages in the backlog
-			if l := c.publishBacklog.Len(); l > 0 {
-				if c.Config().LogDebug() {
-					log.Printf("mqttClientV5[%s]: published backlog of size %d", c.cfg.Name(), l)
+			for {
+				p, ok := c.publishBacklog.Dequeue()
+				if !ok {
+					break
 				}
-				for {
-					p, ok := c.publishBacklog.Dequeue()
-					if !ok {
-						break
-					}
-					if _, err := c.cm.Publish(c.ctx, p); err != nil {
-						log.Printf("mqttClientV5[%s]: cannot publish backlog, truncating: %s", c.cfg.Name(), err)
-					}
+				if c.Config().LogDebug() {
+					log.Printf("mqttClientV5[%s]: published backlog message", c.cfg.Name())
+				}
+
+				if _, err := c.cm.Publish(c.ctx, p); err != nil {
+					log.Printf("mqttClientV5[%s]: cannot publish backlog, truncating: %s", c.cfg.Name(), err)
 				}
 			}
 		}()
@@ -157,10 +156,10 @@ func (c *ClientStruct) Publish(topic string, payload []byte, qos byte, retain bo
 
 	_, err := c.cm.Publish(c.ctx, p)
 	if err != nil {
-		c.publishBacklog.Enqueue(p)
 		if c.Config().LogDebug() {
 			log.Printf("mqttClientV5[%s]: error during publish, add to backlog: %s", c.cfg.Name(), err)
 		}
+		c.publishBacklog.Enqueue(p)
 	}
 }
 

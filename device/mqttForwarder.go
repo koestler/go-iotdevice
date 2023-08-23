@@ -24,10 +24,11 @@ func RunMqttForwarders(
 			continue
 		}
 
+		subscription := storage.Subscribe(deviceFilter)
+
 		// transmitRealtime values from data store and publish to mqtt broker
 		go func() {
 			// setup empty filter (everything)
-			subscription := storage.Subscribe(deviceFilter)
 			defer subscription.Shutdown()
 
 			for {
