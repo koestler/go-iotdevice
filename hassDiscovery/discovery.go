@@ -31,7 +31,7 @@ func getSensorMessage(
 	deviceName string,
 	register dataflow.Register,
 ) (topic string, msg discoveryMessage) {
-	uniqueId := fmt.Sprintf("%s-%s", deviceName, register.Name())
+	uniqueId := fmt.Sprintf("%s-%s", deviceName, CamelToSnakeCase(register.Name()))
 	name := fmt.Sprintf("%s %s", deviceName, register.Description())
 
 	topic = getTopic(discoveryPrefix, "sensor", mCfg.ClientId(), uniqueId)
