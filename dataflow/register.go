@@ -2,8 +2,6 @@ package dataflow
 
 import "sort"
 
-type Registers []Register
-
 type Register interface {
 	Category() string
 	Name() string
@@ -78,8 +76,8 @@ func (r RegisterStruct) Controllable() bool {
 	return r.controllable
 }
 
-func FilterRegisters(input Registers, excludeFields []string, excludeCategories []string) (output Registers) {
-	output = make(Registers, 0, len(input))
+func FilterRegisters(input []Register, excludeFields []string, excludeCategories []string) (output []Register) {
+	output = make([]Register, 0, len(input))
 	for _, r := range input {
 		if RegisterNameExcluded(excludeFields, r) {
 			continue
@@ -92,7 +90,7 @@ func FilterRegisters(input Registers, excludeFields []string, excludeCategories 
 	return
 }
 
-func SortRegisters(input Registers) Registers {
+func SortRegisters(input []Register) []Register {
 	sort.SliceStable(input, func(i, j int) bool { return input[i].Sort() < input[j].Sort() })
 	return input
 }

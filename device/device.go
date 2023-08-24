@@ -20,7 +20,7 @@ type Config interface {
 type Device interface {
 	Name() string
 	Config() Config
-	Registers() dataflow.Registers
+	Registers() []dataflow.Register
 	GetRegister(registerName string) dataflow.Register
 	LastUpdated() time.Time
 	IsAvailable() bool

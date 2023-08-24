@@ -99,11 +99,11 @@ func parsePayload(payload []byte) (msg device.RealtimeMessage, err error) {
 	return
 }
 
-func (c *DeviceStruct) Registers() dataflow.Registers {
+func (c *DeviceStruct) Registers() []dataflow.Register {
 	c.registersMutex.RLock()
 	defer c.registersMutex.RUnlock()
 
-	ret := make(dataflow.Registers, len(c.registers))
+	ret := make([]dataflow.Register, len(c.registers))
 	i := 0
 	for _, r := range c.registers {
 		ret[i] = r

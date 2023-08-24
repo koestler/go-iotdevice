@@ -258,11 +258,11 @@ func (ds *DeviceStruct) addRegister(register dataflow.Register) {
 	ds.registers[register.Name()] = register
 }
 
-func (ds *DeviceStruct) Registers() dataflow.Registers {
+func (ds *DeviceStruct) Registers() []dataflow.Register {
 	ds.registersMutex.RLock()
 	defer ds.registersMutex.RUnlock()
 
-	ret := make(dataflow.Registers, len(ds.registers)+1)
+	ret := make([]dataflow.Register, len(ds.registers)+1)
 	i := 0
 	for _, r := range ds.registers {
 		ret[i] = r
