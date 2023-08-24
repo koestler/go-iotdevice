@@ -38,7 +38,7 @@ type State struct {
 	availableMutex   sync.RWMutex
 }
 
-func CreateState(deviceConfig Config, stateStorage *dataflow.ValueStorageInstance) State {
+func NewState(deviceConfig Config, stateStorage *dataflow.ValueStorageInstance) State {
 	return State{
 		deviceConfig: deviceConfig,
 		stateStorage: stateStorage,

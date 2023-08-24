@@ -2,7 +2,7 @@ package device
 
 import "github.com/koestler/go-iotdevice/dataflow"
 
-var availabilityRegister = dataflow.CreateRegisterStruct(
+var availabilityRegister = dataflow.NewRegisterStruct(
 	"Availability",
 	"Connection",
 	"Connection",

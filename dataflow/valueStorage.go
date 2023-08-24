@@ -107,7 +107,7 @@ func (instance *ValueStorageInstance) handleNewReadStateRequest(newReadStateRequ
 	newReadStateRequest.response <- response
 }
 
-func ValueStorageCreate() (valueStorageInstance *ValueStorageInstance) {
+func NewValueStorage() (valueStorageInstance *ValueStorageInstance) {
 	valueStorageInstance = &ValueStorageInstance{
 		state:                   make(State),
 		subscriptions:           make(map[*Subscription]struct{}),

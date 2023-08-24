@@ -13,14 +13,14 @@ type ModbusRegisterStruct struct {
 	address uint16
 }
 
-func CreateEnumRegisterStruct(
+func NewModbusRegisterStruct(
 	category, name, description string,
 	address uint16,
 	enum map[int]string,
 	sort int,
 ) ModbusRegisterStruct {
 	return ModbusRegisterStruct{
-		dataflow.CreateRegisterStruct(
+		dataflow.NewRegisterStruct(
 			category, name, description,
 			dataflow.EnumRegister,
 			enum,

@@ -28,14 +28,14 @@ type DeviceStruct struct {
 	registersMutex sync.RWMutex
 }
 
-func CreateDevice(
+func NewDevice(
 	deviceConfig device.Config,
 	mqttConfig Config,
 	stateStorage *dataflow.ValueStorageInstance,
 	mqttClientPool *pool.Pool[mqttClient.Client],
 ) *DeviceStruct {
 	return &DeviceStruct{
-		State: device.CreateState(
+		State: device.NewState(
 			deviceConfig,
 			stateStorage,
 		),
@@ -149,7 +149,7 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 		registerType = dataflow.NumberRegister
 	}
 
-	r = dataflow.CreateRegisterStruct(
+	r = dataflow.NewRegisterStruct(
 		msg.Category,
 		registerName,
 		msg.Description,

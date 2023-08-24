@@ -18,7 +18,7 @@ type ModbusStruct struct {
 	mutex sync.Mutex
 }
 
-func Create(cfg Config) (*ModbusStruct, error) {
+func New(cfg Config) (*ModbusStruct, error) {
 	if cfg.LogDebug() {
 		log.Printf("modbus[%s]: create device=%v", cfg.Name(), cfg.Device())
 	}

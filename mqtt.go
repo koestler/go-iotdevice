@@ -21,7 +21,7 @@ func runMqttClient(
 			)
 		}
 
-		client := mqttClient.CreateV5(mqttClientConfig)
+		client := mqttClient.NewV5(mqttClientConfig)
 		client.Run()
 		mqttClientPoolInstance.Add(client)
 	}

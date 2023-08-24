@@ -1,7 +1,7 @@
 package victronDevice
 
 var RegisterListSolarProduct = VictronRegisters{
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Product",
 		"ProductId",
 		"Product id",
@@ -13,7 +13,7 @@ var RegisterListSolarProduct = VictronRegisters{
 		"",
 		300,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Product",
 		"GroupId",
 		"Group id",
@@ -25,7 +25,7 @@ var RegisterListSolarProduct = VictronRegisters{
 		"",
 		301,
 	),
-	CreateTextRegisterStruct(
+	NewTextRegisterStruct(
 		"Product",
 		"SerialNumber",
 		"Serial number",
@@ -33,7 +33,7 @@ var RegisterListSolarProduct = VictronRegisters{
 		true,
 		302,
 	),
-	CreateTextRegisterStruct(
+	NewTextRegisterStruct(
 		"Product",
 		"ModelName",
 		"Model name",
@@ -45,7 +45,7 @@ var RegisterListSolarProduct = VictronRegisters{
 }
 
 var RegisterListSolarGeneric = VictronRegisters{
-	CreateEnumRegisterStruct(
+	NewEnumRegisterStruct(
 		"Generic",
 		"DeviceMode",
 		"Device mode",
@@ -58,7 +58,7 @@ var RegisterListSolarGeneric = VictronRegisters{
 		},
 		400,
 	),
-	CreateEnumRegisterStruct(
+	NewEnumRegisterStruct(
 		"Essential",
 		"State",
 		"Device state",
@@ -83,7 +83,7 @@ var RegisterListSolarGeneric = VictronRegisters{
 }
 
 var RegisterListSolarSettings = VictronRegisters{
-	CreateEnumRegisterStruct(
+	NewEnumRegisterStruct(
 		"Settings",
 		"AdaptiveMode",
 		"Adaptive mode",
@@ -95,7 +95,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		},
 		500,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Settings",
 		"AutomaticEqualisationMode",
 		"Automatic equalisation mode",
@@ -107,7 +107,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		"",
 		501,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Settings",
 		"BatteryAbsorptionTimeLimit",
 		"Battery absorption time limit",
@@ -119,7 +119,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		"h",
 		502,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Settings",
 		"BatteryAbsorptionVoltage",
 		"Battery absorption voltage",
@@ -131,7 +131,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		"V",
 		503,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Settings",
 		"BatteryFloatVoltage",
 		"Battery float voltage",
@@ -143,7 +143,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		"V",
 		504,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Settings",
 		"BatteryEqualisationVoltage",
 		"Battery equalisation voltage",
@@ -155,7 +155,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		"V",
 		505,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Settings",
 		"BatteryTempCompensation",
 		"Battery temperature compensation",
@@ -167,7 +167,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		"mV/K",
 		506,
 	),
-	CreateEnumRegisterStruct(
+	NewEnumRegisterStruct(
 		"Settings",
 		"BatteryType",
 		"Battery type",
@@ -186,7 +186,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		},
 		507,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Settings",
 		"BatteryMaximumCurrent",
 		"Battery maximum current",
@@ -198,7 +198,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		"A",
 		508,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Settings",
 		"BatteryVoltage",
 		"Battery voltage",
@@ -210,7 +210,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		"V",
 		509,
 	),
-	CreateEnumRegisterStruct(
+	NewEnumRegisterStruct(
 		"Settings",
 		"BatteryVoltageSetting",
 		"Battery voltage setting",
@@ -225,7 +225,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		},
 		511,
 	),
-	CreateEnumRegisterStruct(
+	NewEnumRegisterStruct(
 		"Settings",
 		"BmsPresent",
 		"BMS present",
@@ -237,7 +237,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		},
 		512,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Settings",
 		"TailCurrent",
 		"Tail current",
@@ -249,7 +249,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		"A",
 		513,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Settings",
 		"LowTempCurrent",
 		"Low temperature charge current",
@@ -261,7 +261,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		"A",
 		514,
 	),
-	CreateEnumRegisterStruct(
+	NewEnumRegisterStruct(
 		"Settings",
 		"AutoEqualiseStop",
 		"Auto equalise stop on voltage",
@@ -273,7 +273,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		},
 		515,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Settings",
 		"EqualisationCurrentLevel",
 		"Equalisation current level",
@@ -285,7 +285,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		"%",
 		516,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Settings",
 		"EqualisationDuration",
 		"Equalisation duration",
@@ -297,7 +297,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		"h",
 		517,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Settings",
 		"ReBulkVoltageOffset",
 		"Re-bulk voltage offset",
@@ -309,7 +309,7 @@ var RegisterListSolarSettings = VictronRegisters{
 		"V",
 		518,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Settings",
 		"BatteryLowTemperatureLevel",
 		"Battery low temperature level",
@@ -324,7 +324,7 @@ var RegisterListSolarSettings = VictronRegisters{
 }
 
 var RegisterListSolarChargerData = VictronRegisters{
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Essential",
 		"BatteryTemperature",
 		"Battery temperature",
@@ -336,7 +336,7 @@ var RegisterListSolarChargerData = VictronRegisters{
 		"°C",
 		5,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Charger",
 		"ChargerMaximumCurrent",
 		"Charger maximum current",
@@ -348,7 +348,7 @@ var RegisterListSolarChargerData = VictronRegisters{
 		"A",
 		201,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Charger",
 		"SystemYield",
 		"System yield",
@@ -360,7 +360,7 @@ var RegisterListSolarChargerData = VictronRegisters{
 		"kWh",
 		202,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Charger",
 		"SystemYieldResettable",
 		"System yield (resettable)",
@@ -372,7 +372,7 @@ var RegisterListSolarChargerData = VictronRegisters{
 		"kWh",
 		203,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Charger",
 		"ChargerInternalTemperature",
 		"Charger internal temperature",
@@ -384,7 +384,7 @@ var RegisterListSolarChargerData = VictronRegisters{
 		"°C",
 		204,
 	),
-	CreateEnumRegisterStruct(
+	NewEnumRegisterStruct(
 		"Generic",
 		"ChargerErrorCode",
 		"Charger error",
@@ -413,7 +413,7 @@ var RegisterListSolarChargerData = VictronRegisters{
 		},
 		401,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Essential",
 		"ChargerCurrent",
 		"Charger current",
@@ -425,7 +425,7 @@ var RegisterListSolarChargerData = VictronRegisters{
 		"A",
 		1,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Essential",
 		"ChargerVoltage",
 		"Charger voltage",
@@ -438,7 +438,7 @@ var RegisterListSolarChargerData = VictronRegisters{
 		2,
 	),
 	// skipped Additional charger state info (bitmask)
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Essential",
 		"YieldToday",
 		"Yield today",
@@ -450,7 +450,7 @@ var RegisterListSolarChargerData = VictronRegisters{
 		"kWh",
 		3,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Charger",
 		"MaximumPowerToday",
 		"Maximum power today",
@@ -462,7 +462,7 @@ var RegisterListSolarChargerData = VictronRegisters{
 		"W",
 		205,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Essential",
 		"YieldYesterday",
 		"Yield yesterday",
@@ -474,7 +474,7 @@ var RegisterListSolarChargerData = VictronRegisters{
 		"kWh",
 		4,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Charger",
 		"MaximumPowerYesterday",
 		"Maximum power yesterday",
@@ -494,7 +494,7 @@ var RegisterListSolarChargerData = VictronRegisters{
 }
 
 var RegisterListSolarPanelData = VictronRegisters{
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Essential",
 		"PanelPower",
 		"Panel power",
@@ -506,7 +506,7 @@ var RegisterListSolarPanelData = VictronRegisters{
 		"W",
 		0,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Panel",
 		"PanelVoltage",
 		"Panel voltage",
@@ -518,7 +518,7 @@ var RegisterListSolarPanelData = VictronRegisters{
 		"V",
 		100,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Panel",
 		"PanelCurrent",
 		"Panel current",
@@ -530,7 +530,7 @@ var RegisterListSolarPanelData = VictronRegisters{
 		"A",
 		101,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Panel",
 		"PanelMaximumVoltage",
 		"Panel maximum voltage",
@@ -542,7 +542,7 @@ var RegisterListSolarPanelData = VictronRegisters{
 		"V",
 		102,
 	),
-	CreateEnumRegisterStruct(
+	NewEnumRegisterStruct(
 		"Panel",
 		"TrackerMode",
 		"Tracker mode",

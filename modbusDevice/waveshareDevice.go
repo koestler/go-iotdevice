@@ -169,7 +169,7 @@ func (c *DeviceStruct) getModbusRegisters() (registers ModbusRegisters) {
 			1: c.modbusConfig.RelayClosedLabel(name),
 		}
 
-		r := CreateEnumRegisterStruct(
+		r := NewModbusRegisterStruct(
 			category,
 			name,
 			description,

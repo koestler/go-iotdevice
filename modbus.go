@@ -20,7 +20,7 @@ func runModbus(
 				mbCfg.Name(), mbCfg.Device(), mbCfg.BaudRate(), mbCfg.ReadTimeout(),
 			)
 		}
-		if mb, err := modbus.Create(mbCfg); err != nil {
+		if mb, err := modbus.New(mbCfg); err != nil {
 			log.Printf("modbus[%s]: start failed: %s", mbCfg.Name(), err)
 		} else {
 			modbusPoolInstance.Add(mb)

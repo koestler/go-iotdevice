@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func CreateV5(
+func NewV5(
 	cfg Config,
 ) (client *ClientStruct) {
 	ctx, cancel := context.WithCancel(context.Background())

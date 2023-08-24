@@ -29,7 +29,7 @@ func runDevices(
 			log.Printf("device[%s]: start victron type", deviceConfig.Name())
 		}
 
-		dev := victronDevice.CreateDevice(deviceConfig, deviceConfig, stateStorage)
+		dev := victronDevice.NewDevice(deviceConfig, deviceConfig, stateStorage)
 		watchedDev := restarter.RunRestarter[device.Device](deviceConfig, dev)
 		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
 		devicePoolInstance.Add(watchedDev)
@@ -46,7 +46,7 @@ func runDevices(
 			continue
 		}
 
-		dev := modbusDevice.CreateDevice(deviceConfig, deviceConfig, modbusInstance, stateStorage, commandStorage)
+		dev := modbusDevice.NewDevice(deviceConfig, deviceConfig, modbusInstance, stateStorage, commandStorage)
 		watchedDev := restarter.RunRestarter[device.Device](deviceConfig, dev)
 		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
 		devicePoolInstance.Add(watchedDev)
@@ -57,7 +57,7 @@ func runDevices(
 			log.Printf("device[%s]: start mqtt type", deviceConfig.Name())
 		}
 
-		dev := mqttDevice.CreateDevice(deviceConfig, deviceConfig, stateStorage, mqttClientPool)
+		dev := mqttDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, mqttClientPool)
 		watchedDev := restarter.RunRestarter[device.Device](deviceConfig, dev)
 		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
 		devicePoolInstance.Add(watchedDev)
@@ -68,7 +68,7 @@ func runDevices(
 			log.Printf("device[%s]: start tearacom type", deviceConfig.Name())
 		}
 
-		dev := httpDevice.CreateDevice(deviceConfig, deviceConfig, stateStorage, commandStorage)
+		dev := httpDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, commandStorage)
 		watchedDev := restarter.RunRestarter[device.Device](deviceConfig, dev)
 		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
 		devicePoolInstance.Add(watchedDev)

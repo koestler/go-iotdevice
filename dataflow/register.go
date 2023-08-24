@@ -24,7 +24,7 @@ type RegisterStruct struct {
 	controllable bool
 }
 
-func CreateRegisterStruct(
+func NewRegisterStruct(
 	category, name, description string,
 	registerType RegisterType,
 	enum map[int]string,

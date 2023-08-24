@@ -21,13 +21,13 @@ type DeviceStruct struct {
 	model     string
 }
 
-func CreateDevice(
+func NewDevice(
 	deviceConfig device.Config,
 	victronConfig Config,
 	stateStorage *dataflow.ValueStorageInstance,
 ) *DeviceStruct {
 	return &DeviceStruct{
-		State: device.CreateState(
+		State: device.NewState(
 			deviceConfig,
 			stateStorage,
 		),

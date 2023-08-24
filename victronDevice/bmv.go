@@ -1,7 +1,7 @@
 package victronDevice
 
 var RegisterListBmvProduct = VictronRegisters{
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Product",
 		"ProductId",
 		"Product id",
@@ -13,7 +13,7 @@ var RegisterListBmvProduct = VictronRegisters{
 		"",
 		200,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Product",
 		"ProductRevision",
 		"Product revision",
@@ -25,7 +25,7 @@ var RegisterListBmvProduct = VictronRegisters{
 		"",
 		201,
 	),
-	CreateTextRegisterStruct(
+	NewTextRegisterStruct(
 		"Product",
 		"SerialNumber",
 		"Serial number",
@@ -33,7 +33,7 @@ var RegisterListBmvProduct = VictronRegisters{
 		true,
 		202,
 	),
-	CreateTextRegisterStruct(
+	NewTextRegisterStruct(
 		"Product",
 		"ModelName",
 		"Model name",
@@ -41,7 +41,7 @@ var RegisterListBmvProduct = VictronRegisters{
 		true,
 		203,
 	),
-	CreateTextRegisterStruct(
+	NewTextRegisterStruct(
 		"Product",
 		"Description",
 		"Description",
@@ -49,7 +49,7 @@ var RegisterListBmvProduct = VictronRegisters{
 		true,
 		204,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Product",
 		"Uptime",
 		"Device uptime",
@@ -65,7 +65,7 @@ var RegisterListBmvProduct = VictronRegisters{
 }
 
 var RegisterListBmvMonitor = VictronRegisters{
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Essential",
 		"Power",
 		"Power",
@@ -76,7 +76,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		0,
 		"W",
 		0,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Essential",
 		"CurrentHighRes",
 		"Current",
@@ -88,7 +88,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		"A",
 		1,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Essential",
 		"MainVoltage",
 		"Main voltage",
@@ -100,7 +100,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		"V",
 		2,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Monitor",
 		"AuxVoltage",
 		"Aux (starter) voltage",
@@ -112,7 +112,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		"V",
 		100,
 	),
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Monitor",
 		"Consumed",
 		"Consumed",
@@ -123,7 +123,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		0,
 		"Ah",
 		101,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Essential",
 		"SOC",
 		"State of charge",
@@ -134,7 +134,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		0,
 		"%",
 		3,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Monitor",
 		"TTG",
 		"Time to go",
@@ -145,7 +145,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		0,
 		"min",
 		102,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Essential",
 		"BatteryTemperature",
 		"Battery Temperature",
@@ -156,7 +156,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		-273.15, // unit outputs temp in K
 		"°C",
 		4,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Monitor",
 		"MidPointVoltage",
 		"Mid-point voltage",
@@ -167,7 +167,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		0,
 		"V",
 		104,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Monitor",
 		"MidPointVoltageDeviation",
 		"Mid-point voltage deviation",
@@ -178,7 +178,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 		0,
 		"%",
 		105,
-	), CreateEnumRegisterStruct(
+	), NewEnumRegisterStruct(
 		"Monitor",
 		"SynchronizationState",
 		"Synchronization state",
@@ -193,7 +193,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 }
 
 var RegisterListBmvHistoric = VictronRegisters{
-	CreateNumberRegisterStruct(
+	NewNumberRegisterStruct(
 		"Historic",
 		"DepthOfTheDeepestDischarge",
 		"Depth of the deepest discharge",
@@ -204,7 +204,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"Ah",
 		300,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"DepthOfTheLastDischarge",
 		"Depth of the last discharge",
@@ -215,7 +215,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"Ah",
 		301,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"DepthOfTheAverageDischarge",
 		"Depth of the average discharge",
@@ -226,7 +226,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"Ah",
 		302,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"NumberOfCycles",
 		"Number of cycles",
@@ -237,7 +237,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"",
 		303,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"NumberOfFullDischarges",
 		"Number of full discharges",
@@ -248,7 +248,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"",
 		304,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"CumulativeAmpHours",
 		"Cumulative amp hours",
@@ -259,7 +259,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"Ah",
 		305,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"MainVoltageMinimum",
 		"Minimum voltage",
@@ -270,7 +270,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"V",
 		306,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"MainVoltageMaximum",
 		"Maximum voltage",
@@ -281,7 +281,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"V",
 		307,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"TimeSinceFullCharge",
 		"Time since full charge",
@@ -292,7 +292,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"s",
 		308,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"NumberOfAutomaticSynchronizations",
 		"Number of automatic synchronizations",
@@ -303,7 +303,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"",
 		309,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"NumberOfLowMainVoltageAlarms",
 		"Number of low voltage alarms",
@@ -314,7 +314,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"",
 		310,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"NumberOfHighMainVoltageAlarms",
 		"Number of high voltage alarms",
@@ -325,7 +325,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"",
 		311,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"AuxVoltageMinimum",
 		"Minimum starter voltage",
@@ -336,7 +336,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"V",
 		312,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"AuxVoltageMaximum",
 		"Maximum starter voltage",
@@ -347,7 +347,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"V",
 		313,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"AmountOfDischargedEnergy",
 		"Amount of discharged energy",
@@ -358,7 +358,7 @@ var RegisterListBmvHistoric = VictronRegisters{
 		0,
 		"kWh",
 		314,
-	), CreateNumberRegisterStruct(
+	), NewNumberRegisterStruct(
 		"Historic",
 		"AmountOfChargedEnergy",
 		"Amount of charged energy",

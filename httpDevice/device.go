@@ -37,14 +37,14 @@ type DeviceStruct struct {
 	registersMutex sync.RWMutex
 }
 
-func CreateDevice(
+func NewDevice(
 	deviceConfig device.Config,
 	teracomConfig Config,
 	stateStorage *dataflow.ValueStorageInstance,
 	commandStorage *dataflow.ValueStorageInstance,
 ) *DeviceStruct {
 	ds := &DeviceStruct{
-		State: device.CreateState(
+		State: device.NewState(
 			deviceConfig,
 			stateStorage,
 		),
@@ -235,7 +235,7 @@ func (ds *DeviceStruct) addIgnoreRegister(
 
 	// create new register
 	sort := ds.getRegisterSort(category)
-	r := dataflow.CreateRegisterStruct(
+	r := dataflow.NewRegisterStruct(
 		category,
 		registerName,
 		description,

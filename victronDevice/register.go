@@ -73,14 +73,14 @@ func FilterRegistersByName(input VictronRegisters, names ...string) (output Vict
 	return
 }
 
-func CreateTextRegisterStruct(
+func NewTextRegisterStruct(
 	category, name, description string,
 	address uint16,
 	static bool,
 	sort int,
 ) VictronRegisterStruct {
 	return VictronRegisterStruct{
-		dataflow.CreateRegisterStruct(
+		dataflow.NewRegisterStruct(
 			category, name, description,
 			dataflow.TextRegister,
 			nil,
@@ -96,7 +96,7 @@ func CreateTextRegisterStruct(
 	}
 }
 
-func CreateNumberRegisterStruct(
+func NewNumberRegisterStruct(
 	category, name, description string,
 	address uint16,
 	static bool,
@@ -107,7 +107,7 @@ func CreateNumberRegisterStruct(
 	sort int,
 ) VictronRegisterStruct {
 	return VictronRegisterStruct{
-		dataflow.CreateRegisterStruct(
+		dataflow.NewRegisterStruct(
 			category, name, description,
 			dataflow.NumberRegister,
 			nil,
@@ -123,7 +123,7 @@ func CreateNumberRegisterStruct(
 	}
 }
 
-func CreateEnumRegisterStruct(
+func NewEnumRegisterStruct(
 	category, name, description string,
 	address uint16,
 	static bool,
@@ -131,7 +131,7 @@ func CreateEnumRegisterStruct(
 	sort int,
 ) VictronRegisterStruct {
 	return VictronRegisterStruct{
-		dataflow.CreateRegisterStruct(
+		dataflow.NewRegisterStruct(
 			category, name, description,
 			dataflow.EnumRegister,
 			enum,

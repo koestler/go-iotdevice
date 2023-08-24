@@ -5,7 +5,7 @@ import (
 )
 
 func runStorage(logPrefix string) *dataflow.ValueStorageInstance {
-	storageInstance := dataflow.ValueStorageCreate()
+	storageInstance := dataflow.NewValueStorage()
 
 	if len(logPrefix) > 0 {
 		subscription := storageInstance.Subscribe(dataflow.Filter{})
