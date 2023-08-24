@@ -143,8 +143,7 @@ func TestFilterRegisters(t *testing.T) {
 		getTestEnumRegister(),
 	}
 
-	// filter nothing
-	{
+	t.Run("nothing", func(t *testing.T) {
 		got := FilterRegisters(
 			stimuliRegisters,
 			[]string{},
@@ -161,10 +160,9 @@ func TestFilterRegisters(t *testing.T) {
 		if !reflect.DeepEqual(expected, got) {
 			t.Errorf("expected %#v but got %#v", expected, got)
 		}
-	}
+	})
 
-	// filter by fields
-	{
+	t.Run("byFields", func(t *testing.T) {
 		got := FilterRegisters(
 			stimuliRegisters,
 			[]string{"a"},
@@ -180,10 +178,9 @@ func TestFilterRegisters(t *testing.T) {
 		if !reflect.DeepEqual(expected, got) {
 			t.Errorf("expected %#v but got %#v", expected, got)
 		}
-	}
+	})
 
-	// filter by categories
-	{
+	t.Run("byCategories", func(t *testing.T) {
 		got := FilterRegisters(
 			stimuliRegisters,
 			[]string{},
@@ -199,7 +196,7 @@ func TestFilterRegisters(t *testing.T) {
 		if !reflect.DeepEqual(expected, got) {
 			t.Errorf("expected %#v but got %#v", expected, got)
 		}
-	}
+	})
 }
 
 func TestSortRegisters(t *testing.T) {

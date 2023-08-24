@@ -7,9 +7,9 @@ import (
 	"testing"
 )
 
-func getSimpleTestRegister(name string) RegisterStruct {
+func getSimpleTestRegister(category, name string) RegisterStruct {
 	return NewRegisterStruct(
-		"",
+		category,
 		name,
 		"",
 		NumberRegister,
@@ -22,39 +22,42 @@ func getSimpleTestRegister(name string) RegisterStruct {
 func fillSetA(storage *ValueStorageInstance) {
 	storage.Fill(NewNumericRegisterValue(
 		"device-0",
-		getSimpleTestRegister("register-a"),
+		getSimpleTestRegister("set-a", "register-a"),
 		0,
 	))
 
 	storage.Fill(NewNumericRegisterValue(
 		"device-0",
-		getSimpleTestRegister("register-a"),
+		getSimpleTestRegister("set-a", "register-a"),
 		1,
 	))
 
-	storage.Fill(NewNumericRegisterValue(
-		"device-0",
-		getSimpleTestRegister("register-b"),
-		10,
-	))
+	// filling the same register multiple times must not make a difference
+	for i := 0; i < 10; i += 1 {
+		storage.Fill(NewNumericRegisterValue(
+			"device-0",
+			getSimpleTestRegister("set-a", "register-b"),
+			10,
+		))
 
-	storage.Fill(NewNumericRegisterValue(
-		"device-1",
-		getSimpleTestRegister("register-a"),
-		100,
-	))
+		storage.Fill(NewNumericRegisterValue(
+			"device-1",
+			getSimpleTestRegister("set-a", "register-a"),
+			100,
+		))
+	}
 }
 
 func fillSetB(storage *ValueStorageInstance) {
 	storage.Fill(NewNumericRegisterValue(
 		"device-1",
-		getSimpleTestRegister("register-a"),
+		getSimpleTestRegister("set-b", "register-a"),
 		101,
 	))
 
 	storage.Fill(NewNumericRegisterValue(
 		"device-2",
-		getSimpleTestRegister("register-a"),
+		getSimpleTestRegister("set-b", "register-a"),
 		200,
 	))
 }
@@ -63,7 +66,7 @@ func fillSetC(storage *ValueStorageInstance) {
 	for i := 0; i < 1000; i += 1 {
 		storage.Fill(NewNumericRegisterValue(
 			"device-3",
-			getSimpleTestRegister(fmt.Sprintf("register-%d", i)),
+			getSimpleTestRegister("set-c", fmt.Sprintf("register-%d", i)),
 			float64(i),
 		))
 	}
@@ -75,7 +78,7 @@ func TestGetState(t *testing.T) {
 	fillSetA(storage)
 	storage.Wait()
 
-	{
+	t.Run("setA", func(t *testing.T) {
 		expected := []string{
 			"device-0:register-a=1.000000",
 			"device-0:register-b=10.000000",
@@ -85,12 +88,12 @@ func TestGetState(t *testing.T) {
 		if !equalIgnoreOrder(expected, got) {
 			t.Errorf("expected %#v but got %#v", expected, got)
 		}
-	}
+	})
 
 	fillSetB(storage)
 	storage.Wait()
 
-	{
+	t.Run("setAB", func(t *testing.T) {
 		expected := []string{
 			"device-0:register-a=1.000000",
 			"device-0:register-b=10.000000",
@@ -101,8 +104,63 @@ func TestGetState(t *testing.T) {
 		if !equalIgnoreOrder(expected, got) {
 			t.Errorf("expected %#v but got %#v", expected, got)
 		}
-	}
+	})
 
+	fillSetC(storage)
+	storage.Wait()
+
+	t.Run("setABCfilterIncludeDevices", func(t *testing.T) {
+		expected := []string{
+			"device-0:register-a=1.000000",
+			"device-0:register-b=10.000000",
+		}
+		got := getAsStrings(storage.GetState(Filter{
+			IncludeDevices: map[string]bool{"device-0": true},
+		}))
+		if !equalIgnoreOrder(expected, got) {
+			t.Errorf("expected %#v but got %#v", expected, got)
+		}
+	})
+
+	t.Run("setABCfilterSkipRegisterNames", func(t *testing.T) {
+		expected := []string{
+			"device-0:register-a=1.000000",
+			"device-0:register-b=10.000000",
+		}
+		got := getAsStrings(storage.GetState(Filter{
+			IncludeDevices: map[string]bool{"device-0": true, "device-1": true, "device-2": true},
+			SkipRegisterNames: map[SkipRegisterNameStruct]bool{
+				SkipRegisterNameStruct{
+					Device:   "device-1",
+					Register: "register-a",
+				}: true,
+				SkipRegisterNameStruct{
+					Device:   "device-2",
+					Register: "register-a",
+				}: true,
+			},
+		}))
+		if !equalIgnoreOrder(expected, got) {
+			t.Errorf("expected %#v but got %#v", expected, got)
+		}
+	})
+
+	t.Run("setABCfilterSkipRegisterCategories", func(t *testing.T) {
+		expected := []string{
+			"device-0:register-a=1.000000",
+			"device-0:register-b=10.000000",
+		}
+		got := getAsStrings(storage.GetState(Filter{
+			IncludeDevices: map[string]bool{"device-0": true, "device-3": true},
+			SkipRegisterCategories: map[SkipRegisterCategoryStruct]bool{SkipRegisterCategoryStruct{
+				Device:   "device-3",
+				Category: "set-c",
+			}: true},
+		}))
+		if !equalIgnoreOrder(expected, got) {
+			t.Errorf("expected %#v but got %#v", expected, got)
+		}
+	})
 }
 
 func BenchmarkFill(b *testing.B) {
@@ -111,7 +169,7 @@ func BenchmarkFill(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		storage.Fill(NewNumericRegisterValue(
 			"device-0",
-			getSimpleTestRegister("register-a"),
+			getSimpleTestRegister("categoryName", "registerName"),
 			float64(i),
 		))
 	}
