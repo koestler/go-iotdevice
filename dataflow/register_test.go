@@ -5,10 +5,10 @@ import (
 	"testing"
 )
 
-func getTestTextRegister() RegisterStruct {
+func getTestTextRegisterWithName(name string) RegisterStruct {
 	return NewRegisterStruct(
 		"test-text-register-category",
-		"test-text-register-name",
+		name,
 		"test-text-register-description",
 		TextRegister,
 		map[int]string{},
@@ -16,6 +16,10 @@ func getTestTextRegister() RegisterStruct {
 		40,
 		false,
 	)
+}
+
+func getTestTextRegister() RegisterStruct {
+	return getTestTextRegisterWithName("test-text-register-name")
 }
 
 func getTestNumberRegister() RegisterStruct {
@@ -132,5 +136,90 @@ func TestEnumRegisterCreatorAndGetters(t *testing.T) {
 }
 
 func TestFilterRegisters(t *testing.T) {
+	stimuliRegisters := []Register{
+		getTestTextRegisterWithName("a"),
+		getTestTextRegisterWithName("b"),
+		getTestNumberRegister(),
+		getTestEnumRegister(),
+	}
 
+	// filter nothing
+	{
+		got := FilterRegisters(
+			stimuliRegisters,
+			[]string{},
+			[]string{},
+		)
+
+		expected := []Register{
+			getTestTextRegisterWithName("a"),
+			getTestTextRegisterWithName("b"),
+			getTestNumberRegister(),
+			getTestEnumRegister(),
+		}
+
+		if !reflect.DeepEqual(expected, got) {
+			t.Errorf("expected %#v but got %#v", expected, got)
+		}
+	}
+
+	// filter by fields
+	{
+		got := FilterRegisters(
+			stimuliRegisters,
+			[]string{"a"},
+			[]string{},
+		)
+
+		expected := []Register{
+			getTestTextRegisterWithName("b"),
+			getTestNumberRegister(),
+			getTestEnumRegister(),
+		}
+
+		if !reflect.DeepEqual(expected, got) {
+			t.Errorf("expected %#v but got %#v", expected, got)
+		}
+	}
+
+	// filter by categories
+	{
+		got := FilterRegisters(
+			stimuliRegisters,
+			[]string{},
+			[]string{"test-number-register-category"},
+		)
+
+		expected := []Register{
+			getTestTextRegisterWithName("a"),
+			getTestTextRegisterWithName("b"),
+			getTestEnumRegister(),
+		}
+
+		if !reflect.DeepEqual(expected, got) {
+			t.Errorf("expected %#v but got %#v", expected, got)
+		}
+	}
+}
+
+func TestSortRegisters(t *testing.T) {
+	stimuliRegisters := []Register{
+		getTestNumberRegister(),
+		getTestTextRegisterWithName("a"),
+		getTestEnumRegister(),
+		getTestTextRegisterWithName("b"),
+	}
+
+	got := SortRegisters(stimuliRegisters)
+
+	expected := []Register{
+		getTestTextRegisterWithName("a"),
+		getTestTextRegisterWithName("b"),
+		getTestNumberRegister(),
+		getTestEnumRegister(),
+	}
+
+	if !reflect.DeepEqual(expected, got) {
+		t.Errorf("expected %#v but got %#v", expected, got)
+	}
 }
