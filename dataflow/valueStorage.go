@@ -1,5 +1,7 @@
 package dataflow
 
+import "sync"
+
 type State map[string]ValueMap
 
 type ValueStorageInstance struct {
@@ -10,7 +12,9 @@ type ValueStorageInstance struct {
 	subscriptions map[*Subscription]struct{}
 
 	// communication channels to/from the main go routine
-	inputChannel            chan Value
+	inputChannel   chan Value
+	inputWaitGroup sync.WaitGroup
+
 	subscriptionChannel     chan *Subscription
 	readStateRequestChannel chan *readStateRequest
 
@@ -46,6 +50,7 @@ func (instance *ValueStorageInstance) mainStorageRoutine() {
 			return
 		case newValue := <-instance.inputChannel:
 			instance.handleNewValue(newValue)
+			instance.inputWaitGroup.Done()
 		case newSubscription := <-instance.subscriptionChannel:
 			instance.subscriptions[newSubscription] = struct{}{}
 		case newReadStateRequest := <-instance.readStateRequestChannel:
@@ -159,7 +164,13 @@ func (instance *ValueStorageInstance) GetSlice(filter Filter) (result []Value) {
 }
 
 func (instance *ValueStorageInstance) Fill(value Value) {
+	instance.inputWaitGroup.Add(1)
 	instance.inputChannel <- value
+}
+
+// Wait until all inputs are processed (useful for testing)
+func (instance *ValueStorageInstance) Wait() {
+	instance.inputWaitGroup.Wait()
 }
 
 func (instance *ValueStorageInstance) Subscribe(filter Filter) Subscription {
