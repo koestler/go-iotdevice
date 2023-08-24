@@ -19,10 +19,7 @@ func getSimpleTestRegister(name string) RegisterStruct {
 		false,
 	)
 }
-
-func TestGetState(t *testing.T) {
-	storage := NewValueStorage()
-
+func fillSetA(storage *ValueStorageInstance) {
 	storage.Fill(NewNumericRegisterValue(
 		"device-0",
 		getSimpleTestRegister("register-a"),
@@ -46,20 +43,9 @@ func TestGetState(t *testing.T) {
 		getSimpleTestRegister("register-a"),
 		100,
 	))
+}
 
-	{
-		expected := []string{
-			"device-0:register-a=1.000000",
-			"device-0:register-b=10.000000",
-			"device-1:register-a=100.000000",
-		}
-		storage.Wait()
-		got := getAsStrings(storage.GetState(Filter{}))
-		if !equalIgnoreOrder(expected, got) {
-			t.Errorf("expected %#v but got %#v", expected, got)
-		}
-	}
-
+func fillSetB(storage *ValueStorageInstance) {
 	storage.Fill(NewNumericRegisterValue(
 		"device-1",
 		getSimpleTestRegister("register-a"),
@@ -71,6 +57,38 @@ func TestGetState(t *testing.T) {
 		getSimpleTestRegister("register-a"),
 		200,
 	))
+}
+
+func fillSetC(storage *ValueStorageInstance) {
+	for i := 0; i < 1000; i += 1 {
+		storage.Fill(NewNumericRegisterValue(
+			"device-3",
+			getSimpleTestRegister(fmt.Sprintf("register-%d", i)),
+			float64(i),
+		))
+	}
+}
+
+func TestGetState(t *testing.T) {
+	storage := NewValueStorage()
+
+	fillSetA(storage)
+	storage.Wait()
+
+	{
+		expected := []string{
+			"device-0:register-a=1.000000",
+			"device-0:register-b=10.000000",
+			"device-1:register-a=100.000000",
+		}
+		got := getAsStrings(storage.GetState(Filter{}))
+		if !equalIgnoreOrder(expected, got) {
+			t.Errorf("expected %#v but got %#v", expected, got)
+		}
+	}
+
+	fillSetB(storage)
+	storage.Wait()
 
 	{
 		expected := []string{
@@ -79,13 +97,36 @@ func TestGetState(t *testing.T) {
 			"device-1:register-a=101.000000",
 			"device-2:register-a=200.000000",
 		}
-		storage.Wait()
 		got := getAsStrings(storage.GetState(Filter{}))
 		if !equalIgnoreOrder(expected, got) {
 			t.Errorf("expected %#v but got %#v", expected, got)
 		}
 	}
 
+}
+
+func BenchmarkFill(b *testing.B) {
+	storage := NewValueStorage()
+
+	for i := 0; i < b.N; i++ {
+		storage.Fill(NewNumericRegisterValue(
+			"device-0",
+			getSimpleTestRegister("register-a"),
+			float64(i),
+		))
+	}
+}
+
+func BenchmarkGetState(b *testing.B) {
+	storage := NewValueStorage()
+	fillSetA(storage)
+	fillSetB(storage)
+	fillSetC(storage)
+	storage.Wait()
+
+	for i := 0; i < b.N; i++ {
+		storage.GetState(Filter{})
+	}
 }
 
 func equalIgnoreOrder(a, b []string) bool {
