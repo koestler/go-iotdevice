@@ -1,6 +1,7 @@
 package httpServer
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gobwas/ws"
@@ -54,10 +55,10 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 			}
 			log.Printf("httpServer: %s%s: connection established to %s", r.BasePath(), relativePath, c.ClientIP())
 
-			subscription := env.StateStorage.Subscribe(filter)
-
+			subscriptionCtx, subscriptionCancel := context.WithCancel(context.Background())
+			subscription := env.StateStorage.Subscribe(subscriptionCtx, filter)
 			go func() {
-				defer subscription.Shutdown()
+				defer subscriptionCancel()
 				defer conn.Close()
 				defer close(authenticated)
 				defer log.Printf("httpServer: %s%s: connection closed to %s", r.BasePath(), relativePath, c.ClientIP())

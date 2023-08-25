@@ -1,24 +1,29 @@
 package dataflow
 
-import "sync"
+import (
+	"context"
+	"github.com/koestler/go-iotdevice/list"
+	"sync"
+)
 
 type State map[string]ValueMap
 
 type ValueStorageInstance struct {
+	ctx       context.Context
+	ctxCancel context.CancelFunc
+
 	// this represents the state of the storage instance and must only be access by the main go routine
 
 	// state: 1. dimension: device.Name, 2. dimension: register.Name
-	state         State
-	subscriptions map[*Subscription]struct{}
+	state      State
+	stateMutex sync.RWMutex
+
+	subscriptions      *list.List[Subscription]
+	subscriptionsMutex sync.RWMutex
 
 	// communication channels to/from the main go routine
 	inputChannel   chan Value
 	inputWaitGroup sync.WaitGroup
-
-	subscriptionChannel     chan *Subscription
-	readStateRequestChannel chan *readStateRequest
-
-	shutdown chan struct{}
 }
 
 type SkipRegisterNameStruct struct {
@@ -31,17 +36,11 @@ type SkipRegisterCategoryStruct struct {
 	Category string
 }
 
-type OnlyOnceKey struct {
-	deviceName   string
-	registerName string
-}
-
 type Filter struct {
 	IncludeDevices         map[string]bool
 	SkipRegisterNames      map[SkipRegisterNameStruct]bool
 	SkipRegisterCategories map[SkipRegisterCategoryStruct]bool
 	SkipNull               bool
-	OnlyOnce               bool
 }
 
 type readStateRequest struct {
@@ -52,15 +51,11 @@ type readStateRequest struct {
 func (instance *ValueStorageInstance) mainStorageRoutine() {
 	for {
 		select {
-		case <-instance.shutdown:
+		case <-instance.ctx.Done():
 			return
 		case newValue := <-instance.inputChannel:
 			instance.handleNewValue(newValue)
 			instance.inputWaitGroup.Done()
-		case newSubscription := <-instance.subscriptionChannel:
-			instance.subscriptions[newSubscription] = struct{}{}
-		case newReadStateRequest := <-instance.readStateRequestChannel:
-			instance.handleNewReadStateRequest(newReadStateRequest)
 		}
 	}
 }
@@ -73,67 +68,34 @@ func (instance *ValueStorageInstance) handleNewValue(newValue Value) {
 
 	// check if the newValue is not present or has been changed
 	if currentValue, ok := instance.state[newValue.DeviceName()][newValue.Register().Name()]; !ok || !currentValue.Equals(newValue) {
-		// copy the input value to all subscribed output channels
-		for subscription := range instance.subscriptions {
-			// check if Subscription was shut down
-			select {
-			case <-subscription.shutdownChannel:
-				delete(instance.subscriptions, subscription)
-			default:
-				// Subscription was not shut down -> forward new value
-				if !subscription.filter.OnlyOnce {
-					subscription.forward(newValue)
-				} else {
-					k := OnlyOnceKey{newValue.DeviceName(), newValue.Register().Name()}
-					if _, ok := subscription.sentOnce[k]; !ok {
-						subscription.forward(newValue)
-						subscription.sentOnce[k] = true
-					}
-				}
-			}
-		}
-
+		// update state
+		instance.stateMutex.Lock()
 		if _, ok := newValue.(NullRegisterValue); ok {
 			delete(instance.state[newValue.DeviceName()], newValue.Register().Name())
 		} else {
 			// and save the new state
 			instance.state[newValue.DeviceName()][newValue.Register().Name()] = newValue
 		}
-	}
-}
+		instance.stateMutex.Unlock()
 
-func (instance *ValueStorageInstance) handleNewReadStateRequest(newReadStateRequest *readStateRequest) {
-	filter := &newReadStateRequest.filter
-
-	response := make(State)
-
-	for deviceName, deviceState := range instance.state {
-		if !filterByDevice(filter, deviceName) {
-			continue
+		// copy the input value to all subscribed output channels
+		instance.subscriptionsMutex.RLock()
+		for e := instance.subscriptions.Front(); e != nil; e = e.Next() {
+			e.Value.forward(newValue)
 		}
-
-		response[deviceName] = make(ValueMap)
-
-		for registerName, value := range deviceState {
-			if !filterByRegister(filter, deviceName, value.Register()) {
-				continue
-			}
-
-			response[deviceName][registerName] = value
-		}
+		instance.subscriptionsMutex.RUnlock()
 	}
-
-	newReadStateRequest.response <- response
 }
 
 func NewValueStorage() (valueStorageInstance *ValueStorageInstance) {
+	ctx, cancel := context.WithCancel(context.Background())
+
 	valueStorageInstance = &ValueStorageInstance{
-		state:                   make(State),
-		subscriptions:           make(map[*Subscription]struct{}),
-		inputChannel:            make(chan Value, 1024),
-		subscriptionChannel:     make(chan *Subscription),
-		readStateRequestChannel: make(chan *readStateRequest, 16),
-		shutdown:                make(chan struct{}),
+		ctx:           ctx,
+		ctxCancel:     cancel,
+		state:         make(State),
+		subscriptions: list.New[Subscription](),
+		inputChannel:  make(chan Value, 1024),
 	}
 
 	// start main go routine
@@ -143,20 +105,32 @@ func NewValueStorage() (valueStorageInstance *ValueStorageInstance) {
 }
 
 func (instance *ValueStorageInstance) Shutdown() {
-	close(instance.shutdown)
+	instance.ctxCancel()
 }
 
 func (instance *ValueStorageInstance) GetState(filter Filter) State {
-	response := make(chan State)
+	instance.stateMutex.RLock()
+	defer instance.stateMutex.RUnlock()
 
-	request := readStateRequest{
-		filter:   filter,
-		response: response,
+	response := make(State)
+
+	for deviceName, deviceState := range instance.state {
+		if !filterByDevice(&filter, deviceName) {
+			continue
+		}
+
+		response[deviceName] = make(ValueMap)
+
+		for registerName, value := range deviceState {
+			if !filterByRegister(&filter, deviceName, value.Register()) {
+				continue
+			}
+
+			response[deviceName][registerName] = value
+		}
 	}
 
-	instance.readStateRequestChannel <- &request
-
-	return <-request.response
+	return response
 }
 
 func (instance *ValueStorageInstance) GetSlice(filter Filter) (result []Value) {
@@ -187,15 +161,29 @@ func (instance *ValueStorageInstance) Wait() {
 	instance.inputWaitGroup.Wait()
 }
 
-func (instance *ValueStorageInstance) Subscribe(filter Filter) Subscription {
+func (instance *ValueStorageInstance) Subscribe(ctx context.Context, filter Filter) Subscription {
 	s := Subscription{
-		shutdownChannel: make(chan struct{}),
-		outputChannel:   make(chan Value, 128),
-		filter:          filter,
-		sentOnce:        make(map[OnlyOnceKey]bool),
+		ctx:           ctx,
+		outputChannel: make(chan Value, 128),
+		filter:        filter,
 	}
 
-	instance.subscriptionChannel <- &s
+	instance.subscriptionsMutex.Lock()
+	elem := instance.subscriptions.PushBack(s)
+	instance.subscriptionsMutex.Unlock()
+
+	go func() {
+		// wait for the cancellation of the subscription context
+		<-s.ctx.Done()
+
+		// remove from subscriptions list
+		instance.subscriptionsMutex.Lock()
+		instance.subscriptions.Remove(elem)
+		instance.subscriptionsMutex.Unlock()
+
+		// close output channel
+		close(s.outputChannel)
+	}()
 
 	return s
 }

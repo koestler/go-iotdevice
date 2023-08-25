@@ -73,8 +73,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 		SkipNull:       true,
 		IncludeDevices: map[string]bool{c.Config().Name(): true},
 	}
-	commandSubscription := c.commandStorage.Subscribe(filter)
-	defer commandSubscription.Shutdown()
+	commandSubscription := c.commandStorage.Subscribe(ctx, filter)
 
 	execCommand := func(value dataflow.Value) {
 		if c.Config().LogDebug() {

@@ -1,14 +1,11 @@
 package dataflow
 
-type Subscription struct {
-	shutdownChannel chan struct{}
-	outputChannel   chan Value
-	filter          Filter
-	sentOnce        map[OnlyOnceKey]bool
-}
+import "context"
 
-func (s *Subscription) Shutdown() {
-	close(s.shutdownChannel)
+type Subscription struct {
+	ctx           context.Context
+	outputChannel chan Value
+	filter        Filter
 }
 
 func (s *Subscription) GetOutput() <-chan Value {

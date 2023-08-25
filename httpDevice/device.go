@@ -102,8 +102,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 		SkipNull:       true,
 		IncludeDevices: map[string]bool{ds.Config().Name(): true},
 	}
-	commandSubscription := ds.commandStorage.Subscribe(filter)
-	defer commandSubscription.Shutdown()
+	commandSubscription := ds.commandStorage.Subscribe(ctx, filter)
 
 	execCommand := func(value dataflow.Value) {
 		if ds.Config().LogDebug() {
