@@ -25,23 +25,6 @@ type ValueStorage struct {
 	subscriptionsMutex sync.RWMutex
 }
 
-type SkipRegisterNameStruct struct {
-	Device   string
-	Register string
-}
-
-type SkipRegisterCategoryStruct struct {
-	Device   string
-	Category string
-}
-
-type Filter struct {
-	IncludeDevices         map[string]bool
-	SkipRegisterNames      map[SkipRegisterNameStruct]bool
-	SkipRegisterCategories map[SkipRegisterCategoryStruct]bool
-	SkipNull               bool
-}
-
 func (vs *ValueStorage) mainStorageRoutine() {
 	for {
 		select {
@@ -89,8 +72,7 @@ func (vs *ValueStorage) forwardToSubscriptions(newValue Value) {
 
 	for e := vs.subscriptions.Front(); e != nil; e = e.Next() {
 		s := e.Value
-
-		if filterValue(&s.filter, newValue) {
+		if s.filter(newValue) {
 			s.outputChannel <- newValue
 		}
 	}
@@ -117,21 +99,27 @@ func (vs *ValueStorage) Shutdown() {
 	vs.ctxCancel()
 }
 
-func (vs *ValueStorage) GetSlice(filter Filter) (result []Value) {
+func (vs *ValueStorage) GetState() (result []Value) {
 	vs.stateMutex.RLock()
 	defer vs.stateMutex.RUnlock()
 
 	result = make([]Value, 0, len(vs.state))
 	for _, value := range vs.state {
-		if !filterByDevice(&filter, value.DeviceName()) {
-			continue
-		}
-
-		if !filterByRegister(&filter, value.DeviceName(), value.Register()) {
-			continue
-		}
-
 		result = append(result, value)
+	}
+
+	return
+}
+
+func (vs *ValueStorage) GetStateFiltered(filter FilterFunc) (result []Value) {
+	vs.stateMutex.RLock()
+	defer vs.stateMutex.RUnlock()
+
+	result = make([]Value, 0)
+	for _, value := range vs.state {
+		if filter(value) {
+			result = append(result, value)
+		}
 	}
 
 	return
@@ -147,7 +135,7 @@ func (vs *ValueStorage) Wait() {
 	vs.inputWaitGroup.Wait()
 }
 
-func (vs *ValueStorage) Subscribe(ctx context.Context, filter Filter) Subscription {
+func (vs *ValueStorage) Subscribe(ctx context.Context, filter FilterFunc) Subscription {
 	s := Subscription{
 		ctx:           ctx,
 		outputChannel: make(chan Value, 128),

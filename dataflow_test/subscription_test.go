@@ -17,7 +17,7 @@ func TestValueStorageSubscribe(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(numberOfSubscriptions)
 	for i := 0; i < numberOfSubscriptions; i += 1 {
-		subscription := storage.Subscribe(ctx, dataflow.Filter{})
+		subscription := storage.Subscribe(ctx, dataflow.EmptyFilter)
 		go func() {
 			counter := 0
 			defer wg.Done()
@@ -54,7 +54,7 @@ func TestValueStorageSubscribe(t *testing.T) {
 }
 
 func TestValueStorageSubscribeWithFilter(t *testing.T) {
-	run := func(filter dataflow.Filter) (values []dataflow.Value) {
+	run := func(filter dataflow.FilterFunc) (values []dataflow.Value) {
 		storage := dataflow.NewValueStorage()
 		ctx, cancel := context.WithCancel(context.Background())
 		subscription := storage.Subscribe(ctx, filter)
@@ -81,7 +81,7 @@ func TestValueStorageSubscribeWithFilter(t *testing.T) {
 	}
 
 	t.Run("filterDevice", func(t *testing.T) {
-		values := run(dataflow.Filter{IncludeDevices: map[string]bool{"device-0": true}})
+		values := run(dataflow.DeviceFilter("device-0"))
 
 		// check values
 		expected := []string{
@@ -97,19 +97,18 @@ func TestValueStorageSubscribeWithFilter(t *testing.T) {
 	})
 
 	t.Run("filterSkipRegisterCategories", func(t *testing.T) {
-		values := run(dataflow.Filter{
-			IncludeDevices: map[string]bool{"device-0": true, "device-3": true},
-			SkipRegisterCategories: map[dataflow.SkipRegisterCategoryStruct]bool{dataflow.SkipRegisterCategoryStruct{
-				Device:   "device-3",
-				Category: "set-c",
-			}: true},
-		})
+		values := run(dataflow.RegisterFilter(
+			[]string{"register-b"},
+			[]string{"set-c"},
+		))
 
 		// check values
 		expected := []string{
 			"device-0:register-a=0.000000",
 			"device-0:register-a=1.000000",
-			"device-0:register-b=10.000000",
+			"device-1:register-a=100.000000",
+			"device-1:register-a=101.000000",
+			"device-2:register-a=200.000000",
 		}
 		got := getAsStrings(values)
 

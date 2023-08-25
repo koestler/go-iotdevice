@@ -44,7 +44,7 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 					jsonErrorResponse(c, http.StatusForbidden, errors.New("User is not allowed here"))
 					return
 				}
-				values := env.StateStorage.GetSlice(filter)
+				values := env.StateStorage.GetStateFiltered(filter)
 				jsonGetResponse(c, compile1DResponse(values))
 			})
 			if env.Config.LogConfig() {
@@ -168,32 +168,29 @@ func append2DResponseValue(response map[string]map[string]valueResponse, value d
 	response[d0][d1] = value.GenericValue()
 }
 
-func getFilter(viewDevices []*config.ViewDeviceConfig) dataflow.Filter {
-	includeDevices := make(map[string]bool, len(viewDevices))
-	skipRegisterNames := make(map[dataflow.SkipRegisterNameStruct]bool)
-	skipRegisterCategories := make(map[dataflow.SkipRegisterCategoryStruct]bool)
-
+func getFilter(viewDevices []*config.ViewDeviceConfig) dataflow.FilterFunc {
+	skipRegisterNames := make(map[string]map[string]struct{})
+	skipRegisterCategories := make(map[string]map[string]struct{})
 	for _, vd := range viewDevices {
-		includeDevices[vd.Name()] = true
-
-		for _, register := range vd.SkipFields() {
-			skipRegisterNames[dataflow.SkipRegisterNameStruct{
-				Device:   vd.Name(),
-				Register: register,
-			}] = true
-		}
-
-		for _, category := range vd.SkipCategories() {
-			skipRegisterCategories[dataflow.SkipRegisterCategoryStruct{
-				Device:   vd.Name(),
-				Category: category,
-			}] = true
-		}
+		skipRegisterNames[vd.Name()] = dataflow.SliceToMap(vd.SkipFields())
+		skipRegisterCategories[vd.Name()] = dataflow.SliceToMap(vd.SkipCategories())
 	}
 
-	return dataflow.Filter{
-		IncludeDevices:         includeDevices,
-		SkipRegisterNames:      skipRegisterNames,
-		SkipRegisterCategories: skipRegisterCategories,
+	return func(value dataflow.Value) bool {
+		deviceName := value.DeviceName()
+		reg := value.Register()
+
+		if m, ok := skipRegisterNames[deviceName]; !ok {
+			return false // device not included
+		} else if _, ok := m[reg.Name()]; ok {
+			return false
+		}
+
+		m := skipRegisterCategories[deviceName]
+		if _, ok := m[reg.Category()]; ok {
+			return false
+		}
+
+		return true
 	}
 }

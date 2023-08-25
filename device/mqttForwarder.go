@@ -16,7 +16,10 @@ func RunMqttForwarders(
 	mqttClientPool *pool.Pool[mqttClient.Client],
 	storage *dataflow.ValueStorage,
 ) {
-	deviceFilter := dataflow.Filter{IncludeDevices: map[string]bool{d.Config().Name(): true}}
+	deviceName := d.Config().Name()
+	deviceFilter := func(v dataflow.Value) bool {
+		return v.DeviceName() == deviceName
+	}
 
 	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
 	for _, mc := range mqttClientPool.GetByNames(d.Config().RealtimeViaMqttClients()) {
@@ -98,7 +101,7 @@ func RunMqttForwarders(
 							continue
 						}
 
-						values := storage.GetSlice(deviceFilter)
+						values := storage.GetStateFiltered(deviceFilter)
 
 						now := time.Now()
 						telemetryMessage := TelemetryMessage{

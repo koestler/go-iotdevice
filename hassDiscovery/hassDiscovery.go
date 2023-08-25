@@ -59,7 +59,7 @@ func (hd *HassDiscovery) Run() {
 	go func() {
 		defer hd.wg.Done()
 
-		subscription := hd.stateStorage.Subscribe(hd.ctx, dataflow.Filter{})
+		subscription := hd.stateStorage.Subscribe(hd.ctx, dataflow.EmptyFilter)
 
 		configItem := hd.configItems[0]
 

@@ -20,7 +20,7 @@ func TestValueStorageGetSlice(t *testing.T) {
 			"device-0:register-b=10.000000",
 			"device-1:register-a=100.000000",
 		}
-		got := getAsStrings(storage.GetSlice(dataflow.Filter{}))
+		got := getAsStrings(storage.GetState())
 		if !equalIgnoreOrder(expected, got) {
 			t.Errorf("expected %#v but got %#v", expected, got)
 		}
@@ -36,7 +36,7 @@ func TestValueStorageGetSlice(t *testing.T) {
 			"device-1:register-a=101.000000",
 			"device-2:register-a=200.000000",
 		}
-		got := getAsStrings(storage.GetSlice(dataflow.Filter{}))
+		got := getAsStrings(storage.GetState())
 		if !equalIgnoreOrder(expected, got) {
 			t.Errorf("expected %#v but got %#v", expected, got)
 		}
@@ -45,54 +45,26 @@ func TestValueStorageGetSlice(t *testing.T) {
 	fillSetC(storage)
 	storage.Wait()
 
-	t.Run("setABCfilterIncludeDevices", func(t *testing.T) {
+	t.Run("setABCfilterDevice", func(t *testing.T) {
 		expected := []string{
 			"device-0:register-a=1.000000",
 			"device-0:register-b=10.000000",
 		}
-		got := getAsStrings(storage.GetSlice(dataflow.Filter{
-			IncludeDevices: map[string]bool{"device-0": true},
-		}))
+		got := getAsStrings(storage.GetStateFiltered(dataflow.DeviceFilter("device-0")))
 		if !equalIgnoreOrder(expected, got) {
 			t.Errorf("expected %#v but got %#v", expected, got)
 		}
 	})
 
-	t.Run("setABCfilterSkipRegisterNames", func(t *testing.T) {
+	t.Run("setABCfilterRegister", func(t *testing.T) {
 		expected := []string{
 			"device-0:register-a=1.000000",
-			"device-0:register-b=10.000000",
 		}
-		got := getAsStrings(storage.GetSlice(dataflow.Filter{
-			IncludeDevices: map[string]bool{"device-0": true, "device-1": true, "device-2": true},
-			SkipRegisterNames: map[dataflow.SkipRegisterNameStruct]bool{
-				dataflow.SkipRegisterNameStruct{
-					Device:   "device-1",
-					Register: "register-a",
-				}: true,
-				dataflow.SkipRegisterNameStruct{
-					Device:   "device-2",
-					Register: "register-a",
-				}: true,
-			},
-		}))
-		if !equalIgnoreOrder(expected, got) {
-			t.Errorf("expected %#v but got %#v", expected, got)
-		}
-	})
+		got := getAsStrings(storage.GetStateFiltered(dataflow.RegisterFilter(
+			[]string{"register-b"},
+			[]string{"set-b", "set-c"},
+		)))
 
-	t.Run("setABCfilterSkipRegisterCategories", func(t *testing.T) {
-		expected := []string{
-			"device-0:register-a=1.000000",
-			"device-0:register-b=10.000000",
-		}
-		got := getAsStrings(storage.GetSlice(dataflow.Filter{
-			IncludeDevices: map[string]bool{"device-0": true, "device-3": true},
-			SkipRegisterCategories: map[dataflow.SkipRegisterCategoryStruct]bool{dataflow.SkipRegisterCategoryStruct{
-				Device:   "device-3",
-				Category: "set-c",
-			}: true},
-		}))
 		if !equalIgnoreOrder(expected, got) {
 			t.Errorf("expected %#v but got %#v", expected, got)
 		}
@@ -119,7 +91,7 @@ func BenchmarkValueStorageGetSlice(b *testing.B) {
 	storage.Wait()
 
 	for i := 0; i < b.N; i++ {
-		storage.GetSlice(dataflow.Filter{})
+		storage.GetState()
 	}
 }
 

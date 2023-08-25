@@ -101,7 +101,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 
 				// send all values after initial connect
 				{
-					values := env.StateStorage.GetSlice(filter)
+					values := env.StateStorage.GetStateFiltered(filter)
 					response := compile2DResponse(values)
 					if err := wsSendValuesResponse(writer, encoder, response); err != nil {
 						log.Printf("httpServer: %s%s: error while sending initial values: %s", r.BasePath(), relativePath, err)
