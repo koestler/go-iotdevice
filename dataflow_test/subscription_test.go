@@ -9,7 +9,6 @@ import (
 
 func TestValueStorageSubscribe(t *testing.T) {
 	storage := dataflow.NewValueStorage()
-
 	ctx, cancel := context.WithCancel(context.Background())
 
 	numberOfSubscriptions := 42
@@ -31,9 +30,9 @@ func TestValueStorageSubscribe(t *testing.T) {
 		}()
 	}
 
-	expected := fillSetA(storage)
-	expected += fillSetB(storage)
-	expected += fillSetC(storage)
+	fillSetA(storage)
+	fillSetB(storage)
+	fillSetC(storage)
 	storage.Wait()
 	cancel()
 	wg.Wait()
@@ -41,6 +40,7 @@ func TestValueStorageSubscribe(t *testing.T) {
 
 	{
 		i := 0
+		expected := fillSetALength + fillSetBLength + fillSetCLength
 		for got := range counts {
 			if expected != got {
 				t.Errorf("expected count=%d but got %d", expected, got)
@@ -54,5 +54,67 @@ func TestValueStorageSubscribe(t *testing.T) {
 }
 
 func TestValueStorageSubscribeWithFilter(t *testing.T) {
+	run := func(filter dataflow.Filter) (values []dataflow.Value) {
+		storage := dataflow.NewValueStorage()
+		ctx, cancel := context.WithCancel(context.Background())
+		subscription := storage.Subscribe(ctx, filter)
 
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		values = make([]dataflow.Value, 0)
+		go func() {
+			defer wg.Done()
+			for v := range subscription.Drain() {
+				values = append(values, v)
+			}
+		}()
+
+		// send values to storage
+		fillSetA(storage)
+		fillSetB(storage)
+		fillSetC(storage)
+		storage.Wait()
+		cancel()
+		wg.Wait()
+
+		return
+	}
+
+	t.Run("filterDevice", func(t *testing.T) {
+		values := run(dataflow.Filter{IncludeDevices: map[string]bool{"device-0": true}})
+
+		// check values
+		expected := []string{
+			"device-0:register-a=0.000000",
+			"device-0:register-a=1.000000",
+			"device-0:register-b=10.000000",
+		}
+		got := getAsStrings(values)
+
+		if !equalIgnoreOrder(expected, got) {
+			t.Errorf("expected %#v but got %#v", expected, got)
+		}
+	})
+
+	t.Run("filterSkipRegisterCategories", func(t *testing.T) {
+		values := run(dataflow.Filter{
+			IncludeDevices: map[string]bool{"device-0": true, "device-3": true},
+			SkipRegisterCategories: map[dataflow.SkipRegisterCategoryStruct]bool{dataflow.SkipRegisterCategoryStruct{
+				Device:   "device-3",
+				Category: "set-c",
+			}: true},
+		})
+
+		// check values
+		expected := []string{
+			"device-0:register-a=0.000000",
+			"device-0:register-a=1.000000",
+			"device-0:register-b=10.000000",
+		}
+		got := getAsStrings(values)
+
+		if !equalIgnoreOrder(expected, got) {
+			t.Errorf("expected %#v but got %#v", expected, got)
+		}
+	})
 }
