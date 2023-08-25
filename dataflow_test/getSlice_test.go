@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestValueStorageGetState(t *testing.T) {
+func TestValueStorageGetSlice(t *testing.T) {
 	storage := dataflow.NewValueStorage()
 
 	fillSetA(storage)
@@ -20,7 +20,7 @@ func TestValueStorageGetState(t *testing.T) {
 			"device-0:register-b=10.000000",
 			"device-1:register-a=100.000000",
 		}
-		got := getAsStrings(storage.GetState(dataflow.Filter{}))
+		got := getAsStrings(storage.GetSlice(dataflow.Filter{}))
 		if !equalIgnoreOrder(expected, got) {
 			t.Errorf("expected %#v but got %#v", expected, got)
 		}
@@ -36,7 +36,7 @@ func TestValueStorageGetState(t *testing.T) {
 			"device-1:register-a=101.000000",
 			"device-2:register-a=200.000000",
 		}
-		got := getAsStrings(storage.GetState(dataflow.Filter{}))
+		got := getAsStrings(storage.GetSlice(dataflow.Filter{}))
 		if !equalIgnoreOrder(expected, got) {
 			t.Errorf("expected %#v but got %#v", expected, got)
 		}
@@ -50,7 +50,7 @@ func TestValueStorageGetState(t *testing.T) {
 			"device-0:register-a=1.000000",
 			"device-0:register-b=10.000000",
 		}
-		got := getAsStrings(storage.GetState(dataflow.Filter{
+		got := getAsStrings(storage.GetSlice(dataflow.Filter{
 			IncludeDevices: map[string]bool{"device-0": true},
 		}))
 		if !equalIgnoreOrder(expected, got) {
@@ -63,7 +63,7 @@ func TestValueStorageGetState(t *testing.T) {
 			"device-0:register-a=1.000000",
 			"device-0:register-b=10.000000",
 		}
-		got := getAsStrings(storage.GetState(dataflow.Filter{
+		got := getAsStrings(storage.GetSlice(dataflow.Filter{
 			IncludeDevices: map[string]bool{"device-0": true, "device-1": true, "device-2": true},
 			SkipRegisterNames: map[dataflow.SkipRegisterNameStruct]bool{
 				dataflow.SkipRegisterNameStruct{
@@ -86,7 +86,7 @@ func TestValueStorageGetState(t *testing.T) {
 			"device-0:register-a=1.000000",
 			"device-0:register-b=10.000000",
 		}
-		got := getAsStrings(storage.GetState(dataflow.Filter{
+		got := getAsStrings(storage.GetSlice(dataflow.Filter{
 			IncludeDevices: map[string]bool{"device-0": true, "device-3": true},
 			SkipRegisterCategories: map[dataflow.SkipRegisterCategoryStruct]bool{dataflow.SkipRegisterCategoryStruct{
 				Device:   "device-3",
@@ -111,7 +111,7 @@ func BenchmarkValueStorageFill(b *testing.B) {
 	}
 }
 
-func BenchmarkValueStorageGetState(b *testing.B) {
+func BenchmarkValueStorageGetSlice(b *testing.B) {
 	storage := dataflow.NewValueStorage()
 	fillSetA(storage)
 	fillSetB(storage)
@@ -119,7 +119,7 @@ func BenchmarkValueStorageGetState(b *testing.B) {
 	storage.Wait()
 
 	for i := 0; i < b.N; i++ {
-		storage.GetState(dataflow.Filter{})
+		storage.GetSlice(dataflow.Filter{})
 	}
 }
 
@@ -128,11 +128,9 @@ func equalIgnoreOrder(a, b []string) bool {
 	return cmp.Diff(a, b, cmpopts.SortSlices(less)) == ""
 }
 
-func getAsStrings(state dataflow.State) (lines []string) {
-	for deviceName, values := range state {
-		for _, v := range values {
-			lines = append(lines, fmt.Sprintf("%s:%s", deviceName, v.String()))
-		}
+func getAsStrings(values []dataflow.Value) (lines []string) {
+	for _, v := range values {
+		lines = append(lines, fmt.Sprintf("%s:%s", v.DeviceName(), v.String()))
 	}
 	return
 }
