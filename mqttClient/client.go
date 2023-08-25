@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
+	"github.com/koestler/go-iotdevice/queue"
 	"log"
 	"sync"
 )
@@ -16,9 +17,10 @@ type ClientStruct struct {
 	subscriptionsMutex sync.RWMutex
 	subscriptions      []subscription
 
-	cliCfg autopaho.ClientConfig
-	cm     *autopaho.ConnectionManager
-	router *paho.StandardRouter
+	cliCfg         autopaho.ClientConfig
+	cm             *autopaho.ConnectionManager
+	router         *paho.StandardRouter
+	publishBacklog queue.Fifo[*paho.Publish]
 
 	ctx    context.Context
 	cancel context.CancelFunc

@@ -2,6 +2,7 @@ package config
 
 import (
 	"net/url"
+	"regexp"
 	"time"
 )
 
@@ -18,6 +19,7 @@ type Config struct {
 	httpServer      HttpServerConfig       // optional: default Disabled
 	authentication  AuthenticationConfig   // optional: default Disabled
 	mqttClients     []*MqttClientConfig    // mandatory: at least 1 must be defined
+	hassDiscovery   []*HassDiscovery       // optional: default Disabled
 	modbus          []*ModbusConfig        // optional: default empty
 	devices         []*DeviceConfig        // aggregated over all types
 	victronDevices  []*VictronDeviceConfig // optional: default empty
@@ -41,9 +43,9 @@ type HttpServerConfig struct {
 
 type AuthenticationConfig struct {
 	enabled           bool          // defined automatically if Authentication section exists
-	jwtSecret         []byte        `yaml:"JwtSecret"`         // optional: default new random string on startup
-	jwtValidityPeriod time.Duration `yaml:"JwtValidityPeriod"` // optional: default 1h
-	htaccessFile      string        `yaml:"HtaccessFile"`      // optional: default no valid users
+	jwtSecret         []byte        // optional: default new random string on startup
+	jwtValidityPeriod time.Duration // optional: default 1h
+	htaccessFile      string        // optional: default no valid users
 }
 
 type MqttClientConfig struct {
@@ -67,6 +69,17 @@ type MqttClientConfig struct {
 	topicPrefix       string        // optional: default empty
 	logDebug          bool          // optional: default False
 	logMessages       bool          // optional: default False
+}
+
+type HassDiscovery struct {
+	topicPrefix       string   // optional: default "homeassistant"
+	viaMqttClients    []string // optional: default empty
+	devices           []string
+	devicesMatcher    []*regexp.Regexp
+	categories        []string
+	categoriesMatcher []*regexp.Regexp
+	registers         []string
+	registersMatcher  []*regexp.Regexp
 }
 
 type ModbusConfig struct {

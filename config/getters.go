@@ -2,6 +2,7 @@ package config
 
 import (
 	"net/url"
+	"regexp"
 	"time"
 )
 
@@ -37,6 +38,10 @@ func (c Config) Authentication() AuthenticationConfig {
 
 func (c Config) MqttClients() []*MqttClientConfig {
 	return c.mqttClients
+}
+
+func (c Config) HassDiscovery() []*HassDiscovery {
+	return c.hassDiscovery
 }
 
 func (c Config) Modbus() []*ModbusConfig {
@@ -212,6 +217,40 @@ func (c MqttClientConfig) LogDebug() bool {
 
 func (c MqttClientConfig) LogMessages() bool {
 	return c.logMessages
+}
+
+// Gettters for HassDiscovery struct
+
+func (c HassDiscovery) TopicPrefix() string {
+	return c.topicPrefix
+}
+
+func (c HassDiscovery) ViaMqttClients() []string {
+	return c.viaMqttClients
+}
+
+func (c HassDiscovery) Devices() []string {
+	return c.devices
+}
+
+func (c HassDiscovery) DevicesMatcher() []*regexp.Regexp {
+	return c.devicesMatcher
+}
+
+func (c HassDiscovery) Categories() []string {
+	return c.categories
+}
+
+func (c HassDiscovery) CategoriesMatcher() []*regexp.Regexp {
+	return c.categoriesMatcher
+}
+
+func (c HassDiscovery) Registers() []string {
+	return c.registers
+}
+
+func (c HassDiscovery) RegistersMatcher() []*regexp.Regexp {
+	return c.registersMatcher
 }
 
 // Getters for ModbusConfig struct

@@ -31,11 +31,17 @@ type SkipRegisterCategoryStruct struct {
 	Category string
 }
 
+type OnlyOnceKey struct {
+	deviceName   string
+	registerName string
+}
+
 type Filter struct {
 	IncludeDevices         map[string]bool
 	SkipRegisterNames      map[SkipRegisterNameStruct]bool
 	SkipRegisterCategories map[SkipRegisterCategoryStruct]bool
 	SkipNull               bool
+	OnlyOnce               bool
 }
 
 type readStateRequest struct {
@@ -75,7 +81,15 @@ func (instance *ValueStorageInstance) handleNewValue(newValue Value) {
 				delete(instance.subscriptions, subscription)
 			default:
 				// Subscription was not shut down -> forward new value
-				subscription.forward(newValue)
+				if !subscription.filter.OnlyOnce {
+					subscription.forward(newValue)
+				} else {
+					k := OnlyOnceKey{newValue.DeviceName(), newValue.Register().Name()}
+					if _, ok := subscription.sentOnce[k]; !ok {
+						subscription.forward(newValue)
+						subscription.sentOnce[k] = true
+					}
+				}
 			}
 		}
 
@@ -178,6 +192,7 @@ func (instance *ValueStorageInstance) Subscribe(filter Filter) Subscription {
 		shutdownChannel: make(chan struct{}),
 		outputChannel:   make(chan Value, 128),
 		filter:          filter,
+		sentOnce:        make(map[OnlyOnceKey]bool),
 	}
 
 	instance.subscriptionChannel <- &s

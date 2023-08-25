@@ -57,11 +57,6 @@ func (p *Pool[I]) GetByNames(names []string) []I {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 
-	if len(names) < 1 {
-		// return all
-		return maps.Values(p.items)
-	}
-
 	// copy only those in the names list
 	ret := make([]I, 0, len(p.items))
 	for _, name := range names {

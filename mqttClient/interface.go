@@ -32,7 +32,7 @@ type Client interface {
 	Config() Config
 	Run()
 	Shutdown()
-	Publish(topic string, payload []byte, qos byte, retain bool) error
+	Publish(topic string, payload []byte, qos byte, retain bool)
 	AddRoute(subscribeTopic string, messageHandler MessageHandler)
 }
 

@@ -101,6 +101,12 @@ func main() {
 		mqttClientPoolInstance := runMqttClient(cfg)
 		defer mqttClientPoolInstance.Shutdown()
 
+		// start hass discovery
+		hassDiscoveryInstance := runHassDisovery(cfg, stateStorage, mqttClientPoolInstance)
+		if hassDiscoveryInstance != nil {
+			defer hassDiscoveryInstance.Shutdown()
+		}
+
 		// start modbus device handlers
 		modbusPoolInstance := runModbus(cfg)
 		defer modbusPoolInstance.Shutdown()
@@ -111,7 +117,9 @@ func main() {
 
 		// start http server
 		httpServerInstance := runHttpServer(cfg, devicePoolInstance, stateStorage, commandStorage)
-		defer httpServerInstance.Shutdown()
+		if httpServerInstance != nil {
+			defer httpServerInstance.Shutdown()
+		}
 
 		// setup SIGTERM, SIGINT handlers
 		gracefulStop := make(chan os.Signal, 1)

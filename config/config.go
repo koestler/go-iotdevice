@@ -101,6 +101,14 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	)
 	err = append(err, e...)
 
+	ret.hassDiscovery, e = TransformAndValidateList(
+		c.HassDiscovery,
+		func(inp hassDiscoveryRead) (HassDiscovery, []error) {
+			return inp.TransformAndValidate(ret.mqttClients)
+		},
+	)
+	err = append(err, e...)
+
 	ret.modbus, e = TransformAndValidateMapToList(
 		c.Modbus,
 		func(inp modbusConfigRead, name string) (ModbusConfig, []error) {
@@ -168,7 +176,7 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 
 	{
 		var viewsErr []error
-		ret.views, viewsErr = TransformAndValidateList(
+		ret.views, viewsErr = TransformAndValidateListUnique(
 			c.Views,
 			func(inp viewConfigRead) (ViewConfig, []error) {
 				return inp.TransformAndValidate(ret.devices)
@@ -459,29 +467,76 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	return
 }
 
+func (c hassDiscoveryRead) TransformAndValidate(mqttClients []*MqttClientConfig) (ret HassDiscovery, err []error) {
+	ret = HassDiscovery{
+		devices:    c.Devices,
+		categories: c.Categories,
+		registers:  c.Registers,
+	}
+
+	if c.TopicPrefix == nil {
+		ret.topicPrefix = "homeassistant"
+	} else {
+		ret.topicPrefix = *c.TopicPrefix
+	}
+
+	var e []error
+
+	ret.viaMqttClients, e = allOrCheckedMqttClients(
+		c.ViaMqttClients, mqttClients,
+		"HassDisovery->MqttClients: client='%s' is not defined",
+	)
+	err = append(err, e...)
+
+	ret.devicesMatcher, e = stringToRegexp(c.Devices)
+	err = append(err, e...)
+
+	ret.categoriesMatcher, e = stringToRegexp(c.Categories)
+	err = append(err, e...)
+
+	ret.registersMatcher, e = stringToRegexp(c.Registers)
+	err = append(err, e...)
+
+	return
+}
+
+func stringToRegexp(inp []string) (ret []*regexp.Regexp, err []error) {
+	ret = make([]*regexp.Regexp, 0, len(inp))
+	for _, v := range inp {
+		if r, e := regexp.Compile(v); e != nil {
+			err = append(err, fmt.Errorf("invalid regexp: %s", e))
+		} else {
+			ret = append(ret, r)
+		}
+
+	}
+
+	return
+}
+
 func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret DeviceConfig, err []error) {
 	ret = DeviceConfig{
-		name:                    name,
-		telemetryViaMqttClients: c.TelemetryViaMqttClients,
-		realtimeViaMqttClients:  c.RealtimeViaMqttClients,
-		skipFields:              c.SkipFields,
-		skipCategories:          c.SkipCategories,
+		name:           name,
+		skipFields:     c.SkipFields,
+		skipCategories: c.SkipCategories,
 	}
 
 	if !nameMatcher.MatchString(ret.name) {
 		err = append(err, fmt.Errorf("Devices->Name='%s' does not match %s", ret.name, NameRegexp))
 	}
 
-	for _, clientName := range ret.telemetryViaMqttClients {
-		if !existsByName(clientName, mqttClients) {
-			err = append(err, fmt.Errorf("Devices->%s->TelemetryViaMqttClients: client='%s' is not defined", name, clientName))
-		}
-	}
-	for _, clientName := range ret.realtimeViaMqttClients {
-		if !existsByName(clientName, mqttClients) {
-			err = append(err, fmt.Errorf("Devices->%s->RealtimeViaMqttClients: client='%s' is not defined", name, clientName))
-		}
-	}
+	var e []error
+	ret.telemetryViaMqttClients, e = allOrCheckedMqttClients(
+		c.TelemetryViaMqttClients, mqttClients,
+		"Devices->%s->TelemetryViaMqttClients: client='%s' is not defined",
+	)
+	err = append(err, e...)
+
+	ret.realtimeViaMqttClients, e = allOrCheckedMqttClients(
+		c.RealtimeViaMqttClients, mqttClients,
+		"Devices->%s->RealtimeViaMqttClients: client='%s' is not defined",
+	)
+	err = append(err, e...)
 
 	if len(c.RestartInterval) < 1 {
 		// use default 200ms
@@ -664,19 +719,18 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string, mqttClients []*M
 
 func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret MqttDeviceConfig, err []error) {
 	ret = MqttDeviceConfig{
-		mqttTopics:  c.MqttTopics,
-		mqttClients: c.MqttClients,
+		mqttTopics: c.MqttTopics,
 	}
 
 	var e []error
 	ret.DeviceConfig, e = c.General.TransformAndValidate(name, mqttClients)
 	err = append(err, e...)
 
-	for _, clientName := range ret.mqttClients {
-		if !existsByName(clientName, mqttClients) {
-			err = append(err, fmt.Errorf("MqttDevices->%s->mqttClients: Client='%s' is not defined", name, clientName))
-		}
-	}
+	ret.mqttClients, e = allOrCheckedMqttClients(
+		c.MqttClients, mqttClients,
+		"MqttDevices->%s->mqttClients: Client='%s' is not defined",
+	)
+	err = append(err, e...)
 
 	return
 }
@@ -741,7 +795,7 @@ func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewC
 
 	{
 		var devicesErr []error
-		ret.devices, devicesErr = TransformAndValidateList(
+		ret.devices, devicesErr = TransformAndValidateListUnique(
 			c.Devices,
 			func(inp viewDeviceConfigRead) (ViewDeviceConfig, []error) {
 				return inp.TransformAndValidate(devices)
@@ -816,7 +870,22 @@ func TransformAndValidateMap[I any, O any](
 	return
 }
 
-func TransformAndValidateList[I any, O Nameable](
+func TransformAndValidateList[I any, O any](
+	inp []I,
+	transformer func(inp I) (ret O, err []error),
+) (ret []*O, err []error) {
+	ret = make([]*O, 0, len(inp))
+	for _, cr := range inp {
+		r, e := transformer(cr)
+
+		ret = append(ret, &r)
+		err = append(err, e...)
+	}
+
+	return
+}
+
+func TransformAndValidateListUnique[I any, O Nameable](
 	inp []I,
 	transformer func(inp I) (ret O, err []error),
 ) (ret []*O, err []error) {
@@ -835,6 +904,24 @@ func TransformAndValidateList[I any, O Nameable](
 	return
 }
 
+func allOrCheckedMqttClients(inp []string, mqttClients []*MqttClientConfig, errorFormat string) (oup []string, err []error) {
+	if len(inp) < 1 {
+		return getNames(mqttClients), nil
+	}
+
+	oup = make([]string, 0, len(inp))
+
+	for _, clientName := range inp {
+		if !existsByName(clientName, mqttClients) {
+			err = append(err, fmt.Errorf(errorFormat, clientName))
+		} else {
+			oup = append(oup, clientName)
+		}
+	}
+
+	return
+}
+
 func existsByName[N Nameable](needle string, haystack []*N) bool {
 	for _, t := range haystack {
 		if needle == (*t).Name() {
@@ -842,4 +929,12 @@ func existsByName[N Nameable](needle string, haystack []*N) bool {
 		}
 	}
 	return false
+}
+
+func getNames[N Nameable](list []*N) (ret []string) {
+	ret = make([]string, len(list))
+	for i, t := range list {
+		ret[i] = (*t).Name()
+	}
+	return
 }
