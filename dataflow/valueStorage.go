@@ -43,11 +43,6 @@ type Filter struct {
 	SkipNull               bool
 }
 
-type readStateRequest struct {
-	filter   Filter
-	response chan State
-}
-
 func (vs *ValueStorage) mainStorageRoutine() {
 	for {
 		select {
