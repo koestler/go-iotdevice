@@ -61,7 +61,7 @@ func fillSetB(storage *dataflow.ValueStorage) (count int) {
 		200,
 	))
 
-	return 3
+	return 2
 }
 
 func fillSetC(storage *dataflow.ValueStorage) (count int) {

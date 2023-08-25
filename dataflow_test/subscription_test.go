@@ -18,7 +18,6 @@ func TestValueStorageSubscribe(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(numberOfSubscriptions)
 	for i := 0; i < numberOfSubscriptions; i += 1 {
-		i := i
 		subscription := storage.Subscribe(ctx, dataflow.Filter{})
 		go func() {
 			counter := 0
@@ -26,14 +25,15 @@ func TestValueStorageSubscribe(t *testing.T) {
 			defer func() {
 				counts <- counter
 			}()
-			for v := range subscription.Drain() {
-				t.Logf("worker %d got %s", i, v)
+			for range subscription.Drain() {
 				counter += 1
 			}
 		}()
 	}
 
 	expected := fillSetA(storage)
+	expected += fillSetB(storage)
+	expected += fillSetC(storage)
 	storage.Wait()
 	cancel()
 	wg.Wait()
@@ -51,4 +51,8 @@ func TestValueStorageSubscribe(t *testing.T) {
 			t.Errorf("expected to receive %d counts but got %d", numberOfSubscriptions, i)
 		}
 	}
+}
+
+func TestValueStorageSubscribeWithFilter(t *testing.T) {
+
 }
