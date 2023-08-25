@@ -67,10 +67,3 @@ func filterValue(filter *Filter, value Value) bool {
 		filterByRegister(filter, value.DeviceName(), register) &&
 		filterByValue(filter, value)
 }
-
-func (s *Subscription) forward(newValue Value) {
-	if filterValue(&s.filter, newValue) {
-		// forward value
-		s.outputChannel <- newValue
-	}
-}

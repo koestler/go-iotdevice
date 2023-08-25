@@ -6,24 +6,23 @@ import (
 	"sync"
 )
 
-type State map[string]ValueMap
+type StateKey struct {
+	deviceName   string
+	registerName string
+}
 
 type ValueStorage struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 
-	// this represents the state of the storage instance and must only be access by the main go routine
-
-	// state: 1. dimension: device.Name, 2. dimension: register.Name
-	state      State
+	state      map[StateKey]Value
 	stateMutex sync.RWMutex
+
+	inputChannel   chan Value
+	inputWaitGroup sync.WaitGroup
 
 	subscriptions      *list.List[Subscription]
 	subscriptionsMutex sync.RWMutex
-
-	// communication channels to/from the main go routine
-	inputChannel   chan Value
-	inputWaitGroup sync.WaitGroup
 }
 
 type SkipRegisterNameStruct struct {
@@ -49,36 +48,51 @@ func (vs *ValueStorage) mainStorageRoutine() {
 		case <-vs.ctx.Done():
 			return
 		case newValue := <-vs.inputChannel:
-			vs.handleNewValue(newValue)
+			if vs.updateState(newValue) {
+				vs.forwardToSubscriptions(newValue)
+			}
 			vs.inputWaitGroup.Done()
 		}
 	}
 }
 
-func (vs *ValueStorage) handleNewValue(newValue Value) {
-	// make sure device exists
-	if _, ok := vs.state[newValue.DeviceName()]; !ok {
-		vs.state[newValue.DeviceName()] = make(ValueMap)
+func (vs *ValueStorage) updateState(newValue Value) (updated bool) {
+	k := StateKey{
+		deviceName:   newValue.DeviceName(),
+		registerName: newValue.Register().Name(),
 	}
 
-	// check if the newValue is not present or has been changed
-	if currentValue, ok := vs.state[newValue.DeviceName()][newValue.Register().Name()]; !ok || !currentValue.Equals(newValue) {
-		// update state
-		vs.stateMutex.Lock()
-		if _, ok := newValue.(NullRegisterValue); ok {
-			delete(vs.state[newValue.DeviceName()], newValue.Register().Name())
-		} else {
-			// and save the new state
-			vs.state[newValue.DeviceName()][newValue.Register().Name()] = newValue
-		}
-		vs.stateMutex.Unlock()
+	vs.stateMutex.Lock()
+	defer vs.stateMutex.Unlock()
 
-		// copy the input value to all subscribed output channels
-		vs.subscriptionsMutex.RLock()
-		for e := vs.subscriptions.Front(); e != nil; e = e.Next() {
-			e.Value.forward(newValue)
+	currentValue, ok := vs.state[k]
+
+	if ok && currentValue.Equals(newValue) {
+		return false
+	}
+
+	if _, ok := newValue.(NullRegisterValue); ok {
+		// null values means -> remove from state
+		delete(vs.state, k)
+	} else {
+		// update value
+		vs.state[k] = newValue
+	}
+
+	return true
+}
+
+// copy the input value to all subscribed output channels
+func (vs *ValueStorage) forwardToSubscriptions(newValue Value) {
+	vs.subscriptionsMutex.RLock()
+	defer vs.subscriptionsMutex.RUnlock()
+
+	for e := vs.subscriptions.Front(); e != nil; e = e.Next() {
+		s := e.Value
+
+		if filterValue(&s.filter, newValue) {
+			s.outputChannel <- newValue
 		}
-		vs.subscriptionsMutex.RUnlock()
 	}
 }
 
@@ -88,7 +102,7 @@ func NewValueStorage() (valueStorageInstance *ValueStorage) {
 	valueStorageInstance = &ValueStorage{
 		ctx:           ctx,
 		ctxCancel:     cancel,
-		state:         make(State),
+		state:         make(map[StateKey]Value, 64),
 		subscriptions: list.New[Subscription](),
 		inputChannel:  make(chan Value, 1024),
 	}
@@ -103,46 +117,23 @@ func (vs *ValueStorage) Shutdown() {
 	vs.ctxCancel()
 }
 
-func (vs *ValueStorage) GetState(filter Filter) State {
+func (vs *ValueStorage) GetSlice(filter Filter) (result []Value) {
 	vs.stateMutex.RLock()
 	defer vs.stateMutex.RUnlock()
 
-	response := make(State)
-
-	for deviceName, deviceState := range vs.state {
-		if !filterByDevice(&filter, deviceName) {
+	result = make([]Value, 0, len(vs.state))
+	for _, value := range vs.state {
+		if !filterByDevice(&filter, value.DeviceName()) {
 			continue
 		}
 
-		response[deviceName] = make(ValueMap)
-
-		for registerName, value := range deviceState {
-			if !filterByRegister(&filter, deviceName, value.Register()) {
-				continue
-			}
-
-			response[deviceName][registerName] = value
+		if !filterByRegister(&filter, value.DeviceName(), value.Register()) {
+			continue
 		}
+
+		result = append(result, value)
 	}
 
-	return response
-}
-
-func (vs *ValueStorage) GetSlice(filter Filter) (result []Value) {
-	state := vs.GetState(filter)
-
-	// create result slice of correct capacity
-	capacity := 0
-	for _, deviceState := range state {
-		capacity += len(deviceState)
-	}
-	result = make([]Value, 0, capacity)
-
-	for _, deviceState := range state {
-		for _, value := range deviceState {
-			result = append(result, value)
-		}
-	}
 	return
 }
 

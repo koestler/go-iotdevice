@@ -10,8 +10,6 @@ type Value interface {
 	Equals(comp Value) bool
 }
 
-type ValueMap map[string]Value
-
 type RegisterValue struct {
 	deviceName string
 	register   Register
