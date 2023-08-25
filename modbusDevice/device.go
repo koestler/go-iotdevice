@@ -29,7 +29,7 @@ type DeviceStruct struct {
 	device.State
 	modbusConfig Config
 
-	commandStorage *dataflow.ValueStorageInstance
+	commandStorage *dataflow.ValueStorage
 
 	modbus    Modbus
 	registers ModbusRegisters
@@ -39,8 +39,8 @@ func NewDevice(
 	deviceConfig device.Config,
 	modbusConfig Config,
 	modbus Modbus,
-	stateStorage *dataflow.ValueStorageInstance,
-	commandStorage *dataflow.ValueStorageInstance,
+	stateStorage *dataflow.ValueStorage,
+	commandStorage *dataflow.ValueStorage,
 ) *DeviceStruct {
 	return &DeviceStruct{
 		State: device.NewState(

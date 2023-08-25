@@ -31,7 +31,7 @@ type DeviceStruct struct {
 func NewDevice(
 	deviceConfig device.Config,
 	mqttConfig Config,
-	stateStorage *dataflow.ValueStorageInstance,
+	stateStorage *dataflow.ValueStorage,
 	mqttClientPool *pool.Pool[mqttClient.Client],
 ) *DeviceStruct {
 	return &DeviceStruct{

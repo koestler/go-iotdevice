@@ -19,8 +19,8 @@ func runDevices(
 	cfg *config.Config,
 	mqttClientPool *pool.Pool[mqttClient.Client],
 	modbusPoolInstance *pool.Pool[*modbus.ModbusStruct],
-	stateStorage *dataflow.ValueStorageInstance,
-	commandStorage *dataflow.ValueStorageInstance,
+	stateStorage *dataflow.ValueStorage,
+	commandStorage *dataflow.ValueStorage,
 ) (devicePoolInstance *pool.Pool[*restarter.Restarter[device.Device]]) {
 	devicePoolInstance = pool.RunPool[*restarter.Restarter[device.Device]]()
 

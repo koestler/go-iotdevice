@@ -30,7 +30,7 @@ type Device interface {
 
 type State struct {
 	deviceConfig Config
-	stateStorage *dataflow.ValueStorageInstance
+	stateStorage *dataflow.ValueStorage
 
 	lastUpdated      time.Time
 	lastUpdatedMutex sync.RWMutex
@@ -38,7 +38,7 @@ type State struct {
 	availableMutex   sync.RWMutex
 }
 
-func NewState(deviceConfig Config, stateStorage *dataflow.ValueStorageInstance) State {
+func NewState(deviceConfig Config, stateStorage *dataflow.ValueStorage) State {
 	return State{
 		deviceConfig: deviceConfig,
 		stateStorage: stateStorage,
@@ -53,7 +53,7 @@ func (c *State) Config() Config {
 	return c.deviceConfig
 }
 
-func (c *State) StateStorage() *dataflow.ValueStorageInstance {
+func (c *State) StateStorage() *dataflow.ValueStorage {
 	return c.stateStorage
 }
 

@@ -17,7 +17,7 @@ func getSimpleTestRegister(category, name string) dataflow.RegisterStruct {
 		false,
 	)
 }
-func fillSetA(storage *dataflow.ValueStorageInstance) (count int) {
+func fillSetA(storage *dataflow.ValueStorage) (count int) {
 	storage.Fill(dataflow.NewNumericRegisterValue(
 		"device-0",
 		getSimpleTestRegister("set-a", "register-a"),
@@ -48,7 +48,7 @@ func fillSetA(storage *dataflow.ValueStorageInstance) (count int) {
 	return 4
 }
 
-func fillSetB(storage *dataflow.ValueStorageInstance) (count int) {
+func fillSetB(storage *dataflow.ValueStorage) (count int) {
 	storage.Fill(dataflow.NewNumericRegisterValue(
 		"device-1",
 		getSimpleTestRegister("set-b", "register-a"),
@@ -64,7 +64,7 @@ func fillSetB(storage *dataflow.ValueStorageInstance) (count int) {
 	return 3
 }
 
-func fillSetC(storage *dataflow.ValueStorageInstance) (count int) {
+func fillSetC(storage *dataflow.ValueStorage) (count int) {
 	count = 1000
 
 	for i := 0; i < count; i += 1 {

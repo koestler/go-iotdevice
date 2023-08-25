@@ -8,7 +8,7 @@ import (
 
 type State map[string]ValueMap
 
-type ValueStorageInstance struct {
+type ValueStorage struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 
@@ -48,49 +48,49 @@ type readStateRequest struct {
 	response chan State
 }
 
-func (instance *ValueStorageInstance) mainStorageRoutine() {
+func (vs *ValueStorage) mainStorageRoutine() {
 	for {
 		select {
-		case <-instance.ctx.Done():
+		case <-vs.ctx.Done():
 			return
-		case newValue := <-instance.inputChannel:
-			instance.handleNewValue(newValue)
-			instance.inputWaitGroup.Done()
+		case newValue := <-vs.inputChannel:
+			vs.handleNewValue(newValue)
+			vs.inputWaitGroup.Done()
 		}
 	}
 }
 
-func (instance *ValueStorageInstance) handleNewValue(newValue Value) {
+func (vs *ValueStorage) handleNewValue(newValue Value) {
 	// make sure device exists
-	if _, ok := instance.state[newValue.DeviceName()]; !ok {
-		instance.state[newValue.DeviceName()] = make(ValueMap)
+	if _, ok := vs.state[newValue.DeviceName()]; !ok {
+		vs.state[newValue.DeviceName()] = make(ValueMap)
 	}
 
 	// check if the newValue is not present or has been changed
-	if currentValue, ok := instance.state[newValue.DeviceName()][newValue.Register().Name()]; !ok || !currentValue.Equals(newValue) {
+	if currentValue, ok := vs.state[newValue.DeviceName()][newValue.Register().Name()]; !ok || !currentValue.Equals(newValue) {
 		// update state
-		instance.stateMutex.Lock()
+		vs.stateMutex.Lock()
 		if _, ok := newValue.(NullRegisterValue); ok {
-			delete(instance.state[newValue.DeviceName()], newValue.Register().Name())
+			delete(vs.state[newValue.DeviceName()], newValue.Register().Name())
 		} else {
 			// and save the new state
-			instance.state[newValue.DeviceName()][newValue.Register().Name()] = newValue
+			vs.state[newValue.DeviceName()][newValue.Register().Name()] = newValue
 		}
-		instance.stateMutex.Unlock()
+		vs.stateMutex.Unlock()
 
 		// copy the input value to all subscribed output channels
-		instance.subscriptionsMutex.RLock()
-		for e := instance.subscriptions.Front(); e != nil; e = e.Next() {
+		vs.subscriptionsMutex.RLock()
+		for e := vs.subscriptions.Front(); e != nil; e = e.Next() {
 			e.Value.forward(newValue)
 		}
-		instance.subscriptionsMutex.RUnlock()
+		vs.subscriptionsMutex.RUnlock()
 	}
 }
 
-func NewValueStorage() (valueStorageInstance *ValueStorageInstance) {
+func NewValueStorage() (valueStorageInstance *ValueStorage) {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	valueStorageInstance = &ValueStorageInstance{
+	valueStorageInstance = &ValueStorage{
 		ctx:           ctx,
 		ctxCancel:     cancel,
 		state:         make(State),
@@ -104,17 +104,17 @@ func NewValueStorage() (valueStorageInstance *ValueStorageInstance) {
 	return
 }
 
-func (instance *ValueStorageInstance) Shutdown() {
-	instance.ctxCancel()
+func (vs *ValueStorage) Shutdown() {
+	vs.ctxCancel()
 }
 
-func (instance *ValueStorageInstance) GetState(filter Filter) State {
-	instance.stateMutex.RLock()
-	defer instance.stateMutex.RUnlock()
+func (vs *ValueStorage) GetState(filter Filter) State {
+	vs.stateMutex.RLock()
+	defer vs.stateMutex.RUnlock()
 
 	response := make(State)
 
-	for deviceName, deviceState := range instance.state {
+	for deviceName, deviceState := range vs.state {
 		if !filterByDevice(&filter, deviceName) {
 			continue
 		}
@@ -133,8 +133,8 @@ func (instance *ValueStorageInstance) GetState(filter Filter) State {
 	return response
 }
 
-func (instance *ValueStorageInstance) GetSlice(filter Filter) (result []Value) {
-	state := instance.GetState(filter)
+func (vs *ValueStorage) GetSlice(filter Filter) (result []Value) {
+	state := vs.GetState(filter)
 
 	// create result slice of correct capacity
 	capacity := 0
@@ -151,35 +151,35 @@ func (instance *ValueStorageInstance) GetSlice(filter Filter) (result []Value) {
 	return
 }
 
-func (instance *ValueStorageInstance) Fill(value Value) {
-	instance.inputWaitGroup.Add(1)
-	instance.inputChannel <- value
+func (vs *ValueStorage) Fill(value Value) {
+	vs.inputWaitGroup.Add(1)
+	vs.inputChannel <- value
 }
 
 // Wait until all inputs are processed (useful for testing)
-func (instance *ValueStorageInstance) Wait() {
-	instance.inputWaitGroup.Wait()
+func (vs *ValueStorage) Wait() {
+	vs.inputWaitGroup.Wait()
 }
 
-func (instance *ValueStorageInstance) Subscribe(ctx context.Context, filter Filter) Subscription {
+func (vs *ValueStorage) Subscribe(ctx context.Context, filter Filter) Subscription {
 	s := Subscription{
 		ctx:           ctx,
 		outputChannel: make(chan Value, 128),
 		filter:        filter,
 	}
 
-	instance.subscriptionsMutex.Lock()
-	elem := instance.subscriptions.PushBack(s)
-	instance.subscriptionsMutex.Unlock()
+	vs.subscriptionsMutex.Lock()
+	elem := vs.subscriptions.PushBack(s)
+	vs.subscriptionsMutex.Unlock()
 
 	go func() {
 		// wait for the cancellation of the subscription context
 		<-s.ctx.Done()
 
 		// remove from subscriptions list
-		instance.subscriptionsMutex.Lock()
-		instance.subscriptions.Remove(elem)
-		instance.subscriptionsMutex.Unlock()
+		vs.subscriptionsMutex.Lock()
+		vs.subscriptions.Remove(elem)
+		vs.subscriptionsMutex.Unlock()
 
 		// close output channel
 		close(s.outputChannel)

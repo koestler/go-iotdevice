@@ -14,7 +14,7 @@ func RunMqttForwarders(
 	ctx context.Context,
 	d Device,
 	mqttClientPool *pool.Pool[mqttClient.Client],
-	storage *dataflow.ValueStorageInstance,
+	storage *dataflow.ValueStorage,
 ) {
 	deviceFilter := dataflow.Filter{IncludeDevices: map[string]bool{d.Config().Name(): true}}
 
@@ -38,7 +38,7 @@ func RunMqttForwarders(
 						)
 					}
 					return
-				case value := <-subscription.GetOutput():
+				case value := <-subscription.Drain():
 					if d.Config().LogDebug() {
 						log.Printf(
 							"device[%s]->mqttClient[%s]: send realtime : %s",

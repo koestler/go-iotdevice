@@ -26,7 +26,7 @@ type DeviceStruct struct {
 	device.State
 	httpConfig Config
 
-	commandStorage *dataflow.ValueStorageInstance
+	commandStorage *dataflow.ValueStorage
 
 	httpClient  *http.Client
 	pollRequest *http.Request
@@ -40,8 +40,8 @@ type DeviceStruct struct {
 func NewDevice(
 	deviceConfig device.Config,
 	teracomConfig Config,
-	stateStorage *dataflow.ValueStorageInstance,
-	commandStorage *dataflow.ValueStorageInstance,
+	stateStorage *dataflow.ValueStorage,
+	commandStorage *dataflow.ValueStorage,
 ) *DeviceStruct {
 	ds := &DeviceStruct{
 		State: device.NewState(
@@ -157,7 +157,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 			if err := execPoll(); err != nil {
 				return err, false
 			}
-		case value := <-commandSubscription.GetOutput():
+		case value := <-commandSubscription.Drain():
 			execCommand(value)
 		}
 	}

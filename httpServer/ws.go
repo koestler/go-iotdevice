@@ -117,7 +117,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 					defer ticker.Stop()
 
 					tickerRunning := true
-					valuesC := subscription.GetOutput()
+					valuesC := subscription.Drain()
 					values := make(map[string]map[string]valueResponse, 1)
 					for {
 						select {

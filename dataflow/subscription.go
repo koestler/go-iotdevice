@@ -8,7 +8,7 @@ type Subscription struct {
 	filter        Filter
 }
 
-func (s *Subscription) GetOutput() <-chan Value {
+func (s *Subscription) Drain() <-chan Value {
 	return s.outputChannel
 }
 

@@ -24,7 +24,7 @@ type DeviceStruct struct {
 func NewDevice(
 	deviceConfig device.Config,
 	victronConfig Config,
-	stateStorage *dataflow.ValueStorageInstance,
+	stateStorage *dataflow.ValueStorage,
 ) *DeviceStruct {
 	return &DeviceStruct{
 		State: device.NewState(

@@ -11,7 +11,7 @@ import (
 
 func runHassDisovery(
 	cfg *config.Config,
-	stateStorage *dataflow.ValueStorageInstance,
+	stateStorage *dataflow.ValueStorage,
 	mqttClientPool *pool.Pool[mqttClient.Client],
 ) *hassDiscovery.HassDiscovery {
 	hdConfig := cfg.HassDiscovery()

@@ -26,7 +26,7 @@ func TestValueStorageSubscribe(t *testing.T) {
 			defer func() {
 				counts <- counter
 			}()
-			for v := range subscription.GetOutput() {
+			for v := range subscription.Drain() {
 				t.Logf("worker %d got %s", i, v)
 				counter += 1
 			}

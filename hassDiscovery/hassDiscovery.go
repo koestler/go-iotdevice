@@ -22,7 +22,7 @@ type ConfigItem interface {
 type HassDiscovery struct {
 	configItems []ConfigItem
 
-	stateStorage   *dataflow.ValueStorageInstance
+	stateStorage   *dataflow.ValueStorage
 	mqttClientPool *pool.Pool[mqttClient.Client]
 
 	ctx    context.Context
@@ -32,7 +32,7 @@ type HassDiscovery struct {
 
 func Create[CI ConfigItem](
 	configItems []CI,
-	stateStorage *dataflow.ValueStorageInstance,
+	stateStorage *dataflow.ValueStorage,
 	mqttClientPool *pool.Pool[mqttClient.Client],
 ) *HassDiscovery {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -69,7 +69,7 @@ func (hd *HassDiscovery) Run() {
 			select {
 			case <-hd.ctx.Done():
 				return
-			case value := <-subscription.GetOutput():
+			case value := <-subscription.Drain():
 				log.Printf("hassDiscovery: value received: %v", value)
 
 				hd.handleRegister(

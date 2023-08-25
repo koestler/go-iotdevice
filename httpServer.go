@@ -13,8 +13,8 @@ import (
 func runHttpServer(
 	cfg *config.Config,
 	devicePoolInstance *pool.Pool[*restarter.Restarter[device.Device]],
-	stateStorage *dataflow.ValueStorageInstance,
-	commandStorage *dataflow.ValueStorageInstance,
+	stateStorage *dataflow.ValueStorage,
+	commandStorage *dataflow.ValueStorage,
 ) *httpServer.HttpServer {
 	httpServerCfg := cfg.HttpServer()
 	if !httpServerCfg.Enabled() {

@@ -146,7 +146,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 			if err := execPoll(); err != nil {
 				return err, false
 			}
-		case value := <-commandSubscription.GetOutput():
+		case value := <-commandSubscription.Drain():
 			execCommand(value)
 		}
 	}
