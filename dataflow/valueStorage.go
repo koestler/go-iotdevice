@@ -25,6 +25,27 @@ type ValueStorage struct {
 	subscriptionsMutex sync.RWMutex
 }
 
+func NewValueStorage() (valueStorageInstance *ValueStorage) {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	valueStorageInstance = &ValueStorage{
+		ctx:           ctx,
+		ctxCancel:     cancel,
+		state:         make(map[StateKey]Value, 64),
+		subscriptions: list.New[Subscription](),
+		inputChannel:  make(chan Value, 1024),
+	}
+
+	// start main go routine
+	go valueStorageInstance.mainStorageRoutine()
+
+	return
+}
+
+func (vs *ValueStorage) Shutdown() {
+	vs.ctxCancel()
+}
+
 func (vs *ValueStorage) mainStorageRoutine() {
 	for {
 		select {
@@ -76,27 +97,6 @@ func (vs *ValueStorage) forwardToSubscriptions(newValue Value) {
 			s.outputChannel <- newValue
 		}
 	}
-}
-
-func NewValueStorage() (valueStorageInstance *ValueStorage) {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	valueStorageInstance = &ValueStorage{
-		ctx:           ctx,
-		ctxCancel:     cancel,
-		state:         make(map[StateKey]Value, 64),
-		subscriptions: list.New[Subscription](),
-		inputChannel:  make(chan Value, 1024),
-	}
-
-	// start main go routine
-	go valueStorageInstance.mainStorageRoutine()
-
-	return
-}
-
-func (vs *ValueStorage) Shutdown() {
-	vs.ctxCancel()
 }
 
 func (vs *ValueStorage) GetState() (result []Value) {
