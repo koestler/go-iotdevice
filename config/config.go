@@ -228,7 +228,7 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 	if len(c.FrontendPath) > 0 {
 		ret.frontendPath = c.FrontendPath
 	} else {
-		ret.frontendPath = "frontend-build"
+		ret.frontendPath = "./frontend-build/"
 	}
 
 	if len(c.FrontendExpires) < 1 {
@@ -475,9 +475,19 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 
 func (c hassDiscoveryRead) TransformAndValidate(idx int, mqttClients []MqttClientConfig, devices []DeviceConfig) (ret HassDiscovery, err []error) {
 	ret = HassDiscovery{
-		devices:    c.Devices,
-		categories: c.Categories,
-		registers:  c.Registers,
+		devices: c.Devices,
+	}
+
+	if c.Categories != nil {
+		ret.categories = c.Categories
+	} else {
+		ret.categories = []string{}
+	}
+
+	if c.Registers != nil {
+		ret.registers = c.Registers
+	} else {
+		ret.registers = []string{}
 	}
 
 	if c.TopicPrefix == nil {
@@ -496,9 +506,13 @@ func (c hassDiscoveryRead) TransformAndValidate(idx int, mqttClients []MqttClien
 	)
 	err = append(err, e...)
 
-	for _, deviceName := range ret.devices {
-		if !existsByName(deviceName, devices) {
-			err = append(err, fmt.Errorf("HassDiscovery->%d->Devices: device='%s' is not defined", idx, deviceName))
+	if len(ret.devices) < 1 {
+		err = append(err, fmt.Errorf("HassDiscovery->%d->Devices: must not be empty", idx))
+	} else {
+		for _, deviceName := range ret.devices {
+			if !existsByName(deviceName, devices) {
+				err = append(err, fmt.Errorf("HassDiscovery->%d->Devices: device='%s' is not defined", idx, deviceName))
+			}
 		}
 	}
 
