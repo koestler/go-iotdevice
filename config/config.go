@@ -193,7 +193,6 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 
 func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err []error) {
 	ret.enabled = false
-	ret.bind = "[::1]"
 	ret.port = 8000
 	ret.logRequests = true
 
@@ -205,6 +204,8 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 
 	if len(c.Bind) > 0 {
 		ret.bind = c.Bind
+	} else {
+		err = append(err, errors.New("HttpServer->Bind must be either set or the whole section must be missing"))
 	}
 
 	if c.Port != nil {
@@ -220,7 +221,7 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 		if parseError == nil {
 			ret.frontendProxy = u
 		} else {
-			err = append(err, fmt.Errorf("HttpServerConfig->FrontendProxy must not be empty (=disabled) or a valid URL, err: %s", parseError))
+			err = append(err, fmt.Errorf("HttpServer->FrontendProxy must not be empty (=disabled) or a valid URL, err: %s", parseError))
 		}
 	}
 
@@ -234,9 +235,9 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 		// use default 5min
 		ret.frontendExpires = 5 * time.Minute
 	} else if frontendExpires, e := time.ParseDuration(c.FrontendExpires); e != nil {
-		err = append(err, fmt.Errorf("HttpServerConfig->FrontendExpires='%s' parse error: %s", c.FrontendExpires, e))
+		err = append(err, fmt.Errorf("HttpServer->FrontendExpires='%s' parse error: %s", c.FrontendExpires, e))
 	} else if frontendExpires < 0 {
-		err = append(err, fmt.Errorf("HttpServerConfig->FrontendExpires='%s' must be positive", c.FrontendExpires))
+		err = append(err, fmt.Errorf("HttpServer->FrontendExpires='%s' must be positive", c.FrontendExpires))
 	} else {
 		ret.frontendExpires = frontendExpires
 	}
@@ -245,9 +246,9 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 		// use default 1min
 		ret.configExpires = 1 * time.Minute
 	} else if configExpires, e := time.ParseDuration(c.ConfigExpires); e != nil {
-		err = append(err, fmt.Errorf("HttpServerConfig->ConfigExpires='%s' parse error: %s", c.ConfigExpires, e))
+		err = append(err, fmt.Errorf("HttpServer->ConfigExpires='%s' parse error: %s", c.ConfigExpires, e))
 	} else if configExpires < 0 {
-		err = append(err, fmt.Errorf("HttpServerConfig->ConfigExpires='%s' must be positive", c.ConfigExpires))
+		err = append(err, fmt.Errorf("HttpServer->ConfigExpires='%s' must be positive", c.ConfigExpires))
 	} else {
 		ret.configExpires = configExpires
 	}
