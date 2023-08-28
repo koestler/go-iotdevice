@@ -65,6 +65,7 @@ func convertListToRead[I convertable[O], O any](inp []I) (oup []O) {
 	return
 }
 
+//lint:ignore U1000 linter does not catch that this is used genric code
 func (c HttpServerConfig) convertToRead() httpServerConfigRead {
 	frontendProxy := ""
 	if c.frontendProxy != nil {
@@ -83,6 +84,7 @@ func (c HttpServerConfig) convertToRead() httpServerConfigRead {
 	}
 }
 
+//lint:ignore U1000 linter does not catch that this is used genric code
 func (c AuthenticationConfig) convertToRead() authenticationConfigRead {
 	jwtSecret := string(c.jwtSecret)
 	return authenticationConfigRead{
@@ -92,6 +94,7 @@ func (c AuthenticationConfig) convertToRead() authenticationConfigRead {
 	}
 }
 
+//lint:ignore U1000 linter does not catch that this is used genric code
 func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 	return mqttClientConfigRead{
 		Broker:            c.broker.String(),
@@ -116,6 +119,7 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 	}
 }
 
+//lint:ignore U1000 linter does not catch that this is used genric code
 func (c ModbusConfig) convertToRead() modbusConfigRead {
 	return modbusConfigRead{
 		Device:      c.device,
@@ -138,6 +142,7 @@ func (c DeviceConfig) convertToRead() deviceConfigRead {
 	}
 }
 
+//lint:ignore U1000 linter does not catch that this is used genric code
 func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 	return victronDeviceConfigRead{
 		General: c.DeviceConfig.convertToRead(),
@@ -146,6 +151,7 @@ func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 	}
 }
 
+//lint:ignore U1000 linter does not catch that this is used genric code
 func (c ModbusDeviceConfig) convertToRead() modbusDeviceConfigRead {
 	return modbusDeviceConfigRead{
 		General: c.DeviceConfig.convertToRead(),
@@ -163,6 +169,7 @@ func (c ModbusDeviceConfig) convertToRead() modbusDeviceConfigRead {
 	}
 }
 
+//lint:ignore U1000 linter does not catch that this is used genric code
 func (c RelayConfig) convertToRead() relayConfigRead {
 	return relayConfigRead{
 		Description: &c.description,
@@ -171,6 +178,7 @@ func (c RelayConfig) convertToRead() relayConfigRead {
 	}
 }
 
+//lint:ignore U1000 linter does not catch that this is used genric code
 func (c HttpDeviceConfig) convertToRead() httpDeviceConfigRead {
 	return httpDeviceConfigRead{
 		General:      c.DeviceConfig.convertToRead(),
@@ -182,6 +190,7 @@ func (c HttpDeviceConfig) convertToRead() httpDeviceConfigRead {
 	}
 }
 
+//lint:ignore U1000 linter does not catch that this is used genric code
 func (c MqttDeviceConfig) convertToRead() mqttDeviceConfigRead {
 	return mqttDeviceConfigRead{
 		General:     c.DeviceConfig.convertToRead(),
@@ -190,6 +199,7 @@ func (c MqttDeviceConfig) convertToRead() mqttDeviceConfigRead {
 	}
 }
 
+//lint:ignore U1000 linter does not catch that this is used genric code
 func (c ViewConfig) convertToRead() viewConfigRead {
 	return viewConfigRead{
 		Name:         c.name,
@@ -201,6 +211,7 @@ func (c ViewConfig) convertToRead() viewConfigRead {
 	}
 }
 
+//lint:ignore U1000 linter does not catch that this is used genric code
 func (c ViewDeviceConfig) convertToRead() viewDeviceConfigRead {
 	return viewDeviceConfigRead{
 		Name:           c.name,
@@ -210,6 +221,7 @@ func (c ViewDeviceConfig) convertToRead() viewDeviceConfigRead {
 	}
 }
 
+//lint:ignore U1000 linter does not catch that this is used genric code
 func (c HassDiscovery) convertToRead() hassDiscoveryRead {
 	return hassDiscoveryRead{
 		TopicPrefix:    &c.topicPrefix,
