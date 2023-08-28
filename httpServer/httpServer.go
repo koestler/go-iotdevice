@@ -24,7 +24,7 @@ type HttpServer struct {
 type Environment struct {
 	Config             Config
 	ProjectTitle       string
-	Views              []*config.ViewConfig
+	Views              []config.ViewConfig
 	Authentication     config.AuthenticationConfig
 	DevicePoolInstance *pool.Pool[*restarter.Restarter[device.Device]]
 	StateStorage       *dataflow.ValueStorage

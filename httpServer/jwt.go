@@ -61,11 +61,11 @@ func checkToken(tokenStr string, jwtSecret []byte) (user string, err error) {
 	return claims.User, nil
 }
 
-func isViewAuthenticated(view *config.ViewConfig, c *gin.Context, allowAnonymous bool) bool {
+func isViewAuthenticated(view config.ViewConfig, c *gin.Context, allowAnonymous bool) bool {
 	return isViewAuthenticatedByUser(view, c.GetString("AuthUser"), allowAnonymous)
 }
 
-func isViewAuthenticatedByUser(view *config.ViewConfig, user string, allowAnonymous bool) bool {
+func isViewAuthenticatedByUser(view config.ViewConfig, user string, allowAnonymous bool) bool {
 	if !allowAnonymous && len(user) < 1 {
 		return false
 	}

@@ -47,19 +47,19 @@ type mappable[O any] interface {
 	convertable[O]
 }
 
-func convertMapToRead[I mappable[O], O any](inp []*I) (oup map[string]O) {
+func convertMapToRead[I mappable[O], O any](inp []I) (oup map[string]O) {
 	oup = make(map[string]O, len(inp))
 	for _, c := range inp {
-		oup[(*c).Name()] = (*c).convertToRead()
+		oup[c.Name()] = c.convertToRead()
 	}
 	return
 }
 
-func convertListToRead[I convertable[O], O any](inp []*I) (oup []O) {
+func convertListToRead[I convertable[O], O any](inp []I) (oup []O) {
 	oup = make([]O, len(inp))
 	i := 0
 	for _, c := range inp {
-		oup[i] = (*c).convertToRead()
+		oup[i] = c.convertToRead()
 		i++
 	}
 	return

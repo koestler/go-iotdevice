@@ -37,7 +37,7 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 			relativePath := "views/" + view.Name() + "/devices/" + viewDevice.Name() + "/values"
 
 			// the following line uses a loop variable; it must be outside the closure
-			filter := getFilter([]*config.ViewDeviceConfig{viewDevice})
+			filter := getFilter([]config.ViewDeviceConfig{viewDevice})
 			r.GET(relativePath, func(c *gin.Context) {
 				// check authorization
 				if !isViewAuthenticated(view, c, true) {
@@ -168,7 +168,7 @@ func append2DResponseValue(response map[string]map[string]valueResponse, value d
 	response[d0][d1] = value.GenericValue()
 }
 
-func getFilter(viewDevices []*config.ViewDeviceConfig) dataflow.FilterFunc {
+func getFilter(viewDevices []config.ViewDeviceConfig) dataflow.FilterFunc {
 	skipRegisterNames := make(map[string]map[string]struct{})
 	skipRegisterCategories := make(map[string]map[string]struct{})
 	for _, vd := range viewDevices {

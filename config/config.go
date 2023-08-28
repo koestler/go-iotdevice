@@ -143,25 +143,25 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 
 	{
 		ret.devices = make(
-			[]*DeviceConfig,
+			[]DeviceConfig,
 			len(ret.victronDevices)+len(ret.modbusDevices)+len(ret.httpDevices)+len(ret.mqttDevices),
 		)
 
 		i := 0
 		for _, d := range ret.victronDevices {
-			ret.devices[i] = &d.DeviceConfig
+			ret.devices[i] = d.DeviceConfig
 			i += 1
 		}
 		for _, d := range ret.modbusDevices {
-			ret.devices[i] = &d.DeviceConfig
+			ret.devices[i] = d.DeviceConfig
 			i += 1
 		}
 		for _, d := range ret.httpDevices {
-			ret.devices[i] = &d.DeviceConfig
+			ret.devices[i] = d.DeviceConfig
 			i += 1
 		}
 		for _, d := range ret.mqttDevices {
-			ret.devices[i] = &d.DeviceConfig
+			ret.devices[i] = d.DeviceConfig
 			i += 1
 		}
 	}
@@ -469,7 +469,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	return
 }
 
-func (c hassDiscoveryRead) TransformAndValidate(idx int, mqttClients []*MqttClientConfig, devices []*DeviceConfig) (ret HassDiscovery, err []error) {
+func (c hassDiscoveryRead) TransformAndValidate(idx int, mqttClients []MqttClientConfig, devices []DeviceConfig) (ret HassDiscovery, err []error) {
 	ret = HassDiscovery{
 		devices:    c.Devices,
 		categories: c.Categories,
@@ -521,7 +521,7 @@ func stringToRegexp(inp []string) (ret []*regexp.Regexp, err []error) {
 	return
 }
 
-func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret DeviceConfig, err []error) {
+func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []MqttClientConfig) (ret DeviceConfig, err []error) {
 	ret = DeviceConfig{
 		name: name,
 	}
@@ -600,7 +600,7 @@ func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttC
 	return
 }
 
-func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret VictronDeviceConfig, err []error) {
+func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients []MqttClientConfig) (ret VictronDeviceConfig, err []error) {
 	ret = VictronDeviceConfig{
 		kind:   VictronDeviceKindFromString(c.Kind),
 		device: c.Device,
@@ -622,7 +622,7 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients [
 }
 
 func (c modbusDeviceConfigRead) TransformAndValidate(
-	name string, mqttClients []*MqttClientConfig, modbus []*ModbusConfig,
+	name string, mqttClients []MqttClientConfig, modbus []ModbusConfig,
 ) (ret ModbusDeviceConfig, err []error) {
 	ret = ModbusDeviceConfig{
 		kind: ModbusDeviceKindFromString(c.Kind),
@@ -648,7 +648,7 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 	ret.relays, e = TransformAndValidateMap(
 		c.Relays,
 		func(inp relayConfigRead, name string) (RelayConfig, []error) {
-			return inp.TransformAndValidate(name)
+			return inp.TransformAndValidate()
 		},
 	)
 	err = append(err, e...)
@@ -671,7 +671,7 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 	return
 }
 
-func (c relayConfigRead) TransformAndValidate(name string) (ret RelayConfig, err []error) {
+func (c relayConfigRead) TransformAndValidate() (ret RelayConfig, err []error) {
 	ret = RelayConfig{
 		description: "",
 		openLabel:   "",
@@ -693,7 +693,7 @@ func (c relayConfigRead) TransformAndValidate(name string) (ret RelayConfig, err
 	return
 }
 
-func (c httpDeviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret HttpDeviceConfig, err []error) {
+func (c httpDeviceConfigRead) TransformAndValidate(name string, mqttClients []MqttClientConfig) (ret HttpDeviceConfig, err []error) {
 	ret = HttpDeviceConfig{
 		kind:     HttpDeviceKindFromString(c.Kind),
 		username: c.Username,
@@ -738,7 +738,7 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string, mqttClients []*M
 	return
 }
 
-func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret MqttDeviceConfig, err []error) {
+func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []MqttClientConfig) (ret MqttDeviceConfig, err []error) {
 	ret = MqttDeviceConfig{
 		mqttTopics: c.MqttTopics,
 	}
@@ -754,7 +754,7 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []*M
 
 	// Do not allow for {Telemetry, Realtime}ViaMqttClients to contain MqttClients
 	// This can possibly result in an infinite loop where we listen to messages published by our self
-	filteredMqttClients := make([]*MqttClientConfig, 0, len(mqttClients))
+	filteredMqttClients := make([]MqttClientConfig, 0, len(mqttClients))
 	for _, mc := range mqttClients {
 		found := false
 		for _, n := range ret.mqttClients {
@@ -815,7 +815,7 @@ func (c modbusConfigRead) TransformAndValidate(name string) (ret ModbusConfig, e
 	return
 }
 
-func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewConfig, err []error) {
+func (c viewConfigRead) TransformAndValidate(devices []DeviceConfig) (ret ViewConfig, err []error) {
 	ret = ViewConfig{
 		name:         c.Name,
 		title:        c.Title,
@@ -862,7 +862,7 @@ func (c viewConfigRead) TransformAndValidate(devices []*DeviceConfig) (ret ViewC
 }
 
 func (c viewDeviceConfigRead) TransformAndValidate(
-	devices []*DeviceConfig,
+	devices []DeviceConfig,
 ) (ret ViewDeviceConfig, err []error) {
 	ret = ViewDeviceConfig{
 		name:  c.Name,
@@ -891,17 +891,15 @@ func (c viewDeviceConfigRead) TransformAndValidate(
 func TransformAndValidateMapToList[I any, O any](
 	inp map[string]I,
 	transformer func(inp I, name string) (ret O, err []error),
-) (ret []*O, err []error) {
+) (ret []O, err []error) {
 	keys := maps.Keys(inp)
 	sort.Strings(keys)
 
-	ret = make([]*O, len(inp))
-	j := 0
-	for _, name := range keys {
-		r, e := transformer(inp[name], name)
-		ret[j] = &r
+	ret = make([]O, len(inp))
+	for i, name := range keys {
+		var e []error
+		ret[i], e = transformer(inp[name], name)
 		err = append(err, e...)
-		j++
 	}
 	return
 }
@@ -912,8 +910,8 @@ func TransformAndValidateMap[I any, O any](
 ) (ret map[string]O, err []error) {
 	ret = make(map[string]O, len(inp))
 	for k, v := range inp {
-		r, e := transformer(v, k)
-		ret[k] = r
+		var e []error
+		ret[k], e = transformer(v, k)
 		err = append(err, e...)
 	}
 	return
@@ -922,12 +920,11 @@ func TransformAndValidateMap[I any, O any](
 func TransformAndValidateList[I any, O any](
 	inp []I,
 	transformer func(idx int, inp I) (ret O, err []error),
-) (ret []*O, err []error) {
-	ret = make([]*O, 0, len(inp))
-	for idx, cr := range inp {
-		r, e := transformer(idx, cr)
-
-		ret = append(ret, &r)
+) (ret []O, err []error) {
+	ret = make([]O, len(inp))
+	for i, cr := range inp {
+		var e []error
+		ret[i], e = transformer(i, cr)
 		err = append(err, e...)
 	}
 
@@ -937,8 +934,8 @@ func TransformAndValidateList[I any, O any](
 func TransformAndValidateListUnique[I any, O Nameable](
 	inp []I,
 	transformer func(inp I) (ret O, err []error),
-) (ret []*O, err []error) {
-	ret = make([]*O, 0, len(inp))
+) (ret []O, err []error) {
+	ret = make([]O, 0, len(inp))
 	for _, cr := range inp {
 		r, e := transformer(cr)
 
@@ -946,14 +943,14 @@ func TransformAndValidateListUnique[I any, O Nameable](
 			err = append(err, fmt.Errorf("duplicate name='%s'", r.Name()))
 		}
 
-		ret = append(ret, &r)
+		ret = append(ret, r)
 		err = append(err, e...)
 	}
 
 	return
 }
 
-func allOrCheckedMqttClients(inp []string, mqttClients []*MqttClientConfig, errorFunc func(clientName string) error) (oup []string, err []error) {
+func allOrCheckedMqttClients(inp []string, mqttClients []MqttClientConfig, errorFunc func(clientName string) error) (oup []string, err []error) {
 	if len(inp) < 1 {
 		return getNames(mqttClients), nil
 	}
@@ -971,19 +968,19 @@ func allOrCheckedMqttClients(inp []string, mqttClients []*MqttClientConfig, erro
 	return
 }
 
-func existsByName[N Nameable](needle string, haystack []*N) bool {
+func existsByName[N Nameable](needle string, haystack []N) bool {
 	for _, t := range haystack {
-		if needle == (*t).Name() {
+		if needle == t.Name() {
 			return true
 		}
 	}
 	return false
 }
 
-func getNames[N Nameable](list []*N) (ret []string) {
+func getNames[N Nameable](list []N) (ret []string) {
 	ret = make([]string, len(list))
 	for i, t := range list {
-		ret[i] = (*t).Name()
+		ret[i] = t.Name()
 	}
 	return
 }

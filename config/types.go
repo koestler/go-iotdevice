@@ -11,22 +11,22 @@ type Nameable interface {
 }
 
 type Config struct {
-	version         int                    // must be 1
-	projectTitle    string                 // optional: default go-iotdevice
-	logConfig       bool                   // optional: default True
-	logWorkerStart  bool                   // optional: default True
-	logStorageDebug bool                   // optional: default False
-	httpServer      HttpServerConfig       // optional: default Disabled
-	authentication  AuthenticationConfig   // optional: default Disabled
-	mqttClients     []*MqttClientConfig    // mandatory: at least 1 must be defined
-	modbus          []*ModbusConfig        // optional: default empty
-	devices         []*DeviceConfig        // aggregated over all types
-	victronDevices  []*VictronDeviceConfig // optional: default empty
-	modbusDevices   []*ModbusDeviceConfig  // optional: default empty
-	httpDevices     []*HttpDeviceConfig    // optional: default empty
-	mqttDevices     []*MqttDeviceConfig    // optional: default empty
-	views           []*ViewConfig          // optional: default empty
-	hassDiscovery   []*HassDiscovery       // optional: default empty
+	version         int                   // must be 1
+	projectTitle    string                // optional: default go-iotdevice
+	logConfig       bool                  // optional: default True
+	logWorkerStart  bool                  // optional: default True
+	logStorageDebug bool                  // optional: default False
+	httpServer      HttpServerConfig      // optional: default Disabled
+	authentication  AuthenticationConfig  // optional: default Disabled
+	mqttClients     []MqttClientConfig    // mandatory: at least 1 must be defined
+	modbus          []ModbusConfig        // optional: default empty
+	devices         []DeviceConfig        // aggregated over all types
+	victronDevices  []VictronDeviceConfig // optional: default empty
+	modbusDevices   []ModbusDeviceConfig  // optional: default empty
+	httpDevices     []HttpDeviceConfig    // optional: default empty
+	mqttDevices     []MqttDeviceConfig    // optional: default empty
+	views           []ViewConfig          // optional: default empty
+	hassDiscovery   []HassDiscovery       // optional: default empty
 }
 
 type HttpServerConfig struct {
@@ -130,7 +130,7 @@ type MqttDeviceConfig struct {
 type ViewConfig struct {
 	name         string              // mandatory: A technical name used in the URLs
 	title        string              // mandatory: a nice title for the frontend
-	devices      []*ViewDeviceConfig // mandatory: a list of deviceClient names
+	devices      []ViewDeviceConfig  // mandatory: a list of deviceClient names
 	autoplay     bool                // optional: default false
 	allowedUsers map[string]struct{} // optional: if empty: view is public; otherwise only allowed to listed users
 	hidden       bool                // optional: if true, view is not shown in menu unless logged in

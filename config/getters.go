@@ -36,39 +36,39 @@ func (c Config) Authentication() AuthenticationConfig {
 	return c.authentication
 }
 
-func (c Config) MqttClients() []*MqttClientConfig {
+func (c Config) MqttClients() []MqttClientConfig {
 	return c.mqttClients
 }
 
-func (c Config) Modbus() []*ModbusConfig {
+func (c Config) Modbus() []ModbusConfig {
 	return c.modbus
 }
 
-func (c Config) Devices() []*DeviceConfig {
+func (c Config) Devices() []DeviceConfig {
 	return c.devices
 }
 
-func (c Config) VictronDevices() []*VictronDeviceConfig {
+func (c Config) VictronDevices() []VictronDeviceConfig {
 	return c.victronDevices
 }
 
-func (c Config) ModbusDevices() []*ModbusDeviceConfig {
+func (c Config) ModbusDevices() []ModbusDeviceConfig {
 	return c.modbusDevices
 }
 
-func (c Config) HttpDevices() []*HttpDeviceConfig {
+func (c Config) HttpDevices() []HttpDeviceConfig {
 	return c.httpDevices
 }
 
-func (c Config) MqttDevices() []*MqttDeviceConfig {
+func (c Config) MqttDevices() []MqttDeviceConfig {
 	return c.mqttDevices
 }
 
-func (c Config) Views() []*ViewConfig {
+func (c Config) Views() []ViewConfig {
 	return c.views
 }
 
-func (c Config) HassDiscovery() []*HassDiscovery {
+func (c Config) HassDiscovery() []HassDiscovery {
 	return c.hassDiscovery
 }
 
@@ -374,7 +374,7 @@ func (c ViewConfig) Title() string {
 	return c.title
 }
 
-func (c ViewConfig) Devices() []*ViewDeviceConfig {
+func (c ViewConfig) Devices() []ViewDeviceConfig {
 	return c.devices
 }
 

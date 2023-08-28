@@ -48,7 +48,7 @@ func setupConfig(r *gin.RouterGroup, env *Environment) {
 			response.Views = append(response.Views, viewResponse{
 				Name:  v.Name(),
 				Title: v.Title(),
-				Devices: func(devices []*config.ViewDeviceConfig) (ret []deviceViewResponse) {
+				Devices: func(devices []config.ViewDeviceConfig) (ret []deviceViewResponse) {
 					ret = make([]deviceViewResponse, len(devices))
 					for i, c := range devices {
 						ret[i] = deviceViewResponse{
