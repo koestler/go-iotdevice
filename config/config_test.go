@@ -233,12 +233,12 @@ func TestReadConfig_Complete(t *testing.T) {
 	t.Logf("config=%v", config)
 
 	// General Section
-	if expected, got := 1, config.Version(); expected != got {
-		t.Errorf("expect Version to be %d but got %d", expected, got)
+	if expect, got := 1, config.Version(); expect != got {
+		t.Errorf("expect Version to be %d but got %d", expect, got)
 	}
 
-	if expected, got := "Configurable Title of Project", config.ProjectTitle(); expected != got {
-		t.Errorf("expected ProjectTitle to be '%s but got '%s'", expected, got)
+	if expect, got := "Configurable Title of Project", config.ProjectTitle(); expect != got {
+		t.Errorf("expect ProjectTitle to be '%s but got '%s'", expect, got)
 	}
 
 	if !config.LogConfig() {
@@ -259,32 +259,32 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Error("expect HttpServer->Enabled to be True")
 		}
 
-		if expected, got := "::1", hs.Bind(); expected != got {
-			t.Errorf("expect HttpServer->Bind to be '%s' but got '%s'", expected, got)
+		if expect, got := "::1", hs.Bind(); expect != got {
+			t.Errorf("expect HttpServer->Bind to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := 8000, hs.Port(); expected != got {
-			t.Errorf("expect HttpServer->Port to be %d but got %d", expected, got)
+		if expect, got := 8000, hs.Port(); expect != got {
+			t.Errorf("expect HttpServer->Port to be %d but got %d", expect, got)
 		}
 
 		if hs.LogRequests() {
 			t.Error("expect HttpServer->LogRequests to be False")
 		}
 
-		if expected, got := "http://127.0.0.1:3000/", hs.FrontendProxy().String(); expected != got {
-			t.Errorf("expected HttpServer->FrontendProxy to be '%s' but got '%s'", expected, got)
+		if expect, got := "http://127.0.0.1:3000/", hs.FrontendProxy().String(); expect != got {
+			t.Errorf("expect HttpServer->FrontendProxy to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := "./frontend-build/", hs.FrontendPath(); expected != got {
-			t.Errorf("expected HttpServer->FrontendPath to be '%s' but got '%s'", expected, got)
+		if expect, got := "./frontend-build/", hs.FrontendPath(); expect != got {
+			t.Errorf("expect HttpServer->FrontendPath to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := time.Minute, hs.FrontendExpires(); expected != got {
-			t.Errorf("expected HttpServer->FrontendExpires to be %s but got %s", expected, got)
+		if expect, got := time.Minute, hs.FrontendExpires(); expect != got {
+			t.Errorf("expect HttpServer->FrontendExpires to be %s but got %s", expect, got)
 		}
 
-		if expected, got := 2*time.Minute, hs.ConfigExpires(); expected != got {
-			t.Errorf("expected HttpServer->ConfigExpires to be %s but got %s", expected, got)
+		if expect, got := 2*time.Minute, hs.ConfigExpires(); expect != got {
+			t.Errorf("expect HttpServer->ConfigExpires to be %s but got %s", expect, got)
 		}
 
 		if !hs.LogDebug() {
@@ -299,76 +299,76 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Error("expect Authentication->Enabled to be True")
 		}
 
-		if expected, got := "aiziax9Hied0ier9Yo0Lo6bi3xahth7o", string(a.JwtSecret()); expected != got {
-			t.Errorf("expect Authentication->JwtSecret to be '%s' but got '%s'", expected, got)
+		if expect, got := "aiziax9Hied0ier9Yo0Lo6bi3xahth7o", string(a.JwtSecret()); expect != got {
+			t.Errorf("expect Authentication->JwtSecret to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := 2*time.Hour, a.JwtValidityPeriod(); expected != got {
-			t.Errorf("expected Authentication->JwtValidityPeriod to be %s but got %s", expected, got)
+		if expect, got := 2*time.Hour, a.JwtValidityPeriod(); expect != got {
+			t.Errorf("expect Authentication->JwtValidityPeriod to be %s but got %s", expect, got)
 		}
 
-		if expected, got := "./my-auth.passwd", a.HtaccessFile(); expected != got {
-			t.Errorf("expected Authentication->HtaccessFile to be '%s' but got '%s'", expected, got)
+		if expect, got := "./my-auth.passwd", a.HtaccessFile(); expect != got {
+			t.Errorf("expect Authentication->HtaccessFile to be '%s' but got '%s'", expect, got)
 		}
 	}
 
-	if expected, got := 2, len(config.MqttClients()); expected != got {
-		t.Errorf("expect length of config.MqttClients to be %d but got %d", expected, got)
+	if expect, got := 2, len(config.MqttClients()); expect != got {
+		t.Errorf("expect length of config.MqttClients to be %d but got %d", expect, got)
 	}
 
 	{
 		mc := config.MqttClients()[0]
 
-		if expected, got := "0-local", mc.Name(); expected != got {
-			t.Errorf("expect Name of first MqttClient to be '%s' but got '%s'", expected, got)
+		if expect, got := "0-local", mc.Name(); expect != got {
+			t.Errorf("expect Name of first MqttClient to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := "tcp://mqtt.example.com:1883", mc.Broker().String(); expected != got {
-			t.Errorf("expect MqttClients->local->Broker to be '%s' but got '%s'", expected, got)
+		if expect, got := "tcp://mqtt.example.com:1883", mc.Broker().String(); expect != got {
+			t.Errorf("expect MqttClients->local->Broker to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := 5, mc.ProtocolVersion(); expected != got {
-			t.Errorf("expect MqttClients->local->ProtocolVersion to be %d but got %d", expected, got)
+		if expect, got := 5, mc.ProtocolVersion(); expect != got {
+			t.Errorf("expect MqttClients->local->ProtocolVersion to be %d but got %d", expect, got)
 		}
 
-		if expected, got := "dev", mc.User(); expected != got {
-			t.Errorf("expect MqttClients->local->User to be '%s' but got '%s'", expected, got)
+		if expect, got := "dev", mc.User(); expect != got {
+			t.Errorf("expect MqttClients->local->User to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := "zee4AhRi", mc.Password(); expected != got {
-			t.Errorf("expect MqttClients->local->Password to be '%s' but got '%s'", expected, got)
+		if expect, got := "zee4AhRi", mc.Password(); expect != got {
+			t.Errorf("expect MqttClients->local->Password to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := "server42", mc.ClientId(); expected != got {
-			t.Errorf("expect MqttClients->local->ClientId to be '%s' but got '%s'", expected, got)
+		if expect, got := "server42", mc.ClientId(); expect != got {
+			t.Errorf("expect MqttClients->local->ClientId to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := byte(0), mc.Qos(); expected != got {
-			t.Errorf("expect MqttClients->local->Qos to be %d but got %d", expected, got)
+		if expect, got := byte(0), mc.Qos(); expect != got {
+			t.Errorf("expect MqttClients->local->Qos to be %d but got %d", expect, got)
 		}
 
-		if expected, got := 2*time.Minute, mc.KeepAlive(); expected != got {
-			t.Errorf("expect MqttClients->local->KeepAlive to be '%s' but got '%s'", expected, got)
+		if expect, got := 2*time.Minute, mc.KeepAlive(); expect != got {
+			t.Errorf("expect MqttClients->local->KeepAlive to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := 20*time.Second, mc.ConnectRetryDelay(); expected != got {
-			t.Errorf("expect MqttClients->local->ConnectRetryDelay to be '%s' but got '%s'", expected, got)
+		if expect, got := 20*time.Second, mc.ConnectRetryDelay(); expect != got {
+			t.Errorf("expect MqttClients->local->ConnectRetryDelay to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := 10*time.Second, mc.ConnectTimeout(); expected != got {
-			t.Errorf("expect MqttClients->local->ConnectTimeout to be '%s' but got '%s'", expected, got)
+		if expect, got := 10*time.Second, mc.ConnectTimeout(); expect != got {
+			t.Errorf("expect MqttClients->local->ConnectTimeout to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := "%Prefix%/%ClientId%/status", mc.AvailabilityTopic(); expected != got {
-			t.Errorf("expect MqttClients->local->AvailabilityTopic to be '%s' but got '%s'", expected, got)
+		if expect, got := "%Prefix%/%ClientId%/status", mc.AvailabilityTopic(); expect != got {
+			t.Errorf("expect MqttClients->local->AvailabilityTopic to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := 20*time.Second, mc.TelemetryInterval(); expected != got {
-			t.Errorf("expect MqttClients->local->TelemetryInterval to be '%s' but got '%s'", expected, got)
+		if expect, got := 20*time.Second, mc.TelemetryInterval(); expect != got {
+			t.Errorf("expect MqttClients->local->TelemetryInterval to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := "%Prefix%tele/%DeviceName%/state", mc.TelemetryTopic(); expected != got {
-			t.Errorf("expect MqttClients->local->TelemetryTopic to be '%s' but got '%s'", expected, got)
+		if expect, got := "%Prefix%tele/%DeviceName%/state", mc.TelemetryTopic(); expect != got {
+			t.Errorf("expect MqttClients->local->TelemetryTopic to be '%s' but got '%s'", expect, got)
 		}
 
 		if !mc.TelemetryRetain() {
@@ -379,16 +379,16 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Error("expect MqttClients->local->RealtimeEnable to be true")
 		}
 
-		if expected, got := "%Prefix%stat/%DeviceName%/%ValueName%", mc.RealtimeTopic(); expected != got {
-			t.Errorf("expect MqttClients->local->RealtimeTopic to be '%s' but got '%s'", expected, got)
+		if expect, got := "%Prefix%stat/%DeviceName%/%ValueName%", mc.RealtimeTopic(); expect != got {
+			t.Errorf("expect MqttClients->local->RealtimeTopic to be '%s' but got '%s'", expect, got)
 		}
 
 		if mc.RealtimeRetain() {
 			t.Error("expect MqttClients->RealtimeRetain to be false")
 		}
 
-		if expected, got := "my-prefix", mc.TopicPrefix(); expected != got {
-			t.Errorf("expect MqttClients->local->TopicPrefix to be '%s' but got '%s'", expected, got)
+		if expect, got := "my-prefix", mc.TopicPrefix(); expect != got {
+			t.Errorf("expect MqttClients->local->TopicPrefix to be '%s' but got '%s'", expect, got)
 		}
 
 		if !mc.LogDebug() {
@@ -403,44 +403,44 @@ func TestReadConfig_Complete(t *testing.T) {
 	{
 		mc := config.MqttClients()[1]
 
-		if expected, got := "1-remote", mc.Name(); expected != got {
-			t.Errorf("expect Name of second MqttClient to be '%s' but got '%s'", expected, got)
+		if expect, got := "1-remote", mc.Name(); expect != got {
+			t.Errorf("expect Name of second MqttClient to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := "ssl://eu1.cloud.thethings.network:8883", mc.Broker().String(); expected != got {
-			t.Errorf("expect MqttClients->local->Broker to be '%s' but got '%s'", expected, got)
+		if expect, got := "ssl://eu1.cloud.thethings.network:8883", mc.Broker().String(); expect != got {
+			t.Errorf("expect MqttClients->local->Broker to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := 5, mc.ProtocolVersion(); expected != got {
-			t.Errorf("expect MqttClients->local->ProtocolVersion to be %d but got %d", expected, got)
+		if expect, got := 5, mc.ProtocolVersion(); expect != got {
+			t.Errorf("expect MqttClients->local->ProtocolVersion to be %d but got %d", expect, got)
 		}
 
-		if expected, got := "", mc.User(); expected != got {
-			t.Errorf("expect MqttClients->local->User to be '%s' but got '%s'", expected, got)
+		if expect, got := "", mc.User(); expect != got {
+			t.Errorf("expect MqttClients->local->User to be '%s' but got '%s'", expect, got)
 		}
 	}
 
-	if expected, got := 1, len(config.Modbus()); expected != got {
-		t.Errorf("expect length of config.Modbus to be %d but got %d", expected, got)
+	if expect, got := 1, len(config.Modbus()); expect != got {
+		t.Errorf("expect length of config.Modbus to be %d but got %d", expect, got)
 	}
 
 	{
 		mb := config.Modbus()[0]
 
-		if expected, got := "bus0", mb.Name(); expected != got {
-			t.Errorf("expect Name of first Modbus to be '%s' but got %s'", expected, got)
+		if expect, got := "bus0", mb.Name(); expect != got {
+			t.Errorf("expect Name of first Modbus to be '%s' but got %s'", expect, got)
 		}
 
-		if expected, got := "/dev/ttyACM0", mb.Device(); expected != got {
-			t.Errorf("expect Modbus->bus0->Device to be '%s' but got '%s'", expected, got)
+		if expect, got := "/dev/ttyACM0", mb.Device(); expect != got {
+			t.Errorf("expect Modbus->bus0->Device to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := 9600, mb.BaudRate(); expected != got {
-			t.Errorf("expect Modbus->bus0->BaudRate to be %d but got %d", expected, got)
+		if expect, got := 9600, mb.BaudRate(); expect != got {
+			t.Errorf("expect Modbus->bus0->BaudRate to be %d but got %d", expect, got)
 		}
 
-		if expected, got := 200*time.Millisecond, mb.ReadTimeout(); expected != got {
-			t.Errorf("expect Modbus->bus0->ReadTimeout to be %s but got %s", expected, got)
+		if expect, got := 200*time.Millisecond, mb.ReadTimeout(); expect != got {
+			t.Errorf("expect Modbus->bus0->ReadTimeout to be %s but got %s", expect, got)
 		}
 
 		if !mb.LogDebug() {
@@ -448,39 +448,39 @@ func TestReadConfig_Complete(t *testing.T) {
 		}
 	}
 
-	if expected, got := 1, len(config.VictronDevices()); expected != got {
-		t.Errorf("expect length of config.VictronDevices to be %d but got %d", expected, got)
+	if expect, got := 1, len(config.VictronDevices()); expect != got {
+		t.Errorf("expect length of config.VictronDevices to be %d but got %d", expect, got)
 	}
 
 	{
 		vd := config.VictronDevices()[0]
 
-		if expected, got := "bmv0", vd.Name(); expected != got {
-			t.Errorf("expect Name of first VictronDevice to be '%s' but got %s'", expected, got)
+		if expect, got := "bmv0", vd.Name(); expect != got {
+			t.Errorf("expect Name of first VictronDevice to be '%s' but got %s'", expect, got)
 		}
 
-		if expected, got := []string{"Temperature", "AuxVoltage"}, vd.SkipFields(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect VictronDevices->bmv0->General->SkipFields to be %v but got %v", expected, got)
+		if expect, got := []string{"Temperature", "AuxVoltage"}, vd.SkipFields(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect VictronDevices->bmv0->General->SkipFields to be %v but got %v", expect, got)
 		}
 
-		if expected, got := []string{"Settings"}, vd.SkipCategories(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect VictronDevices->bmv0->General->SkipCategories to be %v but got %v", expected, got)
+		if expect, got := []string{"Settings"}, vd.SkipCategories(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect VictronDevices->bmv0->General->SkipCategories to be %v but got %v", expect, got)
 		}
 
-		if expected, got := []string{"0-local", "1-remote"}, vd.TelemetryViaMqttClients(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect VictronDevices->bmv0->General->TelemetryViaMqttClients to be %v but got %v", expected, got)
+		if expect, got := []string{"0-local", "1-remote"}, vd.TelemetryViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect VictronDevices->bmv0->General->TelemetryViaMqttClients to be %v but got %v", expect, got)
 		}
 
-		if expected, got := []string{"0-local"}, vd.RealtimeViaMqttClients(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect VictronDevices->bmv0->General->RealtimeViaMqttClients to be %v but got %v", expected, got)
+		if expect, got := []string{"0-local"}, vd.RealtimeViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect VictronDevices->bmv0->General->RealtimeViaMqttClients to be %v but got %v", expect, got)
 		}
 
-		if expected, got := 400*time.Millisecond, vd.RestartInterval(); expected != got {
-			t.Errorf("expect VictronDevices->bmv0->General->RestartInterval to be %s but got %s", expected, got)
+		if expect, got := 400*time.Millisecond, vd.RestartInterval(); expect != got {
+			t.Errorf("expect VictronDevices->bmv0->General->RestartInterval to be %s but got %s", expect, got)
 		}
 
-		if expected, got := 2*time.Minute, vd.RestartIntervalMaxBackoff(); expected != got {
-			t.Errorf("expect VictronDevices->bmv0->General->RestartIntervalMaxBackoff to be %s but got %s", expected, got)
+		if expect, got := 2*time.Minute, vd.RestartIntervalMaxBackoff(); expect != got {
+			t.Errorf("expect VictronDevices->bmv0->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
 		}
 
 		if !vd.LogDebug() {
@@ -491,48 +491,48 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Error("expect VictronDevices->bmv0->General->LogComDebug to be true")
 		}
 
-		if expected, got := "/dev/serial/by-id/usb-VictronEnergy_BV_VE_Direct_cable_VEHTVQT-if00-port0", vd.Device(); expected != got {
-			t.Errorf("expect VictronDevices->bmv0->Device to be '%s' but got '%s'", expected, got)
+		if expect, got := "/dev/serial/by-id/usb-VictronEnergy_BV_VE_Direct_cable_VEHTVQT-if00-port0", vd.Device(); expect != got {
+			t.Errorf("expect VictronDevices->bmv0->Device to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := VictronVedirectKind, vd.Kind(); expected != got {
-			t.Errorf("expect VictronDevices->bmv0->Kind to be %s but got %s", expected, got)
+		if expect, got := VictronVedirectKind, vd.Kind(); expect != got {
+			t.Errorf("expect VictronDevices->bmv0->Kind to be %s but got %s", expect, got)
 		}
 	}
 
-	if expected, got := 1, len(config.ModbusDevices()); expected != got {
-		t.Errorf("expect length of config.ModbusDevices to be %d but got %d", expected, got)
+	if expect, got := 1, len(config.ModbusDevices()); expect != got {
+		t.Errorf("expect length of config.ModbusDevices to be %d but got %d", expect, got)
 	}
 
 	{
 		md := config.ModbusDevices()[0]
 
-		if expected, got := "modbus-rtu0", md.Name(); expected != got {
-			t.Errorf("expect Name of first ModebusDevice to be '%s' but got %s'", expected, got)
+		if expect, got := "modbus-rtu0", md.Name(); expect != got {
+			t.Errorf("expect Name of first ModebusDevice to be '%s' but got %s'", expect, got)
 		}
 
-		if expected, got := []string{"a", "b"}, md.SkipFields(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->SkipFields to be %v but got %v", expected, got)
+		if expect, got := []string{"a", "b"}, md.SkipFields(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect ModebusDevices->modbus-rtu0->General->SkipFields to be %v but got %v", expect, got)
 		}
 
-		if expected, got := []string{"A", "B", "C"}, md.SkipCategories(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->SkipCategories to be %v but got %v", expected, got)
+		if expect, got := []string{"A", "B", "C"}, md.SkipCategories(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect ModebusDevices->modbus-rtu0->General->SkipCategories to be %v but got %v", expect, got)
 		}
 
-		if expected, got := []string{"0-local", "1-remote"}, md.TelemetryViaMqttClients(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->TelemetryViaMqttClients to be %v but got %v", expected, got)
+		if expect, got := []string{"0-local", "1-remote"}, md.TelemetryViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect ModebusDevices->modbus-rtu0->General->TelemetryViaMqttClients to be %v but got %v", expect, got)
 		}
 
-		if expected, got := []string{"0-local", "1-remote"}, md.RealtimeViaMqttClients(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->RealtimeViaMqttClients to be %v but got %v", expected, got)
+		if expect, got := []string{"0-local", "1-remote"}, md.RealtimeViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect ModebusDevices->modbus-rtu0->General->RealtimeViaMqttClients to be %v but got %v", expect, got)
 		}
 
-		if expected, got := 200*time.Millisecond, md.RestartInterval(); expected != got {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->RestartInterval to be %s but got %s", expected, got)
+		if expect, got := 200*time.Millisecond, md.RestartInterval(); expect != got {
+			t.Errorf("expect ModebusDevices->modbus-rtu0->General->RestartInterval to be %s but got %s", expect, got)
 		}
 
-		if expected, got := time.Minute, md.RestartIntervalMaxBackoff(); expected != got {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->RestartIntervalMaxBackoff to be %s but got %s", expected, got)
+		if expect, got := time.Minute, md.RestartIntervalMaxBackoff(); expect != got {
+			t.Errorf("expect ModebusDevices->modbus-rtu0->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
 		}
 
 		if md.LogDebug() {
@@ -543,52 +543,52 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Error("expect ModebusDevices->modbus-rtu0->General->LogComDebug to be false")
 		}
 
-		if expected, got := "bus0", md.Bus(); expected != got {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->Bus to be '%s' but got '%s'", expected, got)
+		if expect, got := "bus0", md.Bus(); expect != got {
+			t.Errorf("expect ModebusDevices->modbus-rtu0->Bus to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := ModbusWaveshareRtuRelay8Kind, md.Kind(); expected != got {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->Kind to be %s but got %s", expected, got)
+		if expect, got := ModbusWaveshareRtuRelay8Kind, md.Kind(); expect != got {
+			t.Errorf("expect ModebusDevices->modbus-rtu0->Kind to be %s but got %s", expect, got)
 		}
 
-		if expected, got := byte(0x01), md.Address(); expected != got {
-			t.Errorf("expect ModbusDevices->modbus-rtu0->Address to be 0x%x but got 0x%x", expected, got)
+		if expect, got := byte(0x01), md.Address(); expect != got {
+			t.Errorf("expect ModbusDevices->modbus-rtu0->Address to be 0x%x but got 0x%x", expect, got)
 		}
 	}
 
-	if expected, got := 1, len(config.HttpDevices()); expected != got {
-		t.Errorf("expect length of config.HttpDevices to be %d but got %d", expected, got)
+	if expect, got := 1, len(config.HttpDevices()); expect != got {
+		t.Errorf("expect length of config.HttpDevices to be %d but got %d", expect, got)
 	}
 
 	{
 		hd := config.HttpDevices()[0]
 
-		if expected, got := "tcw241", hd.Name(); expected != got {
-			t.Errorf("expect Name of first HttpDevice to be '%s' but got %s'", expected, got)
+		if expect, got := "tcw241", hd.Name(); expect != got {
+			t.Errorf("expect Name of first HttpDevice to be '%s' but got %s'", expect, got)
 		}
 
-		if expected, got := []string{}, hd.SkipFields(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect HttpDevices->tcw241->General->SkipFields to be %v but got %v", expected, got)
+		if expect, got := []string{}, hd.SkipFields(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect HttpDevices->tcw241->General->SkipFields to be %v but got %v", expect, got)
 		}
 
-		if expected, got := []string{}, hd.SkipCategories(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect HttpDevices->tcw241->General->SkipCategories to be %#v but got %#v", expected, got)
+		if expect, got := []string{}, hd.SkipCategories(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect HttpDevices->tcw241->General->SkipCategories to be %#v but got %#v", expect, got)
 		}
 
-		if expected, got := []string{"0-local", "1-remote"}, hd.TelemetryViaMqttClients(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect HttpDevices->tcw241->General->TelemetryViaMqttClients to be %v but got %v", expected, got)
+		if expect, got := []string{"0-local", "1-remote"}, hd.TelemetryViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect HttpDevices->tcw241->General->TelemetryViaMqttClients to be %v but got %v", expect, got)
 		}
 
-		if expected, got := []string{"0-local", "1-remote"}, hd.RealtimeViaMqttClients(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect HttpDevices->tcw241->General->RealtimeViaMqttClients to be %v but got %v", expected, got)
+		if expect, got := []string{"0-local", "1-remote"}, hd.RealtimeViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect HttpDevices->tcw241->General->RealtimeViaMqttClients to be %v but got %v", expect, got)
 		}
 
-		if expected, got := time.Minute, hd.RestartInterval(); expected != got {
-			t.Errorf("expect HttpDevices->tcw241->General->RestartInterval to be %s but got %s", expected, got)
+		if expect, got := time.Minute, hd.RestartInterval(); expect != got {
+			t.Errorf("expect HttpDevices->tcw241->General->RestartInterval to be %s but got %s", expect, got)
 		}
 
-		if expected, got := time.Minute, hd.RestartIntervalMaxBackoff(); expected != got {
-			t.Errorf("expect HttpDevices->tcw241->General->RestartIntervalMaxBackoff to be %s but got %s", expected, got)
+		if expect, got := time.Minute, hd.RestartIntervalMaxBackoff(); expect != got {
+			t.Errorf("expect HttpDevices->tcw241->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
 		}
 
 		if hd.LogDebug() {
@@ -599,60 +599,60 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Error("expect HttpDevices->tcw241->General->LogComDebug to be false")
 		}
 
-		if expected, got := "http://control0/", hd.Url().String(); expected != got {
-			t.Errorf("expect HttpDevices->tcw241->Url to be '%s' but got '%s'", expected, got)
+		if expect, got := "http://control0/", hd.Url().String(); expect != got {
+			t.Errorf("expect HttpDevices->tcw241->Url to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := HttpTeracomKind, hd.Kind(); expected != got {
-			t.Errorf("expect HttpDevices->tcw241->Kind to be %s but got %s", expected, got)
+		if expect, got := HttpTeracomKind, hd.Kind(); expect != got {
+			t.Errorf("expect HttpDevices->tcw241->Kind to be %s but got %s", expect, got)
 		}
 
-		if expected, got := "admin", hd.Username(); expected != got {
-			t.Errorf("expect HttpDevices->tcw241->Username to be '%s' but got '%s'", expected, got)
+		if expect, got := "admin", hd.Username(); expect != got {
+			t.Errorf("expect HttpDevices->tcw241->Username to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := "my-secret", hd.Password(); expected != got {
-			t.Errorf("expect HttpDevices->tcw241->Password to be '%s' but got '%s'", expected, got)
+		if expect, got := "my-secret", hd.Password(); expect != got {
+			t.Errorf("expect HttpDevices->tcw241->Password to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := 5*time.Second, hd.PollInterval(); expected != got {
-			t.Errorf("expect HttpDevices->tcw241->PollInterval to be %s but got %s", expected, got)
+		if expect, got := 5*time.Second, hd.PollInterval(); expect != got {
+			t.Errorf("expect HttpDevices->tcw241->PollInterval to be %s but got %s", expect, got)
 		}
 	}
 
-	if expected, got := 1, len(config.MqttDevices()); expected != got {
-		t.Errorf("expect length of config.MqttDevices to be %d but got %d", expected, got)
+	if expect, got := 1, len(config.MqttDevices()); expect != got {
+		t.Errorf("expect length of config.MqttDevices to be %d but got %d", expect, got)
 	}
 
 	{
 		vd := config.MqttDevices()[0]
 
-		if expected, got := "bmv1", vd.Name(); expected != got {
-			t.Errorf("expect Name of first MqttDevice to be '%s' but got %s'", expected, got)
+		if expect, got := "bmv1", vd.Name(); expect != got {
+			t.Errorf("expect Name of first MqttDevice to be '%s' but got %s'", expect, got)
 		}
 
-		if expected, got := []string{}, vd.SkipFields(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect MqttDevices->bmv1->General->SkipFields to be %v but got %v", expected, got)
+		if expect, got := []string{}, vd.SkipFields(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttDevices->bmv1->General->SkipFields to be %v but got %v", expect, got)
 		}
 
-		if expected, got := []string{}, vd.SkipCategories(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect MqttDevices->bmv1->General->SkipCategories to be %v but got %v", expected, got)
+		if expect, got := []string{}, vd.SkipCategories(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttDevices->bmv1->General->SkipCategories to be %v but got %v", expect, got)
 		}
 
-		if expected, got := []string{"0-local"}, vd.TelemetryViaMqttClients(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect MqttDevices->bmv1->General->TelemetryViaMqttClients to be %v but got %v", expected, got)
+		if expect, got := []string{"0-local"}, vd.TelemetryViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttDevices->bmv1->General->TelemetryViaMqttClients to be %v but got %v", expect, got)
 		}
 
-		if expected, got := []string{"0-local"}, vd.RealtimeViaMqttClients(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect MqttDevices->bmv1->General->RealtimeViaMqttClients to be %v but got %v", expected, got)
+		if expect, got := []string{"0-local"}, vd.RealtimeViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttDevices->bmv1->General->RealtimeViaMqttClients to be %v but got %v", expect, got)
 		}
 
-		if expected, got := 200*time.Millisecond, vd.RestartInterval(); expected != got {
-			t.Errorf("expect MqttDevices->bmv1->General->RestartInterval to be %s but got %s", expected, got)
+		if expect, got := 200*time.Millisecond, vd.RestartInterval(); expect != got {
+			t.Errorf("expect MqttDevices->bmv1->General->RestartInterval to be %s but got %s", expect, got)
 		}
 
-		if expected, got := time.Minute, vd.RestartIntervalMaxBackoff(); expected != got {
-			t.Errorf("expect MqttDevices->bmv1->General->RestartIntervalMaxBackoff to be %s but got %s", expected, got)
+		if expect, got := time.Minute, vd.RestartIntervalMaxBackoff(); expect != got {
+			t.Errorf("expect MqttDevices->bmv1->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
 		}
 
 		if vd.LogDebug() {
@@ -663,72 +663,72 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Error("expect MqttDevices->bmv1->General->LogComDebug to be true")
 		}
 
-		if expected, got := []string{"stat/go-iotdevice/bmv1/+"}, vd.MqttTopics(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect MqttDevices->bmv1->MqttTopics to be %v but got %v", expected, got)
+		if expect, got := []string{"stat/go-iotdevice/bmv1/+"}, vd.MqttTopics(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttDevices->bmv1->MqttTopics to be %v but got %v", expect, got)
 		}
 
-		if expected, got := []string{"1-remote"}, vd.MqttClients(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expect MqttDevices->bmv1->MqttClients to be %v but got %v", expected, got)
+		if expect, got := []string{"1-remote"}, vd.MqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttDevices->bmv1->MqttClients to be %v but got %v", expect, got)
 		}
 
 	}
 
-	if expected, got := 2, len(config.Views()); expected != got {
-		t.Errorf("expect length of config.Views to be %d but got %d", expected, got)
+	if expect, got := 2, len(config.Views()); expect != got {
+		t.Errorf("expect length of config.Views to be %d but got %d", expect, got)
 	}
 
 	{
 		v := config.Views()[0]
 
-		if expected, got := "private", v.Name(); expected != got {
-			t.Errorf("expect Name of first View to be '%s' but got '%s'", expected, got)
+		if expect, got := "private", v.Name(); expect != got {
+			t.Errorf("expect Name of first View to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := "Private", v.Title(); expected != got {
-			t.Errorf("expect Views->private->Title to be '%s' but got '%s'", expected, got)
+		if expect, got := "Private", v.Title(); expect != got {
+			t.Errorf("expect Views->private->Title to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := 2, len(v.Devices()); expected != got {
-			t.Errorf("expect lenghth of Views->private->Devices to be %d but got %d", expected, got)
+		if expect, got := 2, len(v.Devices()); expect != got {
+			t.Errorf("expect lenghth of Views->private->Devices to be %d but got %d", expect, got)
 		}
 
 		{
 			i := 0
 			d := v.Devices()[i]
-			if expected, got := "bmv0", d.Name(); expected != got {
-				t.Errorf("expect Views->%s->Devices->%d->Name to be '%s' but got '%s'", v.Name(), i, expected, got)
+			if expect, got := "bmv0", d.Name(); expect != got {
+				t.Errorf("expect Views->%s->Devices->%d->Name to be '%s' but got '%s'", v.Name(), i, expect, got)
 			}
 
-			if expected, got := "Battery Monitor", d.Title(); expected != got {
-				t.Errorf("expect Views->%s->Devices->%d->Title to be '%s' but got '%s'", v.Name(), i, expected, got)
+			if expect, got := "Battery Monitor", d.Title(); expect != got {
+				t.Errorf("expect Views->%s->Devices->%d->Title to be '%s' but got '%s'", v.Name(), i, expect, got)
 			}
 
-			if expected, got := []string{"field-a", "field-b"}, d.SkipFields(); !reflect.DeepEqual(expected, got) {
-				t.Errorf("expect Views->%s->Devices->%d->SkipFields to be %v but got %v", v.Name(), i, expected, got)
+			if expect, got := []string{"field-a", "field-b"}, d.SkipFields(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect Views->%s->Devices->%d->SkipFields to be %v but got %v", v.Name(), i, expect, got)
 			}
 
-			if expected, got := []string{"cat-a", "cat-b", "cat-c"}, d.SkipCategories(); !reflect.DeepEqual(expected, got) {
-				t.Errorf("expect Views->%s->Devices->%d->SkipCategories to be %v but got %v", v.Name(), i, expected, got)
+			if expect, got := []string{"cat-a", "cat-b", "cat-c"}, d.SkipCategories(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect Views->%s->Devices->%d->SkipCategories to be %v but got %v", v.Name(), i, expect, got)
 			}
 		}
 
 		{
 			i := 1
 			d := v.Devices()[i]
-			if expected, got := "modbus-rtu0", d.Name(); expected != got {
-				t.Errorf("expect Views->%s->Devices->%d->Name to be '%s' but got '%s'", v.Name(), i, expected, got)
+			if expect, got := "modbus-rtu0", d.Name(); expect != got {
+				t.Errorf("expect Views->%s->Devices->%d->Name to be '%s' but got '%s'", v.Name(), i, expect, got)
 			}
 
-			if expected, got := "Relay Board", d.Title(); expected != got {
-				t.Errorf("expect Views->%s->Devices->%d->Title to be '%s' but got '%s'", v.Name(), i, expected, got)
+			if expect, got := "Relay Board", d.Title(); expect != got {
+				t.Errorf("expect Views->%s->Devices->%d->Title to be '%s' but got '%s'", v.Name(), i, expect, got)
 			}
 
-			if expected, got := []string{}, d.SkipFields(); !reflect.DeepEqual(expected, got) {
-				t.Errorf("expect Views->%s->Devices->%d->SkipFields to be %v but got %v", v.Name(), i, expected, got)
+			if expect, got := []string{}, d.SkipFields(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect Views->%s->Devices->%d->SkipFields to be %v but got %v", v.Name(), i, expect, got)
 			}
 
-			if expected, got := []string{}, d.SkipCategories(); !reflect.DeepEqual(expected, got) {
-				t.Errorf("expect Views->%s->Devices->%d->SkipCategories to be %v but got %v", v.Name(), i, expected, got)
+			if expect, got := []string{}, d.SkipCategories(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect Views->%s->Devices->%d->SkipCategories to be %v but got %v", v.Name(), i, expect, got)
 			}
 		}
 
@@ -737,56 +737,56 @@ func TestReadConfig_Complete(t *testing.T) {
 	{
 		v := config.Views()[1]
 
-		if expected, got := "public", v.Name(); expected != got {
-			t.Errorf("expect Name of second View to be '%s' but got '%s'", expected, got)
+		if expect, got := "public", v.Name(); expect != got {
+			t.Errorf("expect Name of second View to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := "Public", v.Title(); expected != got {
-			t.Errorf("expect Views->private->Title to be '%s' but got '%s'", expected, got)
+		if expect, got := "Public", v.Title(); expect != got {
+			t.Errorf("expect Views->private->Title to be '%s' but got '%s'", expect, got)
 		}
 
-		if expected, got := 1, len(v.Devices()); expected != got {
-			t.Errorf("expect lenghth of Views->private->Devices to be %d but got %d", expected, got)
+		if expect, got := 1, len(v.Devices()); expect != got {
+			t.Errorf("expect lenghth of Views->private->Devices to be %d but got %d", expect, got)
 		}
 
 		{
 			i := 0
 			d := v.Devices()[i]
-			if expected, got := "bmv0", d.Name(); expected != got {
-				t.Errorf("expect Views->%s->Devices->%d->Name to be '%s' but got '%s'", v.Name(), i, expected, got)
+			if expect, got := "bmv0", d.Name(); expect != got {
+				t.Errorf("expect Views->%s->Devices->%d->Name to be '%s' but got '%s'", v.Name(), i, expect, got)
 			}
 
-			if expected, got := "Bmv 0", d.Title(); expected != got {
-				t.Errorf("expect Views->%s->Devices->%d->Title to be '%s' but got '%s'", v.Name(), i, expected, got)
+			if expect, got := "Bmv 0", d.Title(); expect != got {
+				t.Errorf("expect Views->%s->Devices->%d->Title to be '%s' but got '%s'", v.Name(), i, expect, got)
 			}
 		}
 	}
 
-	if expected, got := 1, len(config.HassDiscovery()); expected != got {
-		t.Errorf("expect length of config.HassDiscovery to be %d but got %d", expected, got)
+	if expect, got := 1, len(config.HassDiscovery()); expect != got {
+		t.Errorf("expect length of config.HassDiscovery to be %d but got %d", expect, got)
 	}
 
 	{
 		hd := config.HassDiscovery()[0]
 
-		if expected, got := "my-hass", hd.TopicPrefix(); expected != got {
-			t.Errorf("expected HassDiscovery->0->TopicPrefix to be '%s' bot got '%s'", expected, got)
+		if expect, got := "my-hass", hd.TopicPrefix(); expect != got {
+			t.Errorf("expect HassDiscovery->0->TopicPrefix to be '%s' bot got '%s'", expect, got)
 		}
 
-		if expected, got := []string{"0-local", "1-remote"}, hd.ViaMqttClients(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expected HassDiscovery->0->ViaMqttClients to be %v bot got %v", expected, got)
+		if expect, got := []string{"0-local", "1-remote"}, hd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect HassDiscovery->0->ViaMqttClients to be %v bot got %v", expect, got)
 		}
 
-		if expected, got := []string{"bmv0"}, hd.Devices(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expected HassDiscovery->0->Devices to be %v bot got %v", expected, got)
+		if expect, got := []string{"bmv0"}, hd.Devices(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect HassDiscovery->0->Devices to be %v bot got %v", expect, got)
 		}
 
-		if expected, got := []string{".*"}, hd.Categories(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expected HassDiscovery->0->Categories to be %v bot got %v", expected, got)
+		if expect, got := []string{".*"}, hd.Categories(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect HassDiscovery->0->Categories to be %v bot got %v", expect, got)
 		}
 
-		if expected, got := []string{"Voltage$", "ˆBattery"}, hd.Registers(); !reflect.DeepEqual(expected, got) {
-			t.Errorf("expected HassDiscovery->0->Registers to be %v bot got %v", expected, got)
+		if expect, got := []string{"Voltage$", "ˆBattery"}, hd.Registers(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect HassDiscovery->0->Registers to be %v bot got %v", expect, got)
 		}
 	}
 
@@ -797,7 +797,7 @@ func TestReadConfig_Complete(t *testing.T) {
 		log.SetOutput(os.Stderr)
 	}()
 	if err := config.PrintConfig(); err != nil {
-		t.Errorf("expected no error. Got: %s", err)
+		t.Errorf("expect no error. Got: %s", err)
 	}
 	t.Log(buf.String())
 }

@@ -14,20 +14,20 @@ func TestNewNumericRegisterValue(t *testing.T) {
 		3.14,
 	)
 
-	if expected, got := "device-name", nrv.DeviceName(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "device-name", nrv.DeviceName(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := testReg, nrv.Register(); !reflect.DeepEqual(expected, got) {
-		t.Errorf("expected %#v but got %#v", expected, got)
+	if expect, got := testReg, nrv.Register(); !reflect.DeepEqual(expect, got) {
+		t.Errorf("expect %#v but got %#v", expect, got)
 	}
-	if expected, got := "test-number-register-name=3.140000test-number-register-unit", nrv.String(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-number-register-name=3.140000test-number-register-unit", nrv.String(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := 3.14, nrv.Value(); expected != got {
-		t.Errorf("expected %f but got %f", expected, got)
+	if expect, got := 3.14, nrv.Value(); expect != got {
+		t.Errorf("expect %f but got %f", expect, got)
 	}
-	if expected, got := 3.14, nrv.GenericValue(); !reflect.DeepEqual(expected, got) {
-		t.Errorf("expected %#v but got %#v", expected, got)
+	if expect, got := 3.14, nrv.GenericValue(); !reflect.DeepEqual(expect, got) {
+		t.Errorf("expect %#v but got %#v", expect, got)
 	}
 
 	{
@@ -37,7 +37,7 @@ func TestNewNumericRegisterValue(t *testing.T) {
 			3.14,
 		)
 		if !nrv.Equals(matchingNrv) {
-			t.Errorf("expected %#v to be equal to %#v", matchingNrv, nrv)
+			t.Errorf("expect %#v to be equal to %#v", matchingNrv, nrv)
 		}
 	}
 
@@ -48,7 +48,7 @@ func TestNewNumericRegisterValue(t *testing.T) {
 			3.15,
 		)
 		if nrv.Equals(differentNrv) {
-			t.Errorf("expected %#v to NOT be equal to %#v", differentNrv, nrv)
+			t.Errorf("expect %#v to NOT be equal to %#v", differentNrv, nrv)
 		}
 	}
 
@@ -59,7 +59,7 @@ func TestNewNumericRegisterValue(t *testing.T) {
 			3.14,
 		)
 		if nrv.Equals(differentNrv) {
-			t.Errorf("expected %#v to NOT be equal to %#v", differentNrv, nrv)
+			t.Errorf("expect %#v to NOT be equal to %#v", differentNrv, nrv)
 		}
 	}
 }
@@ -73,20 +73,20 @@ func TestNewTextRegisterValue(t *testing.T) {
 		"foobar",
 	)
 
-	if expected, got := "device-name", nrv.DeviceName(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "device-name", nrv.DeviceName(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := testReg, nrv.Register(); !reflect.DeepEqual(expected, got) {
-		t.Errorf("expected %#v but got %#v", expected, got)
+	if expect, got := testReg, nrv.Register(); !reflect.DeepEqual(expect, got) {
+		t.Errorf("expect %#v but got %#v", expect, got)
 	}
-	if expected, got := "test-number-register-name=foobar", nrv.String(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-number-register-name=foobar", nrv.String(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := "foobar", nrv.Value(); expected != got {
-		t.Errorf("expected %s but got %s", expected, got)
+	if expect, got := "foobar", nrv.Value(); expect != got {
+		t.Errorf("expect %s but got %s", expect, got)
 	}
-	if expected, got := "foobar", nrv.GenericValue(); !reflect.DeepEqual(expected, got) {
-		t.Errorf("expected %#v but got %#v", expected, got)
+	if expect, got := "foobar", nrv.GenericValue(); !reflect.DeepEqual(expect, got) {
+		t.Errorf("expect %#v but got %#v", expect, got)
 	}
 }
 
@@ -99,20 +99,20 @@ func TestNewEnumRegisterValue(t *testing.T) {
 		1,
 	)
 
-	if expected, got := "device-name", nrv.DeviceName(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "device-name", nrv.DeviceName(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := testReg, nrv.Register(); !reflect.DeepEqual(expected, got) {
-		t.Errorf("expected %#v but got %#v", expected, got)
+	if expect, got := testReg, nrv.Register(); !reflect.DeepEqual(expect, got) {
+		t.Errorf("expect %#v but got %#v", expect, got)
 	}
-	if expected, got := "test-enum-register-name=1:B", nrv.String(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-enum-register-name=1:B", nrv.String(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := 1, nrv.EnumIdx(); expected != got {
-		t.Errorf("expected %d but got %d", expected, got)
+	if expect, got := 1, nrv.EnumIdx(); expect != got {
+		t.Errorf("expect %d but got %d", expect, got)
 	}
-	if expected, got := 1, nrv.GenericValue(); !reflect.DeepEqual(expected, got) {
-		t.Errorf("expected %#v but got %#v", expected, got)
+	if expect, got := 1, nrv.GenericValue(); !reflect.DeepEqual(expect, got) {
+		t.Errorf("expect %#v but got %#v", expect, got)
 	}
 }
 
@@ -124,16 +124,16 @@ func TestNewNullRegisterValue(t *testing.T) {
 		testReg,
 	)
 
-	if expected, got := "device-name", nrv.DeviceName(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "device-name", nrv.DeviceName(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := testReg, nrv.Register(); !reflect.DeepEqual(expected, got) {
-		t.Errorf("expected %#v but got %#v", expected, got)
+	if expect, got := testReg, nrv.Register(); !reflect.DeepEqual(expect, got) {
+		t.Errorf("expect %#v but got %#v", expect, got)
 	}
-	if expected, got := "NULL", nrv.String(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "NULL", nrv.String(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
 	if got := nrv.GenericValue(); got != nil {
-		t.Errorf("expected nil but got %#v", got)
+		t.Errorf("expect nil but got %#v", got)
 	}
 }

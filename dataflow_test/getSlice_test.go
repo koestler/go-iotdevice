@@ -15,14 +15,14 @@ func TestValueStorageGetSlice(t *testing.T) {
 	storage.Wait()
 
 	t.Run("setA", func(t *testing.T) {
-		expected := []string{
+		expect := []string{
 			"device-0:register-a=1.000000",
 			"device-0:register-b=10.000000",
 			"device-1:register-a=100.000000",
 		}
 		got := getAsStrings(storage.GetState())
-		if !equalIgnoreOrder(expected, got) {
-			t.Errorf("expected %#v but got %#v", expected, got)
+		if !equalIgnoreOrder(expect, got) {
+			t.Errorf("expect %#v but got %#v", expect, got)
 		}
 	})
 
@@ -30,15 +30,15 @@ func TestValueStorageGetSlice(t *testing.T) {
 	storage.Wait()
 
 	t.Run("setAB", func(t *testing.T) {
-		expected := []string{
+		expect := []string{
 			"device-0:register-a=1.000000",
 			"device-0:register-b=10.000000",
 			"device-1:register-a=101.000000",
 			"device-2:register-a=200.000000",
 		}
 		got := getAsStrings(storage.GetState())
-		if !equalIgnoreOrder(expected, got) {
-			t.Errorf("expected %#v but got %#v", expected, got)
+		if !equalIgnoreOrder(expect, got) {
+			t.Errorf("expect %#v but got %#v", expect, got)
 		}
 	})
 
@@ -46,18 +46,18 @@ func TestValueStorageGetSlice(t *testing.T) {
 	storage.Wait()
 
 	t.Run("setABCfilterDevice", func(t *testing.T) {
-		expected := []string{
+		expect := []string{
 			"device-0:register-a=1.000000",
 			"device-0:register-b=10.000000",
 		}
 		got := getAsStrings(storage.GetStateFiltered(dataflow.DeviceFilter("device-0")))
-		if !equalIgnoreOrder(expected, got) {
-			t.Errorf("expected %#v but got %#v", expected, got)
+		if !equalIgnoreOrder(expect, got) {
+			t.Errorf("expect %#v but got %#v", expect, got)
 		}
 	})
 
 	t.Run("setABCfilterRegister", func(t *testing.T) {
-		expected := []string{
+		expect := []string{
 			"device-0:register-a=1.000000",
 		}
 		got := getAsStrings(storage.GetStateFiltered(dataflow.RegisterFilter(
@@ -65,8 +65,8 @@ func TestValueStorageGetSlice(t *testing.T) {
 			[]string{"set-b", "set-c"},
 		)))
 
-		if !equalIgnoreOrder(expected, got) {
-			t.Errorf("expected %#v but got %#v", expected, got)
+		if !equalIgnoreOrder(expect, got) {
+			t.Errorf("expect %#v but got %#v", expect, got)
 		}
 	})
 }

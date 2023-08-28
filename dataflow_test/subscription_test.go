@@ -40,15 +40,15 @@ func TestValueStorageSubscribe(t *testing.T) {
 
 	{
 		i := 0
-		expected := fillSetALength + fillSetBLength + fillSetCLength
+		expect := fillSetALength + fillSetBLength + fillSetCLength
 		for got := range counts {
-			if expected != got {
-				t.Errorf("expected count=%d but got %d", expected, got)
+			if expect != got {
+				t.Errorf("expect count=%d but got %d", expect, got)
 			}
 			i += 1
 		}
 		if numberOfSubscriptions != i {
-			t.Errorf("expected to receive %d counts but got %d", numberOfSubscriptions, i)
+			t.Errorf("expect to receive %d counts but got %d", numberOfSubscriptions, i)
 		}
 	}
 }
@@ -84,15 +84,15 @@ func TestValueStorageSubscribeWithFilter(t *testing.T) {
 		values := run(dataflow.DeviceFilter("device-0"))
 
 		// check values
-		expected := []string{
+		expect := []string{
 			"device-0:register-a=0.000000",
 			"device-0:register-a=1.000000",
 			"device-0:register-b=10.000000",
 		}
 		got := getAsStrings(values)
 
-		if !equalIgnoreOrder(expected, got) {
-			t.Errorf("expected %#v but got %#v", expected, got)
+		if !equalIgnoreOrder(expect, got) {
+			t.Errorf("expect %#v but got %#v", expect, got)
 		}
 	})
 
@@ -103,7 +103,7 @@ func TestValueStorageSubscribeWithFilter(t *testing.T) {
 		))
 
 		// check values
-		expected := []string{
+		expect := []string{
 			"device-0:register-a=0.000000",
 			"device-0:register-a=1.000000",
 			"device-1:register-a=100.000000",
@@ -112,8 +112,8 @@ func TestValueStorageSubscribeWithFilter(t *testing.T) {
 		}
 		got := getAsStrings(values)
 
-		if !equalIgnoreOrder(expected, got) {
-			t.Errorf("expected %#v but got %#v", expected, got)
+		if !equalIgnoreOrder(expect, got) {
+			t.Errorf("expect %#v but got %#v", expect, got)
 		}
 	})
 }

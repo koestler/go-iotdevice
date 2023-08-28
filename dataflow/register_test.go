@@ -51,87 +51,87 @@ func getTestEnumRegister() RegisterStruct {
 func TestTextRegisterCreatorAndGetters(t *testing.T) {
 	register := getTestTextRegister()
 
-	if expected, got := "test-text-register-category", register.Category(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-text-register-category", register.Category(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := "test-text-register-name", register.Name(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-text-register-name", register.Name(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := "test-text-register-description", register.Description(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-text-register-description", register.Description(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := TextRegister, register.RegisterType(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := TextRegister, register.RegisterType(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := map[int]string{}, register.Enum(); !reflect.DeepEqual(expected, got) {
-		t.Errorf("expected %#v but got %#v", expected, got)
+	if expect, got := map[int]string{}, register.Enum(); !reflect.DeepEqual(expect, got) {
+		t.Errorf("expect %#v but got %#v", expect, got)
 	}
-	if expected, got := "test-text-register-unit", register.Unit(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-text-register-unit", register.Unit(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := 40, register.Sort(); expected != got {
-		t.Errorf("expected %d but got %d", expected, got)
+	if expect, got := 40, register.Sort(); expect != got {
+		t.Errorf("expect %d but got %d", expect, got)
 	}
 	if got := register.Controllable(); got {
-		t.Errorf("expected controllable to be false")
+		t.Errorf("expect controllable to be false")
 	}
 }
 
 func TestNumberRegisterCreatorAndGetters(t *testing.T) {
 	register := getTestNumberRegister()
 
-	if expected, got := "test-number-register-category", register.Category(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-number-register-category", register.Category(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := "test-number-register-name", register.Name(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-number-register-name", register.Name(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := "test-number-register-description", register.Description(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-number-register-description", register.Description(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := NumberRegister, register.RegisterType(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := NumberRegister, register.RegisterType(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := map[int]string{}, register.Enum(); !reflect.DeepEqual(expected, got) {
-		t.Errorf("expected %#v but got %#v", expected, got)
+	if expect, got := map[int]string{}, register.Enum(); !reflect.DeepEqual(expect, got) {
+		t.Errorf("expect %#v but got %#v", expect, got)
 	}
-	if expected, got := "test-number-register-unit", register.Unit(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-number-register-unit", register.Unit(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := 41, register.Sort(); expected != got {
-		t.Errorf("expected %d but got %d", expected, got)
+	if expect, got := 41, register.Sort(); expect != got {
+		t.Errorf("expect %d but got %d", expect, got)
 	}
 	if got := register.Controllable(); got {
-		t.Errorf("expected controllable to be false")
+		t.Errorf("expect controllable to be false")
 	}
 }
 
 func TestEnumRegisterCreatorAndGetters(t *testing.T) {
 	register := getTestEnumRegister()
 
-	if expected, got := "test-enum-register-category", register.Category(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-enum-register-category", register.Category(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := "test-enum-register-name", register.Name(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-enum-register-name", register.Name(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := "test-enum-register-description", register.Description(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-enum-register-description", register.Description(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := EnumRegister, register.RegisterType(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := EnumRegister, register.RegisterType(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := map[int]string{0: "A", 1: "B"}, register.Enum(); !reflect.DeepEqual(expected, got) {
-		t.Errorf("expected %#v but got %#v", expected, got)
+	if expect, got := map[int]string{0: "A", 1: "B"}, register.Enum(); !reflect.DeepEqual(expect, got) {
+		t.Errorf("expect %#v but got %#v", expect, got)
 	}
-	if expected, got := "test-enum-register-unit", register.Unit(); expected != got {
-		t.Errorf("expected '%s' but got '%s'", expected, got)
+	if expect, got := "test-enum-register-unit", register.Unit(); expect != got {
+		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expected, got := 42, register.Sort(); expected != got {
-		t.Errorf("expected %d but got %d", expected, got)
+	if expect, got := 42, register.Sort(); expect != got {
+		t.Errorf("expect %d but got %d", expect, got)
 	}
 	if got := register.Controllable(); got {
-		t.Errorf("expected controllable to be false")
+		t.Errorf("expect controllable to be false")
 	}
 }
 
@@ -150,15 +150,15 @@ func TestFilterRegisters(t *testing.T) {
 			[]string{},
 		)
 
-		expected := []Register{
+		expect := []Register{
 			getTestTextRegisterWithName("a"),
 			getTestTextRegisterWithName("b"),
 			getTestNumberRegister(),
 			getTestEnumRegister(),
 		}
 
-		if !reflect.DeepEqual(expected, got) {
-			t.Errorf("expected %#v but got %#v", expected, got)
+		if !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect %#v but got %#v", expect, got)
 		}
 	})
 
@@ -169,14 +169,14 @@ func TestFilterRegisters(t *testing.T) {
 			[]string{},
 		)
 
-		expected := []Register{
+		expect := []Register{
 			getTestTextRegisterWithName("b"),
 			getTestNumberRegister(),
 			getTestEnumRegister(),
 		}
 
-		if !reflect.DeepEqual(expected, got) {
-			t.Errorf("expected %#v but got %#v", expected, got)
+		if !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect %#v but got %#v", expect, got)
 		}
 	})
 
@@ -187,14 +187,14 @@ func TestFilterRegisters(t *testing.T) {
 			[]string{"test-number-register-category"},
 		)
 
-		expected := []Register{
+		expect := []Register{
 			getTestTextRegisterWithName("a"),
 			getTestTextRegisterWithName("b"),
 			getTestEnumRegister(),
 		}
 
-		if !reflect.DeepEqual(expected, got) {
-			t.Errorf("expected %#v but got %#v", expected, got)
+		if !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect %#v but got %#v", expect, got)
 		}
 	})
 }
@@ -209,14 +209,14 @@ func TestSortRegisters(t *testing.T) {
 
 	got := SortRegisters(stimuliRegisters)
 
-	expected := []Register{
+	expect := []Register{
 		getTestTextRegisterWithName("a"),
 		getTestTextRegisterWithName("b"),
 		getTestNumberRegister(),
 		getTestEnumRegister(),
 	}
 
-	if !reflect.DeepEqual(expected, got) {
-		t.Errorf("expected %#v but got %#v", expected, got)
+	if !reflect.DeepEqual(expect, got) {
+		t.Errorf("expect %#v but got %#v", expect, got)
 	}
 }
