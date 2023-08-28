@@ -151,20 +151,29 @@ MqttDevices:                                               # optional, a list of
       - 1-remote                                           # identifier as defined in the MqttClients section
 
 Views:                                                     # optional, a list of views (=categories in the frontend / paths in the api URLs)
-  - Name: victron                                          # mandatory, a technical name used in the URLs
-    Title: Victron                                         # mandatory, a nice title displayed in the frontend
+  - Name: private                                          # mandatory, a technical name used in the URLs
+    Title: Private                                         # mandatory, a nice title displayed in the frontend
     Devices:                                               # mandatory, a list of devices using
       - Name: bmv0                                         # mandatory, the arbitrary names defined above
         Title: Battery Monitor                             # mandatory, a nice title displayed in the frontend
         SkipFields:                                        # optional, default empty, field names that are omitted when displaying this view
+          - field-a
+          - field-b
         SkipCategories:                                    # optional, default empty, category names that are omitted when displaying this view
+          - cat-a
+          - cat-b
+          - cat-c
       - Name: modbus-rtu0                                  # mandatory, the arbitrary names defined above
         Title: Relay Board                                 # mandatory, a nice title displayed in the frontend
     Autoplay: false                                        # optional, default true, when true, live updates are enabled automatically when the view is open in the frontend
     AllowedUsers:                                          # optional, if empty, all users of the HtaccessFile are considered valid, otherwise only those listed here
       - test0                                              # username which is allowed to access this view
     Hidden: true                                           # optional, default false, if true, this view is not shown in the menu unless the user is logged in
-
+  - Name: public
+    Title: Public
+    Devices:
+      - Name: bmv0
+        Title: Bmv 0
 
 HassDiscovery:                                             # optional, default, empty, defines which registers should be advertised via the homeassistant discovery mechanism
                                                            # You can have multiple sections to advertise on different topics, on different MqttServers of matching different registers
@@ -303,8 +312,8 @@ func TestReadConfig_Complete(t *testing.T) {
 		}
 	}
 
-	if len(config.MqttClients()) != 2 {
-		t.Error("expect length of config.MqttClients to be 2")
+	if expected, got := 2, len(config.MqttClients()); expected != got {
+		t.Errorf("expect length of config.MqttClients to be %d but got %d", expected, got)
 	}
 
 	{
@@ -411,8 +420,8 @@ func TestReadConfig_Complete(t *testing.T) {
 		}
 	}
 
-	if len(config.Modbus()) != 1 {
-		t.Error("expect length of config.Modbus to be 1")
+	if expected, got := 1, len(config.Modbus()); expected != got {
+		t.Errorf("expect length of config.Modbus to be %d but got %d", expected, got)
 	}
 
 	{
@@ -439,8 +448,8 @@ func TestReadConfig_Complete(t *testing.T) {
 		}
 	}
 
-	if len(config.VictronDevices()) != 1 {
-		t.Error("expect length of config.VictronDevices to be 1")
+	if expected, got := 1, len(config.VictronDevices()); expected != got {
+		t.Errorf("expect length of config.VictronDevices to be %d but got %d", expected, got)
 	}
 
 	{
@@ -491,8 +500,8 @@ func TestReadConfig_Complete(t *testing.T) {
 		}
 	}
 
-	if len(config.ModbusDevices()) != 1 {
-		t.Error("expect length of config.ModbusDevices to be 1")
+	if expected, got := 1, len(config.ModbusDevices()); expected != got {
+		t.Errorf("expect length of config.ModbusDevices to be %d but got %d", expected, got)
 	}
 
 	{
@@ -547,8 +556,8 @@ func TestReadConfig_Complete(t *testing.T) {
 		}
 	}
 
-	if len(config.HttpDevices()) != 1 {
-		t.Error("expect length of config.HttpDevices to be 1")
+	if expected, got := 1, len(config.HttpDevices()); expected != got {
+		t.Errorf("expect length of config.HttpDevices to be %d but got %d", expected, got)
 	}
 
 	{
@@ -611,8 +620,8 @@ func TestReadConfig_Complete(t *testing.T) {
 		}
 	}
 
-	if len(config.MqttDevices()) != 1 {
-		t.Error("expect length of config.MqttDevices to be 1")
+	if expected, got := 1, len(config.MqttDevices()); expected != got {
+		t.Errorf("expect length of config.MqttDevices to be %d but got %d", expected, got)
 	}
 
 	{
@@ -664,8 +673,97 @@ func TestReadConfig_Complete(t *testing.T) {
 
 	}
 
-	if len(config.HassDiscovery()) != 1 {
-		t.Error("expect length of config.HassDiscovery to be 1")
+	if expected, got := 2, len(config.Views()); expected != got {
+		t.Errorf("expect length of config.Views to be %d but got %d", expected, got)
+	}
+
+	{
+		v := config.Views()[0]
+
+		if expected, got := "private", v.Name(); expected != got {
+			t.Errorf("expect Name of first View to be '%s' but got '%s'", expected, got)
+		}
+
+		if expected, got := "Private", v.Title(); expected != got {
+			t.Errorf("expect Views->private->Title to be '%s' but got '%s'", expected, got)
+		}
+
+		if expected, got := 2, len(v.Devices()); expected != got {
+			t.Errorf("expect lenghth of Views->private->Devices to be %d but got %d", expected, got)
+		}
+
+		{
+			i := 0
+			d := v.Devices()[i]
+			if expected, got := "bmv0", d.Name(); expected != got {
+				t.Errorf("expect Views->%s->Devices->%d->Name to be '%s' but got '%s'", v.Name(), i, expected, got)
+			}
+
+			if expected, got := "Battery Monitor", d.Title(); expected != got {
+				t.Errorf("expect Views->%s->Devices->%d->Title to be '%s' but got '%s'", v.Name(), i, expected, got)
+			}
+
+			if expected, got := []string{"field-a", "field-b"}, d.SkipFields(); !reflect.DeepEqual(expected, got) {
+				t.Errorf("expect Views->%s->Devices->%d->SkipFields to be %v but got %v", v.Name(), i, expected, got)
+			}
+
+			if expected, got := []string{"cat-a", "cat-b", "cat-c"}, d.SkipCategories(); !reflect.DeepEqual(expected, got) {
+				t.Errorf("expect Views->%s->Devices->%d->SkipCategories to be %v but got %v", v.Name(), i, expected, got)
+			}
+		}
+
+		{
+			i := 1
+			d := v.Devices()[i]
+			if expected, got := "modbus-rtu0", d.Name(); expected != got {
+				t.Errorf("expect Views->%s->Devices->%d->Name to be '%s' but got '%s'", v.Name(), i, expected, got)
+			}
+
+			if expected, got := "Relay Board", d.Title(); expected != got {
+				t.Errorf("expect Views->%s->Devices->%d->Title to be '%s' but got '%s'", v.Name(), i, expected, got)
+			}
+
+			if expected, got := []string{}, d.SkipFields(); !reflect.DeepEqual(expected, got) {
+				t.Errorf("expect Views->%s->Devices->%d->SkipFields to be %v but got %v", v.Name(), i, expected, got)
+			}
+
+			if expected, got := []string{}, d.SkipCategories(); !reflect.DeepEqual(expected, got) {
+				t.Errorf("expect Views->%s->Devices->%d->SkipCategories to be %v but got %v", v.Name(), i, expected, got)
+			}
+		}
+
+	}
+
+	{
+		v := config.Views()[1]
+
+		if expected, got := "public", v.Name(); expected != got {
+			t.Errorf("expect Name of second View to be '%s' but got '%s'", expected, got)
+		}
+
+		if expected, got := "Public", v.Title(); expected != got {
+			t.Errorf("expect Views->private->Title to be '%s' but got '%s'", expected, got)
+		}
+
+		if expected, got := 1, len(v.Devices()); expected != got {
+			t.Errorf("expect lenghth of Views->private->Devices to be %d but got %d", expected, got)
+		}
+
+		{
+			i := 0
+			d := v.Devices()[i]
+			if expected, got := "bmv0", d.Name(); expected != got {
+				t.Errorf("expect Views->%s->Devices->%d->Name to be '%s' but got '%s'", v.Name(), i, expected, got)
+			}
+
+			if expected, got := "Bmv 0", d.Title(); expected != got {
+				t.Errorf("expect Views->%s->Devices->%d->Title to be '%s' but got '%s'", v.Name(), i, expected, got)
+			}
+		}
+	}
+
+	if expected, got := 1, len(config.HassDiscovery()); expected != got {
+		t.Errorf("expect length of config.HassDiscovery to be %d but got %d", expected, got)
 	}
 
 	{

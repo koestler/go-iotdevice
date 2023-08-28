@@ -865,10 +865,20 @@ func (c viewDeviceConfigRead) TransformAndValidate(
 	devices []*DeviceConfig,
 ) (ret ViewDeviceConfig, err []error) {
 	ret = ViewDeviceConfig{
-		name:           c.Name,
-		title:          c.Title,
-		skipFields:     c.SkipFields,
-		skipCategories: c.SkipCategories,
+		name:  c.Name,
+		title: c.Title,
+	}
+
+	if c.SkipFields != nil {
+		ret.skipFields = c.SkipFields
+	} else {
+		ret.skipFields = []string{}
+	}
+
+	if c.SkipCategories != nil {
+		ret.skipCategories = c.SkipCategories
+	} else {
+		ret.skipCategories = []string{}
 	}
 
 	if !existsByName(c.Name, devices) {
