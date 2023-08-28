@@ -15,13 +15,6 @@ HttpServer:                                                # optional, when miss
   ConfigExpires: 1m                                        # optional, default 1min, what cache-control header to send for configuration endpoints
   LogDebug: false                                          # optional, default false, output debug messages related to the http server
 
-Modbus:                                                    # optional, when empty, no modbus handler is started
-  bus0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
-    Device: /dev/ttyACM0                                   # mandatory, the RS485 serial device
-    BaudRate: 9600                                         # mandatory, eg. 9600
-    ReadTimeout: 100ms                                     # optional, default 100ms, how long to wait for a response
-    LogDebug: false                                        # optional, default false, verbose debug log
-
 Authentication:                                            # optional, when missing: login is disabled
   #JwtSecret: 'insert a random string here and uncomment'  # optional, default random, used to sign the JWT tokens
   JwtValidityPeriod: 1h                                    # optional, default 1h, users are logged out after this time
@@ -48,6 +41,13 @@ MqttClients:                                               # optional, when empt
     TopicPrefix:                                           # optional, default empty, %Prefix% is replaced with this string
     LogDebug: false                                        # optional, default false, very verbose debug log of the mqtt connection
     LogMessages: false                                     # optional, default false, log all incoming mqtt messages
+
+Modbus:                                                    # optional, when empty, no modbus handler is started
+  bus0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
+    Device: /dev/ttyACM0                                   # mandatory, the RS485 serial device
+    BaudRate: 9600                                         # mandatory, eg. 9600
+    ReadTimeout: 100ms                                     # optional, default 100ms, how long to wait for a response
+    LogDebug: false                                        # optional, default false, verbose debug log
 
 VictronDevices:                                            # optional, a list of Victron Energy devices to connect to
   bmv0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections

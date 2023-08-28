@@ -523,9 +523,19 @@ func stringToRegexp(inp []string) (ret []*regexp.Regexp, err []error) {
 
 func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttClientConfig) (ret DeviceConfig, err []error) {
 	ret = DeviceConfig{
-		name:           name,
-		skipFields:     c.SkipFields,
-		skipCategories: c.SkipCategories,
+		name: name,
+	}
+
+	if c.SkipFields != nil {
+		ret.skipFields = c.SkipFields
+	} else {
+		ret.skipFields = []string{}
+	}
+
+	if c.SkipCategories != nil {
+		ret.skipCategories = c.SkipCategories
+	} else {
+		ret.skipCategories = []string{}
 	}
 
 	if !nameMatcher.MatchString(ret.name) {
