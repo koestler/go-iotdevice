@@ -190,15 +190,6 @@ func (c MqttDeviceConfig) ConvertToRead() mqttDeviceConfigRead {
 	}
 }
 
-func (c ViewDeviceConfig) ConvertToRead() viewDeviceConfigRead {
-	return viewDeviceConfigRead{
-		Name:           c.name,
-		Title:          c.title,
-		SkipFields:     c.skipFields,
-		SkipCategories: c.skipCategories,
-	}
-}
-
 func (c ViewConfig) ConvertToRead() viewConfigRead {
 	return viewConfigRead{
 		Name:         c.name,
@@ -207,6 +198,15 @@ func (c ViewConfig) ConvertToRead() viewConfigRead {
 		Autoplay:     &c.autoplay,
 		AllowedUsers: maps.Keys(c.allowedUsers),
 		Hidden:       &c.hidden,
+	}
+}
+
+func (c ViewDeviceConfig) ConvertToRead() viewDeviceConfigRead {
+	return viewDeviceConfigRead{
+		Name:           c.name,
+		Title:          c.title,
+		SkipFields:     c.skipFields,
+		SkipCategories: c.skipCategories,
 	}
 }
 

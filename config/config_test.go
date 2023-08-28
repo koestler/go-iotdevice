@@ -160,10 +160,10 @@ Views:                                                     # optional, a list of
         SkipCategories:                                    # optional, default empty, category names that are omitted when displaying this view
       - Name: modbus-rtu0                                  # mandatory, the arbitrary names defined above
         Title: Relay Board                                 # mandatory, a nice title displayed in the frontend
-    Autoplay: true                                         # optional, default true, when true, live updates are enabled automatically when the view is open in the frontend
+    Autoplay: false                                        # optional, default true, when true, live updates are enabled automatically when the view is open in the frontend
     AllowedUsers:                                          # optional, if empty, all users of the HtaccessFile are considered valid, otherwise only those listed here
       - test0                                              # username which is allowed to access this view
-    Hidden: false                                          # optional, default false, if true, this view is not shown in the menu unless the user is logged in
+    Hidden: true                                           # optional, default false, if true, this view is not shown in the menu unless the user is logged in
 
 
 HassDiscovery:                                             # optional, default, empty, defines which registers should be advertised via the homeassistant discovery mechanism

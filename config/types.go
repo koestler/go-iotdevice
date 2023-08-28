@@ -127,13 +127,6 @@ type MqttDeviceConfig struct {
 	mqttClients []string
 }
 
-type ViewDeviceConfig struct {
-	name           string   // mandatory: a technical name
-	title          string   // mandatory: a nice title for the frontend
-	skipFields     []string // optional: a list of fields that are not shown
-	skipCategories []string // optional: a list of categories that are not shown
-}
-
 type ViewConfig struct {
 	name         string              // mandatory: A technical name used in the URLs
 	title        string              // mandatory: a nice title for the frontend
@@ -141,6 +134,13 @@ type ViewConfig struct {
 	autoplay     bool                // optional: default false
 	allowedUsers map[string]struct{} // optional: if empty: view is public; otherwise only allowed to listed users
 	hidden       bool                // optional: if true, view is not shown in menu unless logged in
+}
+
+type ViewDeviceConfig struct {
+	name           string   // mandatory: a technical name
+	title          string   // mandatory: a nice title for the frontend
+	skipFields     []string // optional: a list of fields that are not shown
+	skipCategories []string // optional: a list of categories that are not shown
 }
 
 type HassDiscovery struct {
