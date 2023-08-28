@@ -1,6 +1,6 @@
 package victronDevice
 
-var RegisterListBmvProduct = VictronRegisters{
+var RegisterListBmvProduct = []VictronRegister{
 	NewNumberRegisterStruct(
 		"Product",
 		"ProductId",
@@ -64,7 +64,7 @@ var RegisterListBmvProduct = VictronRegisters{
 	// skipped Bluetooth capabilities
 }
 
-var RegisterListBmvMonitor = VictronRegisters{
+var RegisterListBmvMonitor = []VictronRegister{
 	NewNumberRegisterStruct(
 		"Essential",
 		"Power",
@@ -192,7 +192,7 @@ var RegisterListBmvMonitor = VictronRegisters{
 	),
 }
 
-var RegisterListBmvHistoric = VictronRegisters{
+var RegisterListBmvHistoric = []VictronRegister{
 	NewNumberRegisterStruct(
 		"Historic",
 		"DepthOfTheDeepestDischarge",

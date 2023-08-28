@@ -2,7 +2,6 @@ package victronDevice
 
 import "github.com/koestler/go-iotdevice/dataflow"
 
-type VictronRegisters []VictronRegister
 type VictronRegister interface {
 	dataflow.Register
 	Address() uint16
@@ -23,7 +22,8 @@ type VictronRegisterStruct struct {
 	offset float64
 }
 
-func MergeRegisters(maps ...VictronRegisters) (output VictronRegisters) {
+// TODO: this is an implementation of append, isn't it? remove?
+func MergeRegisters(maps ...[]VictronRegister) (output []VictronRegister) {
 	size := len(maps)
 	if size == 0 {
 		return output
@@ -48,8 +48,8 @@ func MergeRegisters(maps ...VictronRegisters) (output VictronRegisters) {
 	return output
 }
 
-func FilterRegisters(input VictronRegisters, excludeFields []string, excludeCategories []string) (output VictronRegisters) {
-	output = make(VictronRegisters, 0, len(input))
+func FilterRegisters(input []VictronRegister, excludeFields []string, excludeCategories []string) (output []VictronRegister) {
+	output = make([]VictronRegister, 0, len(input))
 	for _, r := range input {
 		if dataflow.RegisterNameExcluded(excludeFields, r) {
 			continue
@@ -62,8 +62,8 @@ func FilterRegisters(input VictronRegisters, excludeFields []string, excludeCate
 	return
 }
 
-func FilterRegistersByName(input VictronRegisters, names ...string) (output VictronRegisters) {
-	output = make(VictronRegisters, 0, len(input))
+func FilterRegistersByName(input []VictronRegister, names ...string) (output []VictronRegister) {
+	output = make([]VictronRegister, 0, len(input))
 	for _, r := range input {
 		if dataflow.RegisterNameExcluded(names, r) {
 			continue

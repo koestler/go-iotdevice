@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, registers VictronRegisters) (err error, immediateError bool) {
+func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, registers []VictronRegister) (err error, immediateError bool) {
 	// send connected now, disconnected when this routine stops
 	c.SetAvailable(true)
 	defer func() {

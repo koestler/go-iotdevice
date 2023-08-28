@@ -1,6 +1,6 @@
 package victronDevice
 
-var RegisterListSolarProduct = VictronRegisters{
+var RegisterListSolarProduct = []VictronRegister{
 	NewNumberRegisterStruct(
 		"Product",
 		"ProductId",
@@ -44,7 +44,7 @@ var RegisterListSolarProduct = VictronRegisters{
 	// skipped capabilities
 }
 
-var RegisterListSolarGeneric = VictronRegisters{
+var RegisterListSolarGeneric = []VictronRegister{
 	NewEnumRegisterStruct(
 		"Generic",
 		"DeviceMode",
@@ -82,7 +82,7 @@ var RegisterListSolarGeneric = VictronRegisters{
 	// skipped Device off Reason Bitmask
 }
 
-var RegisterListSolarSettings = VictronRegisters{
+var RegisterListSolarSettings = []VictronRegister{
 	NewEnumRegisterStruct(
 		"Settings",
 		"AdaptiveMode",
@@ -323,7 +323,7 @@ var RegisterListSolarSettings = VictronRegisters{
 	),
 }
 
-var RegisterListSolarChargerData = VictronRegisters{
+var RegisterListSolarChargerData = []VictronRegister{
 	NewNumberRegisterStruct(
 		"Essential",
 		"BatteryTemperature",
@@ -493,7 +493,7 @@ var RegisterListSolarChargerData = VictronRegisters{
 	// skipped adjustable voltage maximum
 }
 
-var RegisterListSolarPanelData = VictronRegisters{
+var RegisterListSolarPanelData = []VictronRegister{
 	NewNumberRegisterStruct(
 		"Essential",
 		"PanelPower",

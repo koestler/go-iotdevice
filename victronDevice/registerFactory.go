@@ -4,7 +4,7 @@ import (
 	"github.com/koestler/go-iotdevice/vedirect"
 )
 
-func RegisterFactoryByProduct(product vedirect.VeProduct) VictronRegisters {
+func RegisterFactoryByProduct(product vedirect.VeProduct) []VictronRegister {
 	switch product {
 	case vedirect.VeProductBMV700:
 		return RegisterListBmv700

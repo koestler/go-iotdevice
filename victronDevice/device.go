@@ -17,7 +17,7 @@ type DeviceStruct struct {
 	device.State
 	victronConfig Config
 
-	registers VictronRegisters
+	registers []VictronRegister
 	model     string
 }
 
