@@ -744,15 +744,31 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []*M
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.General.TransformAndValidate(name, mqttClients)
-	err = append(err, e...)
-
 	ret.mqttClients, e = allOrCheckedMqttClients(
 		c.MqttClients, mqttClients,
 		func(clientName string) error {
 			return fmt.Errorf("MqttDevices->%s->mqttClients: client='%s' is not defined", name, clientName)
 		},
 	)
+	err = append(err, e...)
+
+	// Do not allow for {Telemetry, Realtime}ViaMqttClients to contain MqttClients
+	// This can possibly result in an infinite loop where we listen to messages published by our self
+	filteredMqttClients := make([]*MqttClientConfig, 0, len(mqttClients))
+	for _, mc := range mqttClients {
+		found := false
+		for _, n := range ret.mqttClients {
+			if n == mc.Name() {
+				found = true
+				break
+			}
+		}
+		if !found {
+			filteredMqttClients = append(filteredMqttClients, mc)
+		}
+	}
+
+	ret.DeviceConfig, e = c.General.TransformAndValidate(name, filteredMqttClients)
 	err = append(err, e...)
 
 	return
