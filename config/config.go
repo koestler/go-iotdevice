@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
 	"gopkg.in/yaml.v2"
 	"log"
@@ -310,6 +311,8 @@ func (c *authenticationConfigRead) TransformAndValidate(bypassFileCheck bool) (r
 		}
 
 		ret.htaccessFile = *c.HtaccessFile
+	} else {
+		err = append(err, errors.New("Authentication->HtaccessFile must not be empty"))
 	}
 
 	return
