@@ -51,7 +51,7 @@ func getCmdOptions() (cmdOptions CmdOptions, cmdName string) {
 
 func getConfig(cmdOptions CmdOptions, cmdName string) *config.Config {
 	// read, transform and validate configuration
-	cfg, err := config.ReadConfigFile(cmdName, string(cmdOptions.Config))
+	cfg, err := config.ReadConfigFile(cmdName, string(cmdOptions.Config), false)
 	if len(err) > 0 {
 		for _, e := range err {
 			log.Printf("config: error: %v", e)

@@ -18,16 +18,16 @@ const NameRegexp = "^[a-zA-Z0-9\\-]{1,32}$"
 
 var nameMatcher = regexp.MustCompile(NameRegexp)
 
-func ReadConfigFile(exe, source string) (config Config, err []error) {
+func ReadConfigFile(exe, source string, bypassFileCheck bool) (config Config, err []error) {
 	yamlStr, e := os.ReadFile(source)
 	if e != nil {
 		return config, []error{fmt.Errorf("cannot read configuration: %v; use see `%s --help`", err, exe)}
 	}
 
-	return ReadConfig(yamlStr)
+	return ReadConfig(yamlStr, bypassFileCheck)
 }
 
-func ReadConfig(yamlStr []byte) (config Config, err []error) {
+func ReadConfig(yamlStr []byte, bypassFileCheck bool) (config Config, err []error) {
 	var configRead configRead
 
 	yamlStr = []byte(os.ExpandEnv(string(yamlStr)))
@@ -36,7 +36,7 @@ func ReadConfig(yamlStr []byte) (config Config, err []error) {
 		return config, []error{fmt.Errorf("cannot parse yaml: %s", e)}
 	}
 
-	return configRead.TransformAndValidate()
+	return configRead.TransformAndValidate(bypassFileCheck)
 }
 
 func (c Config) PrintConfig() (err error) {
@@ -52,7 +52,7 @@ func (c Config) PrintConfig() (err error) {
 	return nil
 }
 
-func (c configRead) TransformAndValidate() (ret Config, err []error) {
+func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err []error) {
 	ret = Config{
 		logConfig:      true,
 		logWorkerStart: true,
@@ -90,7 +90,7 @@ func (c configRead) TransformAndValidate() (ret Config, err []error) {
 	ret.httpServer, e = c.HttpServer.TransformAndValidate()
 	err = append(err, e...)
 
-	ret.authentication, e = c.Authentication.TransformAndValidate()
+	ret.authentication, e = c.Authentication.TransformAndValidate(bypassFileCheck)
 	err = append(err, e...)
 
 	ret.mqttClients, e = TransformAndValidateMapToList(
@@ -258,7 +258,7 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 	return
 }
 
-func (c *authenticationConfigRead) TransformAndValidate() (ret AuthenticationConfig, err []error) {
+func (c *authenticationConfigRead) TransformAndValidate(bypassFileCheck bool) (ret AuthenticationConfig, err []error) {
 	ret.enabled = false
 	ret.jwtValidityPeriod = time.Hour
 
@@ -276,7 +276,7 @@ func (c *authenticationConfigRead) TransformAndValidate() (ret AuthenticationCon
 
 	if c.JwtSecret != nil {
 		if len(*c.JwtSecret) < 32 {
-			err = append(err, fmt.Errorf("Authentication->JwtSecret must be empty ot >= 32 chars"))
+			err = append(err, fmt.Errorf("Authentication->JwtSecret must be empty or >= 32 chars"))
 		} else {
 			ret.jwtSecret = []byte(*c.JwtSecret)
 		}
@@ -297,14 +297,16 @@ func (c *authenticationConfigRead) TransformAndValidate() (ret AuthenticationCon
 	}
 
 	if c.HtaccessFile != nil && len(*c.HtaccessFile) > 0 {
-		if info, e := os.Stat(*c.HtaccessFile); e != nil {
-			err = append(err, fmt.Errorf("Authentication->HtaccessFile='%s' cannot open file. error: %s",
-				*c.HtaccessFile, e,
-			))
-		} else if info.IsDir() {
-			err = append(err, fmt.Errorf("Authentication->HtaccessFile='%s' must be a file, not a directory",
-				*c.HtaccessFile,
-			))
+		if !bypassFileCheck {
+			if info, e := os.Stat(*c.HtaccessFile); e != nil {
+				err = append(err, fmt.Errorf("Authentication->HtaccessFile='%s' cannot open file. error: %s",
+					*c.HtaccessFile, e,
+				))
+			} else if info.IsDir() {
+				err = append(err, fmt.Errorf("Authentication->HtaccessFile='%s' must be a file, not a directory",
+					*c.HtaccessFile,
+				))
+			}
 		}
 
 		ret.htaccessFile = *c.HtaccessFile
@@ -484,7 +486,9 @@ func (c hassDiscoveryRead) TransformAndValidate(mqttClients []*MqttClientConfig)
 
 	ret.viaMqttClients, e = allOrCheckedMqttClients(
 		c.ViaMqttClients, mqttClients,
-		"HassDisovery->MqttClients: client='%s' is not defined",
+		func(clientName string) error {
+			return fmt.Errorf("HassDisovery->MqttClients: client='%s' is not defined", clientName)
+		},
 	)
 	err = append(err, e...)
 
@@ -528,13 +532,17 @@ func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []*MqttC
 	var e []error
 	ret.telemetryViaMqttClients, e = allOrCheckedMqttClients(
 		c.TelemetryViaMqttClients, mqttClients,
-		"Devices->%s->TelemetryViaMqttClients: client='%s' is not defined",
+		func(clientName string) error {
+			return fmt.Errorf("Devices->%s->TelemetryViaMqttClients: client='%s' is not defined", name, clientName)
+		},
 	)
 	err = append(err, e...)
 
 	ret.realtimeViaMqttClients, e = allOrCheckedMqttClients(
 		c.RealtimeViaMqttClients, mqttClients,
-		"Devices->%s->RealtimeViaMqttClients: client='%s' is not defined",
+		func(clientName string) error {
+			return fmt.Errorf("Devices->%s->RealtimeViaMqttClients: client='%s' is not defined", name, clientName)
+		},
 	)
 	err = append(err, e...)
 
@@ -728,7 +736,9 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []*M
 
 	ret.mqttClients, e = allOrCheckedMqttClients(
 		c.MqttClients, mqttClients,
-		"MqttDevices->%s->mqttClients: Client='%s' is not defined",
+		func(clientName string) error {
+			return fmt.Errorf("MqttDevices->%s->mqttClients: client='%s' is not defined", name, clientName)
+		},
 	)
 	err = append(err, e...)
 
@@ -904,7 +914,7 @@ func TransformAndValidateListUnique[I any, O Nameable](
 	return
 }
 
-func allOrCheckedMqttClients(inp []string, mqttClients []*MqttClientConfig, errorFormat string) (oup []string, err []error) {
+func allOrCheckedMqttClients(inp []string, mqttClients []*MqttClientConfig, errorFunc func(clientName string) error) (oup []string, err []error) {
 	if len(inp) < 1 {
 		return getNames(mqttClients), nil
 	}
@@ -913,7 +923,7 @@ func allOrCheckedMqttClients(inp []string, mqttClients []*MqttClientConfig, erro
 
 	for _, clientName := range inp {
 		if !existsByName(clientName, mqttClients) {
-			err = append(err, fmt.Errorf(errorFormat, clientName))
+			err = append(err, errorFunc(clientName))
 		} else {
 			oup = append(oup, clientName)
 		}

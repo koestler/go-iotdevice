@@ -80,7 +80,7 @@ Version: 1                                                 # configuration file 
 ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice: is shown in the http frontend
 LogConfig: true                                            # optional, default False, outputs the used configuration including defaults on startup
 LogWorkerStart: true                                       # optional, default False, outputs what devices and mqtt clients are started
-LogDebug: false                                            # optional, default False, outputs various debug information
+LogStorageDebug: false                                     # optional, default False, outputs all write to the internal value storage
 
 HttpServer:                                                # optional, when missing: http server is not started
   Bind: ::1                                                # optional, default ::1 (ipv6 loopback), what address to bind to, use "0:0:0:0" when started within docker
@@ -114,7 +114,7 @@ MqttClients:                                               # optional, when empt
     #ClientId: go-iotdevice                                # optional, default go-iotdevice-UUID, mqtt client id, make sure it is unique per mqtt-server
     Qos: 1                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
     KeepAlive: 1m                                          # optional, default 60s, how often a ping is sent to keep the connection alive
-    ConnectionRetryDelay: 10s                              # optional, default 10s, when disconnected: after what delay shall a connection attempt is made
+    ConnectRetryDelay: 10s                                 # optional, default 10s, when disconnected: after what delay shall a connection attempt is made
     ConnectTimeout: 5s                                     # optional, default 5s, how long to wait for the SYN+ACK packet, increase on slow networks
     AvailabilityTopic: '%Prefix%tele/%ClientId%/status'    # optional, what topic to use for online/offline messages
     TelemetryInterval: 10s                                 # optional, default 10s, how often to sent telemetry mqtt messages, 0s disables tlemetry messages
@@ -124,8 +124,21 @@ MqttClients:                                               # optional, when empt
     RealtimeTopic: '%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%' # optional, what topic to use for realtime messages
     RealtimeRetain: true                                   # optional, default true, the mqtt retain flag for realtime messages
     TopicPrefix:                                           # optional, default empty, %Prefix% is replaced with this string
-    LogMessages: false                                     # optional, default false, log all incoming mqtt messages
     LogDebug: false                                        # optional, default false, very verbose debug log of the mqtt connection
+    LogMessages: false                                     # optional, default false, log all incoming mqtt messages
+
+HassDiscovery:                                             # optional, default, empty, defines which registers should be advertised via the homeassistant discovery mechanism
+                                                           # You can have multiple sections to advertise on different topics, on different MqttServers of matching different registers
+                                                           # each register is only advertised once per server / topic even if multiple entries match
+  - TopicPrefix:                                           # optional, default 'homeassistant', the mqtt topic used for the discovery messages
+    ViaMattClients:                                        # optional, default all clients, on what mqtt servers shall the registers by advertised
+    Devices:                                               # optional, default all, a list of regular expressions against which devices names are matched (eg. "device1" or user ".*" for all devices)
+      - bmv1                                               # use device identifiers of the VictronDevices, ModbusDevices etc. sections
+    Categories:                                            # optional, default all, a list of regular expressions against which devices names are matched (eg. "device1" or user ".*" for all devices)
+      - .*                                                 # match all categories; see the category field in /api/v2/views/dev/devices/DEVICE-NAME/registers
+    Registers:                                             # optional, default all, a list of regular expressions against which register names are matched
+      - Voltage$                                           # matches all registers with a name ending in Voltage, eg. MainVoltage, AuxVoltage
+      - ˆBattery                                           # matches all registers with a name begining with Battery, eg. BatteryTemperature
 
 VictronDevices:                                            # optional, a list of Victron Energy devices to connect to
   bmv0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
