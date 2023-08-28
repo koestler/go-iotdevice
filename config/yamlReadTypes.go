@@ -9,13 +9,13 @@ type configRead struct {
 	HttpServer      *httpServerConfigRead              `yaml:"HttpServer"`
 	Authentication  *authenticationConfigRead          `yaml:"Authentication"`
 	MqttClients     map[string]mqttClientConfigRead    `yaml:"MqttClients"`
-	HassDiscovery   []hassDiscoveryRead                `yaml:"HassDiscovery"`
 	Modbus          map[string]modbusConfigRead        `yaml:"Modbus"`
 	VictronDevices  map[string]victronDeviceConfigRead `yaml:"VictronDevices"`
 	ModbusDevices   map[string]modbusDeviceConfigRead  `yaml:"ModbusDevices"`
 	HttpDevices     map[string]httpDeviceConfigRead    `yaml:"HttpDevices"`
 	MqttDevices     map[string]mqttDeviceConfigRead    `yaml:"MqttDevices"`
 	Views           []viewConfigRead                   `yaml:"Views"`
+	HassDiscovery   []hassDiscoveryRead                `yaml:"HassDiscovery"`
 }
 
 type httpServerConfigRead struct {
@@ -55,14 +55,6 @@ type mqttClientConfigRead struct {
 	TopicPrefix       string  `yaml:"TopicPrefix"`
 	LogDebug          *bool   `yaml:"LogDebug"`
 	LogMessages       *bool   `yaml:"LogMessages"`
-}
-
-type hassDiscoveryRead struct {
-	TopicPrefix    *string  `yaml:"TopicPrefix"`
-	ViaMqttClients []string `yaml:"ViaMqttClients"`
-	Devices        []string `yaml:"Devices"`
-	Categories     []string `yaml:"Categories"`
-	Registers      []string `yaml:"Registers"`
 }
 
 type modbusConfigRead struct {
@@ -133,4 +125,12 @@ type viewConfigRead struct {
 	Autoplay     *bool                  `yaml:"Autoplay"`
 	AllowedUsers []string               `yaml:"AllowedUsers"`
 	Hidden       *bool                  `yaml:"Hidden"`
+}
+
+type hassDiscoveryRead struct {
+	TopicPrefix    *string  `yaml:"TopicPrefix"`
+	ViaMqttClients []string `yaml:"ViaMqttClients"`
+	Devices        []string `yaml:"Devices"`
+	Categories     []string `yaml:"Categories"`
+	Registers      []string `yaml:"Registers"`
 }

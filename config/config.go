@@ -101,14 +101,6 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	)
 	err = append(err, e...)
 
-	ret.hassDiscovery, e = TransformAndValidateList(
-		c.HassDiscovery,
-		func(inp hassDiscoveryRead) (HassDiscovery, []error) {
-			return inp.TransformAndValidate(ret.mqttClients)
-		},
-	)
-	err = append(err, e...)
-
 	ret.modbus, e = TransformAndValidateMapToList(
 		c.Modbus,
 		func(inp modbusConfigRead, name string) (ModbusConfig, []error) {
@@ -186,6 +178,14 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 			err = append(err, fmt.Errorf("section Views: %s", ve))
 		}
 	}
+
+	ret.hassDiscovery, e = TransformAndValidateList(
+		c.HassDiscovery,
+		func(idx int, inp hassDiscoveryRead) (HassDiscovery, []error) {
+			return inp.TransformAndValidate(idx, ret.mqttClients, ret.devices)
+		},
+	)
+	err = append(err, e...)
 
 	return
 }
@@ -469,7 +469,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	return
 }
 
-func (c hassDiscoveryRead) TransformAndValidate(mqttClients []*MqttClientConfig) (ret HassDiscovery, err []error) {
+func (c hassDiscoveryRead) TransformAndValidate(idx int, mqttClients []*MqttClientConfig, devices []*DeviceConfig) (ret HassDiscovery, err []error) {
 	ret = HassDiscovery{
 		devices:    c.Devices,
 		categories: c.Categories,
@@ -487,13 +487,16 @@ func (c hassDiscoveryRead) TransformAndValidate(mqttClients []*MqttClientConfig)
 	ret.viaMqttClients, e = allOrCheckedMqttClients(
 		c.ViaMqttClients, mqttClients,
 		func(clientName string) error {
-			return fmt.Errorf("HassDisovery->MqttClients: client='%s' is not defined", clientName)
+			return fmt.Errorf("HassDisovery->%d->MqttClients: client='%s' is not defined", idx, clientName)
 		},
 	)
 	err = append(err, e...)
 
-	ret.devicesMatcher, e = stringToRegexp(c.Devices)
-	err = append(err, e...)
+	for _, deviceName := range ret.devices {
+		if !existsByName(deviceName, devices) {
+			err = append(err, fmt.Errorf("HassDiscovery->%d->Devices: device='%s' is not defined", idx, deviceName))
+		}
+	}
 
 	ret.categoriesMatcher, e = stringToRegexp(c.Categories)
 	err = append(err, e...)
@@ -882,11 +885,11 @@ func TransformAndValidateMap[I any, O any](
 
 func TransformAndValidateList[I any, O any](
 	inp []I,
-	transformer func(inp I) (ret O, err []error),
+	transformer func(idx int, inp I) (ret O, err []error),
 ) (ret []*O, err []error) {
 	ret = make([]*O, 0, len(inp))
-	for _, cr := range inp {
-		r, e := transformer(cr)
+	for idx, cr := range inp {
+		r, e := transformer(idx, cr)
 
 		ret = append(ret, &r)
 		err = append(err, e...)

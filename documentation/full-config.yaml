@@ -49,19 +49,6 @@ MqttClients:                                               # optional, when empt
     LogDebug: false                                        # optional, default false, very verbose debug log of the mqtt connection
     LogMessages: false                                     # optional, default false, log all incoming mqtt messages
 
-HassDiscovery:                                             # optional, default, empty, defines which registers should be advertised via the homeassistant discovery mechanism
-                                                           # You can have multiple sections to advertise on different topics, on different MqttServers of matching different registers
-                                                           # each register is only advertised once per server / topic even if multiple entries match
-  - TopicPrefix:                                           # optional, default 'homeassistant', the mqtt topic used for the discovery messages
-    ViaMattClients:                                        # optional, default all clients, on what mqtt servers shall the registers by advertised
-    Devices:                                               # optional, default all, a list of regular expressions against which devices names are matched (eg. "device1" or user ".*" for all devices)
-      - bmv1                                               # use device identifiers of the VictronDevices, ModbusDevices etc. sections
-    Categories:                                            # optional, default all, a list of regular expressions against which devices names are matched (eg. "device1" or user ".*" for all devices)
-      - .*                                                 # match all categories; see the category field in /api/v2/views/dev/devices/DEVICE-NAME/registers
-    Registers:                                             # optional, default all, a list of regular expressions against which register names are matched
-      - Voltage$                                           # matches all registers with a name ending in Voltage, eg. MainVoltage, AuxVoltage
-      - ˆBattery                                           # matches all registers with a name begining with Battery, eg. BatteryTemperature
-
 VictronDevices:                                            # optional, a list of Victron Energy devices to connect to
   bmv0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     General:                                               # optional, this section is exactly the same for all devices
@@ -149,3 +136,16 @@ Views:                                                     # optional, a list of
     AllowedUsers:                                          # optional, if empty, all users of the HtaccessFile are considered valid, otherwise only those listed here
       - test0                                              # username which is allowed to access this view
     Hidden: false                                          # optional, default false, if true, this view is not shown in the menu unless the user is logged in
+
+HassDiscovery:                                             # optional, default, empty, defines which registers should be advertised via the homeassistant discovery mechanism
+  # You can have multiple sections to advertise on different topics, on different MqttServers of matching different registers
+  # each register is only advertised once per server / topic even if multiple entries match
+  - TopicPrefix:                                           # optional, default 'homeassistant', the mqtt topic used for the discovery messages
+    ViaMattClients:                                        # optional, default all clients, on what mqtt servers shall the registers by advertised
+    Devices:                                               # optional, default all, a list of regular expressions against which devices names are matched (eg. "device1" or user ".*" for all devices)
+      - bmv1                                               # use device identifiers of the VictronDevices, ModbusDevices etc. sections
+    Categories:                                            # optional, default all, a list of regular expressions against which devices names are matched (eg. "device1" or user ".*" for all devices)
+      - .*                                                 # match all categories; see the category field in /api/v2/views/dev/devices/DEVICE-NAME/registers
+    Registers:                                             # optional, default all, a list of regular expressions against which register names are matched
+      - Voltage$                                           # matches all registers with a name ending in Voltage, eg. MainVoltage, AuxVoltage
+      - ˆBattery                                           # matches all registers with a name begining with Battery, eg. BatteryTemperature

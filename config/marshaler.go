@@ -15,13 +15,13 @@ func (c Config) MarshalYAML() (interface{}, error) {
 		HttpServer:      ConvertEnableableToRead[HttpServerConfig, httpServerConfigRead](c.httpServer),
 		Authentication:  ConvertEnableableToRead[AuthenticationConfig, authenticationConfigRead](c.authentication),
 		MqttClients:     ConvertMapToRead[MqttClientConfig, mqttClientConfigRead](c.mqttClients),
-		HassDiscovery:   ConvertListToRead[HassDiscovery, hassDiscoveryRead](c.hassDiscovery),
 		Modbus:          ConvertMapToRead[ModbusConfig, modbusConfigRead](c.modbus),
 		VictronDevices:  ConvertMapToRead[VictronDeviceConfig, victronDeviceConfigRead](c.victronDevices),
 		ModbusDevices:   ConvertMapToRead[ModbusDeviceConfig, modbusDeviceConfigRead](c.modbusDevices),
 		HttpDevices:     ConvertMapToRead[HttpDeviceConfig, httpDeviceConfigRead](c.httpDevices),
 		MqttDevices:     ConvertMapToRead[MqttDeviceConfig, mqttDeviceConfigRead](c.mqttDevices),
 		Views:           ConvertListToRead[ViewConfig, viewConfigRead](c.views),
+		HassDiscovery:   ConvertListToRead[HassDiscovery, hassDiscoveryRead](c.hassDiscovery),
 	}, nil
 }
 
@@ -116,16 +116,6 @@ func (c MqttClientConfig) ConvertToRead() mqttClientConfigRead {
 	}
 }
 
-func (c HassDiscovery) ConvertToRead() hassDiscoveryRead {
-	return hassDiscoveryRead{
-		TopicPrefix:    &c.topicPrefix,
-		ViaMqttClients: c.viaMqttClients,
-		Devices:        c.devices,
-		Categories:     c.categories,
-		Registers:      c.registers,
-	}
-}
-
 func (c ModbusConfig) ConvertToRead() modbusConfigRead {
 	return modbusConfigRead{
 		Device:      c.device,
@@ -217,5 +207,15 @@ func (c ViewConfig) ConvertToRead() viewConfigRead {
 		Autoplay:     &c.autoplay,
 		AllowedUsers: maps.Keys(c.allowedUsers),
 		Hidden:       &c.hidden,
+	}
+}
+
+func (c HassDiscovery) ConvertToRead() hassDiscoveryRead {
+	return hassDiscoveryRead{
+		TopicPrefix:    &c.topicPrefix,
+		ViaMqttClients: c.viaMqttClients,
+		Devices:        c.devices,
+		Categories:     c.categories,
+		Registers:      c.registers,
 	}
 }

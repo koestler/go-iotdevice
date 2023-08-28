@@ -14,7 +14,7 @@ import (
 type ConfigItem interface {
 	TopicPrefix() string
 	ViaMqttClients() []string
-	DevicesMatcher() []*regexp.Regexp
+	Devices() []string
 	CategoriesMatcher() []*regexp.Regexp
 	RegistersMatcher() []*regexp.Regexp
 }

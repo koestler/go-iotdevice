@@ -19,7 +19,6 @@ type Config struct {
 	httpServer      HttpServerConfig       // optional: default Disabled
 	authentication  AuthenticationConfig   // optional: default Disabled
 	mqttClients     []*MqttClientConfig    // mandatory: at least 1 must be defined
-	hassDiscovery   []*HassDiscovery       // optional: default Disabled
 	modbus          []*ModbusConfig        // optional: default empty
 	devices         []*DeviceConfig        // aggregated over all types
 	victronDevices  []*VictronDeviceConfig // optional: default empty
@@ -27,6 +26,7 @@ type Config struct {
 	httpDevices     []*HttpDeviceConfig    // optional: default empty
 	mqttDevices     []*MqttDeviceConfig    // optional: default empty
 	views           []*ViewConfig          // optional: default empty
+	hassDiscovery   []*HassDiscovery       // optional: default empty
 }
 
 type HttpServerConfig struct {
@@ -69,17 +69,6 @@ type MqttClientConfig struct {
 	topicPrefix       string        // optional: default empty
 	logDebug          bool          // optional: default False
 	logMessages       bool          // optional: default False
-}
-
-type HassDiscovery struct {
-	topicPrefix       string   // optional: default "homeassistant"
-	viaMqttClients    []string // optional: default empty
-	devices           []string
-	devicesMatcher    []*regexp.Regexp
-	categories        []string
-	categoriesMatcher []*regexp.Regexp
-	registers         []string
-	registersMatcher  []*regexp.Regexp
 }
 
 type ModbusConfig struct {
@@ -152,6 +141,16 @@ type ViewConfig struct {
 	autoplay     bool                // optional: default false
 	allowedUsers map[string]struct{} // optional: if empty: view is public; otherwise only allowed to listed users
 	hidden       bool                // optional: if true, view is not shown in menu unless logged in
+}
+
+type HassDiscovery struct {
+	topicPrefix       string   // optional: default "homeassistant"
+	viaMqttClients    []string // optional: default empty
+	devices           []string
+	categories        []string
+	categoriesMatcher []*regexp.Regexp
+	registers         []string
+	registersMatcher  []*regexp.Regexp
 }
 
 type VictronDeviceKind int
