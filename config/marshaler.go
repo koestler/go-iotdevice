@@ -12,21 +12,21 @@ func (c Config) MarshalYAML() (interface{}, error) {
 		LogConfig:       &c.logConfig,
 		LogWorkerStart:  &c.logWorkerStart,
 		LogStorageDebug: &c.logStorageDebug,
-		HttpServer:      ConvertEnableableToRead[HttpServerConfig, httpServerConfigRead](c.httpServer),
-		Authentication:  ConvertEnableableToRead[AuthenticationConfig, authenticationConfigRead](c.authentication),
-		MqttClients:     ConvertMapToRead[MqttClientConfig, mqttClientConfigRead](c.mqttClients),
-		Modbus:          ConvertMapToRead[ModbusConfig, modbusConfigRead](c.modbus),
-		VictronDevices:  ConvertMapToRead[VictronDeviceConfig, victronDeviceConfigRead](c.victronDevices),
-		ModbusDevices:   ConvertMapToRead[ModbusDeviceConfig, modbusDeviceConfigRead](c.modbusDevices),
-		HttpDevices:     ConvertMapToRead[HttpDeviceConfig, httpDeviceConfigRead](c.httpDevices),
-		MqttDevices:     ConvertMapToRead[MqttDeviceConfig, mqttDeviceConfigRead](c.mqttDevices),
-		Views:           ConvertListToRead[ViewConfig, viewConfigRead](c.views),
-		HassDiscovery:   ConvertListToRead[HassDiscovery, hassDiscoveryRead](c.hassDiscovery),
+		HttpServer:      convertEnableableToRead[HttpServerConfig, httpServerConfigRead](c.httpServer),
+		Authentication:  convertEnableableToRead[AuthenticationConfig, authenticationConfigRead](c.authentication),
+		MqttClients:     convertMapToRead[MqttClientConfig, mqttClientConfigRead](c.mqttClients),
+		Modbus:          convertMapToRead[ModbusConfig, modbusConfigRead](c.modbus),
+		VictronDevices:  convertMapToRead[VictronDeviceConfig, victronDeviceConfigRead](c.victronDevices),
+		ModbusDevices:   convertMapToRead[ModbusDeviceConfig, modbusDeviceConfigRead](c.modbusDevices),
+		HttpDevices:     convertMapToRead[HttpDeviceConfig, httpDeviceConfigRead](c.httpDevices),
+		MqttDevices:     convertMapToRead[MqttDeviceConfig, mqttDeviceConfigRead](c.mqttDevices),
+		Views:           convertListToRead[ViewConfig, viewConfigRead](c.views),
+		HassDiscovery:   convertListToRead[HassDiscovery, hassDiscoveryRead](c.hassDiscovery),
 	}, nil
 }
 
 type convertable[O any] interface {
-	ConvertToRead() O
+	convertToRead() O
 }
 
 type enableable[O any] interface {
@@ -34,11 +34,11 @@ type enableable[O any] interface {
 	convertable[O]
 }
 
-func ConvertEnableableToRead[I enableable[O], O any](inp I) *O {
+func convertEnableableToRead[I enableable[O], O any](inp I) *O {
 	if !inp.Enabled() {
 		return nil
 	}
-	r := inp.ConvertToRead()
+	r := inp.convertToRead()
 	return &r
 }
 
@@ -47,25 +47,25 @@ type mappable[O any] interface {
 	convertable[O]
 }
 
-func ConvertMapToRead[I mappable[O], O any](inp []*I) (oup map[string]O) {
+func convertMapToRead[I mappable[O], O any](inp []*I) (oup map[string]O) {
 	oup = make(map[string]O, len(inp))
 	for _, c := range inp {
-		oup[(*c).Name()] = (*c).ConvertToRead()
+		oup[(*c).Name()] = (*c).convertToRead()
 	}
 	return
 }
 
-func ConvertListToRead[I convertable[O], O any](inp []*I) (oup []O) {
+func convertListToRead[I convertable[O], O any](inp []*I) (oup []O) {
 	oup = make([]O, len(inp))
 	i := 0
 	for _, c := range inp {
-		oup[i] = (*c).ConvertToRead()
+		oup[i] = (*c).convertToRead()
 		i++
 	}
 	return
 }
 
-func (c HttpServerConfig) ConvertToRead() httpServerConfigRead {
+func (c HttpServerConfig) convertToRead() httpServerConfigRead {
 	frontendProxy := ""
 	if c.frontendProxy != nil {
 		frontendProxy = c.frontendProxy.String()
@@ -83,7 +83,7 @@ func (c HttpServerConfig) ConvertToRead() httpServerConfigRead {
 	}
 }
 
-func (c AuthenticationConfig) ConvertToRead() authenticationConfigRead {
+func (c AuthenticationConfig) convertToRead() authenticationConfigRead {
 	jwtSecret := string(c.jwtSecret)
 	return authenticationConfigRead{
 		JwtSecret:         &jwtSecret,
@@ -92,7 +92,7 @@ func (c AuthenticationConfig) ConvertToRead() authenticationConfigRead {
 	}
 }
 
-func (c MqttClientConfig) ConvertToRead() mqttClientConfigRead {
+func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 	return mqttClientConfigRead{
 		Broker:            c.broker.String(),
 		ProtocolVersion:   &c.protocolVersion,
@@ -116,7 +116,7 @@ func (c MqttClientConfig) ConvertToRead() mqttClientConfigRead {
 	}
 }
 
-func (c ModbusConfig) ConvertToRead() modbusConfigRead {
+func (c ModbusConfig) convertToRead() modbusConfigRead {
 	return modbusConfigRead{
 		Device:      c.device,
 		BaudRate:    c.baudRate,
@@ -125,7 +125,7 @@ func (c ModbusConfig) ConvertToRead() modbusConfigRead {
 	}
 }
 
-func (c DeviceConfig) ConvertToRead() deviceConfigRead {
+func (c DeviceConfig) convertToRead() deviceConfigRead {
 	return deviceConfigRead{
 		SkipFields:                c.skipFields,
 		SkipCategories:            c.skipCategories,
@@ -138,24 +138,24 @@ func (c DeviceConfig) ConvertToRead() deviceConfigRead {
 	}
 }
 
-func (c VictronDeviceConfig) ConvertToRead() victronDeviceConfigRead {
+func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 	return victronDeviceConfigRead{
-		General: c.DeviceConfig.ConvertToRead(),
+		General: c.DeviceConfig.convertToRead(),
 		Device:  c.device,
 		Kind:    c.kind.String(),
 	}
 }
 
-func (c ModbusDeviceConfig) ConvertToRead() modbusDeviceConfigRead {
+func (c ModbusDeviceConfig) convertToRead() modbusDeviceConfigRead {
 	return modbusDeviceConfigRead{
-		General: c.DeviceConfig.ConvertToRead(),
+		General: c.DeviceConfig.convertToRead(),
 		Bus:     c.bus,
 		Kind:    c.kind.String(),
 		Address: fmt.Sprintf("0x%02x", c.address),
 		Relays: func(inp map[string]RelayConfig) (oup map[string]relayConfigRead) {
 			oup = make(map[string]relayConfigRead, len(inp))
 			for k, v := range inp {
-				oup[k] = v.ConvertToRead()
+				oup[k] = v.convertToRead()
 			}
 			return oup
 		}(c.relays),
@@ -163,7 +163,7 @@ func (c ModbusDeviceConfig) ConvertToRead() modbusDeviceConfigRead {
 	}
 }
 
-func (c RelayConfig) ConvertToRead() relayConfigRead {
+func (c RelayConfig) convertToRead() relayConfigRead {
 	return relayConfigRead{
 		Description: &c.description,
 		OpenLabel:   &c.openLabel,
@@ -171,9 +171,9 @@ func (c RelayConfig) ConvertToRead() relayConfigRead {
 	}
 }
 
-func (c HttpDeviceConfig) ConvertToRead() httpDeviceConfigRead {
+func (c HttpDeviceConfig) convertToRead() httpDeviceConfigRead {
 	return httpDeviceConfigRead{
-		General:      c.DeviceConfig.ConvertToRead(),
+		General:      c.DeviceConfig.convertToRead(),
 		Url:          c.url.String(),
 		Kind:         c.kind.String(),
 		Username:     c.username,
@@ -182,26 +182,26 @@ func (c HttpDeviceConfig) ConvertToRead() httpDeviceConfigRead {
 	}
 }
 
-func (c MqttDeviceConfig) ConvertToRead() mqttDeviceConfigRead {
+func (c MqttDeviceConfig) convertToRead() mqttDeviceConfigRead {
 	return mqttDeviceConfigRead{
-		General:     c.DeviceConfig.ConvertToRead(),
+		General:     c.DeviceConfig.convertToRead(),
 		MqttTopics:  c.mqttTopics,
 		MqttClients: c.mqttClients,
 	}
 }
 
-func (c ViewConfig) ConvertToRead() viewConfigRead {
+func (c ViewConfig) convertToRead() viewConfigRead {
 	return viewConfigRead{
 		Name:         c.name,
 		Title:        c.title,
-		Devices:      ConvertListToRead[ViewDeviceConfig, viewDeviceConfigRead](c.devices),
+		Devices:      convertListToRead[ViewDeviceConfig, viewDeviceConfigRead](c.devices),
 		Autoplay:     &c.autoplay,
 		AllowedUsers: maps.Keys(c.allowedUsers),
 		Hidden:       &c.hidden,
 	}
 }
 
-func (c ViewDeviceConfig) ConvertToRead() viewDeviceConfigRead {
+func (c ViewDeviceConfig) convertToRead() viewDeviceConfigRead {
 	return viewDeviceConfigRead{
 		Name:           c.name,
 		Title:          c.title,
@@ -210,7 +210,7 @@ func (c ViewDeviceConfig) ConvertToRead() viewDeviceConfigRead {
 	}
 }
 
-func (c HassDiscovery) ConvertToRead() hassDiscoveryRead {
+func (c HassDiscovery) convertToRead() hassDiscoveryRead {
 	return hassDiscoveryRead{
 		TopicPrefix:    &c.topicPrefix,
 		ViaMqttClients: c.viaMqttClients,
