@@ -15,7 +15,7 @@ type jwtClaims struct {
 }
 
 func createJwtToken(config config.AuthenticationConfig, user string) (tokenStr string, err error) {
-	claims := &jwtClaims{
+	claims := jwtClaims{
 		User: user,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(config.JwtValidityPeriod()).Unix(),
@@ -48,7 +48,7 @@ func authJwtMiddleware(env *Environment) gin.HandlerFunc {
 
 func checkToken(tokenStr string, jwtSecret []byte) (user string, err error) {
 	// decode jwt token
-	claims := &jwtClaims{}
+	claims := jwtClaims{}
 	tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
