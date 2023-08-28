@@ -144,12 +144,11 @@ MqttDevices:                                               # optional, a list of
       RestartInterval: 200ms                               # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff: 1m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
-      LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
+      LogComDebug: true                                    # optional, default false, enable a verbose log of the communication with the device
     MqttTopics:                                            # mandatory, at least 1 topic must be defined
       - stat/go-iotdevice/bmv1/+                           # what topic to subscribe to; must match RealtimeTopic of the sending device; %ValueName% must be replaced by +
-      - stat/go-iotdevice/soloar0/+
     MqttClients:                                           # optional, default all clients, on which mqtt server(s) we subscribe
-      - 0-local                                            # identifier as defined in the MqttClients section
+      - 1-remote                                           # identifier as defined in the MqttClients section
 
 Views:                                                     # optional, a list of views (=categories in the frontend / paths in the api URLs)
   - Name: victron                                          # mandatory, a technical name used in the URLs
@@ -610,6 +609,59 @@ func TestReadConfig_Complete(t *testing.T) {
 		if expected, got := 5*time.Second, hd.PollInterval(); expected != got {
 			t.Errorf("expect HttpDevices->tcw241->PollInterval to be %s but got %s", expected, got)
 		}
+	}
+
+	if len(config.MqttDevices()) != 1 {
+		t.Error("expect length of config.MqttDevices to be 1")
+	}
+
+	{
+		vd := config.MqttDevices()[0]
+
+		if expected, got := "bmv1", vd.Name(); expected != got {
+			t.Errorf("expect Name of first MqttDevice to be '%s' but got %s'", expected, got)
+		}
+
+		if expected, got := []string{}, vd.SkipFields(); !reflect.DeepEqual(expected, got) {
+			t.Errorf("expect MqttDevices->bmv1->General->SkipFields to be %v but got %v", expected, got)
+		}
+
+		if expected, got := []string{}, vd.SkipCategories(); !reflect.DeepEqual(expected, got) {
+			t.Errorf("expect MqttDevices->bmv1->General->SkipCategories to be %v but got %v", expected, got)
+		}
+
+		if expected, got := []string{"0-local"}, vd.TelemetryViaMqttClients(); !reflect.DeepEqual(expected, got) {
+			t.Errorf("expect MqttDevices->bmv1->General->TelemetryViaMqttClients to be %v but got %v", expected, got)
+		}
+
+		if expected, got := []string{"0-local"}, vd.RealtimeViaMqttClients(); !reflect.DeepEqual(expected, got) {
+			t.Errorf("expect MqttDevices->bmv1->General->RealtimeViaMqttClients to be %v but got %v", expected, got)
+		}
+
+		if expected, got := 200*time.Millisecond, vd.RestartInterval(); expected != got {
+			t.Errorf("expect MqttDevices->bmv1->General->RestartInterval to be %s but got %s", expected, got)
+		}
+
+		if expected, got := time.Minute, vd.RestartIntervalMaxBackoff(); expected != got {
+			t.Errorf("expect MqttDevices->bmv1->General->RestartIntervalMaxBackoff to be %s but got %s", expected, got)
+		}
+
+		if vd.LogDebug() {
+			t.Error("expect MqttDevices->bmv1->General->LogDebug to be false")
+		}
+
+		if !vd.LogComDebug() {
+			t.Error("expect MqttDevices->bmv1->General->LogComDebug to be true")
+		}
+
+		if expected, got := []string{"stat/go-iotdevice/bmv1/+"}, vd.MqttTopics(); !reflect.DeepEqual(expected, got) {
+			t.Errorf("expect MqttDevices->bmv1->MqttTopics to be %v but got %v", expected, got)
+		}
+
+		if expected, got := []string{"1-remote"}, vd.MqttClients(); !reflect.DeepEqual(expected, got) {
+			t.Errorf("expect MqttDevices->bmv1->MqttClients to be %v but got %v", expected, got)
+		}
+
 	}
 
 	if len(config.HassDiscovery()) != 1 {
