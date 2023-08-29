@@ -23,6 +23,8 @@ func RunMqttForwarders(
 
 	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
 	for _, mc := range mqttClientPool.GetByNames(d.Config().RealtimeViaMqttClients()) {
+		mc := mc
+
 		if !mc.Config().RealtimeEnable() {
 			continue
 		}
@@ -74,6 +76,8 @@ func RunMqttForwarders(
 
 	// start mqtt forwarders for telemetry messages
 	for _, mc := range mqttClientPool.GetByNames(d.Config().TelemetryViaMqttClients()) {
+		mc := mc
+
 		if telemetryInterval := mc.Config().TelemetryInterval(); telemetryInterval > 0 {
 			go func() {
 				ticker := time.NewTicker(telemetryInterval)
