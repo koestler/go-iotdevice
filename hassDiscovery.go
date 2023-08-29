@@ -2,16 +2,17 @@ package main
 
 import (
 	"github.com/koestler/go-iotdevice/config"
-	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/hassDiscovery"
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/pool"
+	"github.com/koestler/go-iotdevice/restarter"
 	"log"
 )
 
 func runHassDisovery(
 	cfg *config.Config,
-	stateStorage *dataflow.ValueStorage,
+	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
 	mqttClientPool *pool.Pool[mqttClient.Client],
 ) *hassDiscovery.HassDiscovery {
 	hdConfig := cfg.HassDiscovery()
@@ -26,7 +27,7 @@ func runHassDisovery(
 
 	hd := hassDiscovery.Create(
 		hdConfig,
-		stateStorage,
+		devicePool,
 		mqttClientPool,
 	)
 	hd.Run()
