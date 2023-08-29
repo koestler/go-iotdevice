@@ -40,6 +40,7 @@ MqttClients:                                               # optional, when empt
     RealtimeTopic: '%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%' # optional, what topic to use for realtime messages
     RealtimeRetain: true                                   # optional, default true, the mqtt retain flag for realtime messages
     TopicPrefix:                                           # optional, default empty, %Prefix% is replaced with this string
+    MaxBacklogSize: 256                                    # optional, default 256, max number of mqtt messages to store when connection is offline
     LogDebug: false                                        # optional, default false, very verbose debug log of the mqtt connection
     LogMessages: false                                     # optional, default false, log all incoming mqtt messages
 

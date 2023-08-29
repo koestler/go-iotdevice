@@ -59,6 +59,7 @@ MqttClients:                                               # optional, when empt
     RealtimeTopic: '%Prefix%stat/%DeviceName%/%ValueName%' # optional, what topic to use for realtime messages
     RealtimeRetain: false                                  # optional, default true, the mqtt retain flag for realtime messages
     TopicPrefix: my-prefix                                 # optional, default empty, %Prefix% is replaced with this string
+    MaxBacklogSize: 42                                     # optional, default 256, max number of mqtt messages to store when connection is offline
     LogDebug: true                                         # optional, default false, very verbose debug log of the mqtt connection
     LogMessages: true                                      # optional, default false, log all incoming mqtt messages
   1-remote:
@@ -440,6 +441,10 @@ func TestReadConfig_Complete(t *testing.T) {
 
 			if expect, got := "my-prefix", mc.TopicPrefix(); expect != got {
 				t.Errorf("expect MqttClients->local->TopicPrefix to be '%s' but got '%s'", expect, got)
+			}
+
+			if expect, got := 42, mc.MaxBacklogSize(); expect != got {
+				t.Errorf("expect MqttClients->local->MaxBacklogSize to be %d but got %d", expect, got)
 			}
 
 			if !mc.LogDebug() {
@@ -997,6 +1002,10 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if expect, got := "", mc.TopicPrefix(); expect != got {
 			t.Errorf("expect MqttClients->local->TopicPrefix to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := 256, mc.MaxBacklogSize(); expect != got {
+			t.Errorf("expect MqttClients->local->MaxBacklogSize to be %d but got %d", expect, got)
 		}
 
 		if mc.LogDebug() {

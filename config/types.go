@@ -67,6 +67,7 @@ type MqttClientConfig struct {
 	realtimeTopic     string
 	realtimeRetain    bool
 	topicPrefix       string
+	maxBacklogSize    int
 	logDebug          bool
 	logMessages       bool
 }

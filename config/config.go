@@ -462,6 +462,12 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.realtimeRetain = *c.RealtimeRetain
 	}
 
+	if c.MaxBacklogSize == nil {
+		ret.maxBacklogSize = 256
+	} else {
+		ret.maxBacklogSize = *c.MaxBacklogSize
+	}
+
 	if c.LogDebug != nil && *c.LogDebug {
 		ret.logDebug = true
 	}

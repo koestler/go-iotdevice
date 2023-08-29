@@ -53,6 +53,7 @@ type mqttClientConfigRead struct {
 	RealtimeTopic     *string `yaml:"RealtimeTopic"`
 	RealtimeRetain    *bool   `yaml:"RealtimeRetain"`
 	TopicPrefix       string  `yaml:"TopicPrefix"`
+	MaxBacklogSize    *int    `yaml:"MaxBacklogSize"`
 	LogDebug          *bool   `yaml:"LogDebug"`
 	LogMessages       *bool   `yaml:"LogMessages"`
 }

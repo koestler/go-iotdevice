@@ -114,6 +114,7 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 		RealtimeTopic:     &c.realtimeTopic,
 		RealtimeRetain:    &c.realtimeRetain,
 		TopicPrefix:       c.topicPrefix,
+		MaxBacklogSize:    &c.maxBacklogSize,
 		LogDebug:          &c.logDebug,
 		LogMessages:       &c.logMessages,
 	}

@@ -211,6 +211,10 @@ func (c MqttClientConfig) TopicPrefix() string {
 	return c.topicPrefix
 }
 
+func (c MqttClientConfig) MaxBacklogSize() int {
+	return c.maxBacklogSize
+}
+
 func (c MqttClientConfig) LogDebug() bool {
 	return c.logDebug
 }

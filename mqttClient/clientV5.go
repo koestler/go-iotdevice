@@ -20,7 +20,7 @@ func NewV5(
 		shutdown: make(chan struct{}),
 
 		router:         paho.NewStandardRouter(),
-		publishBacklog: queue.NewFifo[*paho.Publish](64),
+		publishBacklog: queue.NewFifo[*paho.Publish](cfg.MaxBacklogSize()),
 
 		ctx:    ctx,
 		cancel: cancel,

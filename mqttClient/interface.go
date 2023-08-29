@@ -23,6 +23,7 @@ type Config interface {
 	RealtimeTopic() string
 	RealtimeRetain() bool
 	TopicPrefix() string
+	MaxBacklogSize() int
 	LogDebug() bool
 	LogMessages() bool
 }
