@@ -22,30 +22,16 @@ type VictronRegisterStruct struct {
 	offset float64
 }
 
-// TODO: this is an implementation of append, isn't it? remove?
 func MergeRegisters(maps ...[]VictronRegister) (output []VictronRegister) {
-	size := len(maps)
-	if size == 0 {
-		return output
+	if len(maps) == 0 {
+		return
 	}
-	if size == 1 {
-		return maps[0]
-	}
-
-	numb := 0
-	for _, m := range maps {
-		numb += len(m)
+	output = maps[0]
+	for i := 1; i < len(maps); i++ {
+		output = append(output, maps[i]...)
 	}
 
-	output = make([]VictronRegister, numb)
-	i := 0
-	for _, m := range maps {
-		for _, v := range m {
-			output[i] = v
-			i += 1
-		}
-	}
-	return output
+	return
 }
 
 func FilterRegisters(input []VictronRegister, excludeFields []string, excludeCategories []string) (output []VictronRegister) {
