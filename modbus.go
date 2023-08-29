@@ -9,9 +9,9 @@ import (
 
 func runModbus(
 	cfg *config.Config,
-) (modbusPoolInstance *pool.Pool[*modbus.ModbusStruct]) {
+) (modbusPool *pool.Pool[*modbus.ModbusStruct]) {
 	// run pool
-	modbusPoolInstance = pool.RunPool[*modbus.ModbusStruct]()
+	modbusPool = pool.RunPool[*modbus.ModbusStruct]()
 
 	for _, mbCfg := range cfg.Modbus() {
 		if cfg.LogWorkerStart() {
@@ -23,7 +23,7 @@ func runModbus(
 		if mb, err := modbus.New(mbCfg); err != nil {
 			log.Printf("modbus[%s]: start failed: %s", mbCfg.Name(), err)
 		} else {
-			modbusPoolInstance.Add(mb)
+			modbusPool.Add(mb)
 		}
 	}
 

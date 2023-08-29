@@ -9,9 +9,9 @@ import (
 
 func runMqttClient(
 	cfg *config.Config,
-) (mqttClientPoolInstance *pool.Pool[mqttClient.Client]) {
+) (mqttClientPool *pool.Pool[mqttClient.Client]) {
 	// run pool
-	mqttClientPoolInstance = pool.RunPool[mqttClient.Client]()
+	mqttClientPool = pool.RunPool[mqttClient.Client]()
 
 	for _, mqttClientConfig := range cfg.MqttClients() {
 		if cfg.LogWorkerStart() {
@@ -23,7 +23,7 @@ func runMqttClient(
 
 		client := mqttClient.NewV5(mqttClientConfig)
 		client.Run()
-		mqttClientPoolInstance.Add(client)
+		mqttClientPool.Add(client)
 	}
 
 	return

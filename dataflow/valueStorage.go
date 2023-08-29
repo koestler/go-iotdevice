@@ -25,10 +25,10 @@ type ValueStorage struct {
 	subscriptionsMutex sync.RWMutex
 }
 
-func NewValueStorage() (valueStorageInstance *ValueStorage) {
+func NewValueStorage() (valueStorage *ValueStorage) {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	valueStorageInstance = &ValueStorage{
+	valueStorage = &ValueStorage{
 		ctx:           ctx,
 		ctxCancel:     cancel,
 		state:         make(map[StateKey]Value, 64),
@@ -37,7 +37,7 @@ func NewValueStorage() (valueStorageInstance *ValueStorage) {
 	}
 
 	// start main go routine
-	go valueStorageInstance.mainStorageRoutine()
+	go valueStorage.mainStorageRoutine()
 
 	return
 }

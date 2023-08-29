@@ -6,12 +6,12 @@ import (
 )
 
 func runStorage(logPrefix string) *dataflow.ValueStorage {
-	storageInstance := dataflow.NewValueStorage()
+	valueStorage := dataflow.NewValueStorage()
 
 	if len(logPrefix) > 0 {
-		subscription := storageInstance.Subscribe(context.Background(), dataflow.NullFilter)
+		subscription := valueStorage.Subscribe(context.Background(), dataflow.NullFilter)
 		dataflow.SinkLog(logPrefix, subscription.Drain())
 	}
 
-	return storageInstance
+	return valueStorage
 }

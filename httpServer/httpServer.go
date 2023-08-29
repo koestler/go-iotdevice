@@ -22,13 +22,13 @@ type HttpServer struct {
 }
 
 type Environment struct {
-	Config             Config
-	ProjectTitle       string
-	Views              []config.ViewConfig
-	Authentication     config.AuthenticationConfig
-	DevicePoolInstance *pool.Pool[*restarter.Restarter[device.Device]]
-	StateStorage       *dataflow.ValueStorage
-	CommandStorage     *dataflow.ValueStorage
+	Config         Config
+	ProjectTitle   string
+	Views          []config.ViewConfig
+	Authentication config.AuthenticationConfig
+	DevicePool     *pool.Pool[*restarter.Restarter[device.Device]]
+	StateStorage   *dataflow.ValueStorage
+	CommandStorage *dataflow.ValueStorage
 }
 
 type Config interface {

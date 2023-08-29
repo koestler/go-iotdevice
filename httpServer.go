@@ -12,7 +12,7 @@ import (
 
 func runHttpServer(
 	cfg *config.Config,
-	devicePoolInstance *pool.Pool[*restarter.Restarter[device.Device]],
+	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
 	stateStorage *dataflow.ValueStorage,
 	commandStorage *dataflow.ValueStorage,
 ) *httpServer.HttpServer {
@@ -32,12 +32,12 @@ func runHttpServer(
 				cfg.GetViewNames(),
 				cfg.LogConfig(),
 			},
-			ProjectTitle:       cfg.ProjectTitle(),
-			Views:              cfg.Views(),
-			Authentication:     cfg.Authentication(),
-			DevicePoolInstance: devicePoolInstance,
-			StateStorage:       stateStorage,
-			CommandStorage:     commandStorage,
+			ProjectTitle:   cfg.ProjectTitle(),
+			Views:          cfg.Views(),
+			Authentication: cfg.Authentication(),
+			DevicePool:     devicePool,
+			StateStorage:   stateStorage,
+			CommandStorage: commandStorage,
 		},
 	)
 }

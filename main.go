@@ -98,27 +98,27 @@ func main() {
 		defer commandStorage.Shutdown()
 
 		// start mqtt clients
-		mqttClientPoolInstance := runMqttClient(cfg)
-		defer mqttClientPoolInstance.Shutdown()
+		mqttClientPool := runMqttClient(cfg)
+		defer mqttClientPool.Shutdown()
 
 		// start hass discovery
-		hassDiscoveryInstance := runHassDisovery(cfg, stateStorage, mqttClientPoolInstance)
-		if hassDiscoveryInstance != nil {
-			defer hassDiscoveryInstance.Shutdown()
+		hassDiscovery := runHassDisovery(cfg, stateStorage, mqttClientPool)
+		if hassDiscovery != nil {
+			defer hassDiscovery.Shutdown()
 		}
 
 		// start modbus device handlers
-		modbusPoolInstance := runModbus(cfg)
-		defer modbusPoolInstance.Shutdown()
+		modbusPool := runModbus(cfg)
+		defer modbusPool.Shutdown()
 
 		// start devices
-		devicePoolInstance := runDevices(cfg, mqttClientPoolInstance, modbusPoolInstance, stateStorage, commandStorage)
-		defer devicePoolInstance.Shutdown()
+		devicePool := runDevices(cfg, mqttClientPool, modbusPool, stateStorage, commandStorage)
+		defer devicePool.Shutdown()
 
 		// start http server
-		httpServerInstance := runHttpServer(cfg, devicePoolInstance, stateStorage, commandStorage)
-		if httpServerInstance != nil {
-			defer httpServerInstance.Shutdown()
+		httpServer := runHttpServer(cfg, devicePool, stateStorage, commandStorage)
+		if httpServer != nil {
+			defer httpServer.Shutdown()
 		}
 
 		// setup SIGTERM, SIGINT handlers

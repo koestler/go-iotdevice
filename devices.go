@@ -18,11 +18,11 @@ import (
 func runDevices(
 	cfg *config.Config,
 	mqttClientPool *pool.Pool[mqttClient.Client],
-	modbusPoolInstance *pool.Pool[*modbus.ModbusStruct],
+	modbusPool *pool.Pool[*modbus.ModbusStruct],
 	stateStorage *dataflow.ValueStorage,
 	commandStorage *dataflow.ValueStorage,
-) (devicePoolInstance *pool.Pool[*restarter.Restarter[device.Device]]) {
-	devicePoolInstance = pool.RunPool[*restarter.Restarter[device.Device]]()
+) (devicePool *pool.Pool[*restarter.Restarter[device.Device]]) {
+	devicePool = pool.RunPool[*restarter.Restarter[device.Device]]()
 
 	for _, deviceConfig := range cfg.VictronDevices() {
 		if cfg.LogWorkerStart() {
@@ -33,7 +33,7 @@ func runDevices(
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
 		watchedDev.Run()
-		devicePoolInstance.Add(watchedDev)
+		devicePool.Add(watchedDev)
 	}
 
 	for _, deviceConfig := range cfg.ModbusDevices() {
@@ -41,7 +41,7 @@ func runDevices(
 			log.Printf("device[%s]: start modbus type", deviceConfig.Name())
 		}
 
-		modbusInstance := modbusPoolInstance.GetByName(deviceConfig.Bus())
+		modbusInstance := modbusPool.GetByName(deviceConfig.Bus())
 		if modbusInstance == nil {
 			log.Printf("device[%s]: start failed: bus=%s unavailable", deviceConfig.Name(), deviceConfig.Bus())
 			continue
@@ -51,7 +51,7 @@ func runDevices(
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
 		watchedDev.Run()
-		devicePoolInstance.Add(watchedDev)
+		devicePool.Add(watchedDev)
 	}
 
 	for _, deviceConfig := range cfg.MqttDevices() {
@@ -63,7 +63,7 @@ func runDevices(
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
 		watchedDev.Run()
-		devicePoolInstance.Add(watchedDev)
+		devicePool.Add(watchedDev)
 	}
 
 	for _, deviceConfig := range cfg.HttpDevices() {
@@ -75,7 +75,7 @@ func runDevices(
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
 		watchedDev.Run()
-		devicePoolInstance.Add(watchedDev)
+		devicePool.Add(watchedDev)
 	}
 
 	return

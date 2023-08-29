@@ -29,7 +29,7 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 		for _, vd := range view.Devices() {
 			viewDevice := vd
 
-			device := env.DevicePoolInstance.GetByName(viewDevice.Name())
+			device := env.DevicePool.GetByName(viewDevice.Name())
 			if device == nil {
 				continue
 			}
@@ -71,7 +71,7 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 		for _, dn := range view.DeviceNames() {
 			// the following line uses a loop variable; it must be outside the closure
 			deviceName := dn
-			deviceWatcher := env.DevicePoolInstance.GetByName(deviceName)
+			deviceWatcher := env.DevicePool.GetByName(deviceName)
 			if deviceWatcher == nil {
 				continue
 			}
