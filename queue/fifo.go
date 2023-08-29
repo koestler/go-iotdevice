@@ -16,6 +16,11 @@ func NewFifo[T any](maxLength int) Fifo[T] {
 }
 
 func (q *Fifo[T]) Enqueue(value T) {
+	if q.maxLength < 1 {
+		// when maxLength is zero or lower, store nothing
+		return
+	}
+
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
