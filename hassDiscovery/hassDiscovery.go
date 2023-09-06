@@ -82,6 +82,7 @@ func getDiscoverables[CI ConfigItem](
 						mqttClientName: mqttClientName,
 						topicPrefix:    ci.TopicPrefix(),
 						deviceName:     dev.Name(),
+						registerName:   reg.Name(),
 					}
 					discoverables[k] = reg
 					log.Printf("deviceName=%s, registerName=%s added to mqttClient=%s", dev.Name(), reg.Name(), mqttClientName)
