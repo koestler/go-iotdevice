@@ -11,6 +11,7 @@ import (
 	"log"
 	"regexp"
 	"sync"
+	"time"
 )
 
 type ConfigItem interface {
@@ -68,6 +69,7 @@ func getDiscoverables[CI ConfigItem](
 		for _, devRestarter := range devices {
 			dev := devRestarter.Service()
 			for _, reg := range dev.Registers() {
+				log.Printf("deviceName=%s, registerName=%s", dev.Name(), reg.Name())
 				if !regMatchesConfigItem(reg, ci) {
 					continue
 				}
@@ -82,6 +84,7 @@ func getDiscoverables[CI ConfigItem](
 						deviceName:     dev.Name(),
 					}
 					discoverables[k] = reg
+					log.Printf("deviceName=%s, registerName=%s added to mqttClient=%s", dev.Name(), reg.Name(), mqttClientName)
 				}
 			}
 		}
@@ -120,34 +123,23 @@ func stringContains(needle string, haystack []string) bool {
 func (hd *HassDiscovery) Run() {
 	hd.wg.Add(1)
 
-	log.Printf("HassDiscovery: discoverables: %+v", hd.discoverables)
-
 	go func() {
 		defer hd.wg.Done()
 
-		/*
-			subscription := hd.stateStorage.Subscribe(hd.ctx, dataflow.EmptyFilter)
+		// Give the mqtt clients a short time to connect; this increases the change that we can directly
+		// send the messages and don't have to store them into the backlog just to send them a bit later.
+		time.Sleep(time.Second)
 
-			configItem := hd.configItems[0]
+		for k, reg := range hd.discoverables {
+			hd.publishDiscoveryMessage(
+				k.topicPrefix,
+				hd.mqttClientPool.GetByName(k.mqttClientName),
+				k.deviceName,
+				reg,
+			)
+		}
 
-			log.Printf("hassDiscovery: run main routine")
-
-			for {
-				select {
-				case <-hd.ctx.Done():
-					return
-				case value := <-subscription.Drain():
-					log.Printf("hassDiscovery: value received: %v", value)
-
-					hd.handleRegister(
-						configItem.TopicPrefix(),
-						hd.mqttClientPool.GetByName(configItem.ViaMqttClients()[0]),
-						value.DeviceName(),
-						value.Register(),
-					)
-				}
-			}
-		*/
+		<-hd.ctx.Done()
 	}()
 }
 
@@ -156,7 +148,7 @@ func (hd *HassDiscovery) Shutdown() {
 	hd.wg.Wait()
 }
 
-func (hd *HassDiscovery) handleRegister(
+func (hd *HassDiscovery) publishDiscoveryMessage(
 	discoveryPrefix string,
 	mc mqttClient.Client,
 	deviceName string,
@@ -164,6 +156,8 @@ func (hd *HassDiscovery) handleRegister(
 ) {
 	var topic string
 	var msg discoveryMessage
+
+	log.Printf("publishDiscoveryMessage: discoveryPrefix=%s, mqttClient=%s, deviceName=%s, regName=%s", discoveryPrefix, mc.Name(), deviceName, register.Name())
 
 	switch register.RegisterType() {
 	case dataflow.NumberRegister:
@@ -174,6 +168,7 @@ func (hd *HassDiscovery) handleRegister(
 			register,
 		)
 	default:
+		log.Printf("publishDiscoveryMessage: unhandeled register type: %v", register)
 		return
 	}
 
