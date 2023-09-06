@@ -30,15 +30,19 @@ func RegisterFilter(
 	}
 }
 
-var NullFilter FilterFunc = func(value Value) bool {
+var NoFilter FilterFunc = func(value Value) bool {
+	return true
+}
+
+var NonNullFilter FilterFunc = func(value Value) bool {
 	_, isNullValue := value.(NullRegisterValue)
-	return isNullValue
+	return !isNullValue
 }
 
 func DeviceNonNullFilter(deviceName string) FilterFunc {
 	deviceFilter := DeviceFilter(deviceName)
 	return func(value Value) bool {
-		return NullFilter(value) && deviceFilter(value)
+		return NonNullFilter(value) && deviceFilter(value)
 	}
 }
 
