@@ -44,6 +44,19 @@ func NewRegisterStruct(
 	}
 }
 
+func NewRegisterStructByInterface(reg Register) RegisterStruct {
+	return RegisterStruct{
+		category:     reg.Category(),
+		name:         reg.Name(),
+		description:  reg.Description(),
+		registerType: reg.RegisterType(),
+		enum:         reg.Enum(),
+		unit:         reg.Unit(),
+		sort:         reg.Sort(),
+		controllable: reg.Controllable(),
+	}
+}
+
 func (r RegisterStruct) Category() string {
 	return r.category
 }
