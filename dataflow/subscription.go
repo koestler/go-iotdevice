@@ -4,12 +4,12 @@ import "context"
 
 type FilterFunc func(Value) bool
 
-type Subscription struct {
+type ValueSubscription struct {
 	ctx           context.Context
 	outputChannel chan Value
 	filter        FilterFunc
 }
 
-func (s *Subscription) Drain() <-chan Value {
+func (s *ValueSubscription) Drain() <-chan Value {
 	return s.outputChannel
 }

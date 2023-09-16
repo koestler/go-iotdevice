@@ -21,7 +21,7 @@ type ValueStorage struct {
 	inputChannel   chan Value
 	inputWaitGroup sync.WaitGroup
 
-	subscriptions      *list.List[Subscription]
+	subscriptions      *list.List[ValueSubscription]
 	subscriptionsMutex sync.RWMutex
 }
 
@@ -32,7 +32,7 @@ func NewValueStorage() (valueStorage *ValueStorage) {
 		ctx:           ctx,
 		ctxCancel:     cancel,
 		state:         make(map[StateKey]Value, 64),
-		subscriptions: list.New[Subscription](),
+		subscriptions: list.New[ValueSubscription](),
 		inputChannel:  make(chan Value, 1024),
 	}
 
@@ -135,8 +135,8 @@ func (vs *ValueStorage) Wait() {
 	vs.inputWaitGroup.Wait()
 }
 
-func (vs *ValueStorage) Subscribe(ctx context.Context, filter FilterFunc) Subscription {
-	s := Subscription{
+func (vs *ValueStorage) Subscribe(ctx context.Context, filter FilterFunc) ValueSubscription {
+	s := ValueSubscription{
 		ctx:           ctx,
 		outputChannel: make(chan Value, 128),
 		filter:        filter,
