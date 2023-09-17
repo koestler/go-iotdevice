@@ -67,7 +67,7 @@ func (hd *HassDiscovery) Run() {
 func (hd *HassDiscovery) handleRegisters(deviceName string, configItems []ConfigItem) {
 	devRestarter := hd.devicePool.GetByName(deviceName)
 	if devRestarter == nil {
-		log.Printf("hassDiscovery: device '%s' not found anymore", deviceName)
+		log.Printf("hassDiscovery: device '%s' not found", deviceName)
 		return
 	}
 	dev := devRestarter.Service()
@@ -109,7 +109,7 @@ func (hd *HassDiscovery) handleRegisters(deviceName string, configItems []Config
 
 				mc := hd.mqttClientPool.GetByName(k.mqttClientName)
 				if mc == nil {
-					log.Printf("hassDiscovery: mqttClient '%s' not found anymore", k.mqttClientName)
+					log.Printf("hassDiscovery: mqttClient '%s' not found", k.mqttClientName)
 					continue
 				}
 
@@ -182,8 +182,6 @@ func (hd *HassDiscovery) publishDiscoveryMessage(
 	var topic string
 	var msg discoveryMessage
 
-	log.Printf("publishDiscoveryMessage: discoveryPrefix=%s, mqttClient=%s, deviceName=%s, regName=%s", discoveryPrefix, mc.Name(), deviceName, register.Name())
-
 	switch register.RegisterType() {
 	case dataflow.NumberRegister:
 		topic, msg = getSensorMessage(
@@ -193,11 +191,10 @@ func (hd *HassDiscovery) publishDiscoveryMessage(
 			register,
 		)
 	default:
-		log.Printf("publishDiscoveryMessage: unhandeled register type: %v", register)
 		return
 	}
 
-	log.Printf("hassDiscovery: send %s %#v", topic, msg)
+	log.Printf("hassDiscovery[%s]: send %s %#v", mc.Name(), topic, msg)
 
 	if payload, err := json.Marshal(msg); err != nil {
 		log.Printf("hassDiscovery: cannot generate discovery message: %s", err)
