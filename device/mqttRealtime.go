@@ -10,6 +10,7 @@ type RealtimeMessage struct {
 	Description  string   `json:"Desc"`
 	NumericValue *float64 `json:"NumVal,omitempty"`
 	TextValue    *string  `json:"TextVal,omitempty"`
+	EnumIdx      *int     `json:"EnumIdx,omitempty"`
 	Unit         string   `json:"Unit,omitempty"`
 	Sort         int      `json:"Sort"`
 }
@@ -29,8 +30,8 @@ func convertValueToRealtimeMessage(value dataflow.Value) interface{} {
 		v := text.Value()
 		ret.TextValue = &v
 	} else if enum, ok := value.(dataflow.EnumRegisterValue); ok {
-		v := enum.Value()
-		ret.TextValue = &v
+		v := enum.EnumIdx()
+		ret.EnumIdx = &v
 	}
 
 	return ret

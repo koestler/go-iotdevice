@@ -30,6 +30,7 @@ func getSensorMessage(
 	mCfg mqttClient.Config,
 	deviceName string,
 	register dataflow.Register,
+	valueTemplate string,
 ) (topic string, msg discoveryMessage) {
 	uniqueId := fmt.Sprintf("%s-%s", deviceName, CamelToSnakeCase(register.Name()))
 	name := fmt.Sprintf("%s %s", deviceName, register.Description())
@@ -50,7 +51,7 @@ func getSensorMessage(
 			mCfg.AvailabilityTopic(),
 			mCfg,
 		),
-		ValueTemplate:     "{{ value_json.NumVal }}",
+		ValueTemplate:     valueTemplate,
 		UnitOfMeasurement: register.Unit(),
 	}
 

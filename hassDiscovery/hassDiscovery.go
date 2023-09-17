@@ -3,6 +3,7 @@ package hassDiscovery
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
@@ -10,6 +11,7 @@ import (
 	"github.com/koestler/go-iotdevice/restarter"
 	"log"
 	"regexp"
+	"strings"
 	"sync"
 )
 
@@ -189,6 +191,33 @@ func (hd *HassDiscovery) publishDiscoveryMessage(
 			mc.Config(),
 			deviceName,
 			register,
+			"{{ value_json.NumVal }}",
+		)
+	case dataflow.TextRegister:
+		topic, msg = getSensorMessage(
+			discoveryPrefix,
+			mc.Config(),
+			deviceName,
+			register,
+			"{{ value_json.TextVal }}",
+		)
+	case dataflow.EnumRegister:
+		// generate Jinja2 template to translate enumIdx to string
+		enum := register.Enum()
+		var valueTemplate strings.Builder
+		op := "if"
+		for idx, value := range enum {
+			fmt.Fprintf(&valueTemplate, "{%% %s value_json.EnumIdx == %d %%}%s", op, idx, value)
+			op = "elif"
+		}
+		valueTemplate.WriteString("{% endif %}")
+
+		topic, msg = getSensorMessage(
+			discoveryPrefix,
+			mc.Config(),
+			deviceName,
+			register,
+			valueTemplate.String(),
 		)
 	default:
 		return
