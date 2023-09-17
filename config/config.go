@@ -519,7 +519,7 @@ func (c hassDiscoveryRead) TransformAndValidate(idx int, mqttClients []MqttClien
 	ret.viaMqttClients, e = allOrCheckedMqttClients(
 		c.ViaMqttClients, mqttClients,
 		func(clientName string) error {
-			return fmt.Errorf("HassDisovery->%d->MqttClients: client='%s' is not defined", idx, clientName)
+			return fmt.Errorf("HassDisovery->%d->MqttClients: client='%s' is not defined or read-only", idx, clientName)
 		},
 	)
 	err = append(err, e...)
@@ -582,7 +582,7 @@ func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []MqttCl
 	ret.telemetryViaMqttClients, e = allOrCheckedMqttClients(
 		c.TelemetryViaMqttClients, mqttClients,
 		func(clientName string) error {
-			return fmt.Errorf("Devices->%s->TelemetryViaMqttClients: client='%s' is not defined", name, clientName)
+			return fmt.Errorf("Devices->%s->TelemetryViaMqttClients: client='%s' is not defined or read-only", name, clientName)
 		},
 	)
 	err = append(err, e...)
@@ -590,7 +590,7 @@ func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []MqttCl
 	ret.realtimeViaMqttClients, e = allOrCheckedMqttClients(
 		c.RealtimeViaMqttClients, mqttClients,
 		func(clientName string) error {
-			return fmt.Errorf("Devices->%s->RealtimeViaMqttClients: client='%s' is not defined", name, clientName)
+			return fmt.Errorf("Devices->%s->RealtimeViaMqttClients: client='%s' is not defined or read-only", name, clientName)
 		},
 	)
 	err = append(err, e...)
@@ -783,7 +783,7 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []Mq
 	ret.mqttClients, e = allOrCheckedMqttClients(
 		c.MqttClients, mqttClients,
 		func(clientName string) error {
-			return fmt.Errorf("MqttDevices->%s->mqttClients: client='%s' is not defined", name, clientName)
+			return fmt.Errorf("MqttDevices->%s->mqttClients: client='%s' is not defined or ready-only", name, clientName)
 		},
 	)
 	err = append(err, e...)
@@ -987,8 +987,17 @@ func TransformAndValidateListUnique[I any, O Nameable](
 }
 
 func allOrCheckedMqttClients(inp []string, mqttClients []MqttClientConfig, errorFunc func(clientName string) error) (oup []string, err []error) {
+	// filter read only
+	filteredMqttClients := make([]MqttClientConfig, 0, len(mqttClients))
+	for _, mc := range mqttClients {
+		if mc.ReadOnly() {
+			continue
+		}
+		filteredMqttClients = append(filteredMqttClients, mc)
+	}
+
 	if len(inp) < 1 {
-		return getNames(mqttClients), nil
+		return getNames(filteredMqttClients), nil
 	}
 
 	oup = make([]string, 0, len(inp))
