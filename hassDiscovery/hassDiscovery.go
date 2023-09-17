@@ -56,8 +56,8 @@ func Create[CI ConfigItem](
 
 func (hd *HassDiscovery) Run() {
 	for deviceName, configItems := range hd.getDevices() {
+		hd.wg.Add(1)
 		go func(deviceName string, configItems []ConfigItem) {
-			hd.wg.Add(1)
 			defer hd.wg.Done()
 			hd.handleRegisters(deviceName, configItems)
 		}(deviceName, configItems)
@@ -131,6 +131,8 @@ func (hd *HassDiscovery) Shutdown() {
 
 // getDevices create a map of deviceName -> list of config items for this device
 func (hd *HassDiscovery) getDevices() (ret map[string][]ConfigItem) {
+	ret = make(map[string][]ConfigItem)
+
 	for _, ci := range hd.configItems {
 		for _, deviceName := range ci.Devices() {
 			if _, ok := ret[deviceName]; !ok {
