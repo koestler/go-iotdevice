@@ -93,7 +93,7 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 				// check all inputs
 				inputs := make([]dataflow.Value, 0, len(req))
 				for registerName, value := range req {
-					register := deviceWatcher.Service().GetRegister(registerName)
+					register := deviceWatcher.Service().RegisterDb().GetByName(registerName)
 					if register == nil {
 						jsonErrorResponse(c, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
 						return

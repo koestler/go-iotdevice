@@ -9,7 +9,7 @@ import (
 
 type RegisterSubscription struct {
 	ctx           context.Context
-	outputChannel chan RegisterStruct
+	outputChannel chan Register
 }
 
 type RegisterDb struct {
@@ -48,25 +48,31 @@ func (rdb *RegisterDb) Add(registers ...Register) {
 	}
 }
 
-func (rdb *RegisterDb) GetAll() []RegisterStruct {
+func (rdb *RegisterDb) GetAll() []Register {
 	rdb.lock.RLock()
 	defer rdb.lock.RUnlock()
 
-	return maps.Values(rdb.registers)
+	ret := make([]Register, 0, len(rdb.registers))
+	for _, r := range rdb.registers {
+		ret = append(ret, r)
+	}
+	return ret
 }
 
-func (rdb *RegisterDb) GetByName(registerName string) (reg RegisterStruct, ok bool) {
+func (rdb *RegisterDb) GetByName(registerName string) Register {
 	rdb.lock.RLock()
 	defer rdb.lock.RUnlock()
 
-	reg, ok = rdb.registers[registerName]
-	return
+	if reg, ok := rdb.registers[registerName]; ok {
+		return reg
+	}
+	return nil
 }
 
-func (rdb *RegisterDb) Subscribe(ctx context.Context) RegisterSubscription {
+func (rdb *RegisterDb) Subscribe(ctx context.Context) <-chan Register {
 	s := RegisterSubscription{
 		ctx:           ctx,
-		outputChannel: make(chan RegisterStruct, 16),
+		outputChannel: make(chan Register, 16),
 	}
 
 	rdb.lock.Lock()
@@ -93,5 +99,5 @@ func (rdb *RegisterDb) Subscribe(ctx context.Context) RegisterSubscription {
 		close(s.outputChannel)
 	}(maps.Values(rdb.registers))
 
-	return s
+	return s.outputChannel
 }

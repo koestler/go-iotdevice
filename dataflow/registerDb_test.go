@@ -70,7 +70,7 @@ func TestRegisterDb(t *testing.T) {
 		go func() {
 			defer wgSubscribe.Done()
 			got := make([]string, 0)
-			for o := range s.outputChannel {
+			for o := range s {
 				got = append(got, o.Name())
 			}
 			sort.Strings(got)
@@ -90,21 +90,14 @@ func TestRegisterDb(t *testing.T) {
 	})
 
 	t.Run("GetByName", func(t *testing.T) {
-		{
-			_, okGot := rdb.GetByName("non-existent")
-			if okGot {
-				t.Errorf("expect GetByName to return no result")
-			}
+		if reg := rdb.GetByName("non-existent"); reg != nil {
+			t.Errorf("expect GetByName to return no result")
 		}
-		{
-			regGot, okGot := rdb.GetByName("A0")
-			if !okGot {
-				t.Errorf("expect GetByName to return ok")
-			}
-			if expect, got := "A0", regGot.Name(); expect != got {
-				t.Errorf("expect Register Name to be %s but got %s", expect, got)
-			}
 
+		if got := rdb.GetByName("A0"); got == nil {
+			t.Errorf("expect GetByName to return ok")
+		} else if expect, got := "A0", got.Name(); expect != got {
+			t.Errorf("expect Register Name to be %s but got %s", expect, got)
 		}
 	})
 
@@ -113,7 +106,7 @@ func TestRegisterDb(t *testing.T) {
 	wgSubscribe.Wait()
 }
 
-func nameSlice(list []RegisterStruct) []string {
+func nameSlice(list []Register) []string {
 	ret := make([]string, len(list))
 	for i, r := range list {
 		ret[i] = r.Name()

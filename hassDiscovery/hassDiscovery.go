@@ -11,7 +11,6 @@ import (
 	"log"
 	"regexp"
 	"sync"
-	"time"
 )
 
 type ConfigItem interface {
@@ -22,22 +21,14 @@ type ConfigItem interface {
 	RegistersMatcher() []*regexp.Regexp
 }
 
-// only publish once per mqttClient, topic, device and register name even if multiple configItems match
-type key struct {
-	mqttClientName string
-	topicPrefix    string
-	deviceName     string
-	registerName   string
-}
-
 type HassDiscovery struct {
+	configItems    []ConfigItem
+	devicePool     *pool.Pool[*restarter.Restarter[device.Device]]
 	mqttClientPool *pool.Pool[mqttClient.Client]
 
 	ctx    context.Context
 	cancel context.CancelFunc
 	wg     sync.WaitGroup
-
-	discoverables map[key]dataflow.Register
 }
 
 func Create[CI ConfigItem](
@@ -47,46 +38,105 @@ func Create[CI ConfigItem](
 ) *HassDiscovery {
 	ctx, cancel := context.WithCancel(context.Background())
 
+	configItemsInterface := make([]ConfigItem, len(configItems))
+	for i, ci := range configItems {
+		configItemsInterface[i] = ci
+	}
+
 	hd := HassDiscovery{
+		configItems:    configItemsInterface,
+		devicePool:     devicePool,
 		mqttClientPool: mqttClientPool,
 		ctx:            ctx,
 		cancel:         cancel,
-		discoverables:  getDiscoverables(configItems, devicePool),
 	}
 
 	return &hd
 }
 
-func getDiscoverables[CI ConfigItem](
-	configItems []CI,
-	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
-) (discoverables map[key]dataflow.Register) {
-	discoverables = make(map[key]dataflow.Register)
+func (hd *HassDiscovery) Run() {
+	for deviceName, configItems := range hd.getDevices() {
+		go func(deviceName string, configItems []ConfigItem) {
+			hd.wg.Add(1)
+			defer hd.wg.Done()
+			hd.handleRegisters(deviceName, configItems)
+		}(deviceName, configItems)
+	}
+}
 
-	// create a map of all discovery messages to send; only send one message per mqttClient, Topic, Device, Register
-	for _, ci := range configItems {
-		devices := devicePool.GetByNames(ci.Devices())
-		for _, devRestarter := range devices {
-			dev := devRestarter.Service()
-			for _, reg := range dev.Registers() {
-				log.Printf("deviceName=%s, registerName=%s", dev.Name(), reg.Name())
-				if !regMatchesConfigItem(reg, ci) {
+func (hd *HassDiscovery) handleRegisters(deviceName string, configItems []ConfigItem) {
+	devRestarter := hd.devicePool.GetByName(deviceName)
+	if devRestarter == nil {
+		log.Printf("hassDiscovery: device '%s' not found anymore", deviceName)
+		return
+	}
+	dev := devRestarter.Service()
+
+	registerSubscription := dev.RegisterDb().Subscribe(hd.ctx)
+
+	type key struct {
+		mqttClientName string
+		topicPrefix    string
+		registerName   string
+	}
+	alreadySent := make(map[key]struct{})
+
+	// the subscription closes the chan when the hd.ctx expires
+	for reg := range registerSubscription {
+		for _, ci := range configItems {
+			// check if config item matches this register
+			if !regMatchesConfigItem(reg, ci) {
+				continue
+			}
+
+			for _, mqttClientName := range ci.ViaMqttClients() {
+				// only send discovery messages on mqtt clients were we also send realtime messages
+				if !stringContains(mqttClientName, dev.Config().RealtimeViaMqttClients()) {
 					continue
 				}
-				for _, mqttClientName := range ci.ViaMqttClients() {
-					if !stringContains(mqttClientName, dev.Config().RealtimeViaMqttClients()) {
-						// only send discovery messages on mqtt clients were we also send realtime messages
-						continue
-					}
-					k := key{
-						mqttClientName: mqttClientName,
-						topicPrefix:    ci.TopicPrefix(),
-						deviceName:     dev.Name(),
-						registerName:   reg.Name(),
-					}
-					discoverables[k] = reg
-					log.Printf("deviceName=%s, registerName=%s added to mqttClient=%s", dev.Name(), reg.Name(), mqttClientName)
+
+				// only publish once per device, mqttClient, Topic, and register Name
+				k := key{
+					mqttClientName: mqttClientName,
+					topicPrefix:    ci.TopicPrefix(),
+					registerName:   reg.Name(),
 				}
+
+				if _, exists := alreadySent[k]; exists {
+					continue
+				}
+				alreadySent[k] = struct{}{}
+
+				mc := hd.mqttClientPool.GetByName(k.mqttClientName)
+				if mc == nil {
+					log.Printf("hassDiscovery: mqttClient '%s' not found anymore", k.mqttClientName)
+					continue
+				}
+
+				hd.publishDiscoveryMessage(
+					k.topicPrefix,
+					mc,
+					deviceName,
+					reg,
+				)
+			}
+		}
+	}
+}
+
+func (hd *HassDiscovery) Shutdown() {
+	hd.cancel()
+	hd.wg.Wait()
+}
+
+// getDevices create a map of deviceName -> list of config items for this device
+func (hd *HassDiscovery) getDevices() (ret map[string][]ConfigItem) {
+	for _, ci := range hd.configItems {
+		for _, deviceName := range ci.Devices() {
+			if _, ok := ret[deviceName]; !ok {
+				ret[deviceName] = []ConfigItem{ci}
+			} else {
+				ret[deviceName] = append(ret[deviceName], ci)
 			}
 		}
 	}
@@ -119,34 +169,6 @@ func stringContains(needle string, haystack []string) bool {
 		}
 	}
 	return false
-}
-
-func (hd *HassDiscovery) Run() {
-	hd.wg.Add(1)
-
-	go func() {
-		defer hd.wg.Done()
-
-		// Give the mqtt clients a short time to connect; this increases the change that we can directly
-		// send the messages and don't have to store them into the backlog just to send them a bit later.
-		time.Sleep(time.Second)
-
-		for k, reg := range hd.discoverables {
-			hd.publishDiscoveryMessage(
-				k.topicPrefix,
-				hd.mqttClientPool.GetByName(k.mqttClientName),
-				k.deviceName,
-				reg,
-			)
-		}
-
-		<-hd.ctx.Done()
-	}()
-}
-
-func (hd *HassDiscovery) Shutdown() {
-	hd.cancel()
-	hd.wg.Wait()
 }
 
 func (hd *HassDiscovery) publishDiscoveryMessage(

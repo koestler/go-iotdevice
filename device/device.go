@@ -20,8 +20,7 @@ type Config interface {
 type Device interface {
 	Name() string
 	Config() Config
-	Registers() []dataflow.Register
-	GetRegister(registerName string) dataflow.Register
+	RegisterDb() *dataflow.RegisterDb
 	LastUpdated() time.Time
 	IsAvailable() bool
 	Model() string
@@ -31,6 +30,7 @@ type Device interface {
 type State struct {
 	deviceConfig Config
 	stateStorage *dataflow.ValueStorage
+	registerDb   *dataflow.RegisterDb
 
 	lastUpdated      time.Time
 	lastUpdatedMutex sync.RWMutex
@@ -39,9 +39,12 @@ type State struct {
 }
 
 func NewState(deviceConfig Config, stateStorage *dataflow.ValueStorage) State {
+	registerDb := dataflow.NewRegisterDb()
+	registerDb.Add(GetAvailabilityRegister())
 	return State{
 		deviceConfig: deviceConfig,
 		stateStorage: stateStorage,
+		registerDb:   registerDb,
 	}
 }
 
@@ -55,6 +58,10 @@ func (c *State) Config() Config {
 
 func (c *State) StateStorage() *dataflow.ValueStorage {
 	return c.stateStorage
+}
+
+func (c *State) RegisterDb() *dataflow.RegisterDb {
+	return c.registerDb
 }
 
 func (c *State) SetLastUpdatedNow() {
