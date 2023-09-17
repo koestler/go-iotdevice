@@ -106,6 +106,7 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 		KeepAlive:         c.keepAlive.String(),
 		ConnectRetryDelay: c.connectRetryDelay.String(),
 		ConnectTimeout:    c.connectTimeout.String(),
+		ReadOnly:          &c.readOnly,
 		AvailabilityTopic: &c.availabilityTopic,
 		TelemetryInterval: c.telemetryInterval.String(),
 		TelemetryTopic:    &c.telemetryTopic,

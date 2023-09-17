@@ -15,6 +15,7 @@ type Config interface {
 	KeepAlive() time.Duration
 	ConnectRetryDelay() time.Duration
 	ConnectTimeout() time.Duration
+	ReadOnly() bool
 	AvailabilityTopic() string
 	TelemetryInterval() time.Duration
 	TelemetryTopic() string

@@ -45,6 +45,7 @@ type mqttClientConfigRead struct {
 	KeepAlive         string  `yaml:"KeepAlive"`
 	ConnectRetryDelay string  `yaml:"ConnectRetryDelay"`
 	ConnectTimeout    string  `yaml:"ConnectTimeout"`
+	ReadOnly          *bool   `yaml:"ReadOnly"`
 	AvailabilityTopic *string `yaml:"AvailabilityTopic"`
 	TelemetryInterval string  `yaml:"TelemetryInterval"`
 	TelemetryTopic    *string `yaml:"TelemetryTopic"`

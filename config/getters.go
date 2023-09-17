@@ -179,6 +179,10 @@ func (c MqttClientConfig) ConnectTimeout() time.Duration {
 	return c.connectTimeout
 }
 
+func (c MqttClientConfig) ReadOnly() bool {
+	return c.readOnly
+}
+
 func (c MqttClientConfig) AvailabilityTopic() string {
 	return c.availabilityTopic
 }

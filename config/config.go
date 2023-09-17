@@ -399,6 +399,12 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.connectRetryDelay = connectRetryDelay
 	}
 
+	if c.ReadOnly == nil {
+		ret.readOnly = false
+	} else {
+		ret.readOnly = *c.ReadOnly
+	}
+
 	if len(c.ConnectTimeout) < 1 {
 		// use default 5s
 		ret.connectTimeout = 5 * time.Second
@@ -414,14 +420,18 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.connectTimeout = connectTimeout
 	}
 
-	if c.AvailabilityTopic == nil {
+	if ret.readOnly {
+		ret.availabilityTopic = ""
+	} else if c.AvailabilityTopic == nil {
 		// use default
 		ret.availabilityTopic = "%Prefix%tele/%ClientId%/status"
 	} else {
 		ret.availabilityTopic = *c.AvailabilityTopic
 	}
 
-	if len(c.TelemetryInterval) < 1 {
+	if ret.readOnly {
+		ret.telemetryInterval = 0
+	} else if len(c.TelemetryInterval) < 1 {
 		// use default 10s
 		ret.telemetryInterval = 10 * time.Second
 	} else if telemetryInterval, e := time.ParseDuration(c.TelemetryInterval); e != nil {
@@ -444,7 +454,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.telemetryRetain = *c.TelemetryRetain
 	}
 
-	if c.RealtimeEnable == nil {
+	if c.RealtimeEnable == nil || ret.readOnly {
 		ret.realtimeEnable = false
 	} else {
 		ret.realtimeEnable = *c.RealtimeEnable
@@ -462,7 +472,9 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.realtimeRetain = *c.RealtimeRetain
 	}
 
-	if c.MaxBacklogSize == nil {
+	if ret.readOnly {
+		ret.maxBacklogSize = 0
+	} else if c.MaxBacklogSize == nil {
 		ret.maxBacklogSize = 256
 	} else {
 		ret.maxBacklogSize = *c.MaxBacklogSize

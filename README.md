@@ -110,8 +110,9 @@ MqttClients:                                               # optional, when empt
     KeepAlive: 1m                                          # optional, default 60s, how often a ping is sent to keep the connection alive
     ConnectRetryDelay: 10s                                 # optional, default 10s, when disconnected: after what delay shall a connection attempt is made
     ConnectTimeout: 5s                                     # optional, default 5s, how long to wait for the SYN+ACK packet, increase on slow networks
-    AvailabilityTopic: '%Prefix%tele/%ClientId%/status'    # optional, what topic to use for online/offline messages
-    TelemetryInterval: 10s                                 # optional, default 10s, how often to sent telemetry mqtt messages, 0s disables tlemetry messages
+    ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overriding AvailabilityTopic, TelemetryInterval and RealtimeEnable and MaxBacklogSize)
+    AvailabilityTopic: '%Prefix%tele/%ClientId%/status'    # optional, what topic to use for online/offline messages, wen set to empty string, no availability / will messages are sent
+    TelemetryInterval: 10s                                 # optional, default 10s, how often to sent telemetry mqtt messages, 0s disables telemetry messages
     TelemetryTopic: '%Prefix%tele/go-iotdevice/%DeviceName%/state' # optional, what topic to use for telemetry messages
     TelemetryRetain: false                                 # optional, default false, the mqtt retain flag for telemetry messages
     RealtimeEnable: false                                  # optional, default false, whether to enable sending realtime messages

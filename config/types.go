@@ -59,6 +59,7 @@ type MqttClientConfig struct {
 	keepAlive         time.Duration
 	connectRetryDelay time.Duration
 	connectTimeout    time.Duration
+	readOnly          bool
 	availabilityTopic string
 	telemetryInterval time.Duration
 	telemetryTopic    string
