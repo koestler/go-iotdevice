@@ -31,7 +31,10 @@ func (rdb *RegisterDb) Add(registers ...Register) {
 	for i, r := range registers {
 		registerStructs[i] = NewRegisterStructByInterface(r)
 	}
+	rdb.AddStruct(registerStructs...)
+}
 
+func (rdb *RegisterDb) AddStruct(registerStructs ...RegisterStruct) {
 	rdb.lock.Lock()
 	defer rdb.lock.Unlock()
 

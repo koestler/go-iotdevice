@@ -17,8 +17,7 @@ type DeviceStruct struct {
 	device.State
 	victronConfig Config
 
-	registers []VictronRegister
-	model     string
+	model string
 }
 
 func NewDevice(
@@ -46,24 +45,6 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	default:
 		return fmt.Errorf("unknown device kind: %s", c.victronConfig.Kind().String()), true
 	}
-}
-
-func (c *DeviceStruct) Registers() []dataflow.Register {
-	ret := make([]dataflow.Register, len(c.registers)+1)
-	for i, r := range c.registers {
-		ret[i] = r.RegisterStruct
-	}
-	ret[len(c.registers)] = device.GetAvailabilityRegister()
-	return ret
-}
-
-func (c *DeviceStruct) GetRegister(registerName string) dataflow.Register {
-	for _, r := range c.registers {
-		if r.Name() == registerName {
-			return r
-		}
-	}
-	return nil
 }
 
 func (c *DeviceStruct) Model() string {
