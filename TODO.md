@@ -1,3 +1,14 @@
 # Todos
 - redo / check homeassistant integration using mqtt realtime messages
-- mqttDevice: implement available / unavailable messages
+- hassDiscovery:
+  - handle output type 
+  - allow for string fields?
+  - allow for enum fields?
+- mqttDevice:
+ - separate structure and values in different topics
+ - allow filter for realtime message by register / category (like hassDiscovery)
+ - implement command topic / handling of relays
+ - implement available / unavailable messages correctly
+   - when receiver mqtt connection closed,
+   - when sender mqtt connection closed mqtt connection closed
+   - when device is disconnected (modbus / http etc.)
