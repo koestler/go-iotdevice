@@ -2,24 +2,18 @@ package modbusDevice
 
 import "github.com/koestler/go-iotdevice/dataflow"
 
-type ModbusRegisters []ModbusRegister
-type ModbusRegister interface {
-	dataflow.Register
-	Address() uint16
-}
-
-type ModbusRegisterStruct struct {
+type ModbusRegister struct {
 	dataflow.RegisterStruct
 	address uint16
 }
 
-func NewModbusRegisterStruct(
+func NewModbusRegister(
 	category, name, description string,
 	address uint16,
 	enum map[int]string,
 	sort int,
-) ModbusRegisterStruct {
-	return ModbusRegisterStruct{
+) ModbusRegister {
+	return ModbusRegister{
 		dataflow.NewRegisterStruct(
 			category, name, description,
 			dataflow.EnumRegister,
@@ -32,6 +26,10 @@ func NewModbusRegisterStruct(
 	}
 }
 
-func (r ModbusRegisterStruct) Address() uint16 {
-	return r.address
+func addToRegisterDb(rdb *dataflow.RegisterDb, registers []ModbusRegister) {
+	dataflowRegisters := make([]dataflow.RegisterStruct, len(registers))
+	for i, r := range registers {
+		dataflowRegisters[i] = r.RegisterStruct
+	}
+	rdb.AddStruct(dataflowRegisters...)
 }

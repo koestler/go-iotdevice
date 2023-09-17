@@ -123,3 +123,11 @@ func NewEnumRegisterStruct(
 		0,     // unused
 	}
 }
+
+func addToRegisterDb(rdb *dataflow.RegisterDb, registers []VictronRegister) {
+	dataflowRegisters := make([]dataflow.RegisterStruct, len(registers))
+	for i, r := range registers {
+		dataflowRegisters[i] = r.RegisterStruct
+	}
+	rdb.AddStruct(dataflowRegisters...)
+}

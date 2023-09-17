@@ -30,9 +30,7 @@ type DeviceStruct struct {
 	modbusConfig Config
 
 	commandStorage *dataflow.ValueStorage
-
-	modbus    Modbus
-	registers ModbusRegisters
+	modbus         Modbus
 }
 
 func NewDevice(
@@ -60,24 +58,6 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	default:
 		return fmt.Errorf("unknown device kind: %s", c.modbusConfig.Kind().String()), true
 	}
-}
-
-func (c *DeviceStruct) Registers() []dataflow.Register {
-	ret := make([]dataflow.Register, len(c.registers)+1)
-	for i, r := range c.registers {
-		ret[i] = r.(dataflow.Register)
-	}
-	ret[len(c.registers)] = device.GetAvailabilityRegister()
-	return ret
-}
-
-func (c *DeviceStruct) GetRegister(registerName string) dataflow.Register {
-	for _, r := range c.registers {
-		if r.Name() == registerName {
-			return r
-		}
-	}
-	return nil
 }
 
 func (c *DeviceStruct) Model() string {

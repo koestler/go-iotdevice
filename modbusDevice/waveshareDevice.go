@@ -20,7 +20,8 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	}
 
 	// assign registers
-	c.registers = c.getModbusRegisters()
+	registers := c.getModbusRegisters()
+	addToRegisterDb(c.RegisterDb(), registers)
 
 	// setup polling
 	execPoll := func() error {
@@ -32,9 +33,9 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 			return fmt.Errorf("waveshareDevice[%s]: read failed: %s", c.Name(), err)
 		}
 
-		for _, register := range c.registers {
+		for _, register := range registers {
 			value := 0
-			if state[register.Address()] {
+			if state[register.address] {
 				value = 1
 			}
 
@@ -103,11 +104,11 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 		}
 
 		var relayNr uint16
-		if modbusRegister, ok := value.Register().(ModbusRegisterStruct); !ok {
+		if modbusRegister, ok := value.Register().(ModbusRegister); !ok {
 			// unknown register
 			return
 		} else {
-			relayNr = modbusRegister.Address()
+			relayNr = modbusRegister.address
 		}
 
 		if err := WriteRelay(c.modbus.WriteRead, c.modbusConfig.Address(), relayNr, command); err != nil {
@@ -148,9 +149,9 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	}
 }
 
-func (c *DeviceStruct) getModbusRegisters() (registers ModbusRegisters) {
+func (c *DeviceStruct) getModbusRegisters() (registers []ModbusRegister) {
 	category := "Relays"
-	registers = make(ModbusRegisters, 0, 8)
+	registers = make([]ModbusRegister, 0, 8)
 	for i := uint16(0); i < 8; i += 1 {
 		name := fmt.Sprintf("CH%d", i+1)
 
@@ -164,7 +165,7 @@ func (c *DeviceStruct) getModbusRegisters() (registers ModbusRegisters) {
 			1: c.modbusConfig.RelayClosedLabel(name),
 		}
 
-		r := NewModbusRegisterStruct(
+		r := NewModbusRegister(
 			category,
 			name,
 			description,

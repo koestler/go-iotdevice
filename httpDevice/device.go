@@ -10,7 +10,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"sync"
 	"time"
 )
 
@@ -32,9 +31,7 @@ type DeviceStruct struct {
 	pollRequest *http.Request
 	impl        Implementation
 
-	registers      map[string]dataflow.Register
-	sort           map[string]int
-	registersMutex sync.RWMutex
+	sort map[string]int
 }
 
 func NewDevice(
@@ -57,8 +54,7 @@ func NewDevice(
 			Timeout: time.Second,
 		},
 
-		registers: make(map[string]dataflow.Register),
-		sort:      make(map[string]int),
+		sort: make(map[string]int),
 	}
 
 	// setup impl
@@ -211,17 +207,14 @@ func (ds *DeviceStruct) addIgnoreRegister(
 	controllable bool,
 ) dataflow.Register {
 	// check if this register exists already and the properties are still the same
-	ds.registersMutex.RLock()
-	if r, ok := ds.registers[registerName]; ok {
+	if r := ds.RegisterDb().GetByName(registerName); r != nil {
 		if r.Category() == category &&
 			r.Description() == description &&
 			r.RegisterType() == registerType &&
 			r.Unit() == unit {
-			ds.registersMutex.RUnlock()
 			return r
 		}
 	}
-	ds.registersMutex.RUnlock()
 
 	// check if register is on ignore list
 	if device.IsExcluded(registerName, category, ds.Config()) {
@@ -241,40 +234,10 @@ func (ds *DeviceStruct) addIgnoreRegister(
 		controllable,
 	)
 
-	ds.addRegister(r)
+	// add the register into the list
+	ds.RegisterDb().Add(r)
 
 	return r
-}
-
-func (ds *DeviceStruct) addRegister(register dataflow.Register) {
-	ds.registersMutex.Lock()
-	defer ds.registersMutex.Unlock()
-
-	ds.registers[register.Name()] = register
-}
-
-func (ds *DeviceStruct) Registers() []dataflow.Register {
-	ds.registersMutex.RLock()
-	defer ds.registersMutex.RUnlock()
-
-	ret := make([]dataflow.Register, len(ds.registers)+1)
-	i := 0
-	for _, r := range ds.registers {
-		ret[i] = r
-		i += 1
-	}
-	ret[len(ds.registers)] = device.GetAvailabilityRegister()
-	return ret
-}
-
-func (ds *DeviceStruct) GetRegister(registerName string) dataflow.Register {
-	ds.registersMutex.RLock()
-	defer ds.registersMutex.RUnlock()
-
-	if r, ok := ds.registers[registerName]; ok {
-		return r
-	}
-	return nil
 }
 
 func (ds *DeviceStruct) Model() string {

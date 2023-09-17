@@ -50,22 +50,13 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	c.model = deviceString
 
 	// get relevant registers
-	{
-		registers := RegisterFactoryByProduct(deviceId)
-		if registers == nil {
-			return fmt.Errorf("no registers found for deviceId=%x", deviceId), true
-		}
-		// filter registers by skip list
-		registers = FilterRegisters(registers, c.Config().SkipFields(), c.Config().SkipCategories())
-
-		// save registers in registerDb
-		rdb := c.RegisterDb()
-		dataflowRegisters := make([]dataflow.RegisterStruct, len(registers))
-		for i, r := range registers {
-			dataflowRegisters[i] = r.Regis
-		}
-		rdb.AddStruct(dataflowRegisters...)
+	registers := RegisterFactoryByProduct(deviceId)
+	if registers == nil {
+		return fmt.Errorf("no registers found for deviceId=%x", deviceId), true
 	}
+	// filter registers by skip list and add to db for outside use
+	registers = FilterRegisters(registers, c.Config().SkipFields(), c.Config().SkipCategories())
+	addToRegisterDb(c.RegisterDb(), registers)
 
 	// start polling loop
 	fetchStaticCounter := 0
@@ -84,7 +75,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 			// execute a Ping at the beginning and after each error
 			pingNeeded := true
 
-			for _, register := range c.registers {
+			for _, register := range registers {
 				// only fetch static registers seldomly
 				if register.static && (fetchStaticCounter%60 != 0) {
 					continue

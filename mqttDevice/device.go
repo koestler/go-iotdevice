@@ -10,7 +10,6 @@ import (
 	"github.com/koestler/go-iotdevice/pool"
 	"log"
 	"strings"
-	"sync"
 )
 
 type Config interface {
@@ -23,9 +22,6 @@ type DeviceStruct struct {
 	mqttConfig Config
 
 	mqttClientPool *pool.Pool[mqttClient.Client]
-
-	registers      map[string]dataflow.Register
-	registersMutex sync.RWMutex
 }
 
 func NewDevice(
@@ -41,7 +37,6 @@ func NewDevice(
 		),
 		mqttConfig:     mqttConfig,
 		mqttClientPool: mqttClientPool,
-		registers:      make(map[string]dataflow.Register),
 	}
 }
 
@@ -99,42 +94,16 @@ func parsePayload(payload []byte) (msg device.RealtimeMessage, err error) {
 	return
 }
 
-func (c *DeviceStruct) Registers() []dataflow.Register {
-	c.registersMutex.RLock()
-	defer c.registersMutex.RUnlock()
-
-	ret := make([]dataflow.Register, len(c.registers))
-	i := 0
-	for _, r := range c.registers {
-		ret[i] = r
-		i += 1
-	}
-	return ret
-}
-
-func (c *DeviceStruct) GetRegister(registerName string) dataflow.Register {
-	c.registersMutex.RLock()
-	defer c.registersMutex.RUnlock()
-
-	if r, ok := c.registers[registerName]; ok {
-		return r
-	}
-	return nil
-}
-
 func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.RealtimeMessage) dataflow.Register {
 	// check if this register exists already and the properties are still the same
-	c.registersMutex.RLock()
-	if r, ok := c.registers[registerName]; ok {
+	if r := c.RegisterDb().GetByName(registerName); r != nil {
 		if r.Category() == msg.Category &&
 			r.Description() == msg.Description &&
 			r.Unit() == msg.Unit &&
 			r.Sort() == msg.Sort {
-			c.registersMutex.RUnlock()
 			return r
 		}
 	}
-	c.registersMutex.RUnlock()
 
 	// check if register is on ignore list
 	if device.IsExcluded(registerName, msg.Category, c.Config()) {
@@ -161,10 +130,8 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 	)
 
 	// add the register into the list
-	c.registersMutex.Lock()
-	defer c.registersMutex.Unlock()
+	c.RegisterDb().Add(r)
 
-	c.registers[registerName] = r
 	return r
 }
 

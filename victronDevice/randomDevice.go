@@ -16,7 +16,8 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 	}()
 
 	// filter registers by skip list
-	c.registers = FilterRegisters(registers, c.Config().SkipFields(), c.Config().SkipCategories())
+	registers = FilterRegisters(registers, c.Config().SkipFields(), c.Config().SkipCategories())
+	addToRegisterDb(c.RegisterDb(), registers)
 
 	if c.Config().LogDebug() {
 		log.Printf("device[%s]: start random source", c.Name())
@@ -30,7 +31,7 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 		case <-ctx.Done():
 			return nil, false
 		case <-ticker.C:
-			for _, r := range c.registers {
+			for _, r := range registers {
 				switch r.RegisterType() {
 				case dataflow.NumberRegister:
 					var value float64
