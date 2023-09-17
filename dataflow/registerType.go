@@ -3,17 +3,17 @@ package dataflow
 type RegisterType int
 
 const (
-	TextRegister RegisterType = iota
-	NumberRegister
+	NumberRegister RegisterType = iota
+	TextRegister
 	EnumRegister
 )
 
 func (rt RegisterType) String() string {
 	switch rt {
-	case TextRegister:
-		return "string"
 	case NumberRegister:
 		return "number"
+	case TextRegister:
+		return "string"
 	case EnumRegister:
 		return "enum"
 	default:
