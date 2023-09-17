@@ -78,7 +78,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 
 			for _, register := range c.registers {
 				// only fetch static registers seldomly
-				if register.Static() && (fetchStaticCounter%60 != 0) {
+				if register.static && (fetchStaticCounter%60 != 0) {
 					continue
 				}
 
@@ -91,13 +91,13 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 				switch register.RegisterType() {
 				case dataflow.NumberRegister:
 					var value float64
-					if register.Signed() {
+					if register.signed {
 						var intValue int64
-						intValue, err = vd.VeCommandGetInt(register.Address())
+						intValue, err = vd.VeCommandGetInt(register.address)
 						value = float64(intValue)
 					} else {
 						var intValue uint64
-						intValue, err = vd.VeCommandGetUint(register.Address())
+						intValue, err = vd.VeCommandGetUint(register.address)
 						value = float64(intValue)
 					}
 
@@ -107,11 +107,11 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 						output.Fill(dataflow.NewNumericRegisterValue(
 							c.Name(),
 							register,
-							value/float64(register.Factor())+register.Offset(),
+							value/float64(register.factor)+register.offset,
 						))
 					}
 				case dataflow.TextRegister:
-					value, err := vd.VeCommandGetString(register.Address())
+					value, err := vd.VeCommandGetString(register.address)
 
 					if err != nil {
 						log.Printf("device[%s]: fetching text register failed: %v", c.Name(), err)
@@ -124,7 +124,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 					}
 				case dataflow.EnumRegister:
 					var intValue uint64
-					intValue, err = vd.VeCommandGetUint(register.Address())
+					intValue, err = vd.VeCommandGetUint(register.address)
 
 					if err != nil {
 						log.Printf("device[%s]: fetching enum register failed: %v", c.Name(), err)

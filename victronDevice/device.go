@@ -51,7 +51,7 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 func (c *DeviceStruct) Registers() []dataflow.Register {
 	ret := make([]dataflow.Register, len(c.registers)+1)
 	for i, r := range c.registers {
-		ret[i] = r.(dataflow.Register)
+		ret[i] = r.RegisterStruct
 	}
 	ret[len(c.registers)] = device.GetAvailabilityRegister()
 	return ret

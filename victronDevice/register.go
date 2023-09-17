@@ -2,16 +2,7 @@ package victronDevice
 
 import "github.com/koestler/go-iotdevice/dataflow"
 
-type VictronRegister interface {
-	dataflow.Register
-	Address() uint16
-	Static() bool
-	Signed() bool
-	Factor() int
-	Offset() float64
-}
-
-type VictronRegisterStruct struct {
+type VictronRegister struct {
 	dataflow.RegisterStruct
 	address uint16
 	static  bool
@@ -64,8 +55,8 @@ func NewTextRegisterStruct(
 	address uint16,
 	static bool,
 	sort int,
-) VictronRegisterStruct {
-	return VictronRegisterStruct{
+) VictronRegister {
+	return VictronRegister{
 		dataflow.NewRegisterStruct(
 			category, name, description,
 			dataflow.TextRegister,
@@ -91,8 +82,8 @@ func NewNumberRegisterStruct(
 	offset float64,
 	unit string,
 	sort int,
-) VictronRegisterStruct {
-	return VictronRegisterStruct{
+) VictronRegister {
+	return VictronRegister{
 		dataflow.NewRegisterStruct(
 			category, name, description,
 			dataflow.NumberRegister,
@@ -115,8 +106,8 @@ func NewEnumRegisterStruct(
 	static bool,
 	enum map[int]string,
 	sort int,
-) VictronRegisterStruct {
-	return VictronRegisterStruct{
+) VictronRegister {
+	return VictronRegister{
 		dataflow.NewRegisterStruct(
 			category, name, description,
 			dataflow.EnumRegister,
@@ -131,24 +122,4 @@ func NewEnumRegisterStruct(
 		1,     // unused
 		0,     // unused
 	}
-}
-
-func (r VictronRegisterStruct) Address() uint16 {
-	return r.address
-}
-
-func (r VictronRegisterStruct) Static() bool {
-	return r.static
-}
-
-func (r VictronRegisterStruct) Factor() int {
-	return r.factor
-}
-
-func (r VictronRegisterStruct) Offset() float64 {
-	return r.offset
-}
-
-func (r VictronRegisterStruct) Signed() bool {
-	return r.signed
 }

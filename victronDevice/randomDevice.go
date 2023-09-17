@@ -34,10 +34,10 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 				switch r.RegisterType() {
 				case dataflow.NumberRegister:
 					var value float64
-					if r.Signed() {
-						value = 1e2*(rand.Float64()-0.5)*2/float64(r.Factor()) + r.Offset()
+					if r.signed {
+						value = 1e2*(rand.Float64()-0.5)*2/float64(r.factor) + r.offset
 					} else {
-						value = 1e2*rand.Float64()/float64(r.Factor()) + r.Offset()
+						value = 1e2*rand.Float64()/float64(r.factor) + r.offset
 					}
 					output.Fill(dataflow.NewNumericRegisterValue(c.Name(), r, value))
 				case dataflow.TextRegister:
