@@ -541,6 +541,10 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.realtimeRepeat = *c.RealtimeRepeat
 	}
 
+	if ret.realtimeInterval == 0 && ret.realtimeRepeat {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s realtimeRepeat is only allowed to be true when realtimeInterval > 0", name))
+	}
+
 	if c.RealtimeRetain == nil {
 		ret.realtimeRetain = false
 	} else {

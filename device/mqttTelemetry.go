@@ -61,7 +61,7 @@ func runTelemetryForwarders(
 					case <-ctx.Done():
 						if dev.Config().LogDebug() {
 							log.Printf(
-								"device[%s]->mqttClient[%s]: context canceled, exit transmit telemetry",
+								"device[%s]->mqttClient[%s]->telemetry: exit",
 								dev.Config().Name(), mc.Config().Name(),
 							)
 						}
@@ -69,7 +69,7 @@ func runTelemetryForwarders(
 					case <-ticker.C:
 						if dev.Config().LogDebug() {
 							log.Printf(
-								"device[%s]->mqttClient[%s]: telemetry tick",
+								"device[%s]->mqttClient[%s]->telemetry: tick",
 								dev.Config().Name(), mc.Config().Name(),
 							)
 						}
@@ -94,7 +94,7 @@ func runTelemetryForwarders(
 
 						if payload, err := json.Marshal(telemetryMessage); err != nil {
 							log.Printf(
-								"device[%s]->mqttClient[%s]: cannot generate telemetry message: %s",
+								"device[%s]->mqttClient[%s]->telemetry: cannot generate message: %s",
 								dev.Config().Name(), mc.Config().Name(), err,
 							)
 						} else {
@@ -110,7 +110,7 @@ func runTelemetryForwarders(
 			}()
 
 			log.Printf(
-				"device[%s]->mqttClient[%s]: start sending telemetry messages every %s",
+				"device[%s]->mqttClient[%s]->telemetry: start sending messages every %s",
 				dev.Config().Name(), mc.Config().Name(), telemetryInterval.String(),
 			)
 		}

@@ -58,15 +58,19 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 					return
 				}
 
-				register := c.addIgnoreRegister(registerName, realtimeMessage)
-				if register != nil {
-					if v := realtimeMessage.NumericValue; v != nil {
-						c.StateStorage().Fill(dataflow.NewNumericRegisterValue(c.Name(), register, *v))
-					} else if v := realtimeMessage.TextValue; v != nil {
-						c.StateStorage().Fill(dataflow.NewTextRegisterValue(c.Name(), register, *v))
+				log.Printf("mqttDevice[%s]->mqttClient[%s]: received registerName=%v, msg=%v", c.Name(), mc.Config().Name(), registerName, realtimeMessage)
+
+				/*
+					register := c.addIgnoreRegister(registerName, realtimeMessage)
+					if register != nil {
+						if v := realtimeMessage.NumericValue; v != nil {
+							c.StateStorage().Fill(dataflow.NewNumericRegisterValue(c.Name(), register, *v))
+						} else if v := realtimeMessage.TextValue; v != nil {
+							c.StateStorage().Fill(dataflow.NewTextRegisterValue(c.Name(), register, *v))
+						}
+						c.SetLastUpdatedNow()
 					}
-					c.SetLastUpdatedNow()
-				}
+				*/
 			})
 			counter += 1
 		}
@@ -94,6 +98,7 @@ func parsePayload(payload []byte) (msg device.RealtimeMessage, err error) {
 	return
 }
 
+/*
 func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.RealtimeMessage) dataflow.Register {
 	// check if this register exists already and the properties are still the same
 	if r := c.RegisterDb().GetByName(registerName); r != nil {
@@ -134,6 +139,7 @@ func (c *DeviceStruct) addIgnoreRegister(registerName string, msg device.Realtim
 
 	return r
 }
+*/
 
 func (c *DeviceStruct) Model() string {
 	return "mqtt"
