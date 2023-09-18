@@ -28,11 +28,10 @@ func runRealtimeForwarders(
 
 	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
 	for _, mc := range mqttClientPool.GetByNames(dev.Config().RealtimeViaMqttClients()) {
-		if !mc.Config().RealtimeEnabled() {
+		mcCfg := mc.Config()
+		if !mcCfg.RealtimeEnabled() {
 			continue
 		}
-
-		mcCfg := mc.Config()
 
 		go func(mc mqttClient.Client) {
 			if dev.Config().LogDebug() {
