@@ -4,13 +4,8 @@ import (
 	"strings"
 )
 
-const availabilityRetain = true
 const availabilityOnline = "online"
 const availabilityOffline = "offline"
-
-func (c *ClientStruct) AvailabilityEnabled() bool {
-	return len(c.cfg.AvailabilityTopic()) > 0
-}
 
 func (c *ClientStruct) GetAvailabilityTopic() string {
 	return ReplaceTemplate(c.cfg.AvailabilityTopic(), c.cfg)

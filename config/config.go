@@ -468,7 +468,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	} else if structureInterval, e := time.ParseDuration(c.StructureInterval); e != nil {
 		err = append(err, fmt.Errorf("MqttClientConfig->%s->StructureInterval='%s' parse error: %s", name, c.StructureInterval, e))
 	} else if structureInterval < 0 {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->StructureInterval='%s' must be positive", name, c.StructureInterval))
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->StructureInterval='%s' must be >= 0", name, c.StructureInterval))
 	} else {
 		ret.structureInterval = structureInterval
 	}
@@ -499,8 +499,8 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.telemetryInterval = 10 * time.Second
 	} else if telemetryInterval, e := time.ParseDuration(c.TelemetryInterval); e != nil {
 		err = append(err, fmt.Errorf("MqttClientConfig->%s->TelemetryInterval='%s' parse error: %s", name, c.TelemetryInterval, e))
-	} else if telemetryInterval < 0 {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->TelemetryInterval='%s' must be positive", name, c.TelemetryInterval))
+	} else if telemetryInterval < 10*time.Millisecond {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->TelemetryInterval='%s' must be >= 10ms", name, c.TelemetryInterval))
 	} else {
 		ret.telemetryInterval = telemetryInterval
 	}
@@ -530,7 +530,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	} else if realtimeInterval, e := time.ParseDuration(c.RealtimeInterval); e != nil {
 		err = append(err, fmt.Errorf("MqttClientConfig->%s->RealtimeInterval='%s' parse error: %s", name, c.RealtimeInterval, e))
 	} else if realtimeInterval < 0 {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->RealtimeInterval='%s' must be positive", name, c.RealtimeInterval))
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->RealtimeInterval='%s' must be >= 0", name, c.RealtimeInterval))
 	} else {
 		ret.realtimeInterval = realtimeInterval
 	}

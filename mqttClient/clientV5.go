@@ -55,8 +55,12 @@ func NewV5(
 	}
 
 	// setup availability topic using will
-	if client.AvailabilityEnabled() {
-		client.cliCfg.SetWillMessage(client.GetAvailabilityTopic(), []byte(availabilityOffline), cfg.Qos(), true)
+	if cfg.AvailabilityEnabled() {
+		client.cliCfg.SetWillMessage(
+			client.GetAvailabilityTopic(),
+			[]byte(availabilityOffline),
+			cfg.Qos(),
+			cfg.AvailabilityRetain())
 	}
 
 	return
@@ -96,7 +100,7 @@ func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.
 		// publish in separate routine to allow for parallel reception of messages
 		go func() {
 			// publish availability online
-			if c.AvailabilityEnabled() {
+			if c.cfg.AvailabilityEnabled() {
 				_, err := cm.Publish(c.ctx, c.availabilityMsg(availabilityOnline))
 				if err != nil {
 					log.Printf("mqttClientV5[%s]: error during publish: %s", c.cfg.Name(), err)
@@ -125,7 +129,7 @@ func (c *ClientStruct) Shutdown() {
 	close(c.shutdown)
 
 	// publish availability offline
-	if c.AvailabilityEnabled() {
+	if c.cfg.AvailabilityEnabled() {
 		ctx, cancel := context.WithTimeout(c.ctx, time.Second)
 		defer cancel()
 		_, err := c.cm.Publish(ctx, c.availabilityMsg(availabilityOffline))
@@ -168,6 +172,6 @@ func (c *ClientStruct) availabilityMsg(payload string) *paho.Publish {
 		QoS:     c.cfg.Qos(),
 		Topic:   c.GetAvailabilityTopic(),
 		Payload: []byte(payload),
-		Retain:  availabilityRetain,
+		Retain:  c.cfg.AvailabilityRetain(),
 	}
 }

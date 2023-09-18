@@ -8,23 +8,38 @@ import (
 type Config interface {
 	Name() string
 	Broker() *url.URL
+
 	User() string
 	Password() string
 	ClientId() string
+
 	Qos() byte
 	KeepAlive() time.Duration
 	ConnectRetryDelay() time.Duration
 	ConnectTimeout() time.Duration
-	ReadOnly() bool
-	AvailabilityTopic() string
-	TelemetryInterval() time.Duration
-	TelemetryTopic() string
-	TelemetryRetain() bool
-	RealtimeEnabled() bool
-	RealtimeTopic() string
-	RealtimeRetain() bool
 	TopicPrefix() string
 	MaxBacklogSize() int
+
+	AvailabilityEnabled() bool
+	AvailabilityTopic() string
+	AvailabilityRetain() bool
+
+	TelemetryEnabled() bool
+	TelemetryTopic() string
+	TelemetryInterval() time.Duration
+	TelemetryRetain() bool
+
+	StructureEnabled() bool
+	StructureTopic() string
+	StructureInterval() time.Duration
+	StructureRetain() bool
+
+	RealtimeEnabled() bool
+	RealtimeTopic() string
+	RealtimeInterval() time.Duration
+	RealtimeRepeat() bool
+	RealtimeRetain() bool
+
 	LogDebug() bool
 	LogMessages() bool
 }
