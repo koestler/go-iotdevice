@@ -83,7 +83,7 @@ func BenchmarkValueStorageFill(b *testing.B) {
 	}
 }
 
-func BenchmarkValueStorageGetSlice(b *testing.B) {
+func BenchmarkValueStorageGetState(b *testing.B) {
 	storage := dataflow.NewValueStorage()
 	fillSetA(storage)
 	fillSetB(storage)
@@ -92,6 +92,22 @@ func BenchmarkValueStorageGetSlice(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		storage.GetState()
+	}
+}
+
+func BenchmarkValueStorageGetStateFiltered(b *testing.B) {
+	storage := dataflow.NewValueStorage()
+	fillSetA(storage)
+	fillSetB(storage)
+	fillSetC(storage)
+	storage.Wait()
+
+	deviceFilter := func(value dataflow.Value) bool {
+		return value.DeviceName() == "device-0"
+	}
+
+	for i := 0; i < b.N; i++ {
+		storage.GetStateFiltered(deviceFilter)
 	}
 }
 
