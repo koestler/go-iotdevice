@@ -65,21 +65,21 @@ type MqttClientConfig struct {
 	readOnly          bool
 	maxBacklogSize    int
 
-	availabilityEnable bool
-	availabilityTopic  string
-	availabilityRetain bool
+	availabilityEnabled bool
+	availabilityTopic   string
+	availabilityRetain  bool
 
-	structureEnable   bool
+	structureEnabled  bool
 	structureTopic    string
 	structureInterval time.Duration
 	structureRetain   bool
 
-	telemetryEnable   bool
+	telemetryEnabled  bool
 	telemetryTopic    string
 	telemetryInterval time.Duration
 	telemetryRetain   bool
 
-	realtimeEnable   bool
+	realtimeEnabled  bool
 	realtimeTopic    string
 	realtimeInterval time.Duration
 	realtimeRepeat   bool

@@ -51,21 +51,21 @@ type mqttClientConfigRead struct {
 	ReadOnly          *bool  `yaml:"ReadOnly"`
 	MaxBacklogSize    *int   `yaml:"MaxBacklogSize"`
 
-	AvailabilityEnable *bool   `yaml:"AvailabilityEnable"`
-	AvailabilityTopic  *string `yaml:"AvailabilityTopic"`
-	AvailabilityRetain *bool   `yaml:"AvailabilityRetain"`
+	AvailabilityEnabled *bool   `yaml:"AvailabilityEnabled"`
+	AvailabilityTopic   *string `yaml:"AvailabilityTopic"`
+	AvailabilityRetain  *bool   `yaml:"AvailabilityRetain"`
 
-	StructureEnable   *bool   `yaml:"StructureEnable"`
+	StructureEnabled  *bool   `yaml:"StructureEnabled"`
 	StructureTopic    *string `yaml:"StructureTopic"`
 	StructureInterval string  `yaml:"StructureInterval"`
 	StructureRetain   *bool   `yaml:"StructureRetain"`
 
-	TelemetryEnable   *bool   `yaml:"TelemetryEnable"`
+	TelemetryEnabled  *bool   `yaml:"TelemetryEnabled"`
 	TelemetryTopic    *string `yaml:"TelemetryTopic"`
 	TelemetryInterval string  `yaml:"TelemetryInterval"`
 	TelemetryRetain   *bool   `yaml:"TelemetryRetain"`
 
-	RealtimeEnable   *bool   `yaml:"RealtimeEnable"`
+	RealtimeEnabled  *bool   `yaml:"RealtimeEnabled"`
 	RealtimeTopic    *string `yaml:"RealtimeTopic"`
 	RealtimeInterval string  `yaml:"RealtimeInterval"`
 	RealtimeRepeat   *bool   `yaml:"RealtimeRepeat"`

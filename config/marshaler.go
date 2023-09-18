@@ -112,21 +112,21 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 		ReadOnly:          &c.readOnly,
 		MaxBacklogSize:    &c.maxBacklogSize,
 
-		AvailabilityEnable: &c.availabilityEnable,
-		AvailabilityTopic:  &c.availabilityTopic,
-		AvailabilityRetain: &c.availabilityRetain,
+		AvailabilityEnabled: &c.availabilityEnabled,
+		AvailabilityTopic:   &c.availabilityTopic,
+		AvailabilityRetain:  &c.availabilityRetain,
 
-		StructureEnable:   &c.structureEnable,
+		StructureEnabled:  &c.structureEnabled,
 		StructureTopic:    &c.structureTopic,
 		StructureInterval: c.structureInterval.String(),
 		StructureRetain:   &c.structureRetain,
 
-		TelemetryEnable:   &c.telemetryEnable,
+		TelemetryEnabled:  &c.telemetryEnabled,
 		TelemetryTopic:    &c.telemetryTopic,
 		TelemetryInterval: c.telemetryInterval.String(),
 		TelemetryRetain:   &c.telemetryRetain,
 
-		RealtimeEnable:   &c.realtimeEnable,
+		RealtimeEnabled:  &c.realtimeEnabled,
 		RealtimeTopic:    &c.realtimeTopic,
 		RealtimeInterval: c.realtimeInterval.String(),
 		RealtimeRepeat:   &c.realtimeRepeat,

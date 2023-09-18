@@ -426,11 +426,11 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	}
 
 	if ret.readOnly {
-		ret.availabilityEnable = false
-	} else if c.AvailabilityEnable == nil {
-		ret.availabilityEnable = true
+		ret.availabilityEnabled = false
+	} else if c.AvailabilityEnabled == nil {
+		ret.availabilityEnabled = true
 	} else {
-		ret.availabilityEnable = *c.AvailabilityEnable
+		ret.availabilityEnabled = *c.AvailabilityEnabled
 	}
 
 	if c.AvailabilityTopic == nil {
@@ -448,11 +448,11 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	}
 
 	if ret.readOnly {
-		ret.structureEnable = false
-	} else if c.StructureEnable == nil {
-		ret.structureEnable = true
+		ret.structureEnabled = false
+	} else if c.StructureEnabled == nil {
+		ret.structureEnabled = true
 	} else {
-		ret.structureEnable = *c.StructureEnable
+		ret.structureEnabled = *c.StructureEnabled
 	}
 
 	if c.StructureTopic == nil {
@@ -480,11 +480,11 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	}
 
 	if ret.readOnly {
-		ret.telemetryEnable = false
-	} else if c.TelemetryEnable == nil {
-		ret.telemetryEnable = true
+		ret.telemetryEnabled = false
+	} else if c.TelemetryEnabled == nil {
+		ret.telemetryEnabled = true
 	} else {
-		ret.telemetryEnable = *c.TelemetryEnable
+		ret.telemetryEnabled = *c.TelemetryEnabled
 	}
 
 	if c.TelemetryTopic == nil {
@@ -511,10 +511,10 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.telemetryRetain = *c.TelemetryRetain
 	}
 
-	if c.RealtimeEnable == nil || ret.readOnly {
-		ret.realtimeEnable = false
+	if c.RealtimeEnabled == nil || ret.readOnly {
+		ret.realtimeEnabled = false
 	} else {
-		ret.realtimeEnable = *c.RealtimeEnable
+		ret.realtimeEnabled = *c.RealtimeEnabled
 	}
 
 	if c.RealtimeTopic == nil {

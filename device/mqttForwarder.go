@@ -25,7 +25,7 @@ func RunMqttForwarders(
 	for _, mc := range mqttClientPool.GetByNames(d.Config().RealtimeViaMqttClients()) {
 		mc := mc
 
-		if !mc.Config().RealtimeEnable() {
+		if !mc.Config().RealtimeEnabled() {
 			continue
 		}
 
