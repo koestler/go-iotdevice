@@ -115,6 +115,7 @@ func RunMqttForwarders(
 							SecondsSinceLastUpdate: now.Sub(d.LastUpdated()).Seconds(),
 							NumericValues:          convertValuesToNumericTelemetryValues(values),
 							TextValues:             convertValuesToTextTelemetryValues(values),
+							EnumValues:             convertValuesToEnumTelemetryValues(values),
 						}
 
 						if payload, err := json.Marshal(telemetryMessage); err != nil {

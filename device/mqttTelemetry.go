@@ -12,6 +12,7 @@ type TelemetryMessage struct {
 	SecondsSinceLastUpdate float64                          `json:"SecondsSinceLastUpdate"`
 	NumericValues          map[string]NumericTelemetryValue `json:"NumericValues,omitempty"`
 	TextValues             map[string]TextTelemetryValue    `json:"TextValues,omitempty"`
+	EnumValues             map[string]EnumTelemetryValue    `json:"EnumValues,omitempty"`
 }
 
 type NumericTelemetryValue struct {
@@ -27,8 +28,15 @@ type TextTelemetryValue struct {
 	Value       string `json:"Val"`
 }
 
+type EnumTelemetryValue struct {
+	Category    string `json:"Cat"`
+	Description string `json:"Desc"`
+	EnumIdx     int    `json:"Idx"`
+	Value       string `json:"Val"`
+}
+
 func convertValuesToNumericTelemetryValues(values []dataflow.Value) (ret map[string]NumericTelemetryValue) {
-	ret = make(map[string]NumericTelemetryValue, len(values))
+	ret = make(map[string]NumericTelemetryValue)
 
 	for _, value := range values {
 		if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
@@ -45,7 +53,7 @@ func convertValuesToNumericTelemetryValues(values []dataflow.Value) (ret map[str
 }
 
 func convertValuesToTextTelemetryValues(values []dataflow.Value) (ret map[string]TextTelemetryValue) {
-	ret = make(map[string]TextTelemetryValue, len(values))
+	ret = make(map[string]TextTelemetryValue)
 
 	for _, value := range values {
 		if text, ok := value.(dataflow.TextRegisterValue); ok {
@@ -53,6 +61,23 @@ func convertValuesToTextTelemetryValues(values []dataflow.Value) (ret map[string
 				Category:    text.Register().Category(),
 				Description: text.Register().Description(),
 				Value:       text.Value(),
+			}
+		}
+	}
+
+	return
+}
+
+func convertValuesToEnumTelemetryValues(values []dataflow.Value) (ret map[string]EnumTelemetryValue) {
+	ret = make(map[string]EnumTelemetryValue)
+
+	for _, value := range values {
+		if enum, ok := value.(dataflow.EnumRegisterValue); ok {
+			ret[value.Register().Name()] = EnumTelemetryValue{
+				Category:    enum.Register().Category(),
+				Description: enum.Register().Description(),
+				EnumIdx:     enum.EnumIdx(),
+				Value:       enum.Value(),
 			}
 		}
 	}
