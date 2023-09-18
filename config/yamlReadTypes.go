@@ -36,27 +36,43 @@ type authenticationConfigRead struct {
 }
 
 type mqttClientConfigRead struct {
-	Broker            string  `yaml:"Broker"`
-	ProtocolVersion   *int    `yaml:"ProtocolVersion"`
-	User              string  `yaml:"User"`
-	Password          string  `yaml:"Password"`
-	ClientId          *string `yaml:"ClientId"`
-	Qos               *byte   `yaml:"Qos"`
-	KeepAlive         string  `yaml:"KeepAlive"`
-	ConnectRetryDelay string  `yaml:"ConnectRetryDelay"`
-	ConnectTimeout    string  `yaml:"ConnectTimeout"`
-	ReadOnly          *bool   `yaml:"ReadOnly"`
-	AvailabilityTopic *string `yaml:"AvailabilityTopic"`
-	TelemetryInterval string  `yaml:"TelemetryInterval"`
+	Broker          string `yaml:"Broker"`
+	ProtocolVersion *int   `yaml:"ProtocolVersion"`
+
+	User     string  `yaml:"User"`
+	Password string  `yaml:"Password"`
+	ClientId *string `yaml:"ClientId"`
+
+	Qos               *byte  `yaml:"Qos"`
+	KeepAlive         string `yaml:"KeepAlive"`
+	ConnectRetryDelay string `yaml:"ConnectRetryDelay"`
+	ConnectTimeout    string `yaml:"ConnectTimeout"`
+	TopicPrefix       string `yaml:"TopicPrefix"`
+	ReadOnly          *bool  `yaml:"ReadOnly"`
+	MaxBacklogSize    *int   `yaml:"MaxBacklogSize"`
+
+	AvailabilityEnable *bool   `yaml:"AvailabilityEnable"`
+	AvailabilityTopic  *string `yaml:"AvailabilityTopic"`
+	AvailabilityRetain *bool   `yaml:"AvailabilityRetain"`
+
+	StructureEnable   *bool   `yaml:"StructureEnable"`
+	StructureTopic    *string `yaml:"StructureTopic"`
+	StructureInterval string  `yaml:"StructureInterval"`
+	StructureRetain   *bool   `yaml:"StructureRetain"`
+
+	TelemetryEnable   *bool   `yaml:"TelemetryEnable"`
 	TelemetryTopic    *string `yaml:"TelemetryTopic"`
+	TelemetryInterval string  `yaml:"TelemetryInterval"`
 	TelemetryRetain   *bool   `yaml:"TelemetryRetain"`
-	RealtimeEnable    *bool   `yaml:"RealtimeEnable"`
-	RealtimeTopic     *string `yaml:"RealtimeTopic"`
-	RealtimeRetain    *bool   `yaml:"RealtimeRetain"`
-	TopicPrefix       string  `yaml:"TopicPrefix"`
-	MaxBacklogSize    *int    `yaml:"MaxBacklogSize"`
-	LogDebug          *bool   `yaml:"LogDebug"`
-	LogMessages       *bool   `yaml:"LogMessages"`
+
+	RealtimeEnable   *bool   `yaml:"RealtimeEnable"`
+	RealtimeTopic    *string `yaml:"RealtimeTopic"`
+	RealtimeInterval string  `yaml:"RealtimeInterval"`
+	RealtimeRepeat   *bool   `yaml:"RealtimeRepeat"`
+	RealtimeRetain   *bool   `yaml:"RealtimeRetain"`
+
+	LogDebug    *bool `yaml:"LogDebug"`
+	LogMessages *bool `yaml:"LogMessages"`
 }
 
 type modbusConfigRead struct {

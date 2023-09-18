@@ -8,5 +8,11 @@
    - when receiver mqtt connection closed,
    - when sender mqtt connection closed mqtt connection closed
    - when device is disconnected (modbus / http etc.)
+ - implement something like a RealtimeDelay variable to limit the frequency at which updates are sent? This would prevent hass / other systems from receiving to many messages.
 - hassDiscovery:
-  - use multiple availability topics to also make device unavailable when its disconnected 
+  - use multiple availability topics to also make device unavailable when its disconnected
+- come up with a generic register filter usable for mqtt messages, hass discovery, views etc.
+- mqtt: recheck default topics
+  - do the make sense or shall they be changed?
+  - compare with other implementation (hass, tasmota etc.)
+  - remove go-iotdevice? (seems quite obsolete to me now)

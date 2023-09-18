@@ -103,23 +103,39 @@ MqttClients:                                               # optional, when empt
   local:                                                   # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Broker: tcp://mqtt.example.com:1883                    # mandatory, the URL to the server, use tcp:// or ssl://
     ProtocolVersion: 5                                     # optional, default 5, must be 5 always, only mqtt protocol version 5 is supported
+
     User: dev                                              # optional, default empty, the user used for authentication
     Password: zee4AhRi                                     # optional, default empty, the password used for authentication
     #ClientId: go-iotdevice                                # optional, default go-iotdevice-UUID, mqtt client id, make sure it is unique per mqtt-server
+
     Qos: 1                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
     KeepAlive: 1m                                          # optional, default 60s, how often a ping is sent to keep the connection alive
     ConnectRetryDelay: 10s                                 # optional, default 10s, when disconnected: after what delay shall a connection attempt is made
     ConnectTimeout: 5s                                     # optional, default 5s, how long to wait for the SYN+ACK packet, increase on slow networks
-    ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overriding AvailabilityTopic, TelemetryInterval and RealtimeEnable and MaxBacklogSize)
-    AvailabilityTopic: '%Prefix%tele/%ClientId%/status'    # optional, what topic to use for online/offline messages, wen set to empty string, no availability / will messages are sent
-    TelemetryInterval: 10s                                 # optional, default 10s, how often to sent telemetry mqtt messages, 0s disables telemetry messages
-    TelemetryTopic: '%Prefix%tele/go-iotdevice/%DeviceName%/state' # optional, what topic to use for telemetry messages
-    TelemetryRetain: false                                 # optional, default false, the mqtt retain flag for telemetry messages
-    RealtimeEnable: false                                  # optional, default false, whether to enable sending realtime messages
-    RealtimeTopic: '%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%' # optional, what topic to use for realtime messages
-    RealtimeRetain: true                                   # optional, default true, the mqtt retain flag for realtime messages
     TopicPrefix:                                           # optional, default empty, %Prefix% is replaced with this string
+    ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overriding MaxBacklogSize, AvailabilityEnable, StructureEnable, TelemetryEnable, RealtimeEnable)
     MaxBacklogSize: 256                                    # optional, default 256, max number of mqtt messages to store when connection is offline
+
+    AvailabilityEnable: true                               # optional, default true, whether to send online messages and register an offline message as will
+    AvailabilityTopic: '%Prefix%tele/%ClientId%/status'    # optional, what topic to use for online/offline messages
+    AvailabilityRetain: true                               # optional, default true, the mqtt retain flag for availability messages
+
+    StructureEnable: true                                  # optional, default true, whether to send messages containing the list of registers / types
+    StructureTopic: '%Prefix%struct/go-iotdevice/%DeviceName%' # optional, what topic to use for structure messages
+    StructureInterval: 0s                                  # optional, default 0, 0 means disabled only send initially, otherwise the structure is repeated after this interval (useful when retain is false)
+    StructureRetain: true                                  # optional, default true, the mqtt retain flag for structure messages
+
+    TelemetryEnable: true                                  # optional, default true, whether to send telemetry messages (one per device)
+    TelemetryTopic: '%Prefix%tele/go-iotdevice/%DeviceName%/state' # optional, what topic to use for telemetry messages
+    TelemetryInterval: 10s                                 # optional, default 10s, how often to sent telemetry mqtt messages
+    TelemetryRetain: false                                 # optional, default false, the mqtt retain flag for telemetry messages
+
+    RealtimeEnable: true                                   # optional, default false, whether to enable sending realtime messages
+    RealtimeTopic: '%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%' # optional, what topic to use for realtime messages
+    RealtimeInterval: 0s                                   # optional, default 0; 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
+    RealtimeRepeat: false                                  # optional, default false, when true and RealtimeInterval > 0, then all messages are always sent. When false, only changed values are sent.
+    RealtimeRetain: false                                  # optional, default false, the mqtt retain flag for realtime messages
+
     LogDebug: false                                        # optional, default false, very verbose debug log of the mqtt connection
     LogMessages: false                                     # optional, default false, log all incoming mqtt messages
 
@@ -138,9 +154,9 @@ VictronDevices:                                            # optional, a list of
         - AuxVoltage                                       # for BMV devices without a mid- or starter-voltage reading
       SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
         - Settings                                         # for solar devices it might make sense to not fetch / output the settings
-      TelemetryViaMqttClients:                             # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
+      TelemetryViaMqttClients:                             # optional, default all non-readonly clients, to what mqtt servers shall telemetry messages be sent to
         - local                                            # state the arbitrary name of the mqtt client as defined in the MqttClients section of this file
-      RealtimeViaMqttClients:                              # optional, default all clients, to what mqtt servers shall realtime messages be sent to
+      RealtimeViaMqttClients:                              # optional, default all non-readonly clients, to what mqtt servers shall realtime messages be sent to
         - local
       RestartInterval: 200ms                               # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff: 1m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum

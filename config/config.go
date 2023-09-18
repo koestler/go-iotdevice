@@ -358,7 +358,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	}
 
 	if c.Qos == nil {
-		ret.qos = 1 // default qos is 1
+		ret.qos = 1
 	} else if *c.Qos == 0 || *c.Qos == 1 || *c.Qos == 2 {
 		ret.qos = *c.Qos
 	} else {
@@ -366,7 +366,6 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	}
 
 	if len(c.KeepAlive) < 1 {
-		// use default 60s
 		ret.keepAlive = time.Minute
 	} else if keepAlive, e := time.ParseDuration(c.KeepAlive); e != nil {
 		err = append(err, fmt.Errorf("MqttClientConfig->%s->KeepAlive='%s' parse error: %s",
@@ -385,7 +384,6 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	}
 
 	if len(c.ConnectRetryDelay) < 1 {
-		// use default 10s
 		ret.connectRetryDelay = 10 * time.Second
 	} else if connectRetryDelay, e := time.ParseDuration(c.ConnectRetryDelay); e != nil {
 		err = append(err, fmt.Errorf("MqttClientConfig->%s->ConnectRetryDelay='%s' parse error: %s",
@@ -399,14 +397,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.connectRetryDelay = connectRetryDelay
 	}
 
-	if c.ReadOnly == nil {
-		ret.readOnly = false
-	} else {
-		ret.readOnly = *c.ReadOnly
-	}
-
 	if len(c.ConnectTimeout) < 1 {
-		// use default 5s
 		ret.connectTimeout = 5 * time.Second
 	} else if connectTimeout, e := time.ParseDuration(c.ConnectTimeout); e != nil {
 		err = append(err, fmt.Errorf("MqttClientConfig->%s->ConnectTimeout='%s' parse error: %s",
@@ -420,36 +411,102 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.connectTimeout = connectTimeout
 	}
 
+	if c.ReadOnly == nil {
+		ret.readOnly = false
+	} else {
+		ret.readOnly = *c.ReadOnly
+	}
+
 	if ret.readOnly {
-		ret.availabilityTopic = ""
-	} else if c.AvailabilityTopic == nil {
-		// use default
+		ret.maxBacklogSize = 0
+	} else if c.MaxBacklogSize == nil {
+		ret.maxBacklogSize = 256
+	} else {
+		ret.maxBacklogSize = *c.MaxBacklogSize
+	}
+
+	if ret.readOnly {
+		ret.availabilityEnable = false
+	} else if c.AvailabilityEnable == nil {
+		ret.availabilityEnable = true
+	} else {
+		ret.availabilityEnable = *c.AvailabilityEnable
+	}
+
+	if c.AvailabilityTopic == nil {
 		ret.availabilityTopic = "%Prefix%tele/%ClientId%/status"
+	} else if len(*c.AvailabilityTopic) < 1 {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->AvailabilityTopic must no be empty", name))
 	} else {
 		ret.availabilityTopic = *c.AvailabilityTopic
 	}
 
-	if ret.readOnly {
-		ret.telemetryInterval = 0
-	} else if len(c.TelemetryInterval) < 1 {
-		// use default 10s
-		ret.telemetryInterval = 10 * time.Second
-	} else if telemetryInterval, e := time.ParseDuration(c.TelemetryInterval); e != nil {
-		err = append(err, fmt.Errorf("HttpServerConfig->TelemetryInterval='%s' parse error: %s", c.TelemetryInterval, e))
-	} else if telemetryInterval < 0 {
-		err = append(err, fmt.Errorf("HttpServerConfig->TelemetryInterval='%s' must be positive", c.TelemetryInterval))
+	if c.AvailabilityRetain == nil {
+		ret.availabilityRetain = true
 	} else {
-		ret.telemetryInterval = telemetryInterval
+		ret.availabilityRetain = *c.AvailabilityRetain
+	}
+
+	if ret.readOnly {
+		ret.structureEnable = false
+	} else if c.StructureEnable == nil {
+		ret.structureEnable = true
+	} else {
+		ret.structureEnable = *c.StructureEnable
+	}
+
+	if c.StructureTopic == nil {
+		ret.structureTopic = "%Prefix%struct/go-iotdevice/%DeviceName%/state"
+	} else if len(*c.StructureTopic) < 1 {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->StructureTopic must no be empty", name))
+	} else {
+		ret.structureTopic = *c.StructureTopic
+	}
+
+	if len(c.StructureInterval) < 1 {
+		ret.structureInterval = 0 * time.Second
+	} else if structureInterval, e := time.ParseDuration(c.StructureInterval); e != nil {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->StructureInterval='%s' parse error: %s", name, c.StructureInterval, e))
+	} else if structureInterval < 0 {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->StructureInterval='%s' must be positive", name, c.StructureInterval))
+	} else {
+		ret.structureInterval = structureInterval
+	}
+
+	if c.StructureRetain == nil {
+		ret.structureRetain = true
+	} else {
+		ret.structureRetain = *c.StructureRetain
+	}
+
+	if ret.readOnly {
+		ret.telemetryEnable = false
+	} else if c.TelemetryEnable == nil {
+		ret.telemetryEnable = true
+	} else {
+		ret.telemetryEnable = *c.TelemetryEnable
 	}
 
 	if c.TelemetryTopic == nil {
 		ret.telemetryTopic = "%Prefix%tele/go-iotdevice/%DeviceName%/state"
+	} else if len(*c.TelemetryTopic) < 1 {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->TelemetryTopic must no be empty", name))
 	} else {
 		ret.telemetryTopic = *c.TelemetryTopic
 	}
 
+	if len(c.TelemetryInterval) < 1 {
+		ret.telemetryInterval = 10 * time.Second
+	} else if telemetryInterval, e := time.ParseDuration(c.TelemetryInterval); e != nil {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->TelemetryInterval='%s' parse error: %s", name, c.TelemetryInterval, e))
+	} else if telemetryInterval < 0 {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->TelemetryInterval='%s' must be positive", name, c.TelemetryInterval))
+	} else {
+		ret.telemetryInterval = telemetryInterval
+	}
+
 	if c.TelemetryRetain == nil {
-		ret.realtimeRetain = false
+		ret.telemetryRetain = false
 	} else {
 		ret.telemetryRetain = *c.TelemetryRetain
 	}
@@ -462,22 +519,32 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 
 	if c.RealtimeTopic == nil {
 		ret.realtimeTopic = "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%"
+	} else if len(*c.RealtimeTopic) < 1 {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->RealtimeTopic must no be empty", name))
 	} else {
 		ret.realtimeTopic = *c.RealtimeTopic
 	}
 
-	if c.RealtimeRetain == nil {
-		ret.realtimeRetain = true
+	if len(c.RealtimeInterval) < 1 {
+		ret.realtimeInterval = 0 * time.Second
+	} else if realtimeInterval, e := time.ParseDuration(c.RealtimeInterval); e != nil {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->RealtimeInterval='%s' parse error: %s", name, c.RealtimeInterval, e))
+	} else if realtimeInterval < 0 {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->RealtimeInterval='%s' must be positive", name, c.RealtimeInterval))
 	} else {
-		ret.realtimeRetain = *c.RealtimeRetain
+		ret.realtimeInterval = realtimeInterval
 	}
 
-	if ret.readOnly {
-		ret.maxBacklogSize = 0
-	} else if c.MaxBacklogSize == nil {
-		ret.maxBacklogSize = 256
+	if c.RealtimeRepeat == nil {
+		ret.realtimeRepeat = false
 	} else {
-		ret.maxBacklogSize = *c.MaxBacklogSize
+		ret.realtimeRepeat = *c.RealtimeRepeat
+	}
+
+	if c.RealtimeRetain == nil {
+		ret.realtimeRetain = false
+	} else {
+		ret.realtimeRetain = *c.RealtimeRetain
 	}
 
 	if c.LogDebug != nil && *c.LogDebug {

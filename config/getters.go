@@ -179,20 +179,56 @@ func (c MqttClientConfig) ConnectTimeout() time.Duration {
 	return c.connectTimeout
 }
 
+func (c MqttClientConfig) TopicPrefix() string {
+	return c.topicPrefix
+}
+
 func (c MqttClientConfig) ReadOnly() bool {
 	return c.readOnly
+}
+
+func (c MqttClientConfig) MaxBacklogSize() int {
+	return c.maxBacklogSize
+}
+
+func (c MqttClientConfig) AvailabilityEnable() bool {
+	return c.availabilityEnable
 }
 
 func (c MqttClientConfig) AvailabilityTopic() string {
 	return c.availabilityTopic
 }
 
-func (c MqttClientConfig) TelemetryInterval() time.Duration {
-	return c.telemetryInterval
+func (c MqttClientConfig) AvailabilityRetain() bool {
+	return c.availabilityRetain
+}
+
+func (c MqttClientConfig) StructureEnable() bool {
+	return c.structureEnable
+}
+
+func (c MqttClientConfig) StructureTopic() string {
+	return c.structureTopic
+}
+
+func (c MqttClientConfig) StructureInterval() time.Duration {
+	return c.structureInterval
+}
+
+func (c MqttClientConfig) StructureRetain() bool {
+	return c.structureRetain
+}
+
+func (c MqttClientConfig) TelemetryEnable() bool {
+	return c.telemetryEnable
 }
 
 func (c MqttClientConfig) TelemetryTopic() string {
 	return c.telemetryTopic
+}
+
+func (c MqttClientConfig) TelemetryInterval() time.Duration {
+	return c.telemetryInterval
 }
 
 func (c MqttClientConfig) TelemetryRetain() bool {
@@ -207,16 +243,16 @@ func (c MqttClientConfig) RealtimeTopic() string {
 	return c.realtimeTopic
 }
 
+func (c MqttClientConfig) RealtimeInterval() time.Duration {
+	return c.realtimeInterval
+}
+
+func (c MqttClientConfig) RealtimeRepeat() bool {
+	return c.realtimeRepeat
+}
+
 func (c MqttClientConfig) RealtimeRetain() bool {
 	return c.realtimeRetain
-}
-
-func (c MqttClientConfig) TopicPrefix() string {
-	return c.topicPrefix
-}
-
-func (c MqttClientConfig) MaxBacklogSize() int {
-	return c.maxBacklogSize
 }
 
 func (c MqttClientConfig) LogDebug() bool {

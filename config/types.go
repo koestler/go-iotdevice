@@ -49,28 +49,44 @@ type AuthenticationConfig struct {
 }
 
 type MqttClientConfig struct {
-	name              string
-	broker            *url.URL
-	protocolVersion   int
-	user              string
-	password          string
-	clientId          string
+	name            string
+	broker          *url.URL
+	protocolVersion int
+
+	user     string
+	password string
+	clientId string
+
 	qos               byte
 	keepAlive         time.Duration
 	connectRetryDelay time.Duration
 	connectTimeout    time.Duration
-	readOnly          bool
-	availabilityTopic string
-	telemetryInterval time.Duration
-	telemetryTopic    string
-	telemetryRetain   bool
-	realtimeEnable    bool
-	realtimeTopic     string
-	realtimeRetain    bool
 	topicPrefix       string
+	readOnly          bool
 	maxBacklogSize    int
-	logDebug          bool
-	logMessages       bool
+
+	availabilityEnable bool
+	availabilityTopic  string
+	availabilityRetain bool
+
+	structureEnable   bool
+	structureTopic    string
+	structureInterval time.Duration
+	structureRetain   bool
+
+	telemetryEnable   bool
+	telemetryTopic    string
+	telemetryInterval time.Duration
+	telemetryRetain   bool
+
+	realtimeEnable   bool
+	realtimeTopic    string
+	realtimeInterval time.Duration
+	realtimeRepeat   bool
+	realtimeRetain   bool
+
+	logDebug    bool
+	logMessages bool
 }
 
 type ModbusConfig struct {

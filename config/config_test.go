@@ -44,27 +44,52 @@ MqttClients:                                               # optional, when empt
   0-local:                                                 # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Broker: tcp://mqtt.example.com:1883                    # mandatory, the URL to the server, use tcp:// or ssl://
     ProtocolVersion: 5                                     # optional, default 5, must be 5 always, only mqtt protocol version 5 is supported
+
     User: dev                                              # optional, default empty, the user used for authentication
     Password: zee4AhRi                                     # optional, default empty, the password used for authentication
     ClientId: server42                                     # optional, default go-iotdevice-UUID, mqtt client id, make sure it is unique per mqtt-server
+
     Qos: 0                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
     KeepAlive: 2m                                          # optional, default 60s, how often a ping is sent to keep the connection alive
     ConnectRetryDelay: 20s                                 # optional, default 10s, when disconnected: after what delay shall a connection attempt is made
     ConnectTimeout: 10s                                    # optional, default 5s, how long to wait for the SYN+ACK packet, increase on slow networks
-    ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overriding AvailabilityTopic, TelemetryInterval and RealtimeEnable and MaxBacklogSize)
-    AvailabilityTopic: '%Prefix%/%ClientId%/status'        # optional, what topic to use for online/offline messages
-    TelemetryInterval: 20s                                 # optional, default 10s, how often to sent telemetry mqtt messages, 0s disables tlemetry messages
-    TelemetryTopic: '%Prefix%tele/%DeviceName%/state'      # optional, what topic to use for telemetry messages
-    TelemetryRetain: true                                  # optional, default false, the mqtt retain flag for telemetry messages
-    RealtimeEnable: true                                   # optional, default false, whether to enable sending realtime messages
-    RealtimeTopic: '%Prefix%stat/%DeviceName%/%ValueName%' # optional, what topic to use for realtime messages
-    RealtimeRetain: false                                  # optional, default true, the mqtt retain flag for realtime messages
     TopicPrefix: my-prefix                                 # optional, default empty, %Prefix% is replaced with this string
+    ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overriding MaxBacklogSize, AvailabilityEnable, StructureEnable, TelemetryEnable, RealtimeEnable)
     MaxBacklogSize: 42                                     # optional, default 256, max number of mqtt messages to store when connection is offline
+
+    AvailabilityEnable: false                              # optional, default true, whether to send online messages and register an offline message as will
+    AvailabilityTopic: '%Prefix%tele-X/%ClientId%/status'  # optional, what topic to use for online/offline messages
+    AvailabilityRetain: false                              # optional, default true, the mqtt retain flag for availability messages
+
+    StructureEnable: false                                 # optional, default true, whether to send messages containing the list of registers / types
+    StructureTopic: '%Prefix%struct-X/go-iotdevice/%DeviceName%' # optional, what topic to use for structure messages
+    StructureInterval: 20s                                 # optional, default 0, 0 means disabled only send initially, otherwise the structure is repeated after this interval (useful when retain is false)
+    StructureRetain: false                                 # optional, default true, the mqtt retain flag for structure messages
+
+    TelemetryEnable: false                                 # optional, default true, whether to send telemetry messages (one per device)
+    TelemetryTopic: '%Prefix%tele-X/go-iotdevice/%DeviceName%/state' # optional, what topic to use for telemetry messages
+    TelemetryInterval: 30s                                 # optional, default 10s, how often to sent telemetry mqtt messages
+    TelemetryRetain: true                                  # optional, default false, the mqtt retain flag for telemetry messages
+
+    RealtimeEnable: false                                  # optional, default false, whether to enable sending realtime messages
+    RealtimeTopic: '%Prefix%stat-X/go-iotdevice/%DeviceName%/%ValueName%' # optional, what topic to use for realtime messages
+    RealtimeInterval: 2s                                   # optional, default 0; 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
+    RealtimeRepeat: true                                   # optional, default false, when true and RealtimeInterval > 0, then all messages are always sent. When false, only changed values are sent.
+    RealtimeRetain: true                                   # optional, default false, the mqtt retain flag for realtime messages
+
     LogDebug: true                                         # optional, default false, very verbose debug log of the mqtt connection
     LogMessages: true                                      # optional, default false, log all incoming mqtt messages
+
   1-remote:
     Broker: "ssl://eu1.cloud.thethings.network:8883"
+
+  2-readonly:
+    Broker: "tcp://example.com:1883"
+    ReadOnly: true
+    AvailabilityEnable: true
+    StructureEnable: true
+    TelemetryEnable: true
+    RealtimeEnable: true
 
 Modbus:                                                    # optional, when empty, no modbus handler is started
   bus0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
@@ -242,43 +267,6 @@ HassDiscovery:                                             # optional, default, 
   - Devices:
     - tcw241
 `
-
-	ValidMqttReadOnlyConfig = `
-Version: 1                                                 # configuration file format; must be set to 1 for >v2 of this tool.
-
-HttpServer:                                                # optional, when missing: http server is not started
-  Bind: "[::1]"
-
-Authentication:                                            # optional, when missing: login is disabled
-  HtaccessFile: ./my-auth.passwd                           # mandatory, where the file generated by htpasswd can be found
-
-MqttClients:                                               # optional, when empty, no mqtt connection is made
-  0-local:                                                 # mandatory, an arbitrary name used for logging and for referencing in other config sections
-    Broker: tcp://mqtt.example.com:1883                    # mandatory, the URL to the server, use tcp:// or ssl://
-    ProtocolVersion: 5                                     # optional, default 5, must be 5 always, only mqtt protocol version 5 is supported
-    User: dev                                              # optional, default empty, the user used for authentication
-    Password: zee4AhRi                                     # optional, default empty, the password used for authentication
-    ClientId: server42                                     # optional, default go-iotdevice-UUID, mqtt client id, make sure it is unique per mqtt-server
-    Qos: 0                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
-    KeepAlive: 2m                                          # optional, default 60s, how often a ping is sent to keep the connection alive
-    ConnectRetryDelay: 20s                                 # optional, default 10s, when disconnected: after what delay shall a connection attempt is made
-    ConnectTimeout: 10s                                    # optional, default 5s, how long to wait for the SYN+ACK packet, increase on slow networks
-    ReadOnly: true                                         # optional, default false, when true, no messages are sent to the server (overriding AvailabilityTopic, TelemetryInterval and RealtimeEnable and MaxBacklogSize)
-    AvailabilityTopic: '%Prefix%/%ClientId%/status'        # optional, what topic to use for online/offline messages
-    TelemetryInterval: 20s                                 # optional, default 10s, how often to sent telemetry mqtt messages, 0s disables tlemetry messages
-    TelemetryTopic: '%Prefix%tele/%DeviceName%/state'      # optional, what topic to use for telemetry messages
-    TelemetryRetain: true                                  # optional, default false, the mqtt retain flag for telemetry messages
-    RealtimeEnable: true                                   # optional, default false, whether to enable sending realtime messages
-    RealtimeTopic: '%Prefix%stat/%DeviceName%/%ValueName%' # optional, what topic to use for realtime messages
-    RealtimeRetain: false                                  # optional, default true, the mqtt retain flag for realtime messages
-    TopicPrefix: my-prefix                                 # optional, default empty, %Prefix% is replaced with this string
-    MaxBacklogSize: 42                                     # optional, default 256, max number of mqtt messages to store when connection is offline
-    LogDebug: true                                         # optional, default false, very verbose debug log of the mqtt connection
-    LogMessages: true                                      # optional, default false, log all incoming mqtt messages
-  1-remote:
-    Broker: "ssl://eu1.cloud.thethings.network:8883"
-
-`
 )
 
 func containsError(needle string, err []error) bool {
@@ -403,7 +391,7 @@ func TestReadConfig_Complete(t *testing.T) {
 		}
 	}
 
-	if expect, got := 2, len(config.MqttClients()); expect != got {
+	if expect, got := 3, len(config.MqttClients()); expect != got {
 		t.Errorf("expect length of config.MqttClients to be %d but got %d", expect, got)
 	} else {
 		{
@@ -414,87 +402,123 @@ func TestReadConfig_Complete(t *testing.T) {
 			}
 
 			if expect, got := "tcp://mqtt.example.com:1883", mc.Broker().String(); expect != got {
-				t.Errorf("expect MqttClients->local->Broker to be '%s' but got '%s'", expect, got)
+				t.Errorf("expect MqttClients->0-local->Broker to be '%s' but got '%s'", expect, got)
 			}
 
 			if expect, got := 5, mc.ProtocolVersion(); expect != got {
-				t.Errorf("expect MqttClients->local->ProtocolVersion to be %d but got %d", expect, got)
+				t.Errorf("expect MqttClients->0-local->ProtocolVersion to be %d but got %d", expect, got)
 			}
 
 			if expect, got := "dev", mc.User(); expect != got {
-				t.Errorf("expect MqttClients->local->User to be '%s' but got '%s'", expect, got)
+				t.Errorf("expect MqttClients->0-local->User to be '%s' but got '%s'", expect, got)
 			}
 
 			if expect, got := "zee4AhRi", mc.Password(); expect != got {
-				t.Errorf("expect MqttClients->local->Password to be '%s' but got '%s'", expect, got)
+				t.Errorf("expect MqttClients->0-local->Password to be '%s' but got '%s'", expect, got)
 			}
 
 			if expect, got := "server42", mc.ClientId(); expect != got {
-				t.Errorf("expect MqttClients->local->ClientId to be '%s' but got '%s'", expect, got)
+				t.Errorf("expect MqttClients->0-local->ClientId to be '%s' but got '%s'", expect, got)
 			}
 
 			if expect, got := byte(0), mc.Qos(); expect != got {
-				t.Errorf("expect MqttClients->local->Qos to be %d but got %d", expect, got)
+				t.Errorf("expect MqttClients->0-local->Qos to be %d but got %d", expect, got)
 			}
 
 			if expect, got := 2*time.Minute, mc.KeepAlive(); expect != got {
-				t.Errorf("expect MqttClients->local->KeepAlive to be '%s' but got '%s'", expect, got)
+				t.Errorf("expect MqttClients->0-local->KeepAlive to be '%s' but got '%s'", expect, got)
 			}
 
 			if expect, got := 20*time.Second, mc.ConnectRetryDelay(); expect != got {
-				t.Errorf("expect MqttClients->local->ConnectRetryDelay to be '%s' but got '%s'", expect, got)
+				t.Errorf("expect MqttClients->0-local->ConnectRetryDelay to be '%s' but got '%s'", expect, got)
 			}
 
 			if expect, got := 10*time.Second, mc.ConnectTimeout(); expect != got {
-				t.Errorf("expect MqttClients->local->ConnectTimeout to be '%s' but got '%s'", expect, got)
-			}
-
-			if got := mc.ReadOnly(); got {
-				t.Errorf("expect MqttClients->local->ReadOnly to be false")
-			}
-
-			if expect, got := "%Prefix%/%ClientId%/status", mc.AvailabilityTopic(); expect != got {
-				t.Errorf("expect MqttClients->local->AvailabilityTopic to be '%s' but got '%s'", expect, got)
-			}
-
-			if expect, got := 20*time.Second, mc.TelemetryInterval(); expect != got {
-				t.Errorf("expect MqttClients->local->TelemetryInterval to be '%s' but got '%s'", expect, got)
-			}
-
-			if expect, got := "%Prefix%tele/%DeviceName%/state", mc.TelemetryTopic(); expect != got {
-				t.Errorf("expect MqttClients->local->TelemetryTopic to be '%s' but got '%s'", expect, got)
-			}
-
-			if !mc.TelemetryRetain() {
-				t.Error("expect MqttClients->local->TelemetryRetain to be true")
-			}
-
-			if !mc.RealtimeEnable() {
-				t.Error("expect MqttClients->local->RealtimeEnable to be true")
-			}
-
-			if expect, got := "%Prefix%stat/%DeviceName%/%ValueName%", mc.RealtimeTopic(); expect != got {
-				t.Errorf("expect MqttClients->local->RealtimeTopic to be '%s' but got '%s'", expect, got)
-			}
-
-			if mc.RealtimeRetain() {
-				t.Error("expect MqttClients->RealtimeRetain to be false")
+				t.Errorf("expect MqttClients->0-local->ConnectTimeout to be '%s' but got '%s'", expect, got)
 			}
 
 			if expect, got := "my-prefix", mc.TopicPrefix(); expect != got {
-				t.Errorf("expect MqttClients->local->TopicPrefix to be '%s' but got '%s'", expect, got)
+				t.Errorf("expect MqttClients->0-local->TopicPrefix to be '%s' but got '%s'", expect, got)
+			}
+
+			if got := mc.ReadOnly(); got {
+				t.Errorf("expect MqttClients->0-local->ReadOnly to be false")
 			}
 
 			if expect, got := 42, mc.MaxBacklogSize(); expect != got {
-				t.Errorf("expect MqttClients->local->MaxBacklogSize to be %d but got %d", expect, got)
+				t.Errorf("expect MqttClients->0-local->MaxBacklogSize to be %d but got %d", expect, got)
+			}
+
+			if got := mc.AvailabilityEnable(); got {
+				t.Error("expect MqttClients->0-local->AvailabilityEnable to be false")
+			}
+
+			if expect, got := "%Prefix%tele-X/%ClientId%/status", mc.AvailabilityTopic(); expect != got {
+				t.Errorf("expect MqttClients->0-local->AvailabilityTopic to be '%s' but got '%s'", expect, got)
+			}
+
+			if got := mc.AvailabilityRetain(); got {
+				t.Error("expect MqttClients->0-local->AvailabilityRetain to be false")
+			}
+
+			if got := mc.StructureEnable(); got {
+				t.Error("expect MqttClients->0-local->StructureEnable to be false")
+			}
+
+			if expect, got := "%Prefix%struct-X/go-iotdevice/%DeviceName%", mc.StructureTopic(); expect != got {
+				t.Errorf("expect MqttClients->0-local->StructureTopic to be '%s' but got '%s'", expect, got)
+			}
+
+			if expect, got := 20*time.Second, mc.StructureInterval(); expect != got {
+				t.Errorf("expect MqttClients->0-local->StructureInterval to be '%s' but got '%s'", expect, got)
+			}
+
+			if got := mc.StructureRetain(); got {
+				t.Error("expect MqttClients->0-local->StructureRetain to be false")
+			}
+
+			if got := mc.TelemetryEnable(); got {
+				t.Error("expect MqttClients->0-local->TelemetryEnable to be false")
+			}
+
+			if expect, got := "%Prefix%tele-X/go-iotdevice/%DeviceName%/state", mc.TelemetryTopic(); expect != got {
+				t.Errorf("expect MqttClients->0-local->TelemetryTopic to be '%s' but got '%s'", expect, got)
+			}
+
+			if expect, got := 30*time.Second, mc.TelemetryInterval(); expect != got {
+				t.Errorf("expect MqttClients->0-local->TelemetryInterval to be '%s' but got '%s'", expect, got)
+			}
+
+			if got := mc.TelemetryRetain(); !got {
+				t.Error("expect MqttClients->0-local->TelemetryRetain to be true")
+			}
+
+			if got := mc.RealtimeEnable(); got {
+				t.Error("expect MqttClients->0-local->RealtimeEnable to be false")
+			}
+
+			if expect, got := "%Prefix%stat-X/go-iotdevice/%DeviceName%/%ValueName%", mc.RealtimeTopic(); expect != got {
+				t.Errorf("expect MqttClients->0-local->RealtimeTopic to be '%s' but got '%s'", expect, got)
+			}
+
+			if expect, got := 2*time.Second, mc.RealtimeInterval(); expect != got {
+				t.Errorf("expect MqttClients->0-local->RealtimeInterval to be '%s' but got '%s'", expect, got)
+			}
+
+			if got := mc.RealtimeRepeat(); !got {
+				t.Error("expect MqttClients->RealtimeRepeat to be true")
+			}
+
+			if got := mc.RealtimeRetain(); !got {
+				t.Error("expect MqttClients->RealtimeRetain to be true")
 			}
 
 			if !mc.LogDebug() {
-				t.Error("expect MqttClients->local->LogDebug to be true")
+				t.Error("expect MqttClients->0-local->LogDebug to be true")
 			}
 
 			if !mc.LogMessages() {
-				t.Error("expect MqttClients->local->LogMessages to be true")
+				t.Error("expect MqttClients->0-local->LogMessages to be true")
 			}
 		}
 
@@ -506,17 +530,46 @@ func TestReadConfig_Complete(t *testing.T) {
 			}
 
 			if expect, got := "ssl://eu1.cloud.thethings.network:8883", mc.Broker().String(); expect != got {
-				t.Errorf("expect MqttClients->local->Broker to be '%s' but got '%s'", expect, got)
+				t.Errorf("expect MqttClients->1-remote->Broker to be '%s' but got '%s'", expect, got)
 			}
 
 			if expect, got := 5, mc.ProtocolVersion(); expect != got {
-				t.Errorf("expect MqttClients->local->ProtocolVersion to be %d but got %d", expect, got)
+				t.Errorf("expect MqttClients->1-remote->ProtocolVersion to be %d but got %d", expect, got)
 			}
 
 			if expect, got := "", mc.User(); expect != got {
-				t.Errorf("expect MqttClients->local->User to be '%s' but got '%s'", expect, got)
+				t.Errorf("expect MqttClients->1-remote->User to be '%s' but got '%s'", expect, got)
 			}
 		}
+
+		{
+			mc := config.MqttClients()[2]
+
+			if expect, got := "2-readonly", mc.Name(); expect != got {
+				t.Errorf("expect Name of first MqttClient to be '%s' but got '%s'", expect, got)
+			}
+
+			if got := mc.ReadOnly(); !got {
+				t.Errorf("expect MqttClients->2-readonly->ReadOnly to be true")
+			}
+
+			if got := mc.AvailabilityEnable(); got {
+				t.Error("expect MqttClients->2-readonly->AvailabilityEnable to be false")
+			}
+
+			if got := mc.StructureEnable(); got {
+				t.Error("expect MqttClients->2-readonly->StructureEnable to be false")
+			}
+
+			if got := mc.TelemetryEnable(); got {
+				t.Error("expect MqttClients->2-readonly->TelemetryEnable to be false")
+			}
+
+			if got := mc.RealtimeEnable(); got {
+				t.Error("expect MqttClients->2-readonly->RealtimeEnable to be false")
+			}
+		}
+
 	}
 
 	if expect, got := 1, len(config.Modbus()); expect != got {
@@ -979,87 +1032,123 @@ func TestReadConfig_Default(t *testing.T) {
 		}
 
 		if expect, got := "tcp://mqtt.example.com:1883", mc.Broker().String(); expect != got {
-			t.Errorf("expect MqttClients->local->Broker to be '%s' but got '%s'", expect, got)
+			t.Errorf("expect MqttClients->0-local->Broker to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := 5, mc.ProtocolVersion(); expect != got {
-			t.Errorf("expect MqttClients->local->ProtocolVersion to be %d but got %d", expect, got)
+			t.Errorf("expect MqttClients->0-local->ProtocolVersion to be %d but got %d", expect, got)
 		}
 
 		if expect, got := "", mc.User(); expect != got {
-			t.Errorf("expect MqttClients->local->User to be '%s' but got '%s'", expect, got)
+			t.Errorf("expect MqttClients->0-local->User to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := "", mc.Password(); expect != got {
-			t.Errorf("expect MqttClients->local->Password to be '%s' but got '%s'", expect, got)
+			t.Errorf("expect MqttClients->0-local->Password to be '%s' but got '%s'", expect, got)
 		}
 
 		if got0, got1 := mc.ClientId(), config2.MqttClients()[0].ClientId(); got0 == got1 {
-			t.Errorf("expect MqttClients->local->ClientId to be different when rereading the config, got '%s' and '%s'", got0, got1)
+			t.Errorf("expect MqttClients->0-local->ClientId to be different when rereading the config, got '%s' and '%s'", got0, got1)
 		}
 
 		if expect, got := byte(1), mc.Qos(); expect != got {
-			t.Errorf("expect MqttClients->local->Qos to be %d but got %d", expect, got)
+			t.Errorf("expect MqttClients->0-local->Qos to be %d but got %d", expect, got)
 		}
 
 		if expect, got := time.Minute, mc.KeepAlive(); expect != got {
-			t.Errorf("expect MqttClients->local->KeepAlive to be '%s' but got '%s'", expect, got)
+			t.Errorf("expect MqttClients->0-local->KeepAlive to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := 10*time.Second, mc.ConnectRetryDelay(); expect != got {
-			t.Errorf("expect MqttClients->local->ConnectRetryDelay to be '%s' but got '%s'", expect, got)
+			t.Errorf("expect MqttClients->0-local->ConnectRetryDelay to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := 5*time.Second, mc.ConnectTimeout(); expect != got {
-			t.Errorf("expect MqttClients->local->ConnectTimeout to be '%s' but got '%s'", expect, got)
-		}
-
-		if got := mc.ReadOnly(); got {
-			t.Errorf("expect MqttClients->local->ReadOnly to be false")
-		}
-
-		if expect, got := "%Prefix%tele/%ClientId%/status", mc.AvailabilityTopic(); expect != got {
-			t.Errorf("expect MqttClients->local->AvailabilityTopic to be '%s' but got '%s'", expect, got)
-		}
-
-		if expect, got := 10*time.Second, mc.TelemetryInterval(); expect != got {
-			t.Errorf("expect MqttClients->local->TelemetryInterval to be '%s' but got '%s'", expect, got)
-		}
-
-		if expect, got := "%Prefix%tele/go-iotdevice/%DeviceName%/state", mc.TelemetryTopic(); expect != got {
-			t.Errorf("expect MqttClients->local->TelemetryTopic to be '%s' but got '%s'", expect, got)
-		}
-
-		if mc.TelemetryRetain() {
-			t.Error("expect MqttClients->local->TelemetryRetain to be false")
-		}
-
-		if mc.RealtimeEnable() {
-			t.Error("expect MqttClients->local->RealtimeEnable to be false")
-		}
-
-		if expect, got := "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%", mc.RealtimeTopic(); expect != got {
-			t.Errorf("expect MqttClients->local->RealtimeTopic to be '%s' but got '%s'", expect, got)
-		}
-
-		if !mc.RealtimeRetain() {
-			t.Error("expect MqttClients->RealtimeRetain to be true")
+			t.Errorf("expect MqttClients->0-local->ConnectTimeout to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := "", mc.TopicPrefix(); expect != got {
-			t.Errorf("expect MqttClients->local->TopicPrefix to be '%s' but got '%s'", expect, got)
+			t.Errorf("expect MqttClients->0-local->TopicPrefix to be '%s' but got '%s'", expect, got)
+		}
+
+		if got := mc.ReadOnly(); got {
+			t.Errorf("expect MqttClients->0-local->ReadOnly to be false")
 		}
 
 		if expect, got := 256, mc.MaxBacklogSize(); expect != got {
-			t.Errorf("expect MqttClients->local->MaxBacklogSize to be %d but got %d", expect, got)
+			t.Errorf("expect MqttClients->0-local->MaxBacklogSize to be %d but got %d", expect, got)
 		}
 
-		if mc.LogDebug() {
-			t.Error("expect MqttClients->local->LogDebug to be false")
+		if got := mc.AvailabilityEnable(); !got {
+			t.Error("expect MqttClients->0-local->AvailabilityEnable to be true")
 		}
 
-		if mc.LogMessages() {
-			t.Error("expect MqttClients->local->LogMessages to be false")
+		if expect, got := "%Prefix%tele/%ClientId%/status", mc.AvailabilityTopic(); expect != got {
+			t.Errorf("expect MqttClients->0-local->AvailabilityTopic to be '%s' but got '%s'", expect, got)
+		}
+
+		if got := mc.AvailabilityRetain(); !got {
+			t.Error("expect MqttClients->0-local->AvailabilityRetain to be true")
+		}
+
+		if got := mc.StructureEnable(); !got {
+			t.Error("expect MqttClients->0-local->StructureEnable to be true")
+		}
+
+		if expect, got := "%Prefix%struct/go-iotdevice/%DeviceName%/state", mc.StructureTopic(); expect != got {
+			t.Errorf("expect MqttClients->0-local->StructureTopic to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := 0*time.Second, mc.StructureInterval(); expect != got {
+			t.Errorf("expect MqttClients->0-local->StructureInterval to be '%s' but got '%s'", expect, got)
+		}
+
+		if got := mc.StructureRetain(); !got {
+			t.Error("expect MqttClients->0-local->StructureRetain to be true")
+		}
+
+		if got := mc.TelemetryEnable(); !got {
+			t.Error("expect MqttClients->0-local->TelemetryEnable to be true")
+		}
+
+		if expect, got := "%Prefix%tele/go-iotdevice/%DeviceName%/state", mc.TelemetryTopic(); expect != got {
+			t.Errorf("expect MqttClients->0-local->TelemetryTopic to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := 10*time.Second, mc.TelemetryInterval(); expect != got {
+			t.Errorf("expect MqttClients->0-local->TelemetryInterval to be '%s' but got '%s'", expect, got)
+		}
+
+		if got := mc.TelemetryRetain(); got {
+			t.Error("expect MqttClients->0-local->TelemetryRetain to be false")
+		}
+
+		if got := mc.RealtimeEnable(); got {
+			t.Error("expect MqttClients->0-local->RealtimeEnable to be false")
+		}
+
+		if expect, got := "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%", mc.RealtimeTopic(); expect != got {
+			t.Errorf("expect MqttClients->0-local->RealtimeTopic to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := 0*time.Second, mc.RealtimeInterval(); expect != got {
+			t.Errorf("expect MqttClients->0-local->RealtimeInterval to be '%s' but got '%s'", expect, got)
+		}
+
+		if got := mc.RealtimeRepeat(); got {
+			t.Error("expect MqttClients->RealtimeRepeat to be false")
+		}
+
+		if got := mc.RealtimeRetain(); got {
+			t.Error("expect MqttClients->RealtimeRetain to be false")
+		}
+
+		if got := mc.LogDebug(); got {
+			t.Error("expect MqttClients->0-local->LogDebug to be false")
+		}
+
+		if got := mc.LogMessages(); got {
+			t.Error("expect MqttClients->0-local->LogMessages to be false")
 		}
 	}
 
@@ -1368,57 +1457,6 @@ func TestReadConfig_Default(t *testing.T) {
 		}
 	}
 
-}
-
-func TestReadConfig_MqttReadOnly(t *testing.T) {
-	config, err := ReadConfig([]byte(ValidMqttReadOnlyConfig), true)
-	if len(err) > 0 {
-		t.Errorf("did not expect any errors, got: %v", err)
-	}
-
-	if expect, got := 2, len(config.MqttClients()); expect != got {
-		t.Errorf("expect length of config.MqttClients to be %d but got %d", expect, got)
-	} else {
-		{
-			mc := config.MqttClients()[0]
-
-			if expect, got := "0-local", mc.Name(); expect != got {
-				t.Errorf("expect Name of first MqttClient to be '%s' but got '%s'", expect, got)
-			}
-
-			if got := mc.ReadOnly(); !got {
-				t.Errorf("expect MqttClients->local->ReadOnly to be true")
-			}
-
-			if expect, got := "", mc.AvailabilityTopic(); expect != got {
-				t.Errorf("expect MqttClients->local->AvailabilityTopic to be '%s' but got '%s'", expect, got)
-			}
-
-			if expect, got := 0*time.Second, mc.TelemetryInterval(); expect != got {
-				t.Errorf("expect MqttClients->local->TelemetryInterval to be '%s' but got '%s'", expect, got)
-			}
-
-			if mc.RealtimeEnable() {
-				t.Error("expect MqttClients->local->RealtimeEnable to be false")
-			}
-
-			if expect, got := 0, mc.MaxBacklogSize(); expect != got {
-				t.Errorf("expect MqttClients->local->MaxBacklogSize to be %d but got %d", expect, got)
-			}
-		}
-
-		{
-			mc := config.MqttClients()[1]
-
-			if expect, got := "1-remote", mc.Name(); expect != got {
-				t.Errorf("expect Name of second MqttClient to be '%s' but got '%s'", expect, got)
-			}
-
-			if got := mc.ReadOnly(); got {
-				t.Errorf("expect MqttClients->remote->ReadOnly to be false")
-			}
-		}
-	}
 }
 
 // check that configuration file in the documentation do not contain any errors
