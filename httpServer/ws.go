@@ -2,10 +2,10 @@ package httpServer
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
+	jsoniter "github.com/json-iterator/go"
 	"log"
 	"time"
 )
@@ -156,7 +156,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 	}
 }
 
-func wsSendValuesResponse(writer *wsutil.Writer, encoder *json.Encoder, values map[string]map[string]valueResponse) error {
+func wsSendValuesResponse(writer *wsutil.Writer, encoder *jsoniter.Encoder, values map[string]map[string]valueResponse) error {
 	message := outputMessage{
 		Values: values,
 	}
