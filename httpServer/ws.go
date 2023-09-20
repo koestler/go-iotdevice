@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"github.com/koestler/go-iotdevice/config"
 	"log"
+	"nhooyr.io/websocket"
 	"time"
 )
 
@@ -16,6 +16,10 @@ type outputMessage struct {
 
 type authMessage struct {
 	AuthToken string `json:"authToken"`
+}
+
+var websocketAcceptOptions = websocket.AcceptOptions{
+	CompressionMode: websocket.CompressionContextTakeover,
 }
 
 // setupViewWs godoc
@@ -28,10 +32,6 @@ type authMessage struct {
 // @Router /views/{viewName}/ws [get]
 // @Security ApiKeyAuth
 func setupValuesWs(r *gin.RouterGroup, env *Environment) {
-	var upgrader = websocket.Upgrader{
-		EnableCompression: true,
-	}
-
 	// add dynamic routes
 	for _, v := range env.Views {
 		view := v
@@ -40,16 +40,13 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 
 		// the follow line uses a loop variable; it must be outside the closure
 		r.GET(relativePath, func(c *gin.Context) {
-			conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-			defer conn.Close()
+			conn, err := websocket.Accept(c.Writer, c.Request, &websocketAcceptOptions)
+			defer conn.Close(websocket.StatusInternalError, "")
 			if err != nil {
 				log.Printf("%s: error during upgrade: %s", logPrefix, err)
 				return
 			} else if env.Config.LogDebug() {
 				log.Printf("%s: connection established to %s", logPrefix, c.ClientIP())
-			}
-			if env.Config.LogDebug() {
-				defer log.Printf("%s: connection closed to %s", logPrefix, c.ClientIP())
 			}
 
 			senderCtx, senderCancel := context.WithCancel(c)
@@ -70,17 +67,17 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 			}
 
 			for {
-				mt, msg, err := conn.ReadMessage()
-
-				if env.Config.LogDebug() {
-					log.Printf("%s: message received: mt=%d, msg=%s, err=%s", logPrefix, mt, msg, err)
-				}
-
-				if err != nil || mt == websocket.CloseMessage {
+				mt, msg, err := conn.Read(c)
+				if err != nil {
+					if env.Config.LogDebug() {
+						log.Printf("%s: read error: %s", logPrefix, err)
+					}
 					return
+				} else if env.Config.LogDebug() {
+					log.Printf("%s: message received: mt=%d, msg=%s", logPrefix, mt, msg)
 				}
 
-				if mt == websocket.TextMessage {
+				if mt == websocket.MessageText {
 					var authMsg authMessage
 					if err := json.Unmarshal(msg, &authMsg); err == nil {
 						if user, err := checkToken(authMsg.AuthToken, env.Authentication.JwtSecret()); err == nil {
@@ -120,7 +117,7 @@ func wsValuesSender(
 	{
 		values := env.StateStorage.GetStateFiltered(filter)
 		response := compile2DResponse(values)
-		if err := wsSendValuesResponse(conn, response); err != nil {
+		if err := wsSendValuesResponse(ctx, conn, response); err != nil {
 			log.Printf("%s: error while sending initial values: %s", logPrefix, err)
 			return
 		}
@@ -141,7 +138,7 @@ func wsValuesSender(
 			case <-ticker.C:
 				if len(values) > 0 {
 					// there is data to send, send it
-					if err := wsSendValuesResponse(conn, values); err != nil {
+					if err := wsSendValuesResponse(ctx, conn, values); err != nil {
 						log.Printf("%s: error while sending value: %s", logPrefix, err)
 						return
 					}
@@ -167,11 +164,12 @@ func wsValuesSender(
 	}
 }
 
-func wsSendValuesResponse(conn *websocket.Conn, values map[string]map[string]valueResponse) error {
-	w, err := conn.NextWriter(websocket.TextMessage)
+func wsSendValuesResponse(ctx context.Context, conn *websocket.Conn, values map[string]map[string]valueResponse) error {
+	w, err := conn.Writer(ctx, websocket.MessageText)
 	if err != nil {
 		return err
 	}
+
 	err1 := json.NewEncoder(w).Encode(outputMessage{
 		Values: values,
 	})
