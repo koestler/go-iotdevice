@@ -28,7 +28,9 @@ type authMessage struct {
 // @Router /views/{viewName}/ws [get]
 // @Security ApiKeyAuth
 func setupValuesWs(r *gin.RouterGroup, env *Environment) {
-	var upgrader = websocket.Upgrader{}
+	var upgrader = websocket.Upgrader{
+		EnableCompression: true,
+	}
 
 	// add dynamic routes
 	for _, v := range env.Views {
@@ -39,20 +41,13 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 		// the follow line uses a loop variable; it must be outside the closure
 		r.GET(relativePath, func(c *gin.Context) {
 			conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+			defer conn.Close()
 			if err != nil {
 				log.Printf("%s: error during upgrade: %s", logPrefix, err)
-				if err := conn.Close(); err != nil {
-					log.Printf("%s: error during close: %s", logPrefix, err)
-				}
 				return
 			} else if env.Config.LogDebug() {
 				log.Printf("%s: connection established to %s", logPrefix, c.ClientIP())
 			}
-			defer func() {
-				if err := conn.Close(); err != nil && env.Config.LogDebug() {
-					log.Printf("%s: error during conn.Close: %s", logPrefix, err)
-				}
-			}()
 			if env.Config.LogDebug() {
 				defer log.Printf("%s: connection closed to %s", logPrefix, c.ClientIP())
 			}
@@ -115,14 +110,11 @@ func wsValuesSender(
 ) {
 	if env.Config.LogDebug() {
 		log.Printf("%s: start value sender", logPrefix)
+		defer log.Printf("%s: tx routine closed", logPrefix)
 	}
 
 	filter := getFilter(view.Devices())
 	subscription := env.StateStorage.Subscribe(ctx, filter)
-
-	if env.Config.LogDebug() {
-		defer log.Printf("%s: tx routine closed", logPrefix)
-	}
 
 	// send all values after initial connect
 	{
