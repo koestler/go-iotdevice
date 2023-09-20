@@ -4,12 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/gobwas/ws"
-	"github.com/gobwas/ws/wsutil"
-	jsoniter "github.com/json-iterator/go"
+	"github.com/gorilla/websocket"
 	"github.com/koestler/go-iotdevice/config"
 	"log"
-	"net"
 	"time"
 )
 
@@ -31,69 +28,76 @@ type authMessage struct {
 // @Router /views/{viewName}/ws [get]
 // @Security ApiKeyAuth
 func setupValuesWs(r *gin.RouterGroup, env *Environment) {
+	var upgrader = websocket.Upgrader{}
+
 	// add dynamic routes
 	for _, v := range env.Views {
 		view := v
 		relativePath := "views/" + view.Name() + "/ws"
+		logPrefix := fmt.Sprintf("httpServer: %s%s", r.BasePath(), relativePath)
 
 		// the follow line uses a loop variable; it must be outside the closure
 		r.GET(relativePath, func(c *gin.Context) {
-			authenticated := make(chan bool, 1)
-
-			// no authentication needed for public views
-			if view.IsPublic() {
-				authenticated <- true
-			}
-
-			conn, _, _, err := ws.UpgradeHTTP(c.Request, c.Writer)
+			conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 			if err != nil {
-				log.Printf("httpServer: %s%s: error during upgrade: %s", r.BasePath(), relativePath, err)
+				log.Printf("%s: error during upgrade: %s", logPrefix, err)
 				if err := conn.Close(); err != nil {
-					log.Printf("httpServer: %s%s: error during close: %s", r.BasePath(), relativePath, err)
+					log.Printf("%s: error during close: %s", logPrefix, err)
 				}
 				return
+			} else if env.Config.LogDebug() {
+				log.Printf("%s: connection established to %s", logPrefix, c.ClientIP())
 			}
-			log.Printf("httpServer: %s%s: connection established to %s", r.BasePath(), relativePath, c.ClientIP())
+			defer func() {
+				if err := conn.Close(); err != nil && env.Config.LogDebug() {
+					log.Printf("%s: error during conn.Close: %s", logPrefix, err)
+				}
+			}()
+			if env.Config.LogDebug() {
+				defer log.Printf("%s: connection closed to %s", logPrefix, c.ClientIP())
+			}
 
-			subscriptionCtx, subscriptionCancel := context.WithCancel(context.Background())
-			go func() {
-				defer subscriptionCancel()
-				defer conn.Close()
-				defer close(authenticated)
+			senderCtx, senderCancel := context.WithCancel(c)
+			defer senderCancel()
+
+			valueSenderStarted := false
+			startValueSenderOnce := func() {
+				if valueSenderStarted {
+					return
+				}
+				go wsValuesSender(env, view, conn, senderCtx, logPrefix)
+				valueSenderStarted = true
+			}
+
+			if view.IsPublic() {
+				// do not wait for auth message, start sender immediately
+				startValueSenderOnce()
+			}
+
+			for {
+				mt, msg, err := conn.ReadMessage()
+
 				if env.Config.LogDebug() {
-					defer log.Printf("httpServer: %s%s: connection closed to %s", r.BasePath(), relativePath, c.ClientIP())
+					log.Printf("%s: message received: mt=%d, msg=%s, err=%s", logPrefix, mt, msg, err)
 				}
 
-				authenticationCompleted := view.IsPublic()
+				if err != nil || mt == websocket.CloseMessage {
+					return
+				}
 
-				for {
-					msg, op, err := wsutil.ReadClientData(conn)
-					if op == ws.OpClose {
-						return
-					}
-					if err != nil {
-						return
-					}
-					if env.Config.LogDebug() {
-						log.Printf("httpServer: %s%s: message received: %s", r.BasePath(), relativePath, msg)
-					}
-					if !authenticationCompleted {
-						var authMsg authMessage
-						if err := json.Unmarshal(msg, &authMsg); err == nil {
-							if user, err := checkToken(authMsg.AuthToken, env.Authentication.JwtSecret()); err == nil {
-								log.Printf("httpServer: %s%s: user=%s authenticated", r.BasePath(), relativePath, user)
-								authenticated <- isViewAuthenticatedByUser(view, user, true)
-								authenticationCompleted = true
+				if mt == websocket.TextMessage {
+					var authMsg authMessage
+					if err := json.Unmarshal(msg, &authMsg); err == nil {
+						if user, err := checkToken(authMsg.AuthToken, env.Authentication.JwtSecret()); err == nil {
+							log.Printf("httpServer: %s%s: user=%s authenticated", r.BasePath(), relativePath, user)
+							if isViewAuthenticatedByUser(view, user, true) {
+								startValueSenderOnce()
 							}
 						}
 					}
 				}
-			}()
 
-			go wsValuesSender(
-				env, view, conn, authenticated, subscriptionCtx,
-				fmt.Sprintf("httpServer: %s%s", r.BasePath(), relativePath),
-			)
+			}
 		})
 		if env.Config.LogConfig() {
 			log.Printf("httpServer: GET %s%s -> setup websocket for view", r.BasePath(), relativePath)
@@ -104,33 +108,27 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 func wsValuesSender(
 	env *Environment,
 	view config.ViewConfig,
-	conn net.Conn,
-	authenticated <-chan bool,
+	conn *websocket.Conn,
 	ctx context.Context,
 	logPrefix string,
 
 ) {
+	if env.Config.LogDebug() {
+		log.Printf("%s: start value sender", logPrefix)
+	}
+
 	filter := getFilter(view.Devices())
 	subscription := env.StateStorage.Subscribe(ctx, filter)
 
-	writer := wsutil.NewWriter(conn, ws.StateServerSide, ws.OpText)
-	encoder := json.NewEncoder(writer)
-
 	if env.Config.LogDebug() {
 		defer log.Printf("%s: tx routine closed", logPrefix)
-	}
-
-	// wait for authentication, or until auth closes due to disconnect
-	if !<-authenticated {
-		// authentication failed, do not send anything
-		return
 	}
 
 	// send all values after initial connect
 	{
 		values := env.StateStorage.GetStateFiltered(filter)
 		response := compile2DResponse(values)
-		if err := wsSendValuesResponse(writer, encoder, response); err != nil {
+		if err := wsSendValuesResponse(conn, response); err != nil {
 			log.Printf("%s: error while sending initial values: %s", logPrefix, err)
 			return
 		}
@@ -151,7 +149,7 @@ func wsValuesSender(
 			case <-ticker.C:
 				if len(values) > 0 {
 					// there is data to send, send it
-					if err := wsSendValuesResponse(writer, encoder, values); err != nil {
+					if err := wsSendValuesResponse(conn, values); err != nil {
 						log.Printf("%s: error while sending value: %s", logPrefix, err)
 						return
 					}
@@ -177,15 +175,17 @@ func wsValuesSender(
 	}
 }
 
-func wsSendValuesResponse(writer *wsutil.Writer, encoder *jsoniter.Encoder, values map[string]map[string]valueResponse) error {
-	message := outputMessage{
+func wsSendValuesResponse(conn *websocket.Conn, values map[string]map[string]valueResponse) error {
+	w, err := conn.NextWriter(websocket.TextMessage)
+	if err != nil {
+		return err
+	}
+	err1 := json.NewEncoder(w).Encode(outputMessage{
 		Values: values,
+	})
+	err2 := w.Close()
+	if err1 != nil {
+		return err1
 	}
-	if err := encoder.Encode(&message); err != nil {
-		return err
-	}
-	if err := writer.Flush(); err != nil {
-		return err
-	}
-	return nil
+	return err2
 }
