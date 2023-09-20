@@ -2,11 +2,14 @@ package httpServer
 
 import (
 	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/koestler/go-iotdevice/config"
 	"log"
+	"net"
 	"time"
 )
 
@@ -33,9 +36,6 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 		view := v
 		relativePath := "views/" + view.Name() + "/ws"
 
-		view.Devices()
-		filter := getFilter(view.Devices())
-
 		// the follow line uses a loop variable; it must be outside the closure
 		r.GET(relativePath, func(c *gin.Context) {
 			authenticated := make(chan bool, 1)
@@ -56,12 +56,13 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 			log.Printf("httpServer: %s%s: connection established to %s", r.BasePath(), relativePath, c.ClientIP())
 
 			subscriptionCtx, subscriptionCancel := context.WithCancel(context.Background())
-			subscription := env.StateStorage.Subscribe(subscriptionCtx, filter)
 			go func() {
 				defer subscriptionCancel()
 				defer conn.Close()
 				defer close(authenticated)
-				defer log.Printf("httpServer: %s%s: connection closed to %s", r.BasePath(), relativePath, c.ClientIP())
+				if env.Config.LogDebug() {
+					defer log.Printf("httpServer: %s%s: connection closed to %s", r.BasePath(), relativePath, c.ClientIP())
+				}
 
 				authenticationCompleted := view.IsPublic()
 
@@ -89,69 +90,89 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 				}
 			}()
 
-			go func() {
-				writer := wsutil.NewWriter(conn, ws.StateServerSide, ws.OpText)
-				encoder := json.NewEncoder(writer)
-
-				// wait for authentication
-				if !<-authenticated {
-					// authentication failed, do not send anything
-					return
-				}
-
-				// send all values after initial connect
-				{
-					values := env.StateStorage.GetStateFiltered(filter)
-					response := compile2DResponse(values)
-					if err := wsSendValuesResponse(writer, encoder, response); err != nil {
-						log.Printf("httpServer: %s%s: error while sending initial values: %s", r.BasePath(), relativePath, err)
-						return
-					}
-				}
-
-				// send updates
-				{
-					// rate limit number of sent messages to 4 per second
-					tickerDuration := 250 * time.Millisecond
-					ticker := time.NewTicker(tickerDuration)
-					defer ticker.Stop()
-
-					tickerRunning := true
-					valuesC := subscription.Drain()
-					values := make(map[string]map[string]valueResponse, 1)
-					for {
-						select {
-						case <-ticker.C:
-							if len(values) > 0 {
-								// there is data to send, send it
-								if err := wsSendValuesResponse(writer, encoder, values); err != nil {
-									log.Printf("httpServer: %s%s: error while sending value: %s", r.BasePath(), relativePath, err)
-									return
-								}
-								values = make(map[string]map[string]valueResponse, 1)
-							} else {
-								// no data to send; stop timer
-								ticker.Stop()
-								tickerRunning = false
-							}
-						case v, ok := <-valuesC:
-							if ok {
-								append2DResponseValue(values, v)
-								if !tickerRunning {
-									ticker.Reset(tickerDuration)
-									tickerRunning = true
-								}
-							} else {
-								// subscription was shutdown, stop
-								return
-							}
-						}
-					}
-				}
-			}()
+			go wsValuesSender(
+				env, view, conn, authenticated, subscriptionCtx,
+				fmt.Sprintf("httpServer: %s%s", r.BasePath(), relativePath),
+			)
 		})
 		if env.Config.LogConfig() {
 			log.Printf("httpServer: GET %s%s -> setup websocket for view", r.BasePath(), relativePath)
+		}
+	}
+}
+
+func wsValuesSender(
+	env *Environment,
+	view config.ViewConfig,
+	conn net.Conn,
+	authenticated <-chan bool,
+	ctx context.Context,
+	logPrefix string,
+
+) {
+	filter := getFilter(view.Devices())
+	subscription := env.StateStorage.Subscribe(ctx, filter)
+
+	writer := wsutil.NewWriter(conn, ws.StateServerSide, ws.OpText)
+	encoder := json.NewEncoder(writer)
+
+	if env.Config.LogDebug() {
+		defer log.Printf("%s: tx routine closed", logPrefix)
+	}
+
+	// wait for authentication, or until auth closes due to disconnect
+	if !<-authenticated {
+		// authentication failed, do not send anything
+		return
+	}
+
+	// send all values after initial connect
+	{
+		values := env.StateStorage.GetStateFiltered(filter)
+		response := compile2DResponse(values)
+		if err := wsSendValuesResponse(writer, encoder, response); err != nil {
+			log.Printf("%s: error while sending initial values: %s", logPrefix, err)
+			return
+		}
+	}
+
+	// send updates
+	{
+		// rate limit number of sent messages to 4 per second
+		tickerDuration := 250 * time.Millisecond
+		ticker := time.NewTicker(tickerDuration)
+		defer ticker.Stop()
+
+		tickerRunning := true
+		valuesC := subscription.Drain()
+		values := make(map[string]map[string]valueResponse, 1)
+		for {
+			select {
+			case <-ticker.C:
+				if len(values) > 0 {
+					// there is data to send, send it
+					if err := wsSendValuesResponse(writer, encoder, values); err != nil {
+						log.Printf("%s: error while sending value: %s", logPrefix, err)
+						return
+					}
+					values = make(map[string]map[string]valueResponse, 1)
+				} else {
+					// no data to send; stop timer
+					ticker.Stop()
+					tickerRunning = false
+				}
+			case v, ok := <-valuesC:
+				if ok {
+					append2DResponseValue(values, v)
+					if !tickerRunning {
+						ticker.Reset(tickerDuration)
+						tickerRunning = true
+					}
+				} else {
+					// subscription was shutdown, stop
+					return
+				}
+			}
 		}
 	}
 }
