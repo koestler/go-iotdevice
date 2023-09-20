@@ -41,7 +41,12 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 		// the follow line uses a loop variable; it must be outside the closure
 		r.GET(relativePath, func(c *gin.Context) {
 			conn, err := websocket.Accept(c.Writer, c.Request, &websocketAcceptOptions)
-			defer conn.Close(websocket.StatusInternalError, "")
+			defer func() {
+				err := conn.Close(websocket.StatusInternalError, "")
+				if env.Config.LogDebug() {
+					log.Printf("%s: error during close: %s", logPrefix, err)
+				}
+			}()
 			if err != nil {
 				log.Printf("%s: error during upgrade: %s", logPrefix, err)
 				return
