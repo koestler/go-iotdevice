@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-iotdevice/config"
+	"github.com/mileusna/useragent"
 	"log"
 	"nhooyr.io/websocket"
 	"time"
@@ -16,10 +17,6 @@ type outputMessage struct {
 
 type authMessage struct {
 	AuthToken string `json:"authToken"`
-}
-
-var websocketAcceptOptions = websocket.AcceptOptions{
-	CompressionMode: websocket.CompressionContextTakeover,
 }
 
 // setupViewWs godoc
@@ -40,6 +37,22 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 
 		// the follow line uses a loop variable; it must be outside the closure
 		r.GET(relativePath, func(c *gin.Context) {
+			var websocketAcceptOptions = websocket.AcceptOptions{
+				CompressionMode: websocket.CompressionContextTakeover,
+			}
+
+			ua := useragent.Parse(c.GetHeader("User-Agent"))
+			if ua.IsSafari() {
+				// Safari is know to not work with fragmented compressed websockets
+				// disable context takeover as a work around
+				if env.Config.LogDebug() {
+					log.Printf("%s: safari detected, disable compression", logPrefix)
+				}
+				websocketAcceptOptions = websocket.AcceptOptions{
+					CompressionMode: websocket.CompressionNoContextTakeover,
+				}
+			}
+
 			conn, err := websocket.Accept(c.Writer, c.Request, &websocketAcceptOptions)
 			defer func() {
 				err := conn.Close(websocket.StatusInternalError, "")
