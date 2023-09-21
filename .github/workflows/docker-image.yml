@@ -86,6 +86,7 @@ jobs:
           platforms: linux/arm/v7
           tags: ${{ needs.metadata.outputs.img }}-arm-v7
           labels: ${{ needs.metadata.outputs.labels }}
+          provenance: false
 
   build-amd64:
     runs-on: buildjet-2vcpu-ubuntu-2204
