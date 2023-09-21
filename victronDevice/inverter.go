@@ -95,18 +95,7 @@ var RegisterListInverterGeneric = []VictronRegister{
 		},
 		0,
 	),
-	NewEnumRegisterStruct(
-		"Generic",
-		"BleMode",
-		"Bluetooth mode",
-		0x0090,
-		false,
-		map[int]string{
-			0: "off",
-			1: "on",
-		},
-		1,
-	),
+	// skip bluetooth registers
 	NewEnumRegisterStruct(
 		"Essential",
 		"Mode",
@@ -120,7 +109,7 @@ var RegisterListInverterGeneric = []VictronRegister{
 			5:    "Eco mode",
 			0xFD: "Hibernate",
 		},
-		2,
+		1,
 	),
 	// todo: add device off reason, device warning reason and alarm reasno (all bit masks)
 }
