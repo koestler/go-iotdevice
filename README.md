@@ -44,6 +44,7 @@ The following devices are supported:
       [BMV 702](https://www.victronenergy.com/battery-monitors/bmv-702),
       [BMV-712 Smart](https://www.victronenergy.com/battery-monitors/bmv-712-smart)
   * Victron Energy [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt)
+  * Victron Energy [Phoenix Inverter](https://www.victronenergy.com/inverters)
 * via HTTP:
   * [Shelly 3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) 3 phase energy power monitor
   * [Teracom TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/) industrial relay / sensor board
