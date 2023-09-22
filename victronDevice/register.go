@@ -5,6 +5,7 @@ import "github.com/koestler/go-iotdevice/dataflow"
 type VictronRegister interface {
 	dataflow.Register
 	Address() uint16
+	Bit() int
 	Static() bool
 	Signed() bool
 	Factor() int
@@ -14,6 +15,7 @@ type VictronRegister interface {
 type VictronRegisterStruct struct {
 	dataflow.RegisterStruct
 	address uint16
+	bit     int // only used for enums, when positive, only the given bit is used as 0/1
 	static  bool
 
 	// only relevant for number registers
@@ -75,6 +77,7 @@ func NewTextRegisterStruct(
 			false,
 		),
 		address,
+		-1,
 		static,
 		false, // unused
 		1,     // unused
@@ -102,6 +105,7 @@ func NewNumberRegisterStruct(
 			false,
 		),
 		address,
+		-1,
 		static,
 		signed,
 		factor,
@@ -112,6 +116,7 @@ func NewNumberRegisterStruct(
 func NewEnumRegisterStruct(
 	category, name, description string,
 	address uint16,
+	bit int,
 	static bool,
 	enum map[int]string,
 	sort int,
@@ -126,6 +131,7 @@ func NewEnumRegisterStruct(
 			false,
 		),
 		address,
+		bit,
 		static,
 		false, // unused
 		1,     // unused
@@ -135,6 +141,10 @@ func NewEnumRegisterStruct(
 
 func (r VictronRegisterStruct) Address() uint16 {
 	return r.address
+}
+
+func (r VictronRegisterStruct) Bit() int {
+	return r.bit
 }
 
 func (r VictronRegisterStruct) Static() bool {

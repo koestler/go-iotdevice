@@ -97,7 +97,7 @@ var RegisterListInverterGeneric = []VictronRegister{
 		"Essential",
 		"DeviceState",
 		"Device state",
-		0x0201,
+		0x0201, -1,
 		false,
 		map[int]string{
 			0: "Off",
@@ -112,7 +112,7 @@ var RegisterListInverterGeneric = []VictronRegister{
 		"Operation",
 		"DeviceMode",
 		"Device mode",
-		0x0200,
+		0x0200, -1,
 		false,
 		map[int]string{
 			2:    "Inverter On",
@@ -286,7 +286,7 @@ var RegisterListInverterAcOutControl = []VictronRegister{
 		"AC-out settings",
 		"InvWaveSet50HzNot60Hz",
 		"Frequency",
-		0xEB03,
+		0xEB03, -1,
 		true,
 		map[int]string{
 			0: "60 Hz",
@@ -400,7 +400,7 @@ var RegisterListInverterDynamicCutoff = []VictronRegister{
 		"Dynamic Cutoff",
 		"InvProtUbatDynCutoffEnable",
 		"Dynamic Cutoff Enable",
-		0xEBBA,
+		0xEBBA, -1,
 		true,
 		map[int]string{
 			0: "Disabled",

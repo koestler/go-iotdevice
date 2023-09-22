@@ -129,6 +129,10 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 					if err != nil {
 						log.Printf("device[%s]: fetching enum register failed: %v", c.Name(), err)
 					} else {
+						if bit := register.Bit(); bit >= 0 {
+							intValue = (intValue >> bit) & 1
+						}
+
 						output.Fill(dataflow.NewEnumRegisterValue(
 							c.Name(),
 							register,
