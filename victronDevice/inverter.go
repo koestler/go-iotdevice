@@ -177,18 +177,21 @@ var RegisterListInverterOperation = []VictronRegister{
 		"V",
 		1,
 	),
-	NewNumberRegisterStruct(
-		"Essential",
-		"AcOutApparentPower",
-		"AC Output Apparent Power",
-		0x2205,
-		false,
-		true,
-		1,
-		0,
-		"VA",
-		0,
-	),
+	/*
+		todo: use capabilities register to determine if this is needed (howto test?)
+		NewNumberRegisterStruct(
+			"Essential",
+			"AcOutApparentPower",
+			"AC Output Apparent Power",
+			0x2205,
+			false,
+			true,
+			1,
+			0,
+			"VA",
+			0,
+		),
+	*/
 	NewNumberRegisterStruct(
 		"Operation",
 		"InvLoopGetIinv",
@@ -252,30 +255,33 @@ var RegisterListInverterAcOutControl = []VictronRegister{
 		"V",
 		402,
 	),
-	NewNumberRegisterStruct(
-		"AC-out settings",
-		"AcLoadSensePowerThreshold",
-		"Load Sense Power Threshold",
-		0x2206,
-		true,
-		false,
-		1,
-		0,
-		"VA",
-		403,
-	),
-	NewNumberRegisterStruct(
-		"AC-out settings",
-		"AcLoadSensePowerClear",
-		"Load Sense Power Clear",
-		0x2207,
-		true,
-		false,
-		1,
-		0,
-		"VA",
-		404,
-	),
+	/*
+		// todo: activate via capabilities?
+		NewNumberRegisterStruct(
+			"AC-out settings",
+			"AcLoadSensePowerThreshold",
+			"Load Sense Power Threshold",
+			0x2206,
+			true,
+			false,
+			1,
+			0,
+			"VA",
+			403,
+		),
+		NewNumberRegisterStruct(
+			"AC-out settings",
+			"AcLoadSensePowerClear",
+			"Load Sense Power Clear",
+			0x2207,
+			true,
+			false,
+			1,
+			0,
+			"VA",
+			404,
+		),
+	*/
 	NewEnumRegisterStruct(
 		"AC-out settings",
 		"InvWaveSet50HzNot60Hz",
@@ -465,34 +471,37 @@ var RegisterListInverterDynamicCutoff = []VictronRegister{
 }
 
 var RegisterListInverterRelayControl = []VictronRegister{
-	NewEnumRegisterStruct(
-		"Relay Control",
-		"RelayControl",
-		"Relay Status",
-		0x034E,
-		false,
-		map[int]string{
-			0: "Off: NO=open, NC=closed",
-			1: "On: NO=closed, NC=open",
-		},
-		700,
-	),
-	NewEnumRegisterStruct(
-		"Relay Control",
-		"RelayMode",
-		"Relay Mode",
-		0x034F,
-		true,
-		map[int]string{
-			4: "Normal operation",
-			0: "Warnings and alarms",
-			5: "Battery low",
-			6: "External fan",
-			3: "Disabled relay",
-			2: "Remote",
-		},
-		701,
-	),
+	/*
+		todo: activate via capabilities?
+		NewEnumRegisterStruct(
+			"Relay Control",
+			"RelayControl",
+			"Relay Status",
+			0x034E,
+			false,
+			map[int]string{
+				0: "Off: NO=open, NC=closed",
+				1: "On: NO=closed, NC=open",
+			},
+			700,
+		),
+		NewEnumRegisterStruct(
+			"Relay Control",
+			"RelayMode",
+			"Relay Mode",
+			0x034F,
+			true,
+			map[int]string{
+				4: "Normal operation",
+				0: "Warnings and alarms",
+				5: "Battery low",
+				6: "External fan",
+				3: "Disabled relay",
+				2: "Remote",
+			},
+			701,
+		),
+	*/
 }
 
 var RegisterListInverter = MergeRegisters(
