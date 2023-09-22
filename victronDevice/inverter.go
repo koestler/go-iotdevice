@@ -125,6 +125,134 @@ var RegisterListInverterGeneric = []VictronRegister{
 	),
 }
 
+var inactiveActiveEnum = map[int]string{
+	0: "inactive",
+	1: "active",
+}
+
+var RegisterListInverterOffReasons = []VictronRegister{
+	NewEnumRegisterStruct(
+		"OffReason",
+		"DeviceOffReasonNoInputPower",
+		"No input power",
+		0x0207, 0,
+		false,
+		inactiveActiveEnum,
+		30,
+	),
+	NewEnumRegisterStruct(
+		"OffReason",
+		"DeviceOffReasonPowerButton",
+		"Soft power button or SW controller",
+		0x0207, 2,
+		false,
+		inactiveActiveEnum,
+		31,
+	),
+	NewEnumRegisterStruct(
+		"OffReason",
+		"DeviceOffReasonRemoteInput",
+		"HW remote input connector",
+		0x0207, 3,
+		false,
+		inactiveActiveEnum,
+		32,
+	),
+	NewEnumRegisterStruct(
+		"OffReason",
+		"DeviceOffReasonInternal",
+		"Internal reason (see alarm reason)",
+		0x0207, 4,
+		false,
+		inactiveActiveEnum,
+		33,
+	),
+	NewEnumRegisterStruct(
+		"OffReason",
+		"DeviceOffReasonPayGo",
+		"PayGo, out of credit, need token",
+		0x0207, 5,
+		false,
+		inactiveActiveEnum,
+		34,
+	),
+}
+
+var RegisterListInverterWarningReasons = []VictronRegister{
+	NewEnumRegisterStruct(
+		"WarningReason",
+		"DeviceWarningReasonLowBatVoltage",
+		"Low battery voltage",
+		0x031C, 0,
+		false,
+		inactiveActiveEnum,
+		40,
+	),
+	NewEnumRegisterStruct(
+		"WarningReason",
+		"DeviceWarningReasonHighBatVoltage",
+		"High battery voltage",
+		0x031C, 1,
+		false,
+		inactiveActiveEnum,
+		41,
+	),
+	NewEnumRegisterStruct(
+		"WarningReason",
+		"DeviceWarningReasonLowTemp",
+		"Low temperature",
+		0x031C, 5,
+		false,
+		inactiveActiveEnum,
+		42,
+	),
+	NewEnumRegisterStruct(
+		"WarningReason",
+		"DeviceWarningReasonHighTemp",
+		"High temperature",
+		0x031C, 6,
+		false,
+		inactiveActiveEnum,
+		43,
+	),
+	NewEnumRegisterStruct(
+		"WarningReason",
+		"DeviceWarningReasonOverload",
+		"Overload",
+		0x031C, 8,
+		false,
+		inactiveActiveEnum,
+		44,
+	),
+	NewEnumRegisterStruct(
+		"WarningReason",
+		"DeviceWarningReasonPoorDC",
+		"Poor DC connection",
+		0x031C, 9,
+		false,
+		inactiveActiveEnum,
+		45,
+	),
+	NewEnumRegisterStruct(
+		"WarningReason",
+		"DeviceWarningReasonLowAcVoltage",
+		"Low AC-output voltage",
+		0x031C, 10,
+		false,
+		inactiveActiveEnum,
+		46,
+	),
+	NewEnumRegisterStruct(
+		"WarningReason",
+		"DeviceWarningReasonHighAcVoltage",
+		"High AC-output voltage",
+		0x031C, 11,
+		false,
+		inactiveActiveEnum,
+		47,
+	),
+}
+
 var RegisterListInverterHistory = []VictronRegister{
 	NewNumberRegisterStruct(
 		"History",
@@ -507,6 +635,8 @@ var RegisterListInverterRelayControl = []VictronRegister{
 var RegisterListInverter = MergeRegisters(
 	RegisterListInverterProduct,
 	RegisterListInverterGeneric,
+	RegisterListInverterOffReasons,
+	RegisterListInverterWarningReasons,
 	RegisterListInverterHistory,
 	RegisterListInverterOperation,
 	RegisterListInverterAcOutControl,
