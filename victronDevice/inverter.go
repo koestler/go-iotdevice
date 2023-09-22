@@ -109,7 +109,7 @@ var RegisterListInverterGeneric = []VictronRegister{
 	),
 	// todo: add device off reason, device warning reason and alarm reason (all bit masks)
 	NewEnumRegisterStruct(
-		"Essential",
+		"Operation",
 		"DeviceMode",
 		"Device mode",
 		0x0200,
@@ -289,8 +289,8 @@ var RegisterListInverterAcOutControl = []VictronRegister{
 		0xEB03,
 		true,
 		map[int]string{
-			0: "60Hz",
-			1: "50Hz",
+			0: "60 Hz",
+			1: "50 Hz",
 		},
 		405,
 	),
@@ -383,7 +383,7 @@ var RegisterListInverterBatteryControl = []VictronRegister{
 	),
 	NewNumberRegisterStruct(
 		"Battery settings",
-		"VoltageRangeMin",
+		"VoltageRangeMax",
 		"Voltage Range Max",
 		0x2212,
 		true,
@@ -417,7 +417,7 @@ var RegisterListInverterDynamicCutoff = []VictronRegister{
 		false,
 		1,
 		0,
-		"W",
+		"",
 		601,
 	),
 	NewNumberRegisterStruct(
@@ -429,7 +429,7 @@ var RegisterListInverterDynamicCutoff = []VictronRegister{
 		false,
 		1,
 		0,
-		"W",
+		"",
 		602,
 	),
 	NewNumberRegisterStruct(
@@ -441,7 +441,7 @@ var RegisterListInverterDynamicCutoff = []VictronRegister{
 		false,
 		1,
 		0,
-		"W",
+		"",
 		603,
 	),
 	NewNumberRegisterStruct(
@@ -453,7 +453,7 @@ var RegisterListInverterDynamicCutoff = []VictronRegister{
 		false,
 		1,
 		0,
-		"W",
+		"",
 		604,
 	),
 	NewNumberRegisterStruct(
