@@ -17,3 +17,7 @@
   - compare with other implementation (hass, tasmota etc.)
   - remove go-iotdevice? (seems quite obsolete to me now)
 - registerDB: should it check if a register is changed and only send the update if it is?
+- mqttDevice: implement available / unavailable messages
+- hass discovery:
+  - devices: protect registers variable from multiple access
+  - add ready listener to inform hass that the registers array is populated

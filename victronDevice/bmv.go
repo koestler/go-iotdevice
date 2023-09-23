@@ -182,7 +182,7 @@ var RegisterListBmvMonitor = []VictronRegister{
 		"Monitor",
 		"SynchronizationState",
 		"Synchronization state",
-		0xEEB6,
+		0xEEB6, -1,
 		false,
 		map[int]string{
 			0: "false",

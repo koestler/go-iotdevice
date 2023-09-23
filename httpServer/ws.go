@@ -2,11 +2,12 @@ package httpServer
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/gobwas/ws"
-	"github.com/gobwas/ws/wsutil"
+	"github.com/koestler/go-iotdevice/config"
+	"github.com/mileusna/useragent"
 	"log"
+	"nhooyr.io/websocket"
 	"time"
 )
 
@@ -32,123 +33,81 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 	for _, v := range env.Views {
 		view := v
 		relativePath := "views/" + view.Name() + "/ws"
-
-		view.Devices()
-		filter := getFilter(view.Devices())
+		logPrefix := fmt.Sprintf("httpServer: %s%s", r.BasePath(), relativePath)
 
 		// the follow line uses a loop variable; it must be outside the closure
 		r.GET(relativePath, func(c *gin.Context) {
-			authenticated := make(chan bool, 1)
-
-			// no authentication needed for public views
-			if view.IsPublic() {
-				authenticated <- true
+			var websocketAcceptOptions = websocket.AcceptOptions{
+				CompressionMode: websocket.CompressionContextTakeover,
 			}
 
-			conn, _, _, err := ws.UpgradeHTTP(c.Request, c.Writer)
-			if err != nil {
-				log.Printf("httpServer: %s%s: error during upgrade: %s", r.BasePath(), relativePath, err)
-				if err := conn.Close(); err != nil {
-					log.Printf("httpServer: %s%s: error during close: %s", r.BasePath(), relativePath, err)
+			ua := useragent.Parse(c.GetHeader("User-Agent"))
+			if ua.IsSafari() {
+				// Safari is know to not work with fragmented compressed websockets
+				// disable context takeover as a work around
+				if env.Config.LogDebug() {
+					log.Printf("%s: safari detected, disable compression", logPrefix)
 				}
-				return
+				websocketAcceptOptions = websocket.AcceptOptions{
+					CompressionMode: websocket.CompressionNoContextTakeover,
+				}
 			}
-			log.Printf("httpServer: %s%s: connection established to %s", r.BasePath(), relativePath, c.ClientIP())
 
-			subscriptionCtx, subscriptionCancel := context.WithCancel(context.Background())
-			subscription := env.StateStorage.Subscribe(subscriptionCtx, filter)
-			go func() {
-				defer subscriptionCancel()
-				defer conn.Close()
-				defer close(authenticated)
-				defer log.Printf("httpServer: %s%s: connection closed to %s", r.BasePath(), relativePath, c.ClientIP())
-
-				authenticationCompleted := view.IsPublic()
-
-				for {
-					msg, op, err := wsutil.ReadClientData(conn)
-					if op == ws.OpClose {
-						return
-					}
-					if err != nil {
-						return
-					}
-					if env.Config.LogDebug() {
-						log.Printf("httpServer: %s%s: message received: %s", r.BasePath(), relativePath, msg)
-					}
-					if !authenticationCompleted {
-						var authMsg authMessage
-						if err := json.Unmarshal(msg, &authMsg); err == nil {
-							if user, err := checkToken(authMsg.AuthToken, env.Authentication.JwtSecret()); err == nil {
-								log.Printf("httpServer: %s%s: user=%s authenticated", r.BasePath(), relativePath, user)
-								authenticated <- isViewAuthenticatedByUser(view, user, true)
-								authenticationCompleted = true
-							}
-						}
-					}
+			conn, err := websocket.Accept(c.Writer, c.Request, &websocketAcceptOptions)
+			defer func() {
+				err := conn.Close(websocket.StatusInternalError, "")
+				if env.Config.LogDebug() {
+					log.Printf("%s: error during close: %s", logPrefix, err)
 				}
 			}()
+			if err != nil {
+				log.Printf("%s: error during upgrade: %s", logPrefix, err)
+				return
+			} else if env.Config.LogDebug() {
+				log.Printf("%s: connection established to %s", logPrefix, c.ClientIP())
+			}
 
-			go func() {
-				writer := wsutil.NewWriter(conn, ws.StateServerSide, ws.OpText)
-				encoder := json.NewEncoder(writer)
+			senderCtx, senderCancel := context.WithCancel(c)
+			defer senderCancel()
 
-				// wait for authentication
-				if !<-authenticated {
-					// authentication failed, do not send anything
+			valueSenderStarted := false
+			startValueSenderOnce := func() {
+				if valueSenderStarted {
 					return
 				}
+				go wsValuesSender(env, view, conn, senderCtx, logPrefix)
+				valueSenderStarted = true
+			}
 
-				// send all values after initial connect
-				{
-					values := env.StateStorage.GetStateFiltered(filter)
-					response := compile2DResponse(values)
-					if err := wsSendValuesResponse(writer, encoder, response); err != nil {
-						log.Printf("httpServer: %s%s: error while sending initial values: %s", r.BasePath(), relativePath, err)
-						return
+			if view.IsPublic() {
+				// do not wait for auth message, start sender immediately
+				startValueSenderOnce()
+			}
+
+			for {
+				mt, msg, err := conn.Read(c)
+				if err != nil {
+					if env.Config.LogDebug() {
+						log.Printf("%s: read error: %s", logPrefix, err)
 					}
+					return
+				} else if env.Config.LogDebug() {
+					log.Printf("%s: message received: mt=%d, msg=%s", logPrefix, mt, msg)
 				}
 
-				// send updates
-				{
-					// rate limit number of sent messages to 4 per second
-					tickerDuration := 250 * time.Millisecond
-					ticker := time.NewTicker(tickerDuration)
-					defer ticker.Stop()
-
-					tickerRunning := true
-					valuesC := subscription.Drain()
-					values := make(map[string]map[string]valueResponse, 1)
-					for {
-						select {
-						case <-ticker.C:
-							if len(values) > 0 {
-								// there is data to send, send it
-								if err := wsSendValuesResponse(writer, encoder, values); err != nil {
-									log.Printf("httpServer: %s%s: error while sending value: %s", r.BasePath(), relativePath, err)
-									return
-								}
-								values = make(map[string]map[string]valueResponse, 1)
-							} else {
-								// no data to send; stop timer
-								ticker.Stop()
-								tickerRunning = false
-							}
-						case v, ok := <-valuesC:
-							if ok {
-								append2DResponseValue(values, v)
-								if !tickerRunning {
-									ticker.Reset(tickerDuration)
-									tickerRunning = true
-								}
-							} else {
-								// subscription was shutdown, stop
-								return
+				if mt == websocket.MessageText {
+					var authMsg authMessage
+					if err := json.Unmarshal(msg, &authMsg); err == nil {
+						if user, err := checkToken(authMsg.AuthToken, env.Authentication.JwtSecret()); err == nil {
+							log.Printf("httpServer: %s%s: user=%s authenticated", r.BasePath(), relativePath, user)
+							if isViewAuthenticatedByUser(view, user, true) {
+								startValueSenderOnce()
 							}
 						}
 					}
 				}
-			}()
+
+			}
 		})
 		if env.Config.LogConfig() {
 			log.Printf("httpServer: GET %s%s -> setup websocket for view", r.BasePath(), relativePath)
@@ -156,15 +115,85 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 	}
 }
 
-func wsSendValuesResponse(writer *wsutil.Writer, encoder *json.Encoder, values map[string]map[string]valueResponse) error {
-	message := outputMessage{
+func wsValuesSender(
+	env *Environment,
+	view config.ViewConfig,
+	conn *websocket.Conn,
+	ctx context.Context,
+	logPrefix string,
+
+) {
+	if env.Config.LogDebug() {
+		log.Printf("%s: start value sender", logPrefix)
+		defer log.Printf("%s: tx routine closed", logPrefix)
+	}
+
+	filter := getFilter(view.Devices())
+	subscription := env.StateStorage.Subscribe(ctx, filter)
+
+	// send all values after initial connect
+	{
+		values := env.StateStorage.GetStateFiltered(filter)
+		response := compile2DResponse(values)
+		if err := wsSendValuesResponse(ctx, conn, response); err != nil {
+			log.Printf("%s: error while sending initial values: %s", logPrefix, err)
+			return
+		}
+	}
+
+	// send updates
+	{
+		// rate limit number of sent messages to 4 per second
+		tickerDuration := 250 * time.Millisecond
+		ticker := time.NewTicker(tickerDuration)
+		defer ticker.Stop()
+
+		tickerRunning := true
+		valuesC := subscription.Drain()
+		values := make(map[string]map[string]valueResponse, 1)
+		for {
+			select {
+			case <-ticker.C:
+				if len(values) > 0 {
+					// there is data to send, send it
+					if err := wsSendValuesResponse(ctx, conn, values); err != nil {
+						log.Printf("%s: error while sending value: %s", logPrefix, err)
+						return
+					}
+					values = make(map[string]map[string]valueResponse, 1)
+				} else {
+					// no data to send; stop timer
+					ticker.Stop()
+					tickerRunning = false
+				}
+			case v, ok := <-valuesC:
+				if ok {
+					append2DResponseValue(values, v)
+					if !tickerRunning {
+						ticker.Reset(tickerDuration)
+						tickerRunning = true
+					}
+				} else {
+					// subscription was shutdown, stop
+					return
+				}
+			}
+		}
+	}
+}
+
+func wsSendValuesResponse(ctx context.Context, conn *websocket.Conn, values map[string]map[string]valueResponse) error {
+	w, err := conn.Writer(ctx, websocket.MessageText)
+	if err != nil {
+		return err
+	}
+
+	err1 := json.NewEncoder(w).Encode(outputMessage{
 		Values: values,
+	})
+	err2 := w.Close()
+	if err1 != nil {
+		return err1
 	}
-	if err := encoder.Encode(&message); err != nil {
-		return err
-	}
-	if err := writer.Flush(); err != nil {
-		return err
-	}
-	return nil
+	return err2
 }

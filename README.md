@@ -44,6 +44,7 @@ The following devices are supported:
       [BMV 702](https://www.victronenergy.com/battery-monitors/bmv-702),
       [BMV-712 Smart](https://www.victronenergy.com/battery-monitors/bmv-712-smart)
   * Victron Energy [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt)
+  * Victron Energy [Phoenix Inverter](https://www.victronenergy.com/inverters)
 * via HTTP:
   * [Shelly 3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) 3 phase energy power monitor
   * [Teracom TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/) industrial relay / sensor board
@@ -235,6 +236,7 @@ Views:                                                     # optional, a list of
     Hidden: false                                          # optional, default false, if true, this view is not shown in the menu unless the user is logged in
 
 HassDiscovery:                                             # optional, default, empty, defines which registers should be advertised via the homeassistant discovery mechanism
+                                                           # the implementation of the hass discovery service and this configuration section is going to change in the next major version.
   # You can have multiple sections to advertise on different topics, on different MqttServers of matching different registers
   # each register is only advertised once per server / topic even if multiple entries match
   - TopicPrefix:                                           # optional, default 'homeassistant', the mqtt topic used for the discovery messages

@@ -75,6 +75,8 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 			// execute a Ping at the beginning and after each error
 			pingNeeded := true
 
+			var enumCacheAddr uint16
+			var enumCacheValue uint64
 			for _, register := range registers {
 				// only fetch static registers seldomly
 				if register.static && (fetchStaticCounter%60 != 0) {
@@ -110,9 +112,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 						))
 					}
 				case dataflow.TextRegister:
-					value, err := vd.VeCommandGetString(register.address)
-
-					if err != nil {
+					if value, err := vd.VeCommandGetString(register.address); err != nil {
 						log.Printf("device[%s]: fetching text register failed: %v", c.Name(), err)
 					} else {
 						output.Fill(dataflow.NewTextRegisterValue(
@@ -123,11 +123,25 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 					}
 				case dataflow.EnumRegister:
 					var intValue uint64
-					intValue, err = vd.VeCommandGetUint(register.address)
+
+					if addr := register.address; enumCacheAddr != 0 && enumCacheAddr == addr {
+						intValue = enumCacheValue
+						err = nil
+					} else {
+						intValue, err = vd.VeCommandGetUint(addr)
+						if err == nil {
+							enumCacheAddr = addr
+							enumCacheValue = intValue
+						}
+					}
 
 					if err != nil {
 						log.Printf("device[%s]: fetching enum register failed: %v", c.Name(), err)
 					} else {
+						if bit := register.bit; bit >= 0 {
+							intValue = (intValue >> bit) & 1
+						}
+
 						output.Fill(dataflow.NewEnumRegisterValue(
 							c.Name(),
 							register,

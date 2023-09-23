@@ -2,6 +2,7 @@ package httpServer
 
 import (
 	"context"
+	"errors"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-iotdevice/config"
@@ -68,7 +69,7 @@ func Run(env *Environment) (httpServer *HttpServer) {
 		if cfg.LogDebug() {
 			log.Printf("httpServer: listening on %v", server.Addr)
 		}
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			log.Printf("httpServer: stopped due to error: %s", err)
 		}
 	}()

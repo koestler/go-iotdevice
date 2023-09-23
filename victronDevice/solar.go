@@ -49,7 +49,7 @@ var RegisterListSolarGeneric = []VictronRegister{
 		"Generic",
 		"DeviceMode",
 		"Device mode",
-		0x0200,
+		0x0200, -1,
 		false,
 		map[int]string{
 			0: "Charger off",
@@ -62,7 +62,7 @@ var RegisterListSolarGeneric = []VictronRegister{
 		"Essential",
 		"State",
 		"Device state",
-		0x0201,
+		0x0201, -1,
 		false,
 		map[int]string{
 			0:   "Not charging",
@@ -87,7 +87,7 @@ var RegisterListSolarSettings = []VictronRegister{
 		"Settings",
 		"AdaptiveMode",
 		"Adaptive mode",
-		0xEDFE,
+		0xEDFE, -1,
 		true,
 		map[int]string{
 			0: "off",
@@ -171,7 +171,7 @@ var RegisterListSolarSettings = []VictronRegister{
 		"Settings",
 		"BatteryType",
 		"Battery type",
-		0xEDF1,
+		0xEDF1, -1,
 		false,
 		map[int]string{
 			1:   "Gel Victron Long Life (14.1V)",
@@ -214,7 +214,7 @@ var RegisterListSolarSettings = []VictronRegister{
 		"Settings",
 		"BatteryVoltageSetting",
 		"Battery voltage setting",
-		0xEDEA,
+		0xEDEA, -1,
 		false,
 		map[int]string{
 			0:  "Auto detection at startup",
@@ -229,7 +229,7 @@ var RegisterListSolarSettings = []VictronRegister{
 		"Settings",
 		"BmsPresent",
 		"BMS present",
-		0xEDE8,
+		0xEDE8, -1,
 		false,
 		map[int]string{
 			0: "no",
@@ -265,7 +265,7 @@ var RegisterListSolarSettings = []VictronRegister{
 		"Settings",
 		"AutoEqualiseStop",
 		"Auto equalise stop on voltage",
-		0xEDE5,
+		0xEDE5, -1,
 		false,
 		map[int]string{
 			0: "no",
@@ -388,7 +388,7 @@ var RegisterListSolarChargerData = []VictronRegister{
 		"Generic",
 		"ChargerErrorCode",
 		"Charger error",
-		0xEDDA,
+		0xEDDA, -1,
 		false,
 		map[int]string{
 			0:   "No error",
@@ -546,7 +546,7 @@ var RegisterListSolarPanelData = []VictronRegister{
 		"Panel",
 		"TrackerMode",
 		"Tracker mode",
-		0xEDB3,
+		0xEDB3, -1,
 		false,
 		map[int]string{
 			0: "off",

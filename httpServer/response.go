@@ -3,7 +3,6 @@ package httpServer
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
