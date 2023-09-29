@@ -3,7 +3,6 @@ package hassDiscovery
 import (
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
 )
 
@@ -38,19 +37,10 @@ func getSensorMessage(
 	topic = getTopic(discoveryPrefix, "sensor", mCfg.ClientId(), uniqueId)
 
 	msg = discoveryMessage{
-		UniqueId: uniqueId,
-		Name:     name,
-		StateTopic: mqttClient.ReplaceTemplate(device.GetRealtimeTopic(
-			mCfg.RealtimeTopic(),
-			deviceName,
-			register,
-		),
-			mCfg,
-		),
-		AvailabilityTopic: mqttClient.ReplaceTemplate(
-			mCfg.AvailabilityTopic(),
-			mCfg,
-		),
+		UniqueId:          uniqueId,
+		Name:              name,
+		StateTopic:        mCfg.RealtimeTopic(deviceName, register.Name()),
+		AvailabilityTopic: mCfg.AvailabilityTopic(),
 		ValueTemplate:     valueTemplate,
 		UnitOfMeasurement: register.Unit(),
 	}

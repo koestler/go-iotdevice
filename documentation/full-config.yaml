@@ -39,21 +39,21 @@ MqttClients:                                               # optional, when empt
     MaxBacklogSize: 256                                    # optional, default 256, max number of mqtt messages to store when connection is offline
 
     AvailabilityEnable: true                               # optional, default true, whether to send online messages and register an offline message as will
-    AvailabilityTopic: '%Prefix%tele/%ClientId%/status'    # optional, what topic to use for online/offline messages
+    AvailabilityTopicTemplate: '%Prefix%tele/%ClientId%/status' # optional, what topic to use for online/offline messages
     AvailabilityRetain: true                               # optional, default true, the mqtt retain flag for availability messages
 
     StructureEnable: true                                  # optional, default true, whether to send messages containing the list of registers / types
-    StructureTopic: '%Prefix%struct/go-iotdevice/%DeviceName%' # optional, what topic to use for structure messages
+    StructureTopicTemplate: '%Prefix%struct/go-iotdevice/%DeviceName%' # optional, what topic to use for structure messages
     StructureInterval: 0s                                  # optional, default 0, 0 means disabled only send initially, otherwise the structure is repeated after this interval (useful when retain is false)
     StructureRetain: true                                  # optional, default true, the mqtt retain flag for structure messages
 
     TelemetryEnable: true                                  # optional, default true, whether to send telemetry messages (one per device)
-    TelemetryTopic: '%Prefix%tele/go-iotdevice/%DeviceName%/state' # optional, what topic to use for telemetry messages
+    TelemetryTopicTemplate: '%Prefix%tele/go-iotdevice/%DeviceName%/state' # optional, what topic to use for telemetry messages
     TelemetryInterval: 10s                                 # optional, default 10s, how often to sent telemetry mqtt messages
     TelemetryRetain: false                                 # optional, default false, the mqtt retain flag for telemetry messages
 
     RealtimeEnable: true                                   # optional, default false, whether to enable sending realtime messages
-    RealtimeTopic: '%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%' # optional, what topic to use for realtime messages
+    RealtimeTopicTemplate: '%Prefix%stat/go-iotdevice/%DeviceName%/%RegisterName%' # optional, what topic to use for realtime messages
     RealtimeInterval: 0s                                   # optional, default 0; 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
     RealtimeRepeat: false                                  # optional, default false, when true and RealtimeInterval > 0, then all messages are always sent. When false, only changed values are sent.
     RealtimeRetain: false                                  # optional, default false, the mqtt retain flag for realtime messages
@@ -137,7 +137,7 @@ MqttDevices:                                               # optional, a list of
       LogDebug: false                                      # optional, default false, enable debug log output
       LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
     MqttTopics:                                            # mandatory, at least 1 topic must be defined
-      - stat/go-iotdevice/bmv1/+                           # what topic to subscribe to; must match RealtimeTopic of the sending device; %ValueName% must be replaced by +
+      - stat/go-iotdevice/bmv1/+                           # what topic to subscribe to; must match RealtimeTopic of the sending device; %RegisterName% must be replaced by +
     MqttClients:                                           # optional, default all clients, on which mqtt server(s) we subscribe
       - local                                              # identifier as defined in the MqttClients section
 

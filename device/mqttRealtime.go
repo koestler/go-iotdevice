@@ -6,7 +6,6 @@ import (
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/pool"
 	"log"
-	"strings"
 	"time"
 )
 
@@ -197,7 +196,7 @@ func publishRealtimeMessage(mc mqttClient.Client, devConfig Config, value datafl
 		)
 	} else {
 		mc.Publish(
-			GetRealtimeTopic(mcCfg.RealtimeTopic(), devConfig.Name(), value.Register()),
+			mcCfg.RealtimeTopic(devConfig.Name(), value.Register().Name()),
 			payload,
 			mcCfg.Qos(),
 			mcCfg.RealtimeRetain(),
@@ -220,18 +219,4 @@ func convertValueToRealtimeMessage(value dataflow.Value) interface{} {
 	}
 
 	return ret
-}
-
-func GetRealtimeTopic(
-	topic string,
-	deviceName string,
-	register dataflow.Register,
-) string {
-	topic = strings.Replace(topic, "%DeviceName%", deviceName, 1)
-	topic = strings.Replace(topic, "%ValueName%", register.Name(), 1)
-	if valueUnit := register.Unit(); valueUnit != "" {
-		topic = strings.Replace(topic, "%ValueUnit%", valueUnit, 1)
-	}
-
-	return topic
 }

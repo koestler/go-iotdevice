@@ -3,6 +3,7 @@ package config
 import (
 	"net/url"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -195,6 +196,10 @@ func (c MqttClientConfig) AvailabilityEnabled() bool {
 	return c.availabilityEnabled
 }
 
+func (c MqttClientConfig) AvailabilityTopicTemplate() string {
+	return c.availabilityTopicTemplate
+}
+
 func (c MqttClientConfig) AvailabilityTopic() string {
 	return c.availabilityTopic
 }
@@ -207,8 +212,12 @@ func (c MqttClientConfig) StructureEnabled() bool {
 	return c.structureEnabled
 }
 
-func (c MqttClientConfig) StructureTopic() string {
-	return c.structureTopic
+func (c MqttClientConfig) StructureTopicTemplate() string {
+	return c.structureTopicTemplate
+}
+
+func (c MqttClientConfig) StructureTopic(deviceName string) string {
+	return strings.Replace(c.structureTopicTemplate2, "%DeviceName%", deviceName, 1)
 }
 
 func (c MqttClientConfig) StructureInterval() time.Duration {
@@ -223,8 +232,12 @@ func (c MqttClientConfig) TelemetryEnabled() bool {
 	return c.telemetryEnabled
 }
 
-func (c MqttClientConfig) TelemetryTopic() string {
-	return c.telemetryTopic
+func (c MqttClientConfig) TelemetryTopicTemplate() string {
+	return c.telemetryTopicTemplate
+}
+
+func (c MqttClientConfig) TelemetryTopic(deviceName string) string {
+	return strings.Replace(c.telemetryTopicTemplate2, "%DeviceName%", deviceName, 1)
 }
 
 func (c MqttClientConfig) TelemetryInterval() time.Duration {
@@ -239,8 +252,13 @@ func (c MqttClientConfig) RealtimeEnabled() bool {
 	return c.realtimeEnabled
 }
 
-func (c MqttClientConfig) RealtimeTopic() string {
-	return c.realtimeTopic
+func (c MqttClientConfig) RealtimeTopicTemplate() string {
+	return c.realtimeTopicTemplate
+}
+
+func (c MqttClientConfig) RealtimeTopic(deviceName, registerName string) string {
+	r := strings.Replace(c.realtimeTopicTemplate2, "%DeviceName%", deviceName, 1)
+	return strings.Replace(r, "%RegisterName%", registerName, 1)
 }
 
 func (c MqttClientConfig) RealtimeInterval() time.Duration {

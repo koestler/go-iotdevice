@@ -6,7 +6,6 @@ import (
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/pool"
 	"log"
-	"strings"
 	"time"
 )
 
@@ -47,18 +46,23 @@ func runTelemetryForwarders(
 	storage *dataflow.ValueStorage,
 	deviceFilter func(v dataflow.Value) bool,
 ) {
-	// start mqtt forwarders for telemetry messages
-	for _, mc := range mqttClientPool.GetByNames(dev.Config().TelemetryViaMqttClients()) {
-		mc := mc
+	devCfg := dev.Config()
 
-		if telemetryInterval := mc.Config().TelemetryInterval(); telemetryInterval > 0 {
+	// start mqtt forwarders for telemetry messages
+	for _, mc := range mqttClientPool.GetByNames(devCfg.TelemetryViaMqttClients()) {
+		mc := mc
+		mcCfg := mc.Config()
+
+		telemetryTopic := mcCfg.TelemetryTopic(dev.Name())
+
+		if telemetryInterval := mcCfg.TelemetryInterval(); telemetryInterval > 0 {
 			go func() {
 				ticker := time.NewTicker(telemetryInterval)
 				defer ticker.Stop()
 				for {
 					select {
 					case <-ctx.Done():
-						if dev.Config().LogDebug() {
+						if devCfg.LogDebug() {
 							log.Printf(
 								"device[%s]->mqttClient[%s]->telemetry: exit",
 								dev.Config().Name(), mc.Config().Name(),
@@ -66,11 +70,8 @@ func runTelemetryForwarders(
 						}
 						return
 					case <-ticker.C:
-						if dev.Config().LogDebug() {
-							log.Printf(
-								"device[%s]->mqttClient[%s]->telemetry: tick",
-								dev.Config().Name(), mc.Config().Name(),
-							)
+						if devCfg.LogDebug() {
+							log.Printf("device[%s]->mqttClient[%s]->telemetry: tick", devCfg.Name(), mcCfg.Name())
 						}
 
 						if !dev.IsAvailable() {
@@ -94,14 +95,14 @@ func runTelemetryForwarders(
 						if payload, err := json.Marshal(telemetryMessage); err != nil {
 							log.Printf(
 								"device[%s]->mqttClient[%s]->telemetry: cannot generate message: %s",
-								dev.Config().Name(), mc.Config().Name(), err,
+								dev.Config().Name(), mcCfg.Name(), err,
 							)
 						} else {
 							mc.Publish(
-								getTelemetryTopic(mc.Config().TelemetryTopic(), dev),
+								telemetryTopic,
 								payload,
-								mc.Config().Qos(),
-								mc.Config().TelemetryRetain(),
+								mcCfg.Qos(),
+								mcCfg.TelemetryRetain(),
 							)
 						}
 					}
@@ -164,10 +165,4 @@ func convertValuesToEnumTelemetryValues(values []dataflow.Value) (ret map[string
 	}
 
 	return
-}
-
-func getTelemetryTopic(topic string, device Device) string {
-	// replace Device/Value specific placeholders
-	topic = strings.Replace(topic, "%DeviceName%", device.Config().Name(), 1)
-	return topic
 }

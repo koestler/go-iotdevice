@@ -57,7 +57,7 @@ func NewV5(
 	// setup availability topic using will
 	if cfg.AvailabilityEnabled() {
 		client.cliCfg.SetWillMessage(
-			client.GetAvailabilityTopic(),
+			cfg.AvailabilityTopic(),
 			[]byte(availabilityOffline),
 			cfg.Qos(),
 			cfg.AvailabilityRetain())
@@ -153,7 +153,7 @@ func (c *ClientStruct) Shutdown() {
 func (c *ClientStruct) Publish(topic string, payload []byte, qos byte, retain bool) {
 	p := &paho.Publish{
 		QoS:     qos,
-		Topic:   ReplaceTemplate(topic, c.cfg),
+		Topic:   topic,
 		Payload: payload,
 		Retain:  retain,
 	}
@@ -167,10 +167,13 @@ func (c *ClientStruct) Publish(topic string, payload []byte, qos byte, retain bo
 	}
 }
 
+const availabilityOnline = "online"
+const availabilityOffline = "offline"
+
 func (c *ClientStruct) availabilityMsg(payload string) *paho.Publish {
 	return &paho.Publish{
 		QoS:     c.cfg.Qos(),
-		Topic:   c.GetAvailabilityTopic(),
+		Topic:   c.cfg.AvailabilityTopic(),
 		Payload: []byte(payload),
 		Retain:  c.cfg.AvailabilityRetain(),
 	}

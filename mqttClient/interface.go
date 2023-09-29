@@ -24,18 +24,18 @@ type Config interface {
 	AvailabilityTopic() string
 	AvailabilityRetain() bool
 
-	TelemetryEnabled() bool
-	TelemetryTopic() string
-	TelemetryInterval() time.Duration
-	TelemetryRetain() bool
-
 	StructureEnabled() bool
-	StructureTopic() string
+	StructureTopic(deviceName string) string
 	StructureInterval() time.Duration
 	StructureRetain() bool
 
+	TelemetryEnabled() bool
+	TelemetryTopic(deviceName string) string
+	TelemetryInterval() time.Duration
+	TelemetryRetain() bool
+
 	RealtimeEnabled() bool
-	RealtimeTopic() string
+	RealtimeTopic(deviceName, registerName string) string
 	RealtimeInterval() time.Duration
 	RealtimeRepeat() bool
 	RealtimeRetain() bool

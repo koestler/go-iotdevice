@@ -51,25 +51,25 @@ type mqttClientConfigRead struct {
 	ReadOnly          *bool  `yaml:"ReadOnly"`
 	MaxBacklogSize    *int   `yaml:"MaxBacklogSize"`
 
-	AvailabilityEnabled *bool   `yaml:"AvailabilityEnabled"`
-	AvailabilityTopic   *string `yaml:"AvailabilityTopic"`
-	AvailabilityRetain  *bool   `yaml:"AvailabilityRetain"`
+	AvailabilityEnabled       *bool   `yaml:"AvailabilityEnabled"`
+	AvailabilityTopicTemplate *string `yaml:"AvailabilityTopicTemplate"`
+	AvailabilityRetain        *bool   `yaml:"AvailabilityRetain"`
 
-	StructureEnabled  *bool   `yaml:"StructureEnabled"`
-	StructureTopic    *string `yaml:"StructureTopic"`
-	StructureInterval string  `yaml:"StructureInterval"`
-	StructureRetain   *bool   `yaml:"StructureRetain"`
+	StructureEnabled       *bool   `yaml:"StructureEnabled"`
+	StructureTopicTemplate *string `yaml:"StructureTopicTemplate"`
+	StructureInterval      string  `yaml:"StructureInterval"`
+	StructureRetain        *bool   `yaml:"StructureRetain"`
 
-	TelemetryEnabled  *bool   `yaml:"TelemetryEnabled"`
-	TelemetryTopic    *string `yaml:"TelemetryTopic"`
-	TelemetryInterval string  `yaml:"TelemetryInterval"`
-	TelemetryRetain   *bool   `yaml:"TelemetryRetain"`
+	TelemetryEnabled       *bool   `yaml:"TelemetryEnabled"`
+	TelemetryTopicTemplate *string `yaml:"TelemetryTopicTemplate"`
+	TelemetryInterval      string  `yaml:"TelemetryInterval"`
+	TelemetryRetain        *bool   `yaml:"TelemetryRetain"`
 
-	RealtimeEnabled  *bool   `yaml:"RealtimeEnabled"`
-	RealtimeTopic    *string `yaml:"RealtimeTopic"`
-	RealtimeInterval string  `yaml:"RealtimeInterval"`
-	RealtimeRepeat   *bool   `yaml:"RealtimeRepeat"`
-	RealtimeRetain   *bool   `yaml:"RealtimeRetain"`
+	RealtimeEnabled       *bool   `yaml:"RealtimeEnabled"`
+	RealtimeTopicTemplate *string `yaml:"RealtimeTopicTemplate"`
+	RealtimeInterval      string  `yaml:"RealtimeInterval"`
+	RealtimeRepeat        *bool   `yaml:"RealtimeRepeat"`
+	RealtimeRetain        *bool   `yaml:"RealtimeRetain"`
 
 	LogDebug    *bool `yaml:"LogDebug"`
 	LogMessages *bool `yaml:"LogMessages"`

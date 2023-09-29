@@ -2,13 +2,11 @@ package device
 
 import (
 	"context"
-	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/pool"
 	"golang.org/x/exp/maps"
 	"log"
 	"math"
-	"strings"
 	"time"
 )
 
@@ -33,8 +31,6 @@ func runStructureForwarders(
 	ctx context.Context,
 	dev Device,
 	mqttClientPool *pool.Pool[mqttClient.Client],
-	storage *dataflow.ValueStorage,
-	deviceFilter func(v dataflow.Value) bool,
 ) {
 	devCfg := dev.Config()
 
@@ -57,6 +53,10 @@ func runStructureForwarders(
 
 			// for initial send: wait until first register is received; than wait for 1s
 			regSubscription := dev.RegisterDb().Subscribe(ctx)
+
+			// compute topics
+			realtimeTopic := mcCfg.RealtimeTopic(devCfg.Name(), "%RegisterName%")
+			structureTopic := mcCfg.StructureTopic(devCfg.Name())
 
 			ticker := time.NewTicker(math.MaxInt64)
 			defer ticker.Stop()
@@ -81,9 +81,9 @@ func runStructureForwarders(
 				case <-ticker.C:
 					ticker.Stop()
 
-					publishStruct(mc, devCfg, StructureMessage{
+					publishStruct(mc, devCfg, structureTopic, StructureMessage{
 						AvailabilityTopic: mcCfg.AvailabilityTopic(),
-						RealtimeTopic:     mcCfg.RealtimeTopic(),
+						RealtimeTopic:     realtimeTopic,
 						Registers:         maps.Values(registers),
 					})
 					registers = make(map[string]StructRegister)
@@ -93,15 +93,7 @@ func runStructureForwarders(
 	}
 }
 
-func getStructureTopic(
-	topic string,
-	deviceName string,
-) string {
-	topic = strings.Replace(topic, "%DeviceName%", deviceName, 1)
-	return topic
-}
-
-func publishStruct(mc mqttClient.Client, devCfg Config, msg StructureMessage) {
+func publishStruct(mc mqttClient.Client, devCfg Config, topic string, msg StructureMessage) {
 	mcCfg := mc.Config()
 
 	if devCfg.LogDebug() {
@@ -118,7 +110,7 @@ func publishStruct(mc mqttClient.Client, devCfg Config, msg StructureMessage) {
 		)
 	} else {
 		mc.Publish(
-			getStructureTopic(mcCfg.StructureTopic(), devCfg.Name()),
+			topic,
 			payload,
 			mcCfg.Qos(),
 			mcCfg.StructureRetain(),
