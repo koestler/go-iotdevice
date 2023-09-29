@@ -24,8 +24,6 @@ func runRealtimeForwarders(
 	storage *dataflow.ValueStorage,
 	deviceFilter func(v dataflow.Value) bool,
 ) {
-	devCfg := dev.Config()
-
 	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
 	for _, mc := range mqttClientPool.GetByNames(dev.Config().RealtimeViaMqttClients()) {
 		mcCfg := mc.Config()
@@ -33,96 +31,153 @@ func runRealtimeForwarders(
 			continue
 		}
 
-		go func(mc mqttClient.Client) {
-			if dev.Config().LogDebug() {
-				defer func() {
-					log.Printf(
-						"device[%s]->mqttClient[%s]->realtime: exit",
-						dev.Config().Name(), mcCfg.Name(),
-					)
-				}()
-			}
+		// immediate mode: Interval is set to zero
+		// -> send values immediately when they change
+		// delayed update mode: Interval > 0 and Repeat false
+		// -> have a timer, whenever it ticks, send the newest version of the changed values
+		// periodic full mode: Interval > 0 and Repeat true
+		// -> have a timer, whenever it ticks, send all values
+		if mcCfg.RealtimeInterval() <= 0 {
+			go immediateModeRoutine(ctx, dev, mc, storage, deviceFilter)
+		} else if !mcCfg.RealtimeRepeat() {
+			go delayedUpdateModeRoutine(ctx, dev, mc, storage, deviceFilter)
+		} else {
+			go periodicFullModeRoutine(ctx, dev, mc, storage, deviceFilter)
+		}
+	}
+}
 
-			// mode 0: Interval is set to zero
-			// -> send values immediately when they change
-			// mode 1: Interval > 0 and Repeat false
-			// -> have a timer, whenever it ticks, send the newest version of the changed values
-			// mode 2: Interval > 0 and Repeat true
-			// -> have a timer, whenever it ticks, send all values
+func immediateModeRoutine(
+	ctx context.Context,
+	dev Device,
+	mc mqttClient.Client,
+	storage *dataflow.ValueStorage,
+	deviceFilter func(v dataflow.Value) bool,
+) {
+	mcCfg := mc.Config()
+	devCfg := dev.Config()
 
-			if realtimeInterval := mcCfg.RealtimeInterval(); realtimeInterval <= 0 {
-				// mode 0
-				// for loop ends when subscription is canceled and closes its output chan
-				subscription := storage.Subscribe(ctx, deviceFilter)
-				for value := range subscription.Drain() {
-					publishRealtimeMessage(mc, devCfg, value)
-				}
-			} else {
-				log.Printf(
-					"device[%s]->mqttClient[%s]->realtime: start sending messages every %s",
-					devCfg.Name(), mcCfg.Name(), realtimeInterval.String(),
-				)
-
-				ticker := time.NewTicker(realtimeInterval)
-				defer ticker.Stop()
-				if !mcCfg.RealtimeRepeat() {
-					updates := make(map[string]dataflow.Value)
-
-					// mode 1
-					subscription := storage.Subscribe(ctx, deviceFilter)
-					for {
-						select {
-						case <-ctx.Done():
-							return
-						case value := <-subscription.Drain():
-							// new value received, save newest version per register name
-							updates[value.Register().Name()] = value
-						case <-ticker.C:
-							if dev.Config().LogDebug() {
-								log.Printf(
-									"device[%s]->mqttClient[%s]->realtime: tick: send updates",
-									dev.Config().Name(), mcCfg.Name(),
-								)
-							}
-							for _, v := range updates {
-								publishRealtimeMessage(mc, devCfg, v)
-							}
-							updates = make(map[string]dataflow.Value)
-						}
-					}
-				} else {
-					// mode 2
-					for {
-						select {
-						case <-ctx.Done():
-							return
-						case <-ticker.C:
-							if !dev.IsAvailable() {
-								// do not send messages when device is disconnected
-								continue
-							}
-
-							if dev.Config().LogDebug() {
-								log.Printf(
-									"device[%s]->mqttClient[%s]->realtime: tick: send everything",
-									dev.Config().Name(), mcCfg.Name(),
-								)
-							}
-
-							values := storage.GetStateFiltered(deviceFilter)
-							for _, v := range values {
-								publishRealtimeMessage(mc, devCfg, v)
-							}
-						}
-					}
-				}
-			}
-		}(mc)
-
+	if devCfg.LogDebug() {
 		log.Printf(
-			"device[%s]->mqttClient[%s]->realtime: start sending messages",
+			"device[%s]->mqttClient[%s]->realtime: start immediate mode",
 			devCfg.Name(), mcCfg.Name(),
 		)
+		defer func() {
+			log.Printf(
+				"device[%s]->mqttClient[%s]->realtime: exit immediate mode",
+				devCfg.Name(), mcCfg.Name(),
+			)
+		}()
+	}
+
+	// for loop ends when subscription is canceled and closes its output chan
+	subscription := storage.Subscribe(ctx, deviceFilter)
+	for value := range subscription.Drain() {
+		publishRealtimeMessage(mc, devCfg, value)
+	}
+}
+
+func delayedUpdateModeRoutine(
+	ctx context.Context,
+	dev Device,
+	mc mqttClient.Client,
+	storage *dataflow.ValueStorage,
+	deviceFilter func(v dataflow.Value) bool,
+) {
+	mcCfg := mc.Config()
+	devCfg := dev.Config()
+	realtimeInterval := mcCfg.RealtimeInterval()
+
+	if devCfg.LogDebug() {
+		log.Printf(
+			"device[%s]->mqttClient[%s]->realtime: start delayed update mode, send every %s",
+			devCfg.Name(), mcCfg.Name(), realtimeInterval,
+		)
+		defer func() {
+			log.Printf(
+				"device[%s]->mqttClient[%s]->realtime: exit delayed update mode",
+				devCfg.Name(), mcCfg.Name(),
+			)
+		}()
+	}
+
+	ticker := time.NewTicker(realtimeInterval)
+	defer ticker.Stop()
+
+	updates := make(map[string]dataflow.Value)
+
+	subscription := storage.Subscribe(ctx, deviceFilter)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case value := <-subscription.Drain():
+			// new value received, save newest version per register name
+			updates[value.Register().Name()] = value
+		case <-ticker.C:
+			if devCfg.LogDebug() {
+				log.Printf(
+					"device[%s]->mqttClient[%s]->realtime: tick: send updates",
+					devCfg.Name(), mcCfg.Name(),
+				)
+			}
+			for _, v := range updates {
+				publishRealtimeMessage(mc, devCfg, v)
+			}
+			updates = make(map[string]dataflow.Value)
+		}
+	}
+}
+
+func periodicFullModeRoutine(
+	ctx context.Context,
+	dev Device,
+	mc mqttClient.Client,
+	storage *dataflow.ValueStorage,
+	deviceFilter func(v dataflow.Value) bool,
+) {
+	mcCfg := mc.Config()
+	devCfg := dev.Config()
+	realtimeInterval := mcCfg.RealtimeInterval()
+
+	if devCfg.LogDebug() {
+		log.Printf(
+			"device[%s]->mqttClient[%s]->realtime: start periodic full mode, send every %s",
+			devCfg.Name(), mcCfg.Name(), realtimeInterval,
+		)
+		defer func() {
+			log.Printf(
+				"device[%s]->mqttClient[%s]->realtime: exit periodic full mode",
+				devCfg.Name(), mcCfg.Name(),
+			)
+		}()
+	}
+
+	ticker := time.NewTicker(realtimeInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if !dev.IsAvailable() {
+				// do not send messages when device is disconnected
+				continue
+			}
+
+			if devCfg.LogDebug() {
+				log.Printf(
+					"device[%s]->mqttClient[%s]->realtime: tick: send everything",
+					devCfg.Name(), mcCfg.Name(),
+				)
+			}
+
+			values := storage.GetStateFiltered(deviceFilter)
+			for _, v := range values {
+				publishRealtimeMessage(mc, devCfg, v)
+			}
+		}
 	}
 }
 
