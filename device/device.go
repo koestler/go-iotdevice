@@ -40,7 +40,7 @@ type State struct {
 
 func NewState(deviceConfig Config, stateStorage *dataflow.ValueStorage) State {
 	registerDb := dataflow.NewRegisterDb()
-	registerDb.Add(GetAvailabilityRegister())
+	registerDb.Add(availabilityRegister)
 	return State{
 		deviceConfig: deviceConfig,
 		stateStorage: stateStorage,
