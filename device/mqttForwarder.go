@@ -21,7 +21,7 @@ func RunMqttForwarders(
 
 	runRealtimeForwarders(ctx, dev, mqttClientPool, storage, deviceFilter)
 	runTelemetryForwarders(ctx, dev, mqttClientPool, storage, deviceFilter)
-
+	runStructureForwarders(ctx, dev, mqttClientPool, storage, deviceFilter)
 }
 
 func timeToString(t time.Time) string {
