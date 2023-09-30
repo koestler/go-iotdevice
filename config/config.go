@@ -345,10 +345,10 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 
 	if c.ProtocolVersion == nil {
 		ret.protocolVersion = 5
-	} else if *c.ProtocolVersion == 3 || *c.ProtocolVersion == 5 {
+	} else if *c.ProtocolVersion == 5 {
 		ret.protocolVersion = *c.ProtocolVersion
 	} else {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->Protocol=%d but must be 3 or 5", name, *c.ProtocolVersion))
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->Protocol=%d but must be 5 (3 is not supported anymore)", name, *c.ProtocolVersion))
 	}
 
 	if c.ClientId == nil {
