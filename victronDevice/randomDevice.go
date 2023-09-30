@@ -47,7 +47,6 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 					output.Fill(dataflow.NewEnumRegisterValue(c.Name(), r, randomEnum(r.Enum())))
 				}
 			}
-			c.SetLastUpdatedNow()
 		}
 	}
 }

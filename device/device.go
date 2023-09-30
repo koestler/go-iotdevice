@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"sync"
-	"time"
 )
 
 type Config interface {
@@ -21,7 +20,6 @@ type Device interface {
 	Name() string
 	Config() Config
 	RegisterDb() *dataflow.RegisterDb
-	LastUpdated() time.Time
 	IsAvailable() bool
 	Model() string
 	Run(ctx context.Context) (err error, immediateError bool)
@@ -32,10 +30,8 @@ type State struct {
 	stateStorage *dataflow.ValueStorage
 	registerDb   *dataflow.RegisterDb
 
-	lastUpdated      time.Time
-	lastUpdatedMutex sync.RWMutex
-	available        bool
-	availableMutex   sync.RWMutex
+	available      bool
+	availableMutex sync.RWMutex
 }
 
 func NewState(deviceConfig Config, stateStorage *dataflow.ValueStorage) State {
@@ -62,18 +58,6 @@ func (c *State) StateStorage() *dataflow.ValueStorage {
 
 func (c *State) RegisterDb() *dataflow.RegisterDb {
 	return c.registerDb
-}
-
-func (c *State) SetLastUpdatedNow() {
-	c.lastUpdatedMutex.Lock()
-	defer c.lastUpdatedMutex.Unlock()
-	c.lastUpdated = time.Now()
-}
-
-func (c *State) LastUpdated() time.Time {
-	c.lastUpdatedMutex.RLock()
-	defer c.lastUpdatedMutex.RUnlock()
-	return c.lastUpdated
 }
 
 func (c *State) SetAvailable(available bool) {

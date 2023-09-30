@@ -46,8 +46,6 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 			))
 		}
 
-		c.SetLastUpdatedNow()
-
 		if c.Config().LogDebug() {
 			log.Printf(
 				"waveshareDevice[%s]: registers fetched, took=%.3fs",

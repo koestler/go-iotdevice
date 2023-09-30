@@ -68,7 +68,6 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 						} else if v := realtimeMessage.TextValue; v != nil {
 							c.StateStorage().Fill(dataflow.NewTextRegisterValue(c.Name(), register, *v))
 						}
-						c.SetLastUpdatedNow()
 					}
 				*/
 			})

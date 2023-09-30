@@ -18,7 +18,7 @@ type StructRegister struct {
 	Enum         map[int]string `json:"Enum,omitempty"`
 	Unit         string         `json:"Unit,omitempty" example:"W"`
 	Sort         int            `json:"Sort" example:"100"`
-	Controllable bool           `json:"Control" example:"false"`
+	Controllable bool           `json:"Cont" example:"false"`
 }
 
 type StructureMessage struct {
@@ -35,7 +35,7 @@ func runStructureForwarders(
 	devCfg := dev.Config()
 
 	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
-	for _, mc := range mqttClientPool.GetByNames(dev.Config().RealtimeViaMqttClients()) {
+	for _, mc := range mqttClientPool.GetByNames(devCfg.RealtimeViaMqttClients()) {
 		mcCfg := mc.Config()
 		if !mcCfg.StructureEnabled() {
 			continue
@@ -46,7 +46,7 @@ func runStructureForwarders(
 				defer func() {
 					log.Printf(
 						"device[%s]->mqttClient[%s]->struct: exit",
-						dev.Config().Name(), mcCfg.Name(),
+						devCfg.Name(), mcCfg.Name(),
 					)
 				}()
 			}

@@ -153,8 +153,6 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 				pingNeeded = err != nil
 			}
 
-			c.SetLastUpdatedNow()
-
 			fetchStaticCounter++
 
 			if c.Config().LogDebug() {

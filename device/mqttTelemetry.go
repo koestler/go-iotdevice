@@ -51,7 +51,7 @@ func runTelemetryForwarders(
 	for _, mc := range mqttClientPool.GetByNames(devCfg.TelemetryViaMqttClients()) {
 		mcCfg := mc.Config()
 
-		telemetryTopic := mcCfg.TelemetryTopic(dev.Name())
+		telemetryTopic := mcCfg.TelemetryTopic(devCfg.Name())
 		if telemetryInterval := mcCfg.TelemetryInterval(); telemetryInterval > 0 {
 			go func(mc mqttClient.Client) {
 				ticker := time.NewTicker(telemetryInterval)

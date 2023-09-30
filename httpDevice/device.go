@@ -196,7 +196,6 @@ func (ds *DeviceStruct) poll() error {
 		return err
 	}
 
-	ds.SetLastUpdatedNow()
 	return nil
 }
 
