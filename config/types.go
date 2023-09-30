@@ -65,10 +65,15 @@ type MqttClientConfig struct {
 	readOnly          bool
 	maxBacklogSize    int
 
-	availabilityEnabled       bool
-	availabilityTopicTemplate string
-	availabilityTopic         string
-	availabilityRetain        bool
+	availabilityClientEnabled       bool
+	availabilityClientTopicTemplate string
+	availabilityClientTopic         string
+	availabilityClientRetain        bool
+
+	availabilityDeviceEnabled        bool
+	availabilityDeviceTopicTemplate  string
+	availabilityDeviceTopicTemplate2 string
+	availabilityDeviceRetain         bool
 
 	structureEnabled        bool
 	structureTopicTemplate  string

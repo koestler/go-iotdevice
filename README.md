@@ -113,26 +113,30 @@ MqttClients:                                               # optional, when empt
     KeepAlive: 1m                                          # optional, default 60s, how often a ping is sent to keep the connection alive
     ConnectRetryDelay: 10s                                 # optional, default 10s, when disconnected: after what delay shall a connection attempt is made
     ConnectTimeout: 5s                                     # optional, default 5s, how long to wait for the SYN+ACK packet, increase on slow networks
-    TopicPrefix:                                           # optional, default empty, %Prefix% is replaced with this string
+    TopicPrefix: go-iotdevice/                             # optional, %Prefix% is replaced with this string
     ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overriding MaxBacklogSize, AvailabilityEnable, StructureEnable, TelemetryEnable, RealtimeEnable)
     MaxBacklogSize: 256                                    # optional, default 256, max number of mqtt messages to store when connection is offline
 
-    AvailabilityEnable: true                               # optional, default true, whether to send online messages and register an offline message as will
-    AvailabilityTopicTemplate: '%Prefix%tele/%ClientId%/status' # optional, what topic to use for online/offline messages
-    AvailabilityRetain: true                               # optional, default true, the mqtt retain flag for availability messages
+    AvailabilityClientEnable: true                         # optional, default true, whether to send online messages and register an offline message as will
+    AvailabilityClientTopicTemplate: '%Prefix%avail/%ClientId%' # optional, what topic to use for online/offline messages of the go-iotdevice instance
+    AvailabilityClientRetain: true                         # optional, default true, the mqtt retain flag for availability messages
+
+    AvailabilityDeviceEnable: true                         # optional, default true, whether to send online messages and register an offline message as will
+    AvailabilityDeviceTopicTemplate: '%Prefix%avail/%DeviceName%'# optional, what topic to use for online/offline messages of a specific device
+    AvailabilityDeviceRetain: true                         # optional, default true, the mqtt retain flag for availability messages
 
     StructureEnable: true                                  # optional, default true, whether to send messages containing the list of registers / types
-    StructureTopicTemplate: '%Prefix%struct/go-iotdevice/%DeviceName%' # optional, what topic to use for structure messages
+    StructureTopicTemplate: '%Prefix%struct/%DeviceName%' # optional, what topic to use for structure messages
     StructureInterval: 0s                                  # optional, default 0, 0 means disabled only send initially, otherwise the structure is repeated after this interval (useful when retain is false)
     StructureRetain: true                                  # optional, default true, the mqtt retain flag for structure messages
 
     TelemetryEnable: true                                  # optional, default true, whether to send telemetry messages (one per device)
-    TelemetryTopicTemplate: '%Prefix%tele/go-iotdevice/%DeviceName%/state' # optional, what topic to use for telemetry messages
+    TelemetryTopicTemplate: '%Prefix%tele/%DeviceName%'    # optional, what topic to use for telemetry messages
     TelemetryInterval: 10s                                 # optional, default 10s, how often to sent telemetry mqtt messages
     TelemetryRetain: false                                 # optional, default false, the mqtt retain flag for telemetry messages
 
     RealtimeEnable: true                                   # optional, default false, whether to enable sending realtime messages
-    RealtimeTopicTemplate: '%Prefix%stat/go-iotdevice/%DeviceName%/%RegisterName%' # optional, what topic to use for realtime messages
+    RealtimeTopicTemplate: '%Prefix%real/%DeviceName%/%RegisterName%' # optional, what topic to use for realtime messages
     RealtimeInterval: 0s                                   # optional, default 0; 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
     RealtimeRepeat: false                                  # optional, default false, when true and RealtimeInterval > 0, then all messages are always sent. When false, only changed values are sent.
     RealtimeRetain: false                                  # optional, default false, the mqtt retain flag for realtime messages

@@ -43,17 +43,21 @@ type mqttClientConfigRead struct {
 	Password string  `yaml:"Password"`
 	ClientId *string `yaml:"ClientId"`
 
-	Qos               *byte  `yaml:"Qos"`
-	KeepAlive         string `yaml:"KeepAlive"`
-	ConnectRetryDelay string `yaml:"ConnectRetryDelay"`
-	ConnectTimeout    string `yaml:"ConnectTimeout"`
-	TopicPrefix       string `yaml:"TopicPrefix"`
-	ReadOnly          *bool  `yaml:"ReadOnly"`
-	MaxBacklogSize    *int   `yaml:"MaxBacklogSize"`
+	Qos               *byte   `yaml:"Qos"`
+	KeepAlive         string  `yaml:"KeepAlive"`
+	ConnectRetryDelay string  `yaml:"ConnectRetryDelay"`
+	ConnectTimeout    string  `yaml:"ConnectTimeout"`
+	TopicPrefix       *string `yaml:"TopicPrefix"`
+	ReadOnly          *bool   `yaml:"ReadOnly"`
+	MaxBacklogSize    *int    `yaml:"MaxBacklogSize"`
 
-	AvailabilityEnabled       *bool   `yaml:"AvailabilityEnabled"`
-	AvailabilityTopicTemplate *string `yaml:"AvailabilityTopicTemplate"`
-	AvailabilityRetain        *bool   `yaml:"AvailabilityRetain"`
+	AvailabilityClientEnabled       *bool   `yaml:"AvailabilityClientEnabled"`
+	AvailabilityClientTopicTemplate *string `yaml:"AvailabilityClientTopicTemplate"`
+	AvailabilityClientRetain        *bool   `yaml:"AvailabilityClientRetain"`
+
+	AvailabilityDeviceEnabled       *bool   `yaml:"AvailabilityDeviceEnabled"`
+	AvailabilityDeviceTopicTemplate *string `yaml:"AvailabilityDeviceTopicTemplate"`
+	AvailabilityDeviceRetain        *bool   `yaml:"AvailabilityDeviceRetain"`
 
 	StructureEnabled       *bool   `yaml:"StructureEnabled"`
 	StructureTopicTemplate *string `yaml:"StructureTopicTemplate"`

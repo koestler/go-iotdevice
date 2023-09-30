@@ -321,10 +321,9 @@ func (c *authenticationConfigRead) TransformAndValidate(bypassFileCheck bool) (r
 
 func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientConfig, err []error) {
 	ret = MqttClientConfig{
-		name:        name,
-		user:        c.User,
-		password:    c.Password,
-		topicPrefix: c.TopicPrefix,
+		name:     name,
+		user:     c.User,
+		password: c.Password,
 	}
 
 	if !nameMatcher.MatchString(ret.name) {
@@ -411,6 +410,12 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.connectTimeout = connectTimeout
 	}
 
+	if c.TopicPrefix == nil {
+		ret.topicPrefix = "go-iotdevice/"
+	} else {
+		ret.topicPrefix = *c.TopicPrefix
+	}
+
 	if c.ReadOnly == nil {
 		ret.readOnly = false
 	} else {
@@ -426,26 +431,49 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	}
 
 	if ret.readOnly {
-		ret.availabilityEnabled = false
-	} else if c.AvailabilityEnabled == nil {
-		ret.availabilityEnabled = true
+		ret.availabilityClientEnabled = false
+	} else if c.AvailabilityClientEnabled == nil {
+		ret.availabilityClientEnabled = true
 	} else {
-		ret.availabilityEnabled = *c.AvailabilityEnabled
+		ret.availabilityClientEnabled = *c.AvailabilityClientEnabled
 	}
 
-	if c.AvailabilityTopicTemplate == nil {
-		ret.availabilityTopicTemplate = "%Prefix%tele/%ClientId%/status"
-	} else if len(*c.AvailabilityTopicTemplate) < 1 {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->AvailabilityTopicTemplate must no be empty", name))
+	if c.AvailabilityClientTopicTemplate == nil {
+		ret.availabilityClientTopicTemplate = "%Prefix%avail/%ClientId%"
+	} else if len(*c.AvailabilityClientTopicTemplate) < 1 {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->AvailabilityClientTopicTemplate must no be empty", name))
 	} else {
-		ret.availabilityTopicTemplate = *c.AvailabilityTopicTemplate
+		ret.availabilityClientTopicTemplate = *c.AvailabilityClientTopicTemplate
 	}
-	ret.availabilityTopic = ret.replaceTopicTemplate(ret.availabilityTopicTemplate)
+	ret.availabilityClientTopic = ret.replaceTopicTemplate(ret.availabilityClientTopicTemplate)
 
-	if c.AvailabilityRetain == nil {
-		ret.availabilityRetain = true
+	if c.AvailabilityClientRetain == nil {
+		ret.availabilityClientRetain = true
 	} else {
-		ret.availabilityRetain = *c.AvailabilityRetain
+		ret.availabilityClientRetain = *c.AvailabilityClientRetain
+	}
+
+	if ret.readOnly {
+		ret.availabilityDeviceEnabled = false
+	} else if c.AvailabilityDeviceEnabled == nil {
+		ret.availabilityDeviceEnabled = true
+	} else {
+		ret.availabilityDeviceEnabled = *c.AvailabilityDeviceEnabled
+	}
+
+	if c.AvailabilityDeviceTopicTemplate == nil {
+		ret.availabilityDeviceTopicTemplate = "%Prefix%avail/%DeviceName%"
+	} else if len(*c.AvailabilityDeviceTopicTemplate) < 1 {
+		err = append(err, fmt.Errorf("MqttClientConfig->%s->AvailabilityDeviceTopicTemplate must no be empty", name))
+	} else {
+		ret.availabilityDeviceTopicTemplate = *c.AvailabilityDeviceTopicTemplate
+	}
+	ret.availabilityDeviceTopicTemplate2 = ret.replaceTopicTemplate(ret.availabilityDeviceTopicTemplate)
+
+	if c.AvailabilityDeviceRetain == nil {
+		ret.availabilityDeviceRetain = true
+	} else {
+		ret.availabilityDeviceRetain = *c.AvailabilityDeviceRetain
 	}
 
 	if ret.readOnly {
@@ -457,7 +485,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	}
 
 	if c.StructureTopicTemplate == nil {
-		ret.structureTopicTemplate = "%Prefix%struct/go-iotdevice/%DeviceName%/state"
+		ret.structureTopicTemplate = "%Prefix%struct/%DeviceName%"
 	} else if len(*c.StructureTopicTemplate) < 1 {
 		err = append(err, fmt.Errorf("MqttClientConfig->%s->StructureTopicTemplate must no be empty", name))
 	} else {
@@ -490,7 +518,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	}
 
 	if c.TelemetryTopicTemplate == nil {
-		ret.telemetryTopicTemplate = "%Prefix%tele/go-iotdevice/%DeviceName%/state"
+		ret.telemetryTopicTemplate = "%Prefix%tele/%DeviceName%"
 	} else if len(*c.TelemetryTopicTemplate) < 1 {
 		err = append(err, fmt.Errorf("MqttClientConfig->%s->TelemetryTopicTemplate must no be empty", name))
 	} else {
@@ -521,7 +549,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	}
 
 	if c.RealtimeTopicTemplate == nil {
-		ret.realtimeTopicTemplate = "%Prefix%stat/go-iotdevice/%DeviceName%/%RegisterName%"
+		ret.realtimeTopicTemplate = "%Prefix%real/%DeviceName%/%RegisterName%"
 	} else if len(*c.RealtimeTopicTemplate) < 1 {
 		err = append(err, fmt.Errorf("MqttClientConfig->%s->RealtimeTopic must no be empty", name))
 	} else {

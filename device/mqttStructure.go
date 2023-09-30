@@ -22,9 +22,9 @@ type StructRegister struct {
 }
 
 type StructureMessage struct {
-	AvailabilityTopic string
-	RealtimeTopic     string
-	Registers         []StructRegister
+	AvailabilityTopics []string
+	RealtimeTopic      string
+	Registers          []StructRegister
 }
 
 func runStructureForwarders(
@@ -82,15 +82,26 @@ func runStructureForwarders(
 					ticker.Stop()
 
 					publishStruct(mc, devCfg, structureTopic, StructureMessage{
-						AvailabilityTopic: mcCfg.AvailabilityTopic(),
-						RealtimeTopic:     realtimeTopic,
-						Registers:         maps.Values(registers),
+						AvailabilityTopics: getAvailabilityTopics(devCfg, mcCfg),
+						RealtimeTopic:      realtimeTopic,
+						Registers:          maps.Values(registers),
 					})
 					registers = make(map[string]StructRegister)
 				}
 			}
 		}(mc)
 	}
+}
+
+func getAvailabilityTopics(devCfg Config, mcCfg mqttClient.Config) (ret []string) {
+	if mcCfg.AvailabilityClientEnabled() {
+		ret = append(ret, mcCfg.AvailabilityClientTopic())
+	}
+	if mcCfg.AvailabilityDeviceEnabled() {
+		ret = append(ret, mcCfg.AvailabilityDeviceTopic(devCfg.Name()))
+	}
+
+	return
 }
 
 func publishStruct(mc mqttClient.Client, devCfg Config, topic string, msg StructureMessage) {

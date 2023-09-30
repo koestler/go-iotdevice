@@ -57,9 +57,13 @@ MqttClients:                                               # optional, when empt
     ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overriding MaxBacklogSize, AvailabilityEnabled, StructureEnabled, TelemetryEnabled, RealtimeEnabled)
     MaxBacklogSize: 42                                     # optional, default 256, max number of mqtt messages to store when connection is offline
 
-    AvailabilityEnabled: false                             # optional, default true, whether to send online messages and register an offline message as will
-    AvailabilityTopicTemplate: '%Prefix%tele-X/%ClientId%/status'  # optional, what topic to use for online/offline messages
-    AvailabilityRetain: false                              # optional, default true, the mqtt retain flag for availability messages
+    AvailabilityClientEnabled: false                             # optional, default true, whether to send online messages and register an offline message as will
+    AvailabilityClientTopicTemplate: '%Prefix%tele-X/%ClientId%/status'  # optional, what topic to use for online/offline messages
+    AvailabilityClientRetain: false                              # optional, default true, the mqtt retain flag for availability messages
+
+    AvailabilityDeviceEnabled: false                             # optional, default true, whether to send online messages and register an offline message as will
+    AvailabilityDeviceTopicTemplate: '%Prefix%tele-X/%ClientId%/%DeviceName%/status'  # optional, what topic to use for online/offline messages
+    AvailabilityDeviceRetain: false                              # optional, default true, the mqtt retain flag for availability messages
 
     StructureEnabled: false                                # optional, default true, whether to send messages containing the list of registers / types
     StructureTopicTemplate: '%Prefix%struct-X/go-iotdevice/%DeviceName%' # optional, what topic to use for structure messages
@@ -72,7 +76,7 @@ MqttClients:                                               # optional, when empt
     TelemetryRetain: true                                  # optional, default false, the mqtt retain flag for telemetry messages
 
     RealtimeEnabled: false                                 # optional, default false, whether to enable sending realtime messages
-    RealtimeTopicTemplate: '%Prefix%stat-X/go-iotdevice/%DeviceName%/%RegisterName%' # optional, what topic to use for realtime messages
+    RealtimeTopicTemplate: '%Prefix%real-X/go-iotdevice/%DeviceName%/%RegisterName%' # optional, what topic to use for realtime messages
     RealtimeInterval: 2s                                   # optional, default 0; 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
     RealtimeRepeat: true                                   # optional, default false, when true and RealtimeInterval > 0, then all messages are always sent. When false, only changed values are sent.
     RealtimeRetain: true                                   # optional, default false, the mqtt retain flag for realtime messages
@@ -449,20 +453,36 @@ func TestReadConfig_Complete(t *testing.T) {
 				t.Errorf("expect MqttClients->0-local->MaxBacklogSize to be %d but got %d", expect, got)
 			}
 
-			if got := mc.AvailabilityEnabled(); got {
-				t.Error("expect MqttClients->0-local->AvailabilityEnabled to be false")
+			if got := mc.AvailabilityClientEnabled(); got {
+				t.Error("expect MqttClients->0-local->AvailabilityClientEnabled to be false")
 			}
 
-			if expect, got := "%Prefix%tele-X/%ClientId%/status", mc.AvailabilityTopicTemplate(); expect != got {
-				t.Errorf("expect MqttClients->0-local->AvailabilityTopicTemplate to be '%s' but got '%s'", expect, got)
+			if expect, got := "%Prefix%tele-X/%ClientId%/status", mc.AvailabilityClientTopicTemplate(); expect != got {
+				t.Errorf("expect MqttClients->0-local->AvailabilityClientTopicTemplate to be '%s' but got '%s'", expect, got)
 			}
 
-			if expect, got := "my-prefix/tele-X/server42/status", mc.AvailabilityTopic(); expect != got {
-				t.Errorf("expect MqttClients->0-local->AvailabilityTopic to be '%s' but got '%s'", expect, got)
+			if expect, got := "my-prefix/tele-X/server42/status", mc.AvailabilityClientTopic(); expect != got {
+				t.Errorf("expect MqttClients->0-local->AvailabilityClientTopic to be '%s' but got '%s'", expect, got)
 			}
 
-			if got := mc.AvailabilityRetain(); got {
-				t.Error("expect MqttClients->0-local->AvailabilityRetain to be false")
+			if got := mc.AvailabilityClientRetain(); got {
+				t.Error("expect MqttClients->0-local->AvailabilityClientRetain to be false")
+			}
+
+			if got := mc.AvailabilityDeviceEnabled(); got {
+				t.Error("expect MqttDevices->0-local->AvailabilityDeviceEnabled to be false")
+			}
+
+			if expect, got := "%Prefix%tele-X/%ClientId%/%DeviceName%/status", mc.AvailabilityDeviceTopicTemplate(); expect != got {
+				t.Errorf("expect MqttDevices->0-local->AvailabilityDeviceTopicTemplate to be '%s' but got '%s'", expect, got)
+			}
+
+			if expect, got := "my-prefix/tele-X/server42/my-dev/status", mc.AvailabilityDeviceTopic("my-dev"); expect != got {
+				t.Errorf("expect MqttDevices->0-local->AvailabilityDeviceTopic to be '%s' but got '%s'", expect, got)
+			}
+
+			if got := mc.AvailabilityDeviceRetain(); got {
+				t.Error("expect MqttDevices->0-local->AvailabilityDeviceRetain to be false")
 			}
 
 			if got := mc.StructureEnabled(); got {
@@ -509,11 +529,11 @@ func TestReadConfig_Complete(t *testing.T) {
 				t.Error("expect MqttClients->0-local->RealtimeEnabled to be false")
 			}
 
-			if expect, got := "%Prefix%stat-X/go-iotdevice/%DeviceName%/%RegisterName%", mc.RealtimeTopicTemplate(); expect != got {
+			if expect, got := "%Prefix%real-X/go-iotdevice/%DeviceName%/%RegisterName%", mc.RealtimeTopicTemplate(); expect != got {
 				t.Errorf("expect MqttClients->0-local->RealtimeTopicTemplate to be '%s' but got '%s'", expect, got)
 			}
 
-			if expect, got := "my-prefix/stat-X/go-iotdevice/my-dev/my-reg", mc.RealtimeTopic("my-dev", "my-reg"); expect != got {
+			if expect, got := "my-prefix/real-X/go-iotdevice/my-dev/my-reg", mc.RealtimeTopic("my-dev", "my-reg"); expect != got {
 				t.Errorf("expect MqttClients->0-local->RealtimeTopic to be '%s' but got '%s'", expect, got)
 			}
 
@@ -569,8 +589,12 @@ func TestReadConfig_Complete(t *testing.T) {
 				t.Errorf("expect MqttClients->2-readonly->ReadOnly to be true")
 			}
 
-			if got := mc.AvailabilityEnabled(); got {
-				t.Error("expect MqttClients->2-readonly->AvailabilityEnabled to be false")
+			if got := mc.AvailabilityClientEnabled(); got {
+				t.Error("expect MqttClients->2-readonly->AvailabilityClientEnabled to be false")
+			}
+
+			if got := mc.AvailabilityDeviceEnabled(); got {
+				t.Error("expect MqttClients->2-readonly->AvailabilityDeviceEnabled to be false")
 			}
 
 			if got := mc.StructureEnabled(); got {
@@ -1083,7 +1107,7 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Errorf("expect MqttClients->0-local->ConnectTimeout to be '%s' but got '%s'", expect, got)
 		}
 
-		if expect, got := "", mc.TopicPrefix(); expect != got {
+		if expect, got := "go-iotdevice/", mc.TopicPrefix(); expect != got {
 			t.Errorf("expect MqttClients->0-local->TopicPrefix to be '%s' but got '%s'", expect, got)
 		}
 
@@ -1095,35 +1119,51 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Errorf("expect MqttClients->0-local->MaxBacklogSize to be %d but got %d", expect, got)
 		}
 
-		if got := mc.AvailabilityEnabled(); !got {
-			t.Error("expect MqttClients->0-local->AvailabilityEnabled to be true")
+		if got := mc.AvailabilityClientEnabled(); !got {
+			t.Error("expect MqttClients->0-local->AvailabilityClientEnabled to be true")
 		}
 
-		if expect, got := "%Prefix%tele/%ClientId%/status", mc.AvailabilityTopicTemplate(); expect != got {
-			t.Errorf("expect MqttClients->0-local->AvailabilityTopicTemplate to be '%s' but got '%s'", expect, got)
+		if expect, got := "%Prefix%avail/%ClientId%", mc.AvailabilityClientTopicTemplate(); expect != got {
+			t.Errorf("expect MqttClients->0-local->AvailabilityClientTopicTemplate to be '%s' but got '%s'", expect, got)
 		}
 
 		{
-			expect := "tele/%ClientId%/status"
+			expect := "go-iotdevice/avail/%ClientId%"
 			expect = strings.Replace(expect, "%ClientId%", mc.ClientId(), 1)
-			if got := mc.AvailabilityTopic(); expect != got {
-				t.Errorf("expect MqttClients->0-local->AvailabilityTopic to be '%s' but got '%s'", expect, got)
+			if got := mc.AvailabilityClientTopic(); expect != got {
+				t.Errorf("expect MqttClients->0-local->AvailabilityClientTopic to be '%s' but got '%s'", expect, got)
 			}
 		}
 
-		if got := mc.AvailabilityRetain(); !got {
+		if got := mc.AvailabilityClientRetain(); !got {
 			t.Error("expect MqttClients->0-local->AvailabilityRetain to be true")
+		}
+
+		if got := mc.AvailabilityDeviceEnabled(); !got {
+			t.Error("expect MqttDevices->0-local->AvailabilityDeviceEnabled to be true")
+		}
+
+		if expect, got := "%Prefix%avail/%DeviceName%", mc.AvailabilityDeviceTopicTemplate(); expect != got {
+			t.Errorf("expect MqttDevices->0-local->AvailabilityDeviceTopicTemplate to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := "go-iotdevice/avail/my-dev", mc.AvailabilityDeviceTopic("my-dev"); expect != got {
+			t.Errorf("expect MqttDevices->0-local->AvailabilityDeviceTopic to be '%s' but got '%s'", expect, got)
+		}
+
+		if got := mc.AvailabilityDeviceRetain(); !got {
+			t.Error("expect MqttDevices->0-local->AvailabilityRetain to be true")
 		}
 
 		if got := mc.StructureEnabled(); !got {
 			t.Error("expect MqttClients->0-local->StructureEnabled to be true")
 		}
 
-		if expect, got := "%Prefix%struct/go-iotdevice/%DeviceName%/state", mc.StructureTopicTemplate(); expect != got {
+		if expect, got := "%Prefix%struct/%DeviceName%", mc.StructureTopicTemplate(); expect != got {
 			t.Errorf("expect MqttClients->0-local->StructureTopicTemplate to be '%s' but got '%s'", expect, got)
 		}
 
-		if expect, got := "struct/go-iotdevice/my-dev/state", mc.StructureTopic("my-dev"); expect != got {
+		if expect, got := "go-iotdevice/struct/my-dev", mc.StructureTopic("my-dev"); expect != got {
 			t.Errorf("expect MqttClients->0-local->StructureTopic to be '%s' but got '%s'", expect, got)
 		}
 
@@ -1139,11 +1179,11 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Error("expect MqttClients->0-local->TelemetryEnabled to be true")
 		}
 
-		if expect, got := "%Prefix%tele/go-iotdevice/%DeviceName%/state", mc.TelemetryTopicTemplate(); expect != got {
+		if expect, got := "%Prefix%tele/%DeviceName%", mc.TelemetryTopicTemplate(); expect != got {
 			t.Errorf("expect MqttClients->0-local->TelemetryTopicTemplate to be '%s' but got '%s'", expect, got)
 		}
 
-		if expect, got := "tele/go-iotdevice/my-dev/state", mc.TelemetryTopic("my-dev"); expect != got {
+		if expect, got := "go-iotdevice/tele/my-dev", mc.TelemetryTopic("my-dev"); expect != got {
 			t.Errorf("expect MqttClients->0-local->TelemetryTopic to be '%s' but got '%s'", expect, got)
 		}
 
@@ -1159,11 +1199,11 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Error("expect MqttClients->0-local->RealtimeEnabled to be false")
 		}
 
-		if expect, got := "%Prefix%stat/go-iotdevice/%DeviceName%/%RegisterName%", mc.RealtimeTopicTemplate(); expect != got {
+		if expect, got := "%Prefix%real/%DeviceName%/%RegisterName%", mc.RealtimeTopicTemplate(); expect != got {
 			t.Errorf("expect MqttClients->0-local->RealtimeTopicTemplate to be '%s' but got '%s'", expect, got)
 		}
 
-		if expect, got := "stat/go-iotdevice/my-dev/reg-name", mc.RealtimeTopic("my-dev", "reg-name"); expect != got {
+		if expect, got := "go-iotdevice/real/my-dev/reg-name", mc.RealtimeTopic("my-dev", "reg-name"); expect != got {
 			t.Errorf("expect MqttClients->0-local->RealtimeTopic to be '%s' but got '%s'", expect, got)
 		}
 

@@ -192,20 +192,36 @@ func (c MqttClientConfig) MaxBacklogSize() int {
 	return c.maxBacklogSize
 }
 
-func (c MqttClientConfig) AvailabilityEnabled() bool {
-	return c.availabilityEnabled
+func (c MqttClientConfig) AvailabilityClientEnabled() bool {
+	return c.availabilityClientEnabled
 }
 
-func (c MqttClientConfig) AvailabilityTopicTemplate() string {
-	return c.availabilityTopicTemplate
+func (c MqttClientConfig) AvailabilityClientTopicTemplate() string {
+	return c.availabilityClientTopicTemplate
 }
 
-func (c MqttClientConfig) AvailabilityTopic() string {
-	return c.availabilityTopic
+func (c MqttClientConfig) AvailabilityClientTopic() string {
+	return c.availabilityClientTopic
 }
 
-func (c MqttClientConfig) AvailabilityRetain() bool {
-	return c.availabilityRetain
+func (c MqttClientConfig) AvailabilityClientRetain() bool {
+	return c.availabilityClientRetain
+}
+
+func (c MqttClientConfig) AvailabilityDeviceEnabled() bool {
+	return c.availabilityDeviceEnabled
+}
+
+func (c MqttClientConfig) AvailabilityDeviceTopicTemplate() string {
+	return c.availabilityDeviceTopicTemplate
+}
+
+func (c MqttClientConfig) AvailabilityDeviceTopic(deviceName string) string {
+	return strings.Replace(c.availabilityDeviceTopicTemplate2, "%DeviceName%", deviceName, 1)
+}
+
+func (c MqttClientConfig) AvailabilityDeviceRetain() bool {
+	return c.availabilityDeviceRetain
 }
 
 func (c MqttClientConfig) StructureEnabled() bool {

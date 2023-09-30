@@ -20,9 +20,13 @@ type Config interface {
 	TopicPrefix() string
 	MaxBacklogSize() int
 
-	AvailabilityEnabled() bool
-	AvailabilityTopic() string
-	AvailabilityRetain() bool
+	AvailabilityClientEnabled() bool
+	AvailabilityClientTopic() string
+	AvailabilityClientRetain() bool
+
+	AvailabilityDeviceEnabled() bool
+	AvailabilityDeviceTopic(deviceName string) string
+	AvailabilityDeviceRetain() bool
 
 	StructureEnabled() bool
 	StructureTopic(deviceName string) string
