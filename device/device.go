@@ -3,7 +3,7 @@ package device
 import (
 	"context"
 	"github.com/koestler/go-iotdevice/dataflow"
-	"sync"
+	"sync/atomic"
 )
 
 type Config interface {
@@ -30,8 +30,7 @@ type State struct {
 	stateStorage *dataflow.ValueStorage
 	registerDb   *dataflow.RegisterDb
 
-	available      bool
-	availableMutex sync.RWMutex
+	available atomic.Bool
 }
 
 func NewState(deviceConfig Config, stateStorage *dataflow.ValueStorage) State {
@@ -61,9 +60,7 @@ func (c *State) RegisterDb() *dataflow.RegisterDb {
 }
 
 func (c *State) SetAvailable(available bool) {
-	c.availableMutex.Lock()
-	defer c.availableMutex.Unlock()
-	c.available = available
+	c.available.Store(available)
 	if available {
 		c.stateStorage.Fill(dataflow.NewEnumRegisterValue(c.deviceConfig.Name(), availabilityRegister, 1))
 	} else {
@@ -72,7 +69,5 @@ func (c *State) SetAvailable(available bool) {
 }
 
 func (c *State) IsAvailable() bool {
-	c.availableMutex.RLock()
-	defer c.availableMutex.RUnlock()
-	return c.available
+	return c.available.Load()
 }
