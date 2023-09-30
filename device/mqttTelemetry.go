@@ -10,13 +10,12 @@ import (
 )
 
 type TelemetryMessage struct {
-	Time                   string                           `json:"Time"`
-	NextTelemetry          string                           `json:"NextTelemetry"`
-	Model                  string                           `json:"Model"`
-	SecondsSinceLastUpdate float64                          `json:"SecondsSinceLastUpdate"`
-	NumericValues          map[string]NumericTelemetryValue `json:"NumericValues,omitempty"`
-	TextValues             map[string]TextTelemetryValue    `json:"TextValues,omitempty"`
-	EnumValues             map[string]EnumTelemetryValue    `json:"EnumValues,omitempty"`
+	Time          string                           `json:"Time"`
+	NextTelemetry string                           `json:"NextTelemetry"`
+	Model         string                           `json:"Model"`
+	NumericValues map[string]NumericTelemetryValue `json:"NumericValues,omitempty"`
+	TextValues    map[string]TextTelemetryValue    `json:"TextValues,omitempty"`
+	EnumValues    map[string]EnumTelemetryValue    `json:"EnumValues,omitempty"`
 }
 
 type NumericTelemetryValue struct {
@@ -83,13 +82,12 @@ func runTelemetryForwarders(
 
 						now := time.Now()
 						telemetryMessage := TelemetryMessage{
-							Time:                   timeToString(now),
-							NextTelemetry:          timeToString(now.Add(telemetryInterval)),
-							Model:                  dev.Model(),
-							SecondsSinceLastUpdate: now.Sub(dev.LastUpdated()).Seconds(),
-							NumericValues:          convertValuesToNumericTelemetryValues(values),
-							TextValues:             convertValuesToTextTelemetryValues(values),
-							EnumValues:             convertValuesToEnumTelemetryValues(values),
+							Time:          timeToString(now),
+							NextTelemetry: timeToString(now.Add(telemetryInterval)),
+							Model:         dev.Model(),
+							NumericValues: convertValuesToNumericTelemetryValues(values),
+							TextValues:    convertValuesToTextTelemetryValues(values),
+							EnumValues:    convertValuesToEnumTelemetryValues(values),
 						}
 
 						if payload, err := json.Marshal(telemetryMessage); err != nil {
