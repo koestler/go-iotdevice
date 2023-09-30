@@ -129,12 +129,11 @@ func wsValuesSender(
 	}
 
 	filter := getFilter(view.Devices())
-	subscription := env.StateStorage.Subscribe(ctx, filter)
+	initial, subscription := env.StateStorage.SubscribeReturnInitial(ctx, filter)
 
 	// send all values after initial connect
 	{
-		values := env.StateStorage.GetStateFiltered(filter)
-		response := compile2DResponse(values)
+		response := compile2DResponse(initial)
 		if err := wsSendValuesResponse(ctx, conn, response); err != nil {
 			log.Printf("%s: error while sending initial values: %s", logPrefix, err)
 			return

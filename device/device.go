@@ -3,7 +3,6 @@ package device
 import (
 	"context"
 	"github.com/koestler/go-iotdevice/dataflow"
-	"sync/atomic"
 )
 
 type Config interface {
@@ -30,7 +29,8 @@ type State struct {
 	stateStorage *dataflow.ValueStorage
 	registerDb   *dataflow.RegisterDb
 
-	available atomic.Bool
+	unavailableValue dataflow.Value
+	availableValue   dataflow.Value
 }
 
 func NewState(deviceConfig Config, stateStorage *dataflow.ValueStorage) State {
@@ -40,6 +40,9 @@ func NewState(deviceConfig Config, stateStorage *dataflow.ValueStorage) State {
 		deviceConfig: deviceConfig,
 		stateStorage: stateStorage,
 		registerDb:   registerDb,
+
+		unavailableValue: dataflow.NewEnumRegisterValue(deviceConfig.Name(), availabilityRegister, 0),
+		availableValue:   dataflow.NewEnumRegisterValue(deviceConfig.Name(), availabilityRegister, 1),
 	}
 }
 
@@ -59,15 +62,21 @@ func (c *State) RegisterDb() *dataflow.RegisterDb {
 	return c.registerDb
 }
 
-func (c *State) SetAvailable(available bool) {
-	c.available.Store(available)
-	if available {
-		c.stateStorage.Fill(dataflow.NewEnumRegisterValue(c.deviceConfig.Name(), availabilityRegister, 1))
+func (c *State) SetAvailable(v bool) {
+	if v {
+		c.stateStorage.Fill(c.availableValue)
 	} else {
-		c.stateStorage.Fill(dataflow.NewEnumRegisterValue(c.deviceConfig.Name(), availabilityRegister, 0))
+		c.stateStorage.Fill(c.unavailableValue)
 	}
 }
 
 func (c *State) IsAvailable() bool {
-	return c.available.Load()
+	state := c.stateStorage.GetStateFiltered(availabilityValueFilter)
+	return len(state) > 0 && state[0].Equals(c.availableValue)
+}
+
+func (c *State) SubscribeAvailable(ctx context.Context) (initial bool, subscription dataflow.ValueSubscription) {
+	initialState, subscription := c.stateStorage.SubscribeReturnInitial(ctx, availabilityValueFilter)
+	initial = len(initialState) > 0 && initialState[0].Equals(c.availableValue)
+	return
 }

@@ -94,7 +94,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 	}()
 
 	// setup subscription to listen for updates of controllable registers
-	commandSubscription := ds.commandStorage.Subscribe(ctx, dataflow.DeviceNonNullFilter(ds.Config().Name()))
+	_, commandSubscription := ds.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullFilter(ds.Config().Name()))
 
 	execCommand := func(value dataflow.Value) {
 		if ds.Config().LogDebug() {

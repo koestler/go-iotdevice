@@ -68,8 +68,8 @@ func immediateModeRoutine(
 		}()
 	}
 
-	// for loop ends when subscription is canceled and closes its output chan
 	subscription := storage.Subscribe(ctx, deviceFilter)
+	// for loop ends when subscription is canceled and closes its output chan
 	for value := range subscription.Drain() {
 		publishRealtimeMessage(mc, devCfg, value)
 	}

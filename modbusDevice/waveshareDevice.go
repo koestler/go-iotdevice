@@ -68,7 +68,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	}()
 
 	// setup subscription to listen for updates of controllable registers
-	commandSubscription := c.commandStorage.Subscribe(ctx, dataflow.DeviceNonNullFilter(c.Config().Name()))
+	_, commandSubscription := c.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullFilter(c.Config().Name()))
 
 	execCommand := func(value dataflow.Value) {
 		if c.Config().LogDebug() {
