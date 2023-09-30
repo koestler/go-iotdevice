@@ -35,6 +35,7 @@ type State struct {
 
 func NewState(deviceConfig Config, stateStorage *dataflow.ValueStorage) State {
 	registerDb := dataflow.NewRegisterDb()
+	registerDb.Add(availabilityRegister)
 	return State{
 		deviceConfig: deviceConfig,
 		stateStorage: stateStorage,
@@ -60,6 +61,11 @@ func (c *State) RegisterDb() *dataflow.RegisterDb {
 
 func (c *State) SetAvailable(available bool) {
 	c.available.Store(available)
+	if available {
+		c.stateStorage.Fill(dataflow.NewEnumRegisterValue(c.deviceConfig.Name(), availabilityRegister, 1))
+	} else {
+		c.stateStorage.Fill(dataflow.NewEnumRegisterValue(c.deviceConfig.Name(), availabilityRegister, 0))
+	}
 }
 
 func (c *State) IsAvailable() bool {
