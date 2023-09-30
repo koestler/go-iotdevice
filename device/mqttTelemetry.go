@@ -49,13 +49,11 @@ func runTelemetryForwarders(
 
 	// start mqtt forwarders for telemetry messages
 	for _, mc := range mqttClientPool.GetByNames(devCfg.TelemetryViaMqttClients()) {
-		mc := mc
 		mcCfg := mc.Config()
 
 		telemetryTopic := mcCfg.TelemetryTopic(dev.Name())
-
 		if telemetryInterval := mcCfg.TelemetryInterval(); telemetryInterval > 0 {
-			go func() {
+			go func(mc mqttClient.Client) {
 				ticker := time.NewTicker(telemetryInterval)
 				defer ticker.Stop()
 				for {
@@ -64,7 +62,7 @@ func runTelemetryForwarders(
 						if devCfg.LogDebug() {
 							log.Printf(
 								"device[%s]->mqttClient[%s]->telemetry: exit",
-								dev.Config().Name(), mc.Config().Name(),
+								devCfg.Name(), mcCfg.Name(),
 							)
 						}
 						return
@@ -93,7 +91,7 @@ func runTelemetryForwarders(
 						if payload, err := json.Marshal(telemetryMessage); err != nil {
 							log.Printf(
 								"device[%s]->mqttClient[%s]->telemetry: cannot generate message: %s",
-								dev.Config().Name(), mcCfg.Name(), err,
+								devCfg.Name(), mcCfg.Name(), err,
 							)
 						} else {
 							mc.Publish(
@@ -105,11 +103,11 @@ func runTelemetryForwarders(
 						}
 					}
 				}
-			}()
+			}(mc)
 
 			log.Printf(
 				"device[%s]->mqttClient[%s]->telemetry: start sending messages every %s",
-				dev.Config().Name(), mc.Config().Name(), telemetryInterval.String(),
+				devCfg.Name(), mcCfg.Name(), telemetryInterval.String(),
 			)
 		}
 	}
@@ -120,11 +118,12 @@ func convertValuesToNumericTelemetryValues(values []dataflow.Value) (ret map[str
 
 	for _, value := range values {
 		if numeric, ok := value.(dataflow.NumericRegisterValue); ok {
-			ret[value.Register().Name()] = NumericTelemetryValue{
-				Category:    numeric.Register().Category(),
-				Description: numeric.Register().Description(),
+			reg := value.Register()
+			ret[reg.Name()] = NumericTelemetryValue{
+				Category:    reg.Category(),
+				Description: reg.Description(),
 				Value:       numeric.Value(),
-				Unit:        numeric.Register().Unit(),
+				Unit:        reg.Unit(),
 			}
 		}
 	}
@@ -137,9 +136,10 @@ func convertValuesToTextTelemetryValues(values []dataflow.Value) (ret map[string
 
 	for _, value := range values {
 		if text, ok := value.(dataflow.TextRegisterValue); ok {
-			ret[value.Register().Name()] = TextTelemetryValue{
-				Category:    text.Register().Category(),
-				Description: text.Register().Description(),
+			reg := value.Register()
+			ret[reg.Name()] = TextTelemetryValue{
+				Category:    reg.Category(),
+				Description: reg.Description(),
 				Value:       text.Value(),
 			}
 		}
@@ -153,9 +153,10 @@ func convertValuesToEnumTelemetryValues(values []dataflow.Value) (ret map[string
 
 	for _, value := range values {
 		if enum, ok := value.(dataflow.EnumRegisterValue); ok {
-			ret[value.Register().Name()] = EnumTelemetryValue{
-				Category:    enum.Register().Category(),
-				Description: enum.Register().Description(),
+			reg := value.Register()
+			ret[reg.Name()] = EnumTelemetryValue{
+				Category:    reg.Category(),
+				Description: reg.Description(),
 				EnumIdx:     enum.EnumIdx(),
 				Value:       enum.Value(),
 			}
