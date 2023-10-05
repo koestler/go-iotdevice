@@ -68,7 +68,7 @@ func immediateModeRoutine(
 		}()
 	}
 
-	subscription := storage.Subscribe(ctx, deviceFilter)
+	subscription := storage.SubscribeSendInitial(ctx, deviceFilter)
 	// for loop ends when subscription is canceled and closes its output chan
 	for value := range subscription.Drain() {
 		publishRealtimeMessage(mc, devCfg, value)
@@ -104,7 +104,7 @@ func delayedUpdateModeRoutine(
 
 	updates := make(map[string]dataflow.Value)
 
-	subscription := storage.Subscribe(ctx, deviceFilter)
+	subscription := storage.SubscribeSendInitial(ctx, deviceFilter)
 	for {
 		select {
 		case <-ctx.Done():

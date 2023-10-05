@@ -136,7 +136,9 @@ func (vs *ValueStorage) Wait() {
 
 const subscriptionDefaultCap = 128
 
-func (vs *ValueStorage) SubscribeReturnInitial(ctx context.Context, filter FilterFunc) (initial []Value, subscription ValueSubscription) {
+func (vs *ValueStorage) newSubscription(ctx context.Context, filter FilterFunc) (
+	initial []Value, subscription ValueSubscription, elem *list.Element[ValueSubscription],
+) {
 	vs.mutex.Lock()
 	defer vs.mutex.Unlock()
 
@@ -147,50 +149,48 @@ func (vs *ValueStorage) SubscribeReturnInitial(ctx context.Context, filter Filte
 		outputChannel: make(chan Value, subscriptionDefaultCap),
 		filter:        filter,
 	}
-	elem := vs.subscriptions.PushBack(subscription)
-
-	go vs.cleanupValueSubscription(subscription, elem)
+	elem = vs.subscriptions.PushBack(subscription)
 
 	return
 }
 
-func (vs *ValueStorage) Subscribe(ctx context.Context, filter FilterFunc) (subscription ValueSubscription) {
-	vs.mutex.Lock()
-	defer vs.mutex.Unlock()
+func (vs *ValueStorage) SubscribeReturnInitial(ctx context.Context, filter FilterFunc) (initial []Value, subscription ValueSubscription) {
+	initial, subscription, elem := vs.newSubscription(ctx, filter)
+	go vs.sendInitialAndCleanupValueSubscription([]Value{}, subscription, elem)
+	return
+}
 
-	initial := vs.getStateFilteredUnlocked(filter)
+func (vs *ValueStorage) SubscribeSendInitial(ctx context.Context, filter FilterFunc) (subscription ValueSubscription) {
+	initial, subscription, elem := vs.newSubscription(ctx, filter)
+	go vs.sendInitialAndCleanupValueSubscription(initial, subscription, elem)
+	return
+}
 
-	chanCap := subscriptionDefaultCap
-	if l := len(initial); l > chanCap {
-		chanCap = l
-	}
+func (vs *ValueStorage) sendInitialAndCleanupValueSubscription(
+	initial []Value,
+	subscription ValueSubscription,
+	elem *list.Element[ValueSubscription],
+) {
+	// cleanup subscription
+	defer func() {
+		// remove from subscriptions list
+		vs.mutex.Lock()
+		vs.subscriptions.Remove(elem)
+		vs.mutex.Unlock()
 
-	subscription = ValueSubscription{
-		ctx:           ctx,
-		outputChannel: make(chan Value, chanCap),
-		filter:        filter,
-	}
-	elem := vs.subscriptions.PushBack(subscription)
+		// close output channel
+		close(subscription.outputChannel)
+	}()
 
 	// this never blocks since channel is always buffered, big enough and main routine is blocked
-	for _, initialV := range vs.getStateFilteredUnlocked(filter) {
-		subscription.outputChannel <- initialV
+	for _, initialV := range initial {
+		select {
+		case subscription.outputChannel <- initialV:
+		case <-subscription.ctx.Done():
+			return
+		}
 	}
 
-	go vs.cleanupValueSubscription(subscription, elem)
-
-	return
-}
-
-func (vs *ValueStorage) cleanupValueSubscription(subscription ValueSubscription, elem *list.Element[ValueSubscription]) {
 	// wait for the cancellation of the subscription context
 	<-subscription.ctx.Done()
-
-	// remove from subscriptions list
-	vs.mutex.Lock()
-	vs.subscriptions.Remove(elem)
-	vs.mutex.Unlock()
-
-	// close output channel
-	close(subscription.outputChannel)
 }
