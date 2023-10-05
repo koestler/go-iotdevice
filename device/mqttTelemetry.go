@@ -48,7 +48,7 @@ func runTelemetryForwarders(
 	devCfg := dev.Config()
 
 	// start mqtt forwarders for telemetry messages
-	for _, mc := range mqttClientPool.GetByNames(devCfg.TelemetryViaMqttClients()) {
+	for _, mc := range mqttClientPool.GetByNames(devCfg.ViaMqttClients()) {
 		mcCfg := mc.Config()
 
 		telemetryTopic := mcCfg.TelemetryTopic(devCfg.Name())

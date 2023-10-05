@@ -333,12 +333,8 @@ func (c DeviceConfig) SkipCategories() []string {
 	return c.skipCategories
 }
 
-func (c DeviceConfig) TelemetryViaMqttClients() []string {
-	return c.telemetryViaMqttClients
-}
-
-func (c DeviceConfig) RealtimeViaMqttClients() []string {
-	return c.realtimeViaMqttClients
+func (c DeviceConfig) ViaMqttClients() []string {
+	return c.viaMqttClients
 }
 
 func (c DeviceConfig) RestartInterval() time.Duration {

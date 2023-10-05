@@ -110,11 +110,9 @@ VictronDevices:                                            # optional, a list of
         - AuxVoltage                                       # for BMV devices without a mid- or starter-voltage reading
       SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
         - Settings                                         # for solar devices it might make sense to not fetch / output the settings
-      TelemetryViaMqttClients:                             # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
+      ViaMqttClients:                                      # optional, default all clients, to what mqtt servers shall mqtt messages be sent to
         - 0-local                                          # state the arbitrary name of the mqtt client as defined in the MqttClients section of this file
         - 1-remote
-      RealtimeViaMqttClients:                              # optional, default all clients, to what mqtt servers shall realtime messages be sent to
-        - 0-local
       RestartInterval: 400ms                               # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff: 2m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: true                                       # optional, default false, enable debug log output
@@ -132,8 +130,7 @@ ModbusDevices:                                             # optional, a list of
         - A
         - B
         - C
-      TelemetryViaMqttClients:                             # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
-      RealtimeViaMqttClients:                              # optional, default all clients, to what mqtt servers shall realtime messages be sent to
+      ViaMqttClients:                                      # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
       RestartInterval:                                     # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff:                           # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
@@ -153,8 +150,7 @@ HttpDevices:                                               # optional, a list of
     General:                                               # optional, this section is exactly the same for all devices
       SkipFields:                                          # optional, default empty, a list of field names that shall be ignored for this device
       SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
-      TelemetryViaMqttClients:                             # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
-      RealtimeViaMqttClients:                              # optional, default all clients, to what mqtt servers shall realtime messages be sent to
+      ViaMqttClients:                                      # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
       RestartInterval: 1m                                  # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff: 2m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
@@ -170,8 +166,7 @@ MqttDevices:                                               # optional, a list of
     General:                                               # optional, this section is exactly the same for all devices
       SkipFields:                                          # optional, default empty, a list of field names that shall be ignored for this device
       SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
-      TelemetryViaMqttClients:                             # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
-      RealtimeViaMqttClients:                              # optional, default all clients, to what mqtt servers shall realtime messages be sent to
+      ViaMqttClients:                                      # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
       RestartInterval: 50ms                                # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff: 30s                       # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
@@ -655,12 +650,8 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect VictronDevices->bmv0->General->SkipCategories to be %v but got %v", expect, got)
 		}
 
-		if expect, got := []string{"0-local", "1-remote"}, vd.TelemetryViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect VictronDevices->bmv0->General->TelemetryViaMqttClients to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"0-local"}, vd.RealtimeViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect VictronDevices->bmv0->General->RealtimeViaMqttClients to be %v but got %v", expect, got)
+		if expect, got := []string{"0-local", "1-remote"}, vd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect VictronDevices->bmv0->General->ViaMqttClients to be %v but got %v", expect, got)
 		}
 
 		if expect, got := 400*time.Millisecond, vd.RestartInterval(); expect != got {
@@ -705,12 +696,8 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect ModebusDevices->modbus-rtu0->General->SkipCategories to be %v but got %v", expect, got)
 		}
 
-		if expect, got := []string{"0-local", "1-remote"}, md.TelemetryViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->TelemetryViaMqttClients to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"0-local", "1-remote"}, md.RealtimeViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->RealtimeViaMqttClients to be %v but got %v", expect, got)
+		if expect, got := []string{"0-local", "1-remote"}, md.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect ModebusDevices->modbus-rtu0->General->ViaMqttClients to be %v but got %v", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, md.RestartInterval(); expect != got {
@@ -759,12 +746,8 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect HttpDevices->tcw241->General->SkipCategories to be %#v but got %#v", expect, got)
 		}
 
-		if expect, got := []string{"0-local", "1-remote"}, hd.TelemetryViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HttpDevices->tcw241->General->TelemetryViaMqttClients to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"0-local", "1-remote"}, hd.RealtimeViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HttpDevices->tcw241->General->RealtimeViaMqttClients to be %v but got %v", expect, got)
+		if expect, got := []string{"0-local", "1-remote"}, hd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect HttpDevices->tcw241->General->ViaMqttClients to be %v but got %v", expect, got)
 		}
 
 		if expect, got := time.Minute, hd.RestartInterval(); expect != got {
@@ -821,12 +804,8 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect MqttDevices->bmv1->General->SkipCategories to be %v but got %v", expect, got)
 		}
 
-		if expect, got := []string{"0-local"}, vd.TelemetryViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect MqttDevices->bmv1->General->TelemetryViaMqttClients to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"0-local"}, vd.RealtimeViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect MqttDevices->bmv1->General->RealtimeViaMqttClients to be %v but got %v", expect, got)
+		if expect, got := []string{"0-local"}, vd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttDevices->bmv1->General->ViaMqttClients to be %v but got %v", expect, got)
 		}
 
 		if expect, got := 50*time.Millisecond, vd.RestartInterval(); expect != got {
@@ -1271,12 +1250,8 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Errorf("expect VictronDevices->bmv0->General->SkipCategories to be %v but got %v", expect, got)
 		}
 
-		if expect, got := []string{"0-local"}, vd.TelemetryViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect VictronDevices->bmv0->General->TelemetryViaMqttClients to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"0-local"}, vd.RealtimeViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect VictronDevices->bmv0->General->RealtimeViaMqttClients to be %v but got %v", expect, got)
+		if expect, got := []string{"0-local"}, vd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect VictronDevices->bmv0->General->ViaMqttClients to be %v but got %v", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, vd.RestartInterval(); expect != got {
@@ -1321,12 +1296,8 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Errorf("expect ModebusDevices->modbus-rtu0->General->SkipCategories to be %v but got %v", expect, got)
 		}
 
-		if expect, got := []string{"0-local"}, md.TelemetryViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->TelemetryViaMqttClients to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"0-local"}, md.RealtimeViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->RealtimeViaMqttClients to be %v but got %v", expect, got)
+		if expect, got := []string{"0-local"}, md.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect ModebusDevices->modbus-rtu0->General->ViaMqttClients to be %v but got %v", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, md.RestartInterval(); expect != got {
@@ -1375,12 +1346,8 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Errorf("expect HttpDevices->tcw241->General->SkipCategories to be %#v but got %#v", expect, got)
 		}
 
-		if expect, got := []string{"0-local"}, hd.TelemetryViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HttpDevices->tcw241->General->TelemetryViaMqttClients to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"0-local"}, hd.RealtimeViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HttpDevices->tcw241->General->RealtimeViaMqttClients to be %v but got %v", expect, got)
+		if expect, got := []string{"0-local"}, hd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect HttpDevices->tcw241->General->ViaMqttClients to be %v but got %v", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, hd.RestartInterval(); expect != got {
@@ -1437,12 +1404,8 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Errorf("expect MqttDevices->bmv1->General->SkipCategories to be %v but got %v", expect, got)
 		}
 
-		if expect, got := []string{}, vd.TelemetryViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect MqttDevices->bmv1->General->TelemetryViaMqttClients to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{}, vd.RealtimeViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect MqttDevices->bmv1->General->RealtimeViaMqttClients to be %v but got %v", expect, got)
+		if expect, got := []string{}, vd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttDevices->bmv1->General->ViaMqttClients to be %v but got %v", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, vd.RestartInterval(); expect != got {

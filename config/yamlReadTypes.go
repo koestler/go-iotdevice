@@ -89,8 +89,7 @@ type modbusConfigRead struct {
 type deviceConfigRead struct {
 	SkipFields                []string `yaml:"SkipFields"`
 	SkipCategories            []string `yaml:"SkipCategories"`
-	TelemetryViaMqttClients   []string `yaml:"TelemetryViaMqttClients"`
-	RealtimeViaMqttClients    []string `yaml:"RealtimeViaMqttClients"`
+	ViaMqttClients            []string `yaml:"ViaMqttClients"`
 	RestartInterval           string   `yaml:"RestartInterval"`
 	RestartIntervalMaxBackoff string   `yaml:"RestartIntervalMaxBackoff"`
 	LogDebug                  *bool    `yaml:"LogDebug"`

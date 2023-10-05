@@ -683,20 +683,11 @@ func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []MqttCl
 	}
 
 	var e []error
-	ret.telemetryViaMqttClients, e = allOrCheckedMqttClients(
-		c.TelemetryViaMqttClients,
+	ret.viaMqttClients, e = allOrCheckedMqttClients(
+		c.ViaMqttClients,
 		filterReadOnlyMqttClients(mqttClients),
 		func(clientName string) error {
-			return fmt.Errorf("Devices->%s->TelemetryViaMqttClients: client='%s' is not defined or read-only", name, clientName)
-		},
-	)
-	err = append(err, e...)
-
-	ret.realtimeViaMqttClients, e = allOrCheckedMqttClients(
-		c.RealtimeViaMqttClients,
-		filterReadOnlyMqttClients(mqttClients),
-		func(clientName string) error {
-			return fmt.Errorf("Devices->%s->RealtimeViaMqttClients: client='%s' is not defined or read-only", name, clientName)
+			return fmt.Errorf("Devices->%s->ViaMqttClients: client='%s' is not defined or read-only", name, clientName)
 		},
 	)
 	err = append(err, e...)

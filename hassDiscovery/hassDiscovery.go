@@ -93,7 +93,7 @@ func (hd *HassDiscovery) handleRegisters(deviceName string, configItems []Config
 
 			for _, mqttClientName := range ci.ViaMqttClients() {
 				// only send discovery messages on mqtt clients were we also send realtime messages
-				if !stringContains(mqttClientName, dev.Config().RealtimeViaMqttClients()) {
+				if !stringContains(mqttClientName, dev.Config().ViaMqttClients()) {
 					continue
 				}
 

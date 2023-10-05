@@ -155,8 +155,7 @@ func (c DeviceConfig) convertToRead() deviceConfigRead {
 	return deviceConfigRead{
 		SkipFields:                c.skipFields,
 		SkipCategories:            c.skipCategories,
-		TelemetryViaMqttClients:   c.telemetryViaMqttClients,
-		RealtimeViaMqttClients:    c.realtimeViaMqttClients,
+		ViaMqttClients:            c.viaMqttClients,
 		RestartInterval:           c.restartInterval.String(),
 		RestartIntervalMaxBackoff: c.restartIntervalMaxBackoff.String(),
 		LogDebug:                  &c.logDebug,

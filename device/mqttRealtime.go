@@ -23,7 +23,7 @@ func runRealtimeForwarders(
 	deviceFilter func(v dataflow.Value) bool,
 ) {
 	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
-	for _, mc := range mqttClientPool.GetByNames(dev.Config().RealtimeViaMqttClients()) {
+	for _, mc := range mqttClientPool.GetByNames(dev.Config().ViaMqttClients()) {
 		mcCfg := mc.Config()
 		if !mcCfg.RealtimeEnabled() {
 			continue

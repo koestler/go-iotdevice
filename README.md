@@ -159,10 +159,8 @@ VictronDevices:                                            # optional, a list of
         - AuxVoltage                                       # for BMV devices without a mid- or starter-voltage reading
       SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
         - Settings                                         # for solar devices it might make sense to not fetch / output the settings
-      TelemetryViaMqttClients:                             # optional, default all non-readonly clients, to what mqtt servers shall telemetry messages be sent to
+      ViaMqttClients:                                      # optional, default all non-readonly clients, to what mqtt servers shall mqtt messages be sent to
         - local                                            # state the arbitrary name of the mqtt client as defined in the MqttClients section of this file
-      RealtimeViaMqttClients:                              # optional, default all non-readonly clients, to what mqtt servers shall realtime messages be sent to
-        - local
       RestartInterval: 200ms                               # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff: 1m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
@@ -175,8 +173,7 @@ ModbusDevices:                                             # optional, a list of
     General:                                               # optional, this section is exactly the same for all devices
       SkipFields:                                          # optional, default empty, a list of field names that shall be ignored for this device
       SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
-      TelemetryViaMqttClients:                             # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
-      RealtimeViaMqttClients:                              # optional, default all clients, to what mqtt servers shall realtime messages be sent to
+      ViaMqttClients:                                      # optional, default all non-readonly clients, to what mqtt servers shall mqtt messages be sent to
       RestartInterval: 200ms                               # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff: 1m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
@@ -196,8 +193,7 @@ HttpDevices:                                               # optional, a list of
     General:                                               # optional, this section is exactly the same for all devices
       SkipFields:                                          # optional, default empty, a list of field names that shall be ignored for this device
       SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
-      TelemetryViaMqttClients:                             # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
-      RealtimeViaMqttClients:                              # optional, default all clients, to what mqtt servers shall realtime messages be sent to
+      ViaMqttClients:                                      # optional, default all non-readonly clients, to what mqtt servers shall mqtt messages be sent to
       RestartInterval: 200ms                               # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff: 1m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
@@ -213,8 +209,7 @@ MqttDevices:                                               # optional, a list of
     General:                                               # optional, this section is exactly the same for all devices
       SkipFields:                                          # optional, default empty, a list of field names that shall be ignored for this device
       SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
-      TelemetryViaMqttClients:                             # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
-      RealtimeViaMqttClients:                              # optional, default all clients, to what mqtt servers shall realtime messages be sent to
+      ViaMqttClients:                                      # optional, default all non-readonly clients, to what mqtt servers shall mqtt messages be sent to
       RestartInterval: 200ms                               # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff: 1m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output

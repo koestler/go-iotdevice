@@ -35,7 +35,7 @@ func runStructureForwarders(
 	devCfg := dev.Config()
 
 	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
-	for _, mc := range mqttClientPool.GetByNames(devCfg.RealtimeViaMqttClients()) {
+	for _, mc := range mqttClientPool.GetByNames(devCfg.ViaMqttClients()) {
 		mcCfg := mc.Config()
 		if !mcCfg.StructureEnabled() {
 			continue

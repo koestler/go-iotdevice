@@ -9,8 +9,7 @@ type Config interface {
 	Name() string
 	SkipFields() []string
 	SkipCategories() []string
-	TelemetryViaMqttClients() []string
-	RealtimeViaMqttClients() []string
+	ViaMqttClients() []string
 	LogDebug() bool
 	LogComDebug() bool
 }

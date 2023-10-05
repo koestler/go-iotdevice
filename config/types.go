@@ -110,8 +110,7 @@ type DeviceConfig struct {
 	name                      string
 	skipFields                []string
 	skipCategories            []string
-	telemetryViaMqttClients   []string
-	realtimeViaMqttClients    []string
+	viaMqttClients            []string
 	restartInterval           time.Duration
 	restartIntervalMaxBackoff time.Duration
 	logDebug                  bool
