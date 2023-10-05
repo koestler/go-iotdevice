@@ -3,7 +3,6 @@ package device
 import (
 	"context"
 	"github.com/koestler/go-iotdevice/dataflow"
-	"sync/atomic"
 )
 
 type Config interface {
@@ -20,7 +19,6 @@ type Device interface {
 	Name() string
 	Config() Config
 	RegisterDb() *dataflow.RegisterDb
-	IsAvailable() bool
 	SubscribeAvailable(ctx context.Context) (initialAvail bool, avail <-chan bool)
 	Model() string
 	Run(ctx context.Context) (err error, immediateError bool)
@@ -31,7 +29,6 @@ type State struct {
 	stateStorage *dataflow.ValueStorage
 	registerDb   *dataflow.RegisterDb
 
-	available        atomic.Bool
 	unavailableValue dataflow.Value
 	availableValue   dataflow.Value
 }
@@ -66,16 +63,11 @@ func (c *State) RegisterDb() *dataflow.RegisterDb {
 }
 
 func (c *State) SetAvailable(v bool) {
-	c.available.Store(v)
 	if v {
 		c.stateStorage.Fill(c.availableValue)
 	} else {
 		c.stateStorage.Fill(c.unavailableValue)
 	}
-}
-
-func (c *State) IsAvailable() bool {
-	return c.available.Load()
 }
 
 func (c *State) SubscribeAvailable(ctx context.Context) (initialAvail bool, availUpdate <-chan bool) {

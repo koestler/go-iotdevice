@@ -56,6 +56,8 @@ func runTelemetryForwarders(
 			go func(mc mqttClient.Client) {
 				ticker := time.NewTicker(telemetryInterval)
 				defer ticker.Stop()
+
+				avail, availChan := dev.SubscribeAvailable(ctx)
 				for {
 					select {
 					case <-ctx.Done():
@@ -66,12 +68,24 @@ func runTelemetryForwarders(
 							)
 						}
 						return
+					case avail = <-availChan:
+						if devCfg.LogDebug() {
+							s := "stopped"
+							if avail {
+								s = "started"
+							}
+
+							log.Printf(
+								"device[%s]->mqttClient[%s]->telemetry: %s sending due to availability",
+								devCfg.Name(), mcCfg.Name(), s,
+							)
+						}
 					case <-ticker.C:
 						if devCfg.LogDebug() {
 							log.Printf("device[%s]->mqttClient[%s]->telemetry: tick", devCfg.Name(), mcCfg.Name())
 						}
 
-						if !dev.IsAvailable() {
+						if !avail {
 							// do not send telemetry when device is disconnected
 							continue
 						}

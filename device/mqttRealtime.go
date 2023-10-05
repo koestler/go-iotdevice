@@ -160,6 +160,17 @@ func periodicFullModeRoutine(
 		case <-ctx.Done():
 			return
 		case avail = <-availChan:
+			if devCfg.LogDebug() {
+				s := "stoped"
+				if avail {
+					s = "started"
+				}
+
+				log.Printf(
+					"device[%s]->mqttClient[%s]->realtime: %s sending due to availability",
+					devCfg.Name(), mcCfg.Name(), s,
+				)
+			}
 		case <-ticker.C:
 			if !avail {
 				// do not send messages when device is disconnected
