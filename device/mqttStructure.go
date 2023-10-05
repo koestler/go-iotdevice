@@ -64,6 +64,14 @@ func runStructureForwarders(
 			registers := make(map[string]StructRegister)
 			for {
 				select {
+				case <-ctx.Done():
+					if devCfg.LogDebug() {
+						log.Printf(
+							"device[%s]->mqttClient[%s]->structure: exit",
+							devCfg.Name(), mcCfg.Name(),
+						)
+					}
+					return
 				case reg := <-regSubscription:
 					if len(registers) < 1 {
 						ticker.Reset(time.Second)
