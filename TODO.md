@@ -12,5 +12,4 @@
 - use this filter to replace the RealtimeViaMqttClient and TelemetryViaMqttClient; if not possible, add StructureViaMqttClient
 - registerDB: should it check if a register is changed and only send the update if it is?
 - mqttDevice: implement available / unavailable messages
-
-- valueStorage: subscribe: how to we know that forwarding never blocks
+- check what happens with a http connection not able to handle the bandwidth required by the subscription. This probably stalls the whole storage.

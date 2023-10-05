@@ -17,8 +17,3 @@ var availabilityRegister = dataflow.NewRegisterStruct(
 	1000,
 	false,
 )
-
-func availabilityValueFilter(value dataflow.Value) bool {
-	reg := value.Register()
-	return reg.RegisterType() == dataflow.EnumRegister && reg.Name() == availabilityRegisterName
-}

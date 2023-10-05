@@ -154,12 +154,14 @@ func periodicFullModeRoutine(
 	ticker := time.NewTicker(realtimeInterval)
 	defer ticker.Stop()
 
+	avail, availChan := dev.SubscribeAvailable(ctx)
 	for {
 		select {
 		case <-ctx.Done():
 			return
+		case avail = <-availChan:
 		case <-ticker.C:
-			if !dev.IsAvailable() {
+			if !avail {
 				// do not send messages when device is disconnected
 				continue
 			}
