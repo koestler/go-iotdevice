@@ -57,7 +57,8 @@ func runTelemetryForwarders(
 				ticker := time.NewTicker(telemetryInterval)
 				defer ticker.Stop()
 
-				avail, availChan := dev.SubscribeAvailable(ctx)
+				var avail bool
+				availChan := dev.SubscribeAvailableSendInitial(ctx)
 				for {
 					select {
 					case <-ctx.Done():

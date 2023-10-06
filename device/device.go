@@ -18,7 +18,7 @@ type Device interface {
 	Name() string
 	Config() Config
 	RegisterDb() *dataflow.RegisterDb
-	SubscribeAvailable(ctx context.Context) (initialAvail bool, avail <-chan bool)
+	SubscribeAvailableSendInitial(ctx context.Context) (availChan <-chan bool)
 	Model() string
 	Run(ctx context.Context) (err error, immediateError bool)
 }
@@ -69,7 +69,7 @@ func (c *State) SetAvailable(v bool) {
 	}
 }
 
-func (c *State) SubscribeAvailable(ctx context.Context) (initialAvail bool, availUpdate <-chan bool) {
+func (c *State) SubscribeAvailableSendInitial(ctx context.Context) <-chan bool {
 	devName := c.Name()
 	initialState, subscription := c.stateStorage.SubscribeReturnInitial(ctx, func(value dataflow.Value) bool {
 		if value.DeviceName() != devName {
@@ -83,6 +83,7 @@ func (c *State) SubscribeAvailable(ctx context.Context) (initialAvail bool, avai
 	availChan := make(chan bool)
 	go func() {
 		defer close(availChan)
+		availChan <- avail
 		for v := range subscription.Drain() {
 			avail, updated := c.UpdateAvailable(avail, v)
 			if updated {
@@ -91,7 +92,7 @@ func (c *State) SubscribeAvailable(ctx context.Context) (initialAvail bool, avai
 		}
 	}()
 
-	return avail, availUpdate
+	return availChan
 }
 
 func (c *State) GetAvailableByState(state []dataflow.Value) (avail bool) {

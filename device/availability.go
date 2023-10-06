@@ -3,6 +3,8 @@ package device
 import "github.com/koestler/go-iotdevice/dataflow"
 
 const availabilityRegisterName = "Available"
+const availabilityOfflineValue = "offline"
+const availabilityOnlineValue = "online"
 
 var availabilityRegister = dataflow.NewRegisterStruct(
 	availabilityRegisterName,
@@ -10,8 +12,8 @@ var availabilityRegister = dataflow.NewRegisterStruct(
 	availabilityRegisterName,
 	dataflow.EnumRegister,
 	map[int]string{
-		0: "offline",
-		1: "online",
+		0: availabilityOfflineValue,
+		1: availabilityOnlineValue,
 	},
 	"",
 	1000,

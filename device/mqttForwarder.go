@@ -19,9 +19,10 @@ func RunMqttForwarders(
 		return v.DeviceName() == deviceName
 	}
 
-	runRealtimeForwarders(ctx, dev, mqttClientPool, storage, deviceFilter)
-	runTelemetryForwarders(ctx, dev, mqttClientPool, storage, deviceFilter)
+	runAvailabilityForwarders(ctx, dev, mqttClientPool)
 	runStructureForwarders(ctx, dev, mqttClientPool)
+	runTelemetryForwarders(ctx, dev, mqttClientPool, storage, deviceFilter)
+	runRealtimeForwarders(ctx, dev, mqttClientPool, storage, deviceFilter)
 }
 
 func timeToString(t time.Time) string {

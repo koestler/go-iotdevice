@@ -154,7 +154,8 @@ func periodicFullModeRoutine(
 	ticker := time.NewTicker(realtimeInterval)
 	defer ticker.Stop()
 
-	avail, availChan := dev.SubscribeAvailable(ctx)
+	var avail bool
+	availChan := dev.SubscribeAvailableSendInitial(ctx)
 	for {
 		select {
 		case <-ctx.Done():
