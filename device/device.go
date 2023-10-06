@@ -79,11 +79,13 @@ func (c *State) SubscribeAvailableSendInitial(ctx context.Context) <-chan bool {
 		return reg.RegisterType() == dataflow.EnumRegister && reg.Name() == availabilityRegisterName
 	})
 
-	avail := c.GetAvailableByState(initialState)
+	avail, initialOk := c.GetAvailableByState(initialState)
 	availChan := make(chan bool)
 	go func() {
 		defer close(availChan)
-		availChan <- avail
+		if initialOk {
+			availChan <- avail
+		}
 		for v := range subscription.Drain() {
 			avail, updated := c.UpdateAvailable(avail, v)
 			if updated {
@@ -95,20 +97,20 @@ func (c *State) SubscribeAvailableSendInitial(ctx context.Context) <-chan bool {
 	return availChan
 }
 
-func (c *State) GetAvailableByState(state []dataflow.Value) (avail bool) {
+func (c *State) GetAvailableByState(state []dataflow.Value) (avail, ok bool) {
 	devName := c.Name()
 	for _, v := range state {
 		if v.DeviceName() != devName {
 			continue
 		}
 		if v.Equals(c.availableValue) {
-			return true
+			return true, true
 		}
 		if v.Equals(c.unavailableValue) {
-			return false
+			return false, true
 		}
 	}
-	return false
+	return false, false
 }
 
 func (c *State) UpdateAvailable(oldAvail bool, newValue dataflow.Value) (avail, updated bool) {
