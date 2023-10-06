@@ -2,6 +2,7 @@ package device
 
 import (
 	"context"
+	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/pool"
 	"golang.org/x/exp/maps"
@@ -22,9 +23,9 @@ type StructRegister struct {
 }
 
 type StructureMessage struct {
-	AvailabilityTopics []string
-	RealtimeTopic      string
-	Registers          []StructRegister
+	AvailabilityTopics []string         `json:"Avail,omitempty"`
+	RealtimeTopic      string           `json:"Realtime,omitempty"`
+	Registers          []StructRegister `json:"Registers"`
 }
 
 func runStructureForwarders(
@@ -41,67 +42,108 @@ func runStructureForwarders(
 			continue
 		}
 
-		go func(mc mqttClient.Client) {
-			if devCfg.LogDebug() {
-				defer func() {
-					log.Printf(
-						"device[%s]->mqttClient[%s]->struct: exit",
-						devCfg.Name(), mcCfg.Name(),
-					)
-				}()
+		if mcCfg.StructureInterval() <= 0 {
+			go structureOnUpdateModeRoutine(ctx, dev, mc)
+		} else {
+			go structurePeriodicModeRoutine(ctx, dev, mc)
+		}
+	}
+}
+
+func structureOnUpdateModeRoutine(
+	ctx context.Context,
+	dev Device,
+	mc mqttClient.Client,
+) {
+	devCfg := dev.Config()
+	mcCfg := mc.Config()
+
+	if devCfg.LogDebug() {
+		log.Printf(
+			"device[%s]->mqttClient[%s]->structure: start on-update mode",
+			devCfg.Name(), mcCfg.Name(),
+		)
+
+		defer log.Printf(
+			"device[%s]->mqttClient[%s]->structure: exit",
+			devCfg.Name(), mcCfg.Name(),
+		)
+	}
+
+	regSubscription := dev.RegisterDb().Subscribe(ctx)
+	structureTopic := mcCfg.StructureTopic(devCfg.Name())
+
+	// when a new register arrives, wait until no new register is received for 100ms
+	// and then send all updates together
+	ticker := time.NewTicker(math.MaxInt64)
+	defer ticker.Stop()
+
+	registers := make(map[string]StructRegister)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case reg := <-regSubscription:
+			if len(registers) < 1 {
+				ticker.Reset(100 * time.Millisecond)
+			}
+			regName := reg.Name()
+			if regName == availabilityRegisterName {
+				// do not use Availability as a register in mqtt; availability is handled separately
+				continue
 			}
 
-			// for initial send: wait until first register is received; than wait for 1s
-			regSubscription := dev.RegisterDb().Subscribe(ctx)
+			registers[regName] = NewStructRegister(reg)
+		case <-ticker.C:
+			ticker.Stop()
 
-			// compute topics
-			realtimeTopic := mcCfg.RealtimeTopic(devCfg.Name(), "%RegisterName%")
-			structureTopic := mcCfg.StructureTopic(devCfg.Name())
+			publishStruct(mc, devCfg, structureTopic, maps.Values(registers))
+			registers = make(map[string]StructRegister)
+		}
+	}
+}
 
-			ticker := time.NewTicker(math.MaxInt64)
-			defer ticker.Stop()
+func structurePeriodicModeRoutine(
+	ctx context.Context,
+	dev Device,
+	mc mqttClient.Client,
+) {
+	devCfg := dev.Config()
+	mcCfg := mc.Config()
+	structureInterval := mcCfg.StructureInterval()
 
-			registers := make(map[string]StructRegister)
-			for {
-				select {
-				case <-ctx.Done():
-					if devCfg.LogDebug() {
-						log.Printf(
-							"device[%s]->mqttClient[%s]->structure: exit",
-							devCfg.Name(), mcCfg.Name(),
-						)
-					}
-					return
-				case reg := <-regSubscription:
-					if len(registers) < 1 {
-						ticker.Reset(time.Second)
-					}
-					registers[reg.Name()] = StructRegister{
-						Category:     reg.Category(),
-						Name:         reg.Name(),
-						Description:  reg.Description(),
-						Type:         reg.RegisterType().String(),
-						Enum:         reg.Enum(),
-						Unit:         reg.Unit(),
-						Sort:         reg.Sort(),
-						Controllable: reg.Controllable(),
-					}
-				case <-ticker.C:
-					ticker.Stop()
+	if devCfg.LogDebug() {
+		log.Printf(
+			"device[%s]->mqttClient[%s]->structure: start periodic mode, send every %s",
+			devCfg.Name(), mcCfg.Name(), structureInterval,
+		)
 
-					publishStruct(mc, devCfg, structureTopic, StructureMessage{
-						AvailabilityTopics: getAvailabilityTopics(devCfg, mcCfg),
-						RealtimeTopic:      realtimeTopic,
-						Registers:          maps.Values(registers),
-					})
-					registers = make(map[string]StructRegister)
-				}
-			}
-		}(mc)
+		defer log.Printf(
+			"device[%s]->mqttClient[%s]->structure: exit",
+			devCfg.Name(), mcCfg.Name(),
+		)
+	}
+
+	structureTopic := mcCfg.StructureTopic(devCfg.Name())
+
+	// when a new register arrives, wait until no new register is received for 100ms
+	// and then send all updates together
+	ticker := time.NewTicker(structureInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			registers := dev.RegisterDb().GetAll()
+			publishStruct(mc, devCfg, structureTopic, NewStructRegisters(registers...))
+		}
 	}
 }
 
 func getAvailabilityTopics(devCfg Config, mcCfg mqttClient.Config) (ret []string) {
+	ret = make([]string, 0, 2)
 	if mcCfg.AvailabilityClientEnabled() {
 		ret = append(ret, mcCfg.AvailabilityClientTopic())
 	}
@@ -112,19 +154,32 @@ func getAvailabilityTopics(devCfg Config, mcCfg mqttClient.Config) (ret []string
 	return
 }
 
-func publishStruct(mc mqttClient.Client, devCfg Config, topic string, msg StructureMessage) {
+func getRealtimeTopic(devCfg Config, mcCfg mqttClient.Config) string {
+	if mcCfg.RealtimeEnabled() {
+		return mcCfg.RealtimeTopic(devCfg.Name(), "%RegisterName%")
+	}
+	return ""
+}
+
+func publishStruct(mc mqttClient.Client, devCfg Config, topic string, registers []StructRegister) {
 	mcCfg := mc.Config()
+
+	msg := StructureMessage{
+		AvailabilityTopics: getAvailabilityTopics(devCfg, mcCfg),
+		RealtimeTopic:      getRealtimeTopic(devCfg, mcCfg),
+		Registers:          registers,
+	}
 
 	if devCfg.LogDebug() {
 		log.Printf(
-			"device[%s]->mqttClient[%s]->struct: send: %v",
+			"device[%s]->mqttClient[%s]->structure: send: %v",
 			devCfg.Name(), mcCfg.Name(), msg,
 		)
 	}
 
 	if payload, err := json.Marshal(msg); err != nil {
 		log.Printf(
-			"device[%s]->mqttClient[%s]->struct: cannot generate message: %s",
+			"device[%s]->mqttClient[%s]->structure: cannot generate message: %s",
 			devCfg.Name(), mcCfg.Name(), err,
 		)
 	} else {
@@ -134,6 +189,27 @@ func publishStruct(mc mqttClient.Client, devCfg Config, topic string, msg Struct
 			mcCfg.Qos(),
 			mcCfg.StructureRetain(),
 		)
+	}
+}
+
+func NewStructRegisters(regs ...dataflow.Register) (ret []StructRegister) {
+	ret = make([]StructRegister, len(regs))
+	for i, reg := range regs {
+		ret[i] = NewStructRegister(reg)
+	}
+	return ret
+}
+
+func NewStructRegister(reg dataflow.Register) StructRegister {
+	return StructRegister{
+		Category:     reg.Category(),
+		Name:         reg.Name(),
+		Description:  reg.Description(),
+		Type:         reg.RegisterType().String(),
+		Enum:         reg.Enum(),
+		Unit:         reg.Unit(),
+		Sort:         reg.Sort(),
+		Controllable: reg.Controllable(),
 	}
 }
 

@@ -43,7 +43,7 @@ func runTelemetryForwarders(
 	dev Device,
 	mqttClientPool *pool.Pool[mqttClient.Client],
 	storage *dataflow.ValueStorage,
-	deviceFilter func(v dataflow.Value) bool,
+	filter func(v dataflow.Value) bool,
 ) {
 	devCfg := dev.Config()
 
@@ -59,6 +59,17 @@ func runTelemetryForwarders(
 		telemetryTopic := mcCfg.TelemetryTopic(devCfg.Name())
 
 		go func(mc mqttClient.Client) {
+			log.Printf(
+				"device[%s]->mqttClient[%s]->telemetry: start sending messages every %s",
+				devCfg.Name(), mcCfg.Name(), telemetryInterval.String(),
+			)
+			if devCfg.LogDebug() {
+				defer log.Printf(
+					"device[%s]->mqttClient[%s]->telemetry: exit",
+					devCfg.Name(), mcCfg.Name(),
+				)
+			}
+
 			ticker := time.NewTicker(telemetryInterval)
 			defer ticker.Stop()
 
@@ -67,12 +78,7 @@ func runTelemetryForwarders(
 			for {
 				select {
 				case <-ctx.Done():
-					if devCfg.LogDebug() {
-						log.Printf(
-							"device[%s]->mqttClient[%s]->telemetry: exit",
-							devCfg.Name(), mcCfg.Name(),
-						)
-					}
+
 					return
 				case avail = <-availChan:
 					if devCfg.LogDebug() {
@@ -96,7 +102,7 @@ func runTelemetryForwarders(
 						continue
 					}
 
-					values := storage.GetStateFiltered(deviceFilter)
+					values := storage.GetStateFiltered(filter)
 
 					now := time.Now()
 					telemetryMessage := TelemetryMessage{
@@ -124,11 +130,6 @@ func runTelemetryForwarders(
 				}
 			}
 		}(mc)
-
-		log.Printf(
-			"device[%s]->mqttClient[%s]->telemetry: start sending messages every %s",
-			devCfg.Name(), mcCfg.Name(), telemetryInterval.String(),
-		)
 	}
 }
 

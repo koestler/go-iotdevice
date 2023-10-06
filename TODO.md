@@ -13,3 +13,5 @@
 - registerDB: should it check if a register is changed and only send the update if it is?
 - mqttDevice: implement available / unavailable messages
 - check what happens with a http connection not able to handle the bandwidth required by the subscription. This probably stalls the whole storage.
+- steam register structure update via websocket to client
+- http device: remove registers that are not present anymore

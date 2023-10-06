@@ -20,7 +20,7 @@ func runRealtimeForwarders(
 	dev Device,
 	mqttClientPool *pool.Pool[mqttClient.Client],
 	storage *dataflow.ValueStorage,
-	deviceFilter func(v dataflow.Value) bool,
+	filter func(v dataflow.Value) bool,
 ) {
 	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
 	for _, mc := range mqttClientPool.GetByNames(dev.Config().ViaMqttClients()) {
@@ -36,21 +36,21 @@ func runRealtimeForwarders(
 		// periodic full mode: Interval > 0 and Repeat true
 		// -> have a timer, whenever it ticks, send all values
 		if mcCfg.RealtimeInterval() <= 0 {
-			go immediateModeRoutine(ctx, dev, mc, storage, deviceFilter)
+			go realtimeImmediateModeRoutine(ctx, dev, mc, storage, filter)
 		} else if !mcCfg.RealtimeRepeat() {
-			go delayedUpdateModeRoutine(ctx, dev, mc, storage, deviceFilter)
+			go realtimeDelayedUpdateModeRoutine(ctx, dev, mc, storage, filter)
 		} else {
-			go periodicFullModeRoutine(ctx, dev, mc, storage, deviceFilter)
+			go realtimePeriodicFullModeRoutine(ctx, dev, mc, storage, filter)
 		}
 	}
 }
 
-func immediateModeRoutine(
+func realtimeImmediateModeRoutine(
 	ctx context.Context,
 	dev Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
-	deviceFilter func(v dataflow.Value) bool,
+	filter func(v dataflow.Value) bool,
 ) {
 	mcCfg := mc.Config()
 	devCfg := dev.Config()
@@ -60,27 +60,25 @@ func immediateModeRoutine(
 			"device[%s]->mqttClient[%s]->realtime: start immediate mode",
 			devCfg.Name(), mcCfg.Name(),
 		)
-		defer func() {
-			log.Printf(
-				"device[%s]->mqttClient[%s]->realtime: exit immediate mode",
-				devCfg.Name(), mcCfg.Name(),
-			)
-		}()
+		defer log.Printf(
+			"device[%s]->mqttClient[%s]->realtime: exit immediate mode",
+			devCfg.Name(), mcCfg.Name(),
+		)
 	}
 
-	subscription := storage.SubscribeSendInitial(ctx, deviceFilter)
+	subscription := storage.SubscribeSendInitial(ctx, filter)
 	// for loop ends when subscription is canceled and closes its output chan
 	for value := range subscription.Drain() {
 		publishRealtimeMessage(mc, devCfg, value)
 	}
 }
 
-func delayedUpdateModeRoutine(
+func realtimeDelayedUpdateModeRoutine(
 	ctx context.Context,
 	dev Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
-	deviceFilter func(v dataflow.Value) bool,
+	filter func(v dataflow.Value) bool,
 ) {
 	mcCfg := mc.Config()
 	devCfg := dev.Config()
@@ -91,12 +89,10 @@ func delayedUpdateModeRoutine(
 			"device[%s]->mqttClient[%s]->realtime: start delayed update mode, send every %s",
 			devCfg.Name(), mcCfg.Name(), realtimeInterval,
 		)
-		defer func() {
-			log.Printf(
-				"device[%s]->mqttClient[%s]->realtime: exit delayed update mode",
-				devCfg.Name(), mcCfg.Name(),
-			)
-		}()
+		defer log.Printf(
+			"device[%s]->mqttClient[%s]->realtime: exit delayed update mode",
+			devCfg.Name(), mcCfg.Name(),
+		)
 	}
 
 	ticker := time.NewTicker(realtimeInterval)
@@ -104,7 +100,7 @@ func delayedUpdateModeRoutine(
 
 	updates := make(map[string]dataflow.Value)
 
-	subscription := storage.SubscribeSendInitial(ctx, deviceFilter)
+	subscription := storage.SubscribeSendInitial(ctx, filter)
 	for {
 		select {
 		case <-ctx.Done():
@@ -127,12 +123,12 @@ func delayedUpdateModeRoutine(
 	}
 }
 
-func periodicFullModeRoutine(
+func realtimePeriodicFullModeRoutine(
 	ctx context.Context,
 	dev Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
-	deviceFilter func(v dataflow.Value) bool,
+	filter func(v dataflow.Value) bool,
 ) {
 	mcCfg := mc.Config()
 	devCfg := dev.Config()
@@ -143,12 +139,10 @@ func periodicFullModeRoutine(
 			"device[%s]->mqttClient[%s]->realtime: start periodic full mode, send every %s",
 			devCfg.Name(), mcCfg.Name(), realtimeInterval,
 		)
-		defer func() {
-			log.Printf(
-				"device[%s]->mqttClient[%s]->realtime: exit periodic full mode",
-				devCfg.Name(), mcCfg.Name(),
-			)
-		}()
+		defer log.Printf(
+			"device[%s]->mqttClient[%s]->realtime: exit periodic full mode",
+			devCfg.Name(), mcCfg.Name(),
+		)
 	}
 
 	ticker := time.NewTicker(realtimeInterval)
@@ -185,7 +179,7 @@ func periodicFullModeRoutine(
 				)
 			}
 
-			values := storage.GetStateFiltered(deviceFilter)
+			values := storage.GetStateFiltered(filter)
 			for _, v := range values {
 				publishRealtimeMessage(mc, devCfg, v)
 			}
