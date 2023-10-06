@@ -105,7 +105,7 @@ func getAvailabilityTopics(devCfg Config, mcCfg mqttClient.Config) (ret []string
 	if mcCfg.AvailabilityClientEnabled() {
 		ret = append(ret, mcCfg.AvailabilityClientTopic())
 	}
-	if mcCfg.AvailabilityDeviceEnabled() {
+	if mcCfg.AvailabilityDeviceEnabled() && stringContains(mcCfg.Name(), devCfg.ViaMqttClients()) {
 		ret = append(ret, mcCfg.AvailabilityDeviceTopic(devCfg.Name()))
 	}
 
@@ -135,4 +135,13 @@ func publishStruct(mc mqttClient.Client, devCfg Config, topic string, msg Struct
 			mcCfg.StructureRetain(),
 		)
 	}
+}
+
+func stringContains(needle string, haystack []string) bool {
+	for _, t := range haystack {
+		if t == needle {
+			return true
+		}
+	}
+	return false
 }
