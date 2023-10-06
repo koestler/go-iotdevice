@@ -430,158 +430,61 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.maxBacklogSize = *c.MaxBacklogSize
 	}
 
-	if ret.readOnly {
-		ret.availabilityClientEnabled = false
-	} else if c.AvailabilityClientEnabled == nil {
-		ret.availabilityClientEnabled = true
-	} else {
-		ret.availabilityClientEnabled = *c.AvailabilityClientEnabled
-	}
+	var e []error
+	ret.availabilityClient, e = c.AvailabilityClient.TransformAndValidate(
+		fmt.Sprintf("MqttClientConfig->%s->AvailabilityClient->", name),
+		ret.readOnly,
+		true,
+		"%Prefix%avail/%ClientId%",
+		0,
+		true,
+		true,
+	)
+	err = append(err, e...)
 
-	if c.AvailabilityClientTopicTemplate == nil {
-		ret.availabilityClientTopicTemplate = "%Prefix%avail/%ClientId%"
-	} else if len(*c.AvailabilityClientTopicTemplate) < 1 {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->AvailabilityClientTopicTemplate must no be empty", name))
-	} else {
-		ret.availabilityClientTopicTemplate = *c.AvailabilityClientTopicTemplate
-	}
-	ret.availabilityClientTopic = ret.replaceTopicTemplate(ret.availabilityClientTopicTemplate)
+	ret.availabilityDevice, e = c.AvailabilityDevice.TransformAndValidate(
+		fmt.Sprintf("MqttClientConfig->%s->AvailabilityClient->", name),
+		ret.readOnly,
+		true,
+		"%Prefix%avail/%DeviceName%",
+		0,
+		true,
+		true,
+	)
+	err = append(err, e...)
 
-	if c.AvailabilityClientRetain == nil {
-		ret.availabilityClientRetain = true
-	} else {
-		ret.availabilityClientRetain = *c.AvailabilityClientRetain
-	}
+	ret.structure, e = c.Structure.TransformAndValidate(
+		fmt.Sprintf("MqttClientConfig->%s->Structure->", name),
+		ret.readOnly,
+		true,
+		"%Prefix%struct/%DeviceName%",
+		0,
+		true,
+		true,
+	)
+	err = append(err, e...)
 
-	if ret.readOnly {
-		ret.availabilityDeviceEnabled = false
-	} else if c.AvailabilityDeviceEnabled == nil {
-		ret.availabilityDeviceEnabled = true
-	} else {
-		ret.availabilityDeviceEnabled = *c.AvailabilityDeviceEnabled
-	}
+	ret.telemetry, e = c.Telemetry.TransformAndValidate(
+		fmt.Sprintf("MqttClientConfig->%s->Telemetry->", name),
+		ret.readOnly,
+		true,
+		"%Prefix%tele/%DeviceName%",
+		time.Second,
+		false,
+		false,
+	)
+	err = append(err, e...)
 
-	if c.AvailabilityDeviceTopicTemplate == nil {
-		ret.availabilityDeviceTopicTemplate = "%Prefix%avail/%DeviceName%"
-	} else if len(*c.AvailabilityDeviceTopicTemplate) < 1 {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->AvailabilityDeviceTopicTemplate must no be empty", name))
-	} else {
-		ret.availabilityDeviceTopicTemplate = *c.AvailabilityDeviceTopicTemplate
-	}
-	ret.availabilityDeviceTopicTemplate2 = ret.replaceTopicTemplate(ret.availabilityDeviceTopicTemplate)
-
-	if c.AvailabilityDeviceRetain == nil {
-		ret.availabilityDeviceRetain = true
-	} else {
-		ret.availabilityDeviceRetain = *c.AvailabilityDeviceRetain
-	}
-
-	if ret.readOnly {
-		ret.structureEnabled = false
-	} else if c.StructureEnabled == nil {
-		ret.structureEnabled = true
-	} else {
-		ret.structureEnabled = *c.StructureEnabled
-	}
-
-	if c.StructureTopicTemplate == nil {
-		ret.structureTopicTemplate = "%Prefix%struct/%DeviceName%"
-	} else if len(*c.StructureTopicTemplate) < 1 {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->StructureTopicTemplate must no be empty", name))
-	} else {
-		ret.structureTopicTemplate = *c.StructureTopicTemplate
-	}
-	ret.structureTopicTemplate2 = ret.replaceTopicTemplate(ret.structureTopicTemplate)
-
-	if len(c.StructureInterval) < 1 {
-		ret.structureInterval = 0 * time.Second
-	} else if structureInterval, e := time.ParseDuration(c.StructureInterval); e != nil {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->StructureInterval='%s' parse error: %s", name, c.StructureInterval, e))
-	} else if structureInterval < 0 {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->StructureInterval='%s' must be >= 0", name, c.StructureInterval))
-	} else {
-		ret.structureInterval = structureInterval
-	}
-
-	if c.StructureRetain == nil {
-		ret.structureRetain = true
-	} else {
-		ret.structureRetain = *c.StructureRetain
-	}
-
-	if ret.readOnly {
-		ret.telemetryEnabled = false
-	} else if c.TelemetryEnabled == nil {
-		ret.telemetryEnabled = true
-	} else {
-		ret.telemetryEnabled = *c.TelemetryEnabled
-	}
-
-	if c.TelemetryTopicTemplate == nil {
-		ret.telemetryTopicTemplate = "%Prefix%tele/%DeviceName%"
-	} else if len(*c.TelemetryTopicTemplate) < 1 {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->TelemetryTopicTemplate must no be empty", name))
-	} else {
-		ret.telemetryTopicTemplate = *c.TelemetryTopicTemplate
-	}
-	ret.telemetryTopicTemplate2 = ret.replaceTopicTemplate(ret.telemetryTopicTemplate)
-
-	if len(c.TelemetryInterval) < 1 {
-		ret.telemetryInterval = 10 * time.Second
-	} else if telemetryInterval, e := time.ParseDuration(c.TelemetryInterval); e != nil {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->TelemetryInterval='%s' parse error: %s", name, c.TelemetryInterval, e))
-	} else if telemetryInterval < 10*time.Millisecond {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->TelemetryInterval='%s' must be >= 10ms", name, c.TelemetryInterval))
-	} else {
-		ret.telemetryInterval = telemetryInterval
-	}
-
-	if c.TelemetryRetain == nil {
-		ret.telemetryRetain = false
-	} else {
-		ret.telemetryRetain = *c.TelemetryRetain
-	}
-
-	if c.RealtimeEnabled == nil || ret.readOnly {
-		ret.realtimeEnabled = false
-	} else {
-		ret.realtimeEnabled = *c.RealtimeEnabled
-	}
-
-	if c.RealtimeTopicTemplate == nil {
-		ret.realtimeTopicTemplate = "%Prefix%real/%DeviceName%/%RegisterName%"
-	} else if len(*c.RealtimeTopicTemplate) < 1 {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->RealtimeTopic must no be empty", name))
-	} else {
-		ret.realtimeTopicTemplate = *c.RealtimeTopicTemplate
-	}
-	ret.realtimeTopicTemplate2 = ret.replaceTopicTemplate(ret.realtimeTopicTemplate)
-
-	if len(c.RealtimeInterval) < 1 {
-		ret.realtimeInterval = 0 * time.Second
-	} else if realtimeInterval, e := time.ParseDuration(c.RealtimeInterval); e != nil {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->RealtimeInterval='%s' parse error: %s", name, c.RealtimeInterval, e))
-	} else if realtimeInterval < 0 {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->RealtimeInterval='%s' must be >= 0", name, c.RealtimeInterval))
-	} else {
-		ret.realtimeInterval = realtimeInterval
-	}
-
-	if c.RealtimeRepeat == nil {
-		ret.realtimeRepeat = false
-	} else {
-		ret.realtimeRepeat = *c.RealtimeRepeat
-	}
-
-	if ret.realtimeInterval == 0 && ret.realtimeRepeat {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s realtimeRepeat is only allowed to be true when realtimeInterval > 0", name))
-	}
-
-	if c.RealtimeRetain == nil {
-		ret.realtimeRetain = false
-	} else {
-		ret.realtimeRetain = *c.RealtimeRetain
-	}
+	ret.realtime, e = c.Realtime.TransformAndValidate(
+		fmt.Sprintf("MqttClientConfig->%s->Realtime->", name),
+		ret.readOnly,
+		false,
+		"%Prefix%real/%DeviceName%/%RegisterName%",
+		0,
+		true,
+		false,
+	)
+	err = append(err, e...)
 
 	if c.LogDebug != nil && *c.LogDebug {
 		ret.logDebug = true
@@ -589,6 +492,52 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 
 	if c.LogMessages != nil && *c.LogMessages {
 		ret.logMessages = true
+	}
+
+	return
+}
+
+func (c mqttSectionConfigRead) TransformAndValidate(
+	logPrefix string,
+	readOnly bool,
+	defaultEnabled bool,
+	defaultTopicTemplate string,
+	defaultInterval time.Duration,
+	allowZeroInterval bool,
+	defaultRetain bool,
+) (ret MqttSectionConfig, err []error) {
+	if readOnly {
+		ret.enabled = false
+	} else if c.Enabled == nil {
+		ret.enabled = defaultEnabled
+	} else {
+		ret.enabled = *c.Enabled
+	}
+
+	if c.TopicTemplate == nil {
+		ret.topicTemplate = defaultTopicTemplate
+	} else if len(*c.TopicTemplate) < 1 {
+		err = append(err, fmt.Errorf("%sTopicTemplate must no be empty", logPrefix))
+	} else {
+		ret.topicTemplate = *c.TopicTemplate
+	}
+
+	if len(c.Interval) < 1 {
+		ret.interval = defaultInterval
+	} else if interval, e := time.ParseDuration(c.Interval); e != nil {
+		err = append(err, fmt.Errorf("%sInterval='%s' parse error: %s", logPrefix, c.Interval, e))
+	} else if allowZeroInterval && interval < 0 {
+		err = append(err, fmt.Errorf("%sInterval='%s' must be >= 0", logPrefix, c.Interval))
+	} else if !allowZeroInterval && interval <= 0 {
+		err = append(err, fmt.Errorf("%sInterval='%s' must be > 0", logPrefix, c.Interval))
+	} else {
+		ret.interval = interval
+	}
+
+	if c.Retain == nil {
+		ret.retain = defaultRetain
+	} else {
+		ret.retain = *c.Retain
 	}
 
 	return

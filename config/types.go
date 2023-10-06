@@ -65,37 +65,22 @@ type MqttClientConfig struct {
 	readOnly          bool
 	maxBacklogSize    int
 
-	availabilityClientEnabled       bool
-	availabilityClientTopicTemplate string
-	availabilityClientTopic         string
-	availabilityClientRetain        bool
-
-	availabilityDeviceEnabled        bool
-	availabilityDeviceTopicTemplate  string
-	availabilityDeviceTopicTemplate2 string
-	availabilityDeviceRetain         bool
-
-	structureEnabled        bool
-	structureTopicTemplate  string
-	structureTopicTemplate2 string
-	structureInterval       time.Duration
-	structureRetain         bool
-
-	telemetryEnabled        bool
-	telemetryTopicTemplate  string
-	telemetryTopicTemplate2 string
-	telemetryInterval       time.Duration
-	telemetryRetain         bool
-
-	realtimeEnabled        bool
-	realtimeTopicTemplate  string
-	realtimeTopicTemplate2 string
-	realtimeInterval       time.Duration
-	realtimeRepeat         bool
-	realtimeRetain         bool
+	availabilityClient MqttSectionConfig
+	availabilityDevice MqttSectionConfig
+	structure          MqttSectionConfig
+	telemetry          MqttSectionConfig
+	realtime           MqttSectionConfig
 
 	logDebug    bool
 	logMessages bool
+}
+
+type MqttSectionConfig struct {
+	enabled       bool
+	topicTemplate string
+	topic         string
+	interval      time.Duration
+	retain        bool
 }
 
 type ModbusConfig struct {

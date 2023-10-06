@@ -112,32 +112,24 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 		ReadOnly:          &c.readOnly,
 		MaxBacklogSize:    &c.maxBacklogSize,
 
-		AvailabilityDeviceEnabled:       &c.availabilityDeviceEnabled,
-		AvailabilityDeviceTopicTemplate: &c.availabilityDeviceTopicTemplate,
-		AvailabilityDeviceRetain:        &c.availabilityDeviceRetain,
-
-		AvailabilityClientEnabled:       &c.availabilityClientEnabled,
-		AvailabilityClientTopicTemplate: &c.availabilityClientTopicTemplate,
-		AvailabilityClientRetain:        &c.availabilityClientRetain,
-
-		StructureEnabled:       &c.structureEnabled,
-		StructureTopicTemplate: &c.structureTopicTemplate,
-		StructureInterval:      c.structureInterval.String(),
-		StructureRetain:        &c.structureRetain,
-
-		TelemetryEnabled:       &c.telemetryEnabled,
-		TelemetryTopicTemplate: &c.telemetryTopicTemplate,
-		TelemetryInterval:      c.telemetryInterval.String(),
-		TelemetryRetain:        &c.telemetryRetain,
-
-		RealtimeEnabled:       &c.realtimeEnabled,
-		RealtimeTopicTemplate: &c.realtimeTopicTemplate,
-		RealtimeInterval:      c.realtimeInterval.String(),
-		RealtimeRepeat:        &c.realtimeRepeat,
-		RealtimeRetain:        &c.realtimeRetain,
+		AvailabilityClient: c.availabilityClient.convertToRead(),
+		AvailabilityDevice: c.availabilityDevice.convertToRead(),
+		Structure:          c.structure.convertToRead(),
+		Telemetry:          c.telemetry.convertToRead(),
+		Realtime:           c.realtime.convertToRead(),
 
 		LogDebug:    &c.logDebug,
 		LogMessages: &c.logMessages,
+	}
+}
+
+//lint:ignore U1000 linter does not catch that this is used generic code
+func (c MqttSectionConfig) convertToRead() mqttSectionConfigRead {
+	return mqttSectionConfigRead{
+		Enabled:       &c.enabled,
+		TopicTemplate: &c.topicTemplate,
+		Interval:      c.interval.String(),
+		Retain:        &c.retain,
 	}
 }
 

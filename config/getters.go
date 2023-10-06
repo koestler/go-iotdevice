@@ -192,101 +192,45 @@ func (c MqttClientConfig) MaxBacklogSize() int {
 	return c.maxBacklogSize
 }
 
-func (c MqttClientConfig) AvailabilityClientEnabled() bool {
-	return c.availabilityClientEnabled
-}
-
-func (c MqttClientConfig) AvailabilityClientTopicTemplate() string {
-	return c.availabilityClientTopicTemplate
+func (c MqttClientConfig) AvailabilityClient() MqttSectionConfig {
+	return c.availabilityClient
 }
 
 func (c MqttClientConfig) AvailabilityClientTopic() string {
-	return c.availabilityClientTopic
+	return c.replaceTopicTemplate(c.availabilityClient.topicTemplate)
 }
 
-func (c MqttClientConfig) AvailabilityClientRetain() bool {
-	return c.availabilityClientRetain
-}
-
-func (c MqttClientConfig) AvailabilityDeviceEnabled() bool {
-	return c.availabilityDeviceEnabled
-}
-
-func (c MqttClientConfig) AvailabilityDeviceTopicTemplate() string {
-	return c.availabilityDeviceTopicTemplate
+func (c MqttClientConfig) AvailabilityDevice() MqttSectionConfig {
+	return c.availabilityDevice
 }
 
 func (c MqttClientConfig) AvailabilityDeviceTopic(deviceName string) string {
-	return strings.Replace(c.availabilityDeviceTopicTemplate2, "%DeviceName%", deviceName, 1)
+	return strings.Replace(c.replaceTopicTemplate(c.availabilityDevice.topicTemplate), "%DeviceName%", deviceName, 1)
 }
 
-func (c MqttClientConfig) AvailabilityDeviceRetain() bool {
-	return c.availabilityDeviceRetain
-}
-
-func (c MqttClientConfig) StructureEnabled() bool {
-	return c.structureEnabled
-}
-
-func (c MqttClientConfig) StructureTopicTemplate() string {
-	return c.structureTopicTemplate
+func (c MqttClientConfig) Structure() MqttSectionConfig {
+	return c.structure
 }
 
 func (c MqttClientConfig) StructureTopic(deviceName string) string {
-	return strings.Replace(c.structureTopicTemplate2, "%DeviceName%", deviceName, 1)
+	return strings.Replace(c.replaceTopicTemplate(c.structure.topicTemplate), "%DeviceName%", deviceName, 1)
 }
 
-func (c MqttClientConfig) StructureInterval() time.Duration {
-	return c.structureInterval
-}
-
-func (c MqttClientConfig) StructureRetain() bool {
-	return c.structureRetain
-}
-
-func (c MqttClientConfig) TelemetryEnabled() bool {
-	return c.telemetryEnabled
-}
-
-func (c MqttClientConfig) TelemetryTopicTemplate() string {
-	return c.telemetryTopicTemplate
+func (c MqttClientConfig) Telemetry() MqttSectionConfig {
+	return c.telemetry
 }
 
 func (c MqttClientConfig) TelemetryTopic(deviceName string) string {
-	return strings.Replace(c.telemetryTopicTemplate2, "%DeviceName%", deviceName, 1)
+	return strings.Replace(c.replaceTopicTemplate(c.telemetry.topicTemplate), "%DeviceName%", deviceName, 1)
 }
 
-func (c MqttClientConfig) TelemetryInterval() time.Duration {
-	return c.telemetryInterval
-}
-
-func (c MqttClientConfig) TelemetryRetain() bool {
-	return c.telemetryRetain
-}
-
-func (c MqttClientConfig) RealtimeEnabled() bool {
-	return c.realtimeEnabled
-}
-
-func (c MqttClientConfig) RealtimeTopicTemplate() string {
-	return c.realtimeTopicTemplate
+func (c MqttClientConfig) Realtime() MqttSectionConfig {
+	return c.realtime
 }
 
 func (c MqttClientConfig) RealtimeTopic(deviceName, registerName string) string {
-	r := strings.Replace(c.realtimeTopicTemplate2, "%DeviceName%", deviceName, 1)
+	r := strings.Replace(c.replaceTopicTemplate(c.realtime.topicTemplate), "%DeviceName%", deviceName, 1)
 	return strings.Replace(r, "%RegisterName%", registerName, 1)
-}
-
-func (c MqttClientConfig) RealtimeInterval() time.Duration {
-	return c.realtimeInterval
-}
-
-func (c MqttClientConfig) RealtimeRepeat() bool {
-	return c.realtimeRepeat
-}
-
-func (c MqttClientConfig) RealtimeRetain() bool {
-	return c.realtimeRetain
 }
 
 func (c MqttClientConfig) LogDebug() bool {
@@ -295,6 +239,23 @@ func (c MqttClientConfig) LogDebug() bool {
 
 func (c MqttClientConfig) LogMessages() bool {
 	return c.logMessages
+}
+
+// Getters for MqttSection struct
+func (c MqttSectionConfig) Enabled() bool {
+	return c.enabled
+}
+
+func (c MqttSectionConfig) TopicTemplate() string {
+	return c.topicTemplate
+}
+
+func (c MqttSectionConfig) Interval() time.Duration {
+	return c.interval
+}
+
+func (c MqttSectionConfig) Retain() bool {
+	return c.retain
 }
 
 // Getters for ModbusConfig struct

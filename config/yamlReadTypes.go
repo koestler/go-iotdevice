@@ -51,32 +51,21 @@ type mqttClientConfigRead struct {
 	ReadOnly          *bool   `yaml:"ReadOnly"`
 	MaxBacklogSize    *int    `yaml:"MaxBacklogSize"`
 
-	AvailabilityClientEnabled       *bool   `yaml:"AvailabilityClientEnabled"`
-	AvailabilityClientTopicTemplate *string `yaml:"AvailabilityClientTopicTemplate"`
-	AvailabilityClientRetain        *bool   `yaml:"AvailabilityClientRetain"`
-
-	AvailabilityDeviceEnabled       *bool   `yaml:"AvailabilityDeviceEnabled"`
-	AvailabilityDeviceTopicTemplate *string `yaml:"AvailabilityDeviceTopicTemplate"`
-	AvailabilityDeviceRetain        *bool   `yaml:"AvailabilityDeviceRetain"`
-
-	StructureEnabled       *bool   `yaml:"StructureEnabled"`
-	StructureTopicTemplate *string `yaml:"StructureTopicTemplate"`
-	StructureInterval      string  `yaml:"StructureInterval"`
-	StructureRetain        *bool   `yaml:"StructureRetain"`
-
-	TelemetryEnabled       *bool   `yaml:"TelemetryEnabled"`
-	TelemetryTopicTemplate *string `yaml:"TelemetryTopicTemplate"`
-	TelemetryInterval      string  `yaml:"TelemetryInterval"`
-	TelemetryRetain        *bool   `yaml:"TelemetryRetain"`
-
-	RealtimeEnabled       *bool   `yaml:"RealtimeEnabled"`
-	RealtimeTopicTemplate *string `yaml:"RealtimeTopicTemplate"`
-	RealtimeInterval      string  `yaml:"RealtimeInterval"`
-	RealtimeRepeat        *bool   `yaml:"RealtimeRepeat"`
-	RealtimeRetain        *bool   `yaml:"RealtimeRetain"`
+	AvailabilityClient mqttSectionConfigRead `yaml:"AvailabilityClient"`
+	AvailabilityDevice mqttSectionConfigRead `yaml:"AvailabilityDevice"`
+	Structure          mqttSectionConfigRead `yaml:"Structure"`
+	Telemetry          mqttSectionConfigRead `yaml:"Telemetry"`
+	Realtime           mqttSectionConfigRead `yaml:"Realtime"`
 
 	LogDebug    *bool `yaml:"LogDebug"`
 	LogMessages *bool `yaml:"LogMessages"`
+}
+
+type mqttSectionConfigRead struct {
+	Enabled       *bool   `yaml:"Enabled"`
+	TopicTemplate *string `yaml:"TopicTemplate"`
+	Interval      string  `yaml:"Interval"`
+	Retain        *bool   `yaml:"Retain"`
 }
 
 type modbusConfigRead struct {
