@@ -150,7 +150,9 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 				return err, false
 			}
 		case value := <-commandSubscription.Drain():
-			execCommand(value)
+			if value != nil {
+				execCommand(value)
+			}
 		}
 	}
 }
