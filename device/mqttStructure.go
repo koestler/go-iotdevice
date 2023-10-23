@@ -37,12 +37,12 @@ func runStructureForwarders(
 
 	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
 	for _, mc := range mqttClientPool.GetByNames(devCfg.ViaMqttClients()) {
-		mcCfg := mc.Config()
-		if !mcCfg.StructureEnabled() {
+		mCfg := mc.Config().Structure()
+		if !mCfg.Enabled() {
 			continue
 		}
 
-		if mcCfg.StructureInterval() <= 0 {
+		if mCfg.Interval() <= 0 {
 			go structureOnUpdateModeRoutine(ctx, dev, mc)
 		} else {
 			go structurePeriodicModeRoutine(ctx, dev, mc)
@@ -110,7 +110,7 @@ func structurePeriodicModeRoutine(
 ) {
 	devCfg := dev.Config()
 	mcCfg := mc.Config()
-	structureInterval := mcCfg.StructureInterval()
+	structureInterval := mcCfg.Structure().Interval()
 
 	if devCfg.LogDebug() {
 		log.Printf(
@@ -144,10 +144,10 @@ func structurePeriodicModeRoutine(
 
 func getAvailabilityTopics(devCfg Config, mcCfg mqttClient.Config) (ret []string) {
 	ret = make([]string, 0, 2)
-	if mcCfg.AvailabilityClientEnabled() {
+	if mcCfg.AvailabilityClient().Enabled() {
 		ret = append(ret, mcCfg.AvailabilityClientTopic())
 	}
-	if mcCfg.AvailabilityDeviceEnabled() && stringContains(mcCfg.Name(), devCfg.ViaMqttClients()) {
+	if mcCfg.AvailabilityDevice().Enabled() && stringContains(mcCfg.Name(), devCfg.ViaMqttClients()) {
 		ret = append(ret, mcCfg.AvailabilityDeviceTopic(devCfg.Name()))
 	}
 
@@ -155,7 +155,7 @@ func getAvailabilityTopics(devCfg Config, mcCfg mqttClient.Config) (ret []string
 }
 
 func getRealtimeTopic(devCfg Config, mcCfg mqttClient.Config) string {
-	if mcCfg.RealtimeEnabled() {
+	if mcCfg.Realtime().Enabled() {
 		return mcCfg.RealtimeTopic(devCfg.Name(), "%RegisterName%")
 	}
 	return ""
@@ -163,6 +163,7 @@ func getRealtimeTopic(devCfg Config, mcCfg mqttClient.Config) string {
 
 func publishStruct(mc mqttClient.Client, devCfg Config, topic string, registers []StructRegister) {
 	mcCfg := mc.Config()
+	mCfg := mcCfg.Structure()
 
 	msg := StructureMessage{
 		AvailabilityTopics: getAvailabilityTopics(devCfg, mcCfg),
@@ -186,8 +187,8 @@ func publishStruct(mc mqttClient.Client, devCfg Config, topic string, registers 
 		mc.Publish(
 			topic,
 			payload,
-			mcCfg.Qos(),
-			mcCfg.StructureRetain(),
+			mCfg.Qos(),
+			mCfg.Retain(),
 		)
 	}
 }

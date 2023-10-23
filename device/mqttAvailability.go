@@ -14,13 +14,13 @@ func runAvailabilityForwarders(
 	devCfg := dev.Config()
 
 	for _, mc := range mqttClientPool.GetByNames(devCfg.ViaMqttClients()) {
-		mcCfg := mc.Config()
+		mCfg := mc.Config().AvailabilityDevice()
 
-		if !mcCfg.AvailabilityDeviceEnabled() {
+		if !mCfg.Enabled() {
 			continue
 		}
 
-		topic := mcCfg.AvailabilityDeviceTopic(devCfg.Name())
+		topic := mc.Config().AvailabilityDeviceTopic(devCfg.Name())
 
 		go func(mc mqttClient.Client) {
 			availChan := dev.SubscribeAvailableSendInitial(ctx)
@@ -36,8 +36,8 @@ func runAvailabilityForwarders(
 					mc.Publish(
 						topic,
 						[]byte(payload),
-						mcCfg.Qos(),
-						mcCfg.AvailabilityDeviceRetain(),
+						mCfg.Qos(),
+						mCfg.Retain(),
 					)
 				}
 			}

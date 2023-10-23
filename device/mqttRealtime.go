@@ -24,8 +24,8 @@ func runRealtimeForwarders(
 ) {
 	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
 	for _, mc := range mqttClientPool.GetByNames(dev.Config().ViaMqttClients()) {
-		mcCfg := mc.Config()
-		if !mcCfg.RealtimeEnabled() {
+		mCfg := mc.Config().Realtime()
+		if !mCfg.Enabled() {
 			continue
 		}
 
@@ -35,12 +35,10 @@ func runRealtimeForwarders(
 		// -> have a timer, whenever it ticks, send the newest version of the changed values
 		// periodic full mode: Interval > 0 and Repeat true
 		// -> have a timer, whenever it ticks, send all values
-		if mcCfg.RealtimeInterval() <= 0 {
+		if mCfg.Interval() <= 0 {
 			go realtimeImmediateModeRoutine(ctx, dev, mc, storage, filter)
-		} else if !mcCfg.RealtimeRepeat() {
-			go realtimeDelayedUpdateModeRoutine(ctx, dev, mc, storage, filter)
 		} else {
-			go realtimePeriodicFullModeRoutine(ctx, dev, mc, storage, filter)
+			go realtimeDelayedUpdateModeRoutine(ctx, dev, mc, storage, filter)
 		}
 	}
 }
@@ -82,7 +80,7 @@ func realtimeDelayedUpdateModeRoutine(
 ) {
 	mcCfg := mc.Config()
 	devCfg := dev.Config()
-	realtimeInterval := mcCfg.RealtimeInterval()
+	realtimeInterval := mcCfg.Realtime().Interval()
 
 	if devCfg.LogDebug() {
 		log.Printf(
@@ -123,72 +121,9 @@ func realtimeDelayedUpdateModeRoutine(
 	}
 }
 
-func realtimePeriodicFullModeRoutine(
-	ctx context.Context,
-	dev Device,
-	mc mqttClient.Client,
-	storage *dataflow.ValueStorage,
-	filter func(v dataflow.Value) bool,
-) {
-	mcCfg := mc.Config()
-	devCfg := dev.Config()
-	realtimeInterval := mcCfg.RealtimeInterval()
-
-	if devCfg.LogDebug() {
-		log.Printf(
-			"device[%s]->mqttClient[%s]->realtime: start periodic full mode, send every %s",
-			devCfg.Name(), mcCfg.Name(), realtimeInterval,
-		)
-		defer log.Printf(
-			"device[%s]->mqttClient[%s]->realtime: exit periodic full mode",
-			devCfg.Name(), mcCfg.Name(),
-		)
-	}
-
-	ticker := time.NewTicker(realtimeInterval)
-	defer ticker.Stop()
-
-	var avail bool
-	availChan := dev.SubscribeAvailableSendInitial(ctx)
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case avail = <-availChan:
-			if devCfg.LogDebug() {
-				s := "stoped"
-				if avail {
-					s = "started"
-				}
-
-				log.Printf(
-					"device[%s]->mqttClient[%s]->realtime: %s sending due to availability",
-					devCfg.Name(), mcCfg.Name(), s,
-				)
-			}
-		case <-ticker.C:
-			if !avail {
-				// do not send messages when device is disconnected
-				continue
-			}
-
-			if devCfg.LogDebug() {
-				log.Printf(
-					"device[%s]->mqttClient[%s]->realtime: tick: send everything",
-					devCfg.Name(), mcCfg.Name(),
-				)
-			}
-
-			values := storage.GetStateFiltered(filter)
-			for _, v := range values {
-				publishRealtimeMessage(mc, devCfg, v)
-			}
-		}
-	}
-}
-
 func publishRealtimeMessage(mc mqttClient.Client, devConfig Config, value dataflow.Value) {
 	mcCfg := mc.Config()
+	mCfg := mcCfg.Realtime()
 
 	if devConfig.LogDebug() {
 		log.Printf(
@@ -204,10 +139,10 @@ func publishRealtimeMessage(mc mqttClient.Client, devConfig Config, value datafl
 		)
 	} else {
 		mc.Publish(
-			mcCfg.RealtimeTopic(devConfig.Name(), value.Register().Name()),
+			mc.Config().RealtimeTopic(devConfig.Name(), value.Register().Name()),
 			payload,
-			mcCfg.Qos(),
-			mcCfg.RealtimeRetain(),
+			mCfg.Qos(),
+			mCfg.Retain(),
 		)
 	}
 }

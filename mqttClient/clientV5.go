@@ -55,12 +55,12 @@ func NewV5(
 	}
 
 	// setup client availability topic using will
-	if cfg.AvailabilityClientEnabled() {
+	if mCfg := cfg.AvailabilityClient(); mCfg.Enabled() {
 		client.cliCfg.SetWillMessage(
 			cfg.AvailabilityClientTopic(),
 			[]byte(availabilityOffline),
-			cfg.Qos(),
-			cfg.AvailabilityClientRetain())
+			mCfg.Qos(),
+			mCfg.Retain())
 	}
 
 	return
@@ -86,7 +86,7 @@ func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.
 					defer c.subscriptionsMutex.RUnlock()
 					ret = make(map[string]paho.SubscribeOptions, len(c.subscriptions))
 
-					subOpts := paho.SubscribeOptions{QoS: c.cfg.Qos()}
+					subOpts := paho.SubscribeOptions{QoS: byte(1)}
 					for _, s := range c.subscriptions {
 						ret[s.subscribeTopic] = subOpts
 					}
@@ -100,7 +100,7 @@ func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.
 		// publish in separate routine to allow for parallel reception of messages
 		go func() {
 			// publish availability online
-			if c.cfg.AvailabilityClientEnabled() {
+			if c.cfg.AvailabilityClient().Enabled() {
 				_, err := cm.Publish(c.ctx, c.availabilityMsg(availabilityOnline))
 				if err != nil {
 					log.Printf("mqttClientV5[%s]: error during publish: %s", c.cfg.Name(), err)
@@ -129,7 +129,7 @@ func (c *ClientStruct) Shutdown() {
 	close(c.shutdown)
 
 	// publish availability offline
-	if c.cfg.AvailabilityClientEnabled() {
+	if c.cfg.AvailabilityClient().Enabled() {
 		ctx, cancel := context.WithTimeout(c.ctx, time.Second)
 		defer cancel()
 		_, err := c.cm.Publish(ctx, c.availabilityMsg(availabilityOffline))
@@ -171,10 +171,12 @@ const availabilityOnline = "online"
 const availabilityOffline = "offline"
 
 func (c *ClientStruct) availabilityMsg(payload string) *paho.Publish {
+	mCfg := c.cfg.AvailabilityClient()
+
 	return &paho.Publish{
-		QoS:     c.cfg.Qos(),
+		QoS:     mCfg.Qos(),
 		Topic:   c.cfg.AvailabilityClientTopic(),
 		Payload: []byte(payload),
-		Retain:  c.cfg.AvailabilityClientRetain(),
+		Retain:  mCfg.Retain(),
 	}
 }

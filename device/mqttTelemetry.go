@@ -50,12 +50,13 @@ func runTelemetryForwarders(
 	// start mqtt forwarders for telemetry messages
 	for _, mc := range mqttClientPool.GetByNames(devCfg.ViaMqttClients()) {
 		mcCfg := mc.Config()
+		mCfg := mcCfg.Telemetry()
 
-		if !mcCfg.TelemetryEnabled() {
+		if !mCfg.Enabled() {
 			continue
 		}
 
-		telemetryInterval := mcCfg.TelemetryInterval()
+		telemetryInterval := mCfg.Interval()
 		telemetryTopic := mcCfg.TelemetryTopic(devCfg.Name())
 
 		go func(mc mqttClient.Client) {
@@ -123,8 +124,8 @@ func runTelemetryForwarders(
 						mc.Publish(
 							telemetryTopic,
 							payload,
-							mcCfg.Qos(),
-							mcCfg.TelemetryRetain(),
+							mCfg.Qos(),
+							mCfg.Retain(),
 						)
 					}
 				}

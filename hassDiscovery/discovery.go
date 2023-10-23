@@ -55,10 +55,10 @@ func getSensorMessage(
 }
 
 func getAvailabilityTopics(deviceName string, mcCfg mqttClient.Config) (ret []availabilityStruct) {
-	if mcCfg.AvailabilityClientEnabled() {
+	if mcCfg.AvailabilityClient().Enabled() {
 		ret = append(ret, availabilityStruct{mcCfg.AvailabilityClientTopic()})
 	}
-	if mcCfg.AvailabilityDeviceEnabled() {
+	if mcCfg.AvailabilityDevice().Enabled() {
 		ret = append(ret, availabilityStruct{mcCfg.AvailabilityDeviceTopic(deviceName)})
 	}
 

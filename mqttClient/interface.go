@@ -1,6 +1,7 @@
 package mqttClient
 
 import (
+	"github.com/koestler/go-iotdevice/config"
 	"net/url"
 	"time"
 )
@@ -13,36 +14,26 @@ type Config interface {
 	Password() string
 	ClientId() string
 
-	Qos() byte
 	KeepAlive() time.Duration
 	ConnectRetryDelay() time.Duration
 	ConnectTimeout() time.Duration
 	TopicPrefix() string
 	MaxBacklogSize() int
 
-	AvailabilityClientEnabled() bool
+	AvailabilityClient() config.MqttSectionConfig
 	AvailabilityClientTopic() string
-	AvailabilityClientRetain() bool
 
-	AvailabilityDeviceEnabled() bool
+	AvailabilityDevice() config.MqttSectionConfig
 	AvailabilityDeviceTopic(deviceName string) string
-	AvailabilityDeviceRetain() bool
 
-	StructureEnabled() bool
+	Structure() config.MqttSectionConfig
 	StructureTopic(deviceName string) string
-	StructureInterval() time.Duration
-	StructureRetain() bool
 
-	TelemetryEnabled() bool
+	Telemetry() config.MqttSectionConfig
 	TelemetryTopic(deviceName string) string
-	TelemetryInterval() time.Duration
-	TelemetryRetain() bool
 
-	RealtimeEnabled() bool
+	Realtime() config.MqttSectionConfig
 	RealtimeTopic(deviceName, registerName string) string
-	RealtimeInterval() time.Duration
-	RealtimeRepeat() bool
-	RealtimeRetain() bool
 
 	LogDebug() bool
 	LogMessages() bool

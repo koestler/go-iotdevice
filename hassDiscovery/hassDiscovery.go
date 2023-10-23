@@ -181,6 +181,8 @@ func (hd *HassDiscovery) publishDiscoveryMessage(
 	deviceName string,
 	register dataflow.Register,
 ) {
+	mCfg := mc.Config().Realtime() // todo: change this!
+
 	var topic string
 	var msg discoveryMessage
 
@@ -231,8 +233,8 @@ func (hd *HassDiscovery) publishDiscoveryMessage(
 		mc.Publish(
 			topic,
 			payload,
-			mc.Config().Qos(),
-			mc.Config().RealtimeRetain(),
+			mCfg.Qos(),
+			mCfg.Retain(),
 		)
 	}
 }
