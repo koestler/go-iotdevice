@@ -30,7 +30,6 @@ MqttClients:                                               # optional, when empt
     Password: zee4AhRi                                     # optional, default empty, the password used for authentication
     #ClientId: go-iotdevice                                # optional, default go-iotdevice-UUID, mqtt client id, make sure it is unique per mqtt-server
 
-    Qos: 1                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
     KeepAlive: 1m                                          # optional, default 60s, how often a ping is sent to keep the connection alive
     ConnectRetryDelay: 10s                                 # optional, default 10s, when disconnected: after what delay shall a connection attempt is made
     ConnectTimeout: 5s                                     # optional, default 5s, how long to wait for the SYN+ACK packet, increase on slow networks
@@ -43,30 +42,35 @@ MqttClients:                                               # optional, when empt
       TopicTemplate: '%Prefix%avail/%ClientId%'            # optional, what topic to use for online/offline messages of the go-iotdevice instance
       Interval: 0s                                         # optional, default 0s, 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
       Retain: true                                         # optional, default true, the mqtt retain flag for availability messages
+      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
 
     AvailabilityDevice:
       Enabled: true                                        # optional, default true, whether to send online messages and register an offline message as will
       TopicTemplate: '%Prefix%avail/%DeviceName%'          # optional, what topic to use for online/offline messages of a specific device
       Interval: 0s                                         # optional, default 0s, 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
       Retain: true                                         # optional, default true, the mqtt retain flag for availability messages
+      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
 
     Structure:
       Enabled: true                                        # optional, default true, whether to send messages containing the list of registers / types
       TopicTemplate: '%Prefix%struct/%DeviceName%'         # optional, what topic to use for structure messages
       Interval: 0s                                         # optional, default 0, 0 means disabled only send initially, otherwise the structure is repeated after this interval (useful when retain is false)
       Retain: true                                         # optional, default true, the mqtt retain flag for structure messages
+      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
 
     Telemetry:
       Enabled: true                                        # optional, default true, whether to send telemetry messages (one per device)
       TopicTemplate: '%Prefix%tele/%DeviceName%'           # optional, what topic to use for telemetry messages
       Interval: 1s                                         # optional, default 1s, how often to sent telemetry mqtt messages
       Retain: false                                        # optional, default false, the mqtt retain flag for telemetry messages
+      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
 
     Realtime:
       Enabled: true                                        # optional, default false, whether to enable sending realtime messages
       TopicTemplate: '%Prefix%real/%DeviceName%/%RegisterName%' # optional, what topic to use for realtime messages
       Interval: 0s                                         # optional, default 0; 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
       Retain: false                                        # optional, default false, the mqtt retain flag for realtime messages
+      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
 
     LogDebug: false                                        # optional, default false, very verbose debug log of the mqtt connection
     LogMessages: false                                     # optional, default false, log all incoming mqtt messages

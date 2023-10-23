@@ -49,7 +49,6 @@ MqttClients:                                               # optional, when empt
     Password: zee4AhRi                                     # optional, default empty, the password used for authentication
     ClientId: server42                                     # optional, default go-iotdevice-UUID, mqtt client id, make sure it is unique per mqtt-server
 
-    Qos: 0                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
     KeepAlive: 2m                                          # optional, default 60s, how often a ping is sent to keep the connection alive
     ConnectRetryDelay: 20s                                 # optional, default 10s, when disconnected: after what delay shall a connection attempt is made
     ConnectTimeout: 10s                                    # optional, default 5s, how long to wait for the SYN+ACK packet, increase on slow networks
@@ -61,17 +60,20 @@ MqttClients:                                               # optional, when empt
       Enabled: false                             # optional, default true, whether to send online messages and register an offline message as will
       TopicTemplate: '%Prefix%tele-X/%ClientId%/status'  # optional, what topic to use for online/offline messages
       Retain: false                              # optional, default true, the mqtt retain flag for availability messages
+      Qos: 0                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
 
     AvailabilityDevice:
       Enabled: false                             # optional, default true, whether to send online messages and register an offline message as will
       TopicTemplate: '%Prefix%tele-X/%ClientId%/%DeviceName%/status'  # optional, what topic to use for online/offline messages
       Retain: false                              # optional, default true, the mqtt retain flag for availability messages
+      Qos: 1                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
 
     Structure:
       Enabled: false                                # optional, default true, whether to send messages containing the list of registers / types
       TopicTemplate: '%Prefix%struct-X/go-iotdevice/%DeviceName%' # optional, what topic to use for structure messages
       Interval: 20s                                 # optional, default 0, 0 means disabled only send initially, otherwise the structure is repeated after this interval (useful when retain is false)
       Retain: false                                 # optional, default true, the mqtt retain flag for structure messages
+      Qos: 2                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
 
     Telemetry:
       Enabled: false                                # optional, default true, whether to send telemetry messages (one per device)
@@ -424,10 +426,6 @@ func TestReadConfig_Complete(t *testing.T) {
 				t.Errorf("expect MqttClients->0-local->ClientId to be '%s' but got '%s'", expect, got)
 			}
 
-			if expect, got := byte(0), mc.Qos(); expect != got {
-				t.Errorf("expect MqttClients->0-local->Qos to be %d but got %d", expect, got)
-			}
-
 			if expect, got := 2*time.Minute, mc.KeepAlive(); expect != got {
 				t.Errorf("expect MqttClients->0-local->KeepAlive to be '%s' but got '%s'", expect, got)
 			}
@@ -468,6 +466,10 @@ func TestReadConfig_Complete(t *testing.T) {
 				t.Error("expect MqttClients->0-local->AvailabilityClient->Retain to be false")
 			}
 
+			if expect, got := byte(0), mc.AvailabilityClient().Qos(); expect != got {
+				t.Errorf("expect MqttClients->0-local->AvailabilityClient->Qos to be %d but got %d", expect, got)
+			}
+
 			if got := mc.AvailabilityDevice().Enabled(); got {
 				t.Error("expect MqttDevices->0-local->AvailabilityDevice->Enabled to be false")
 			}
@@ -482,6 +484,10 @@ func TestReadConfig_Complete(t *testing.T) {
 
 			if got := mc.AvailabilityDevice().Retain(); got {
 				t.Error("expect MqttDevices->0-local->AvailabilityDevice->Retain to be false")
+			}
+
+			if expect, got := byte(1), mc.AvailabilityDevice().Qos(); expect != got {
+				t.Errorf("expect MqttClients->0-local->AvailabilityDevice->Qos to be %d but got %d", expect, got)
 			}
 
 			if got := mc.Structure().Enabled(); got {
@@ -502,6 +508,10 @@ func TestReadConfig_Complete(t *testing.T) {
 
 			if got := mc.Structure().Retain(); got {
 				t.Error("expect MqttClients->0-local->Structure->Retain to be false")
+			}
+
+			if expect, got := byte(2), mc.Structure().Qos(); expect != got {
+				t.Errorf("expect MqttClients->0-local->Structure->Qos to be %d but got %d", expect, got)
 			}
 
 			if got := mc.Telemetry().Enabled(); got {
@@ -1070,10 +1080,6 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Errorf("expect MqttClients->0-local->ClientId to be different when rereading the config, got '%s' and '%s'", got0, got1)
 		}
 
-		if expect, got := byte(1), mc.Qos(); expect != got {
-			t.Errorf("expect MqttClients->0-local->Qos to be %d but got %d", expect, got)
-		}
-
 		if expect, got := time.Minute, mc.KeepAlive(); expect != got {
 			t.Errorf("expect MqttClients->0-local->KeepAlive to be '%s' but got '%s'", expect, got)
 		}
@@ -1116,6 +1122,10 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if got := mc.AvailabilityClient().Retain(); !got {
 			t.Error("expect MqttClients->0-local->Availability->Retain to be true")
+		}
+
+		if expect, got := byte(1), mc.AvailabilityClient().Qos(); expect != got {
+			t.Errorf("expect MqttClients->0-local->Availability->Qos to be %d but got %d", expect, got)
 		}
 
 		if got := mc.AvailabilityDevice().Enabled(); !got {

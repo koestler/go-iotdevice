@@ -43,7 +43,6 @@ type mqttClientConfigRead struct {
 	Password string  `yaml:"Password"`
 	ClientId *string `yaml:"ClientId"`
 
-	Qos               *byte   `yaml:"Qos"`
 	KeepAlive         string  `yaml:"KeepAlive"`
 	ConnectRetryDelay string  `yaml:"ConnectRetryDelay"`
 	ConnectTimeout    string  `yaml:"ConnectTimeout"`
@@ -66,6 +65,7 @@ type mqttSectionConfigRead struct {
 	TopicTemplate *string `yaml:"TopicTemplate"`
 	Interval      string  `yaml:"Interval"`
 	Retain        *bool   `yaml:"Retain"`
+	Qos           *byte   `yaml:"Qos"`
 }
 
 type modbusConfigRead struct {

@@ -104,7 +104,6 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 		Password: c.password,
 		ClientId: &c.clientId,
 
-		Qos:               &c.qos,
 		KeepAlive:         c.keepAlive.String(),
 		ConnectRetryDelay: c.connectRetryDelay.String(),
 		ConnectTimeout:    c.connectTimeout.String(),
@@ -130,6 +129,7 @@ func (c MqttSectionConfig) convertToRead() mqttSectionConfigRead {
 		TopicTemplate: &c.topicTemplate,
 		Interval:      c.interval.String(),
 		Retain:        &c.retain,
+		Qos:           &c.qos,
 	}
 }
 

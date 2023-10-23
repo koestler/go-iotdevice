@@ -164,10 +164,6 @@ func (c MqttClientConfig) ClientId() string {
 	return c.clientId
 }
 
-func (c MqttClientConfig) Qos() byte {
-	return c.qos
-}
-
 func (c MqttClientConfig) KeepAlive() time.Duration {
 	return c.keepAlive
 }
@@ -256,6 +252,10 @@ func (c MqttSectionConfig) Interval() time.Duration {
 
 func (c MqttSectionConfig) Retain() bool {
 	return c.retain
+}
+
+func (c MqttSectionConfig) Qos() byte {
+	return c.qos
 }
 
 // Getters for ModbusConfig struct

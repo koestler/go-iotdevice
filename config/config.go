@@ -356,14 +356,6 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.clientId = *c.ClientId
 	}
 
-	if c.Qos == nil {
-		ret.qos = 1
-	} else if *c.Qos == 0 || *c.Qos == 1 || *c.Qos == 2 {
-		ret.qos = *c.Qos
-	} else {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->Qos=%d but must be 0, 1 or 2", name, *c.Qos))
-	}
-
 	if len(c.KeepAlive) < 1 {
 		ret.keepAlive = time.Minute
 	} else if keepAlive, e := time.ParseDuration(c.KeepAlive); e != nil {
@@ -538,6 +530,14 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 		ret.retain = defaultRetain
 	} else {
 		ret.retain = *c.Retain
+	}
+
+	if c.Qos == nil {
+		ret.qos = 1
+	} else if *c.Qos == 0 || *c.Qos == 1 || *c.Qos == 2 {
+		ret.qos = *c.Qos
+	} else {
+		err = append(err, fmt.Errorf("%sQos=%d but must be 0, 1 or 2", logPrefix, *c.Qos))
 	}
 
 	return

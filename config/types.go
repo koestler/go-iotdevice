@@ -57,7 +57,6 @@ type MqttClientConfig struct {
 	password string
 	clientId string
 
-	qos               byte
 	keepAlive         time.Duration
 	connectRetryDelay time.Duration
 	connectTimeout    time.Duration
@@ -81,6 +80,7 @@ type MqttSectionConfig struct {
 	topic         string
 	interval      time.Duration
 	retain        bool
+	qos           byte
 }
 
 type ModbusConfig struct {
