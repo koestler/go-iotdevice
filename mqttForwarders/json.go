@@ -1,4 +1,4 @@
-package device
+package mqttForwarders
 
 import jsoniter "github.com/json-iterator/go"
 

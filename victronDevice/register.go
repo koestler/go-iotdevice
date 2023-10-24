@@ -1,6 +1,9 @@
 package victronDevice
 
-import "github.com/koestler/go-iotdevice/dataflow"
+import (
+	"github.com/koestler/go-iotdevice/config"
+	"github.com/koestler/go-iotdevice/dataflow"
+)
 
 type VictronRegister struct {
 	dataflow.RegisterStruct
@@ -26,16 +29,13 @@ func MergeRegisters(maps ...[]VictronRegister) (output []VictronRegister) {
 	return
 }
 
-func FilterRegisters(input []VictronRegister, excludeFields []string, excludeCategories []string) (output []VictronRegister) {
+func FilterRegisters(input []VictronRegister, registerFilter config.RegisterFilterConfig) (output []VictronRegister) {
 	output = make([]VictronRegister, 0, len(input))
+	f := dataflow.RegisterFilter(registerFilter)
 	for _, r := range input {
-		if dataflow.RegisterNameExcluded(excludeFields, r) {
-			continue
+		if f(r) {
+			output = append(output, r)
 		}
-		if dataflow.RegisterCategoryExcluded(excludeCategories, r) {
-			continue
-		}
-		output = append(output, r)
 	}
 	return
 }
@@ -43,12 +43,21 @@ func FilterRegisters(input []VictronRegister, excludeFields []string, excludeCat
 func FilterRegistersByName(input []VictronRegister, names ...string) (output []VictronRegister) {
 	output = make([]VictronRegister, 0, len(input))
 	for _, r := range input {
-		if dataflow.RegisterNameExcluded(names, r) {
+		if registerNameExcluded(names, r) {
 			continue
 		}
 		output = append(output, r)
 	}
 	return
+}
+
+func registerNameExcluded(exclude []string, r dataflow.Register) bool {
+	for _, e := range exclude {
+		if e == r.Name() {
+			return true
+		}
+	}
+	return false
 }
 
 func NewTextRegisterStruct(

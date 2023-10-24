@@ -2,7 +2,6 @@ package config
 
 import (
 	"net/url"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -67,10 +66,6 @@ func (c Config) MqttDevices() []MqttDeviceConfig {
 
 func (c Config) Views() []ViewConfig {
 	return c.views
-}
-
-func (c Config) HassDiscovery() []HassDiscovery {
-	return c.hassDiscovery
 }
 
 func (c Config) GetViewNames() (ret []string) {
@@ -229,6 +224,10 @@ func (c MqttClientConfig) RealtimeTopic(deviceName, registerName string) string 
 	return strings.Replace(r, "%RegisterName%", registerName, 1)
 }
 
+func (c MqttClientConfig) HassDiscovery() MqttSectionConfig {
+	return c.hassDiscovery
+}
+
 func (c MqttClientConfig) LogDebug() bool {
 	return c.logDebug
 }
@@ -256,6 +255,19 @@ func (c MqttSectionConfig) Retain() bool {
 
 func (c MqttSectionConfig) Qos() byte {
 	return c.qos
+}
+
+func (c MqttSectionConfig) Devices() []MqttDeviceSectionConfig {
+	return c.devices
+}
+
+// Getters for MqttDeviceSectionConfig struct
+func (c MqttDeviceSectionConfig) Name() string {
+	return c.name
+}
+
+func (c MqttDeviceSectionConfig) RegisterFilter() RegisterFilterConfig {
+	return c.registerFilter
 }
 
 // Getters for ModbusConfig struct
@@ -286,16 +298,8 @@ func (c DeviceConfig) Name() string {
 	return c.name
 }
 
-func (c DeviceConfig) SkipFields() []string {
-	return c.skipFields
-}
-
-func (c DeviceConfig) SkipCategories() []string {
-	return c.skipCategories
-}
-
-func (c DeviceConfig) ViaMqttClients() []string {
-	return c.viaMqttClients
+func (c DeviceConfig) RegisterFilter() RegisterFilterConfig {
+	return c.registerFilter
 }
 
 func (c DeviceConfig) RestartInterval() time.Duration {
@@ -448,40 +452,28 @@ func (c ViewDeviceConfig) Title() string {
 	return c.title
 }
 
-func (c ViewDeviceConfig) SkipFields() []string {
-	return c.skipFields
+func (c ViewDeviceConfig) RegisterFilter() RegisterFilterConfig {
+	return c.registerFilter
 }
 
-func (c ViewDeviceConfig) SkipCategories() []string {
+// Getters for RegisterFilterConfig struct
+
+func (c RegisterFilterConfig) IncludeRegisters() []string {
+	return c.includeRegisters
+}
+
+func (c RegisterFilterConfig) SkipRegisters() []string {
+	return c.skipRegisters
+}
+
+func (c RegisterFilterConfig) IncludeCategories() []string {
+	return c.includeCategories
+}
+
+func (c RegisterFilterConfig) SkipCategories() []string {
 	return c.skipCategories
 }
 
-// Gettters for HassDiscovery struct
-
-func (c HassDiscovery) TopicPrefix() string {
-	return c.topicPrefix
-}
-
-func (c HassDiscovery) ViaMqttClients() []string {
-	return c.viaMqttClients
-}
-
-func (c HassDiscovery) Devices() []string {
-	return c.devices
-}
-
-func (c HassDiscovery) Categories() []string {
-	return c.categories
-}
-
-func (c HassDiscovery) CategoriesMatcher() []*regexp.Regexp {
-	return c.categoriesMatcher
-}
-
-func (c HassDiscovery) Registers() []string {
-	return c.registers
-}
-
-func (c HassDiscovery) RegistersMatcher() []*regexp.Regexp {
-	return c.registersMatcher
+func (c RegisterFilterConfig) DefaultInclude() bool {
+	return c.defaultInclude
 }

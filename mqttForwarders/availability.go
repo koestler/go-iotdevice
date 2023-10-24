@@ -1,14 +1,15 @@
-package device
+package mqttForwarders
 
 import (
 	"context"
+	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/pool"
 )
 
 func runAvailabilityForwarders(
 	ctx context.Context,
-	dev Device,
+	dev device.Device,
 	mqttClientPool *pool.Pool[mqttClient.Client],
 ) {
 	devCfg := dev.Config()
@@ -29,9 +30,9 @@ func runAvailabilityForwarders(
 				case <-ctx.Done():
 					return
 				case avail := <-availChan:
-					payload := availabilityOfflineValue
+					payload := device.AvailabilityOfflineValue
 					if avail {
-						payload = availabilityOnlineValue
+						payload = device.AvailabilityOnlineValue
 					}
 					mc.Publish(
 						topic,

@@ -89,16 +89,14 @@ func (r RegisterStruct) Controllable() bool {
 	return r.controllable
 }
 
-func FilterRegisters(input []Register, excludeFields []string, excludeCategories []string) (output []Register) {
+func FilterRegisters(input []Register, registerFilter RegisterFilterConf) (output []Register) {
 	output = make([]Register, 0, len(input))
+	f := RegisterFilter(registerFilter)
+
 	for _, r := range input {
-		if RegisterNameExcluded(excludeFields, r) {
-			continue
+		if f(r) {
+			output = append(output, r)
 		}
-		if RegisterCategoryExcluded(excludeCategories, r) {
-			continue
-		}
-		output = append(output, r)
 	}
 	return
 }
@@ -106,22 +104,4 @@ func FilterRegisters(input []Register, excludeFields []string, excludeCategories
 func SortRegisters(input []Register) []Register {
 	sort.SliceStable(input, func(i, j int) bool { return input[i].Sort() < input[j].Sort() })
 	return input
-}
-
-func RegisterNameExcluded(exclude []string, r Register) bool {
-	for _, e := range exclude {
-		if e == r.Name() {
-			return true
-		}
-	}
-	return false
-}
-
-func RegisterCategoryExcluded(exclude []string, r Register) bool {
-	for _, e := range exclude {
-		if e == r.Category() {
-			return true
-		}
-	}
-	return false
 }

@@ -2,14 +2,13 @@ package device
 
 import (
 	"context"
+	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 )
 
 type Config interface {
 	Name() string
-	SkipFields() []string
-	SkipCategories() []string
-	ViaMqttClients() []string
+	RegisterFilter() config.RegisterFilterConfig
 	LogDebug() bool
 	LogComDebug() bool
 }
@@ -34,14 +33,14 @@ type State struct {
 
 func NewState(deviceConfig Config, stateStorage *dataflow.ValueStorage) State {
 	registerDb := dataflow.NewRegisterDb()
-	registerDb.Add(availabilityRegister)
+	registerDb.Add(AvailabilityRegister)
 	return State{
 		deviceConfig: deviceConfig,
 		stateStorage: stateStorage,
 		registerDb:   registerDb,
 
-		unavailableValue: dataflow.NewEnumRegisterValue(deviceConfig.Name(), availabilityRegister, 0),
-		availableValue:   dataflow.NewEnumRegisterValue(deviceConfig.Name(), availabilityRegister, 1),
+		unavailableValue: dataflow.NewEnumRegisterValue(deviceConfig.Name(), AvailabilityRegister, 0),
+		availableValue:   dataflow.NewEnumRegisterValue(deviceConfig.Name(), AvailabilityRegister, 1),
 	}
 }
 
@@ -76,7 +75,7 @@ func (c *State) SubscribeAvailableSendInitial(ctx context.Context) <-chan bool {
 			return false
 		}
 		reg := value.Register()
-		return reg.RegisterType() == dataflow.EnumRegister && reg.Name() == availabilityRegisterName
+		return reg.RegisterType() == dataflow.EnumRegister && reg.Name() == AvailabilityRegisterName
 	})
 
 	avail, initialOk := c.GetAvailableByState(initialState)

@@ -1,8 +1,9 @@
-package device
+package mqttForwarders
 
 import (
 	"context"
 	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/pool"
 	"time"
@@ -10,7 +11,7 @@ import (
 
 func RunMqttForwarders(
 	ctx context.Context,
-	dev Device,
+	dev device.Device,
 	mqttClientPool *pool.Pool[mqttClient.Client],
 	storage *dataflow.ValueStorage,
 ) {

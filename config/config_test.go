@@ -74,6 +74,9 @@ MqttClients:                                               # optional, when empt
       Interval: 20s                                 # optional, default 0, 0 means disabled only send initially, otherwise the structure is repeated after this interval (useful when retain is false)
       Retain: false                                 # optional, default true, the mqtt retain flag for structure messages
       Qos: 2                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
+      Devices:
+        bmv0:
+        tcw241:
 
     Telemetry:
       Enabled: false                                # optional, default true, whether to send telemetry messages (one per device)
@@ -86,6 +89,14 @@ MqttClients:                                               # optional, when empt
       TopicTemplate: '%Prefix%real-X/go-iotdevice/%DeviceName%/%RegisterName%' # optional, what topic to use for realtime messages
       Interval: 2s                                   # optional, default 0; 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
       Retain: true                                   # optional, default false, the mqtt retain flag for realtime messages
+
+    HassDiscovery:
+      Enabled: true                                          # optional, default false, whether to enable sending realtime messages
+      TopicTemplate: 'my-hass/'                                 # optional, topic to use for homeassistant deisovery messages
+      Interval: 0s                                           # optional, default 0, 0 means disabled only send initially, otherwise the disovery messages are repeated after this interval (useful when retain is false)
+      Retain: true                                           # optional, default false, the mqtt retain flag for hass disovery messages
+      Devices:                                               # optional, default all, a list of devices to match
+        - bmv0                                               # use device identifiers of the VictronDevices, ModbusDevices etc. sections
 
     LogDebug: true                                         # optional, default false, very verbose debug log of the mqtt connection
     LogMessages: true                                      # optional, default false, log all incoming mqtt messages
@@ -111,14 +122,12 @@ Modbus:                                                    # optional, when empt
 VictronDevices:                                            # optional, a list of Victron Energy devices to connect to
   bmv0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     General:                                               # optional, this section is exactly the same for all devices
-      SkipFields:                                          # optional, default empty, a list of field names that shall be ignored for this device
-        - Temperature                                      # for BMV devices without a temperature sensor connect
-        - AuxVoltage                                       # for BMV devices without a mid- or starter-voltage reading
-      SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
-        - Settings                                         # for solar devices it might make sense to not fetch / output the settings
-      ViaMqttClients:                                      # optional, default all clients, to what mqtt servers shall mqtt messages be sent to
-        - 0-local                                          # state the arbitrary name of the mqtt client as defined in the MqttClients section of this file
-        - 1-remote
+      RegisterFilter:
+        SkipRegisters:                                          # optional, default empty, a list of field names that shall be ignored for this device
+          - Temperature                                      # for BMV devices without a temperature sensor connect
+          - AuxVoltage                                       # for BMV devices without a mid- or starter-voltage reading
+        SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
+          - Settings                                         # for solar devices it might make sense to not fetch / output the settings
       RestartInterval: 400ms                               # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff: 2m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: true                                       # optional, default false, enable debug log output
@@ -129,13 +138,21 @@ VictronDevices:                                            # optional, a list of
 ModbusDevices:                                             # optional, a list of devices connected via ModBus
   modbus-rtu0:                                             # mandatory, an arbitrary name used for logging and for referencing in other config sections
     General:                                               # optional, this section is exactly the same for all devices
-      SkipFields:                                          # optional, default empty, a list of field names that shall be ignored for this device
-        - a
-        - b
-      SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
-        - A
-        - B
-        - C
+      RegisterFilter:
+        SkipRegisters:                                          # optional, default empty, a list of field names that shall be ignored for this device
+          - a
+          - b
+        IncludeRegisters:
+          - c
+          - d
+        SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
+          - A
+          - B
+          - C
+        IncludeCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
+          - D
+          - E
+          - F
       ViaMqttClients:                                      # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
       RestartInterval:                                     # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff:                           # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
@@ -154,8 +171,6 @@ ModbusDevices:                                             # optional, a list of
 HttpDevices:                                               # optional, a list of devices controlled via http
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections
     General:                                               # optional, this section is exactly the same for all devices
-      SkipFields:                                          # optional, default empty, a list of field names that shall be ignored for this device
-      SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
       ViaMqttClients:                                      # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
       RestartInterval: 1m                                  # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff: 2m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
@@ -170,8 +185,6 @@ HttpDevices:                                               # optional, a list of
 MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     General:                                               # optional, this section is exactly the same for all devices
-      SkipFields:                                          # optional, default empty, a list of field names that shall be ignored for this device
-      SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
       ViaMqttClients:                                      # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
       RestartInterval: 50ms                                # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff: 30s                       # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
@@ -188,13 +201,14 @@ Views:                                                     # optional, a list of
     Devices:                                               # mandatory, a list of devices using
       - Name: bmv0                                         # mandatory, the arbitrary names defined above
         Title: Battery Monitor                             # mandatory, a nice title displayed in the frontend
-        SkipFields:                                        # optional, default empty, field names that are omitted when displaying this view
-          - field-a
-          - field-b
-        SkipCategories:                                    # optional, default empty, category names that are omitted when displaying this view
-          - cat-a
-          - cat-b
-          - cat-c
+        RegisterFilter:
+          SkipRegisters:                                        # optional, default empty, field names that are omitted when displaying this view
+            - field-a
+            - field-b
+          SkipCategories:                                    # optional, default empty, category names that are omitted when displaying this view
+            - cat-a
+            - cat-b
+            - cat-c
       - Name: modbus-rtu0                                  # mandatory, the arbitrary names defined above
         Title: Relay Board                                 # mandatory, a nice title displayed in the frontend
     Autoplay: false                                        # optional, default true, when true, live updates are enabled automatically when the view is open in the frontend
@@ -214,13 +228,7 @@ HassDiscovery:                                             # optional, default, 
     ViaMattClients:                                        # optional, default all clients, on what mqtt servers shall the registers by advertised
       - 0-local
       - 1-remote
-    Devices:                                               # optional, default all, a list of regular expressions against which devices names are matched (eg. "device1" or user ".*" for all devices)
-      - bmv0                                               # use device identifiers of the VictronDevices, ModbusDevices etc. sections
-    Categories:                                            # optional, default all, a list of regular expressions against which devices names are matched (eg. "device1" or user ".*" for all devices)
-      - .*                                                 # match all categories; see the category field in /api/v2/views/dev/devices/DEVICE-NAME/registers
-    Registers:                                             # optional, default all, a list of regular expressions against which register names are matched
-      - Voltage$                                           # matches all registers with a name ending in Voltage, eg. MainVoltage, AuxVoltage
-      - ˆBattery                                           # matches all registers with a name begining with Battery, eg. BatteryTemperature
+
 `
 
 	ValidDefaultConfig = `
@@ -470,6 +478,10 @@ func TestReadConfig_Complete(t *testing.T) {
 				t.Errorf("expect MqttClients->0-local->AvailabilityClient->Qos to be %d but got %d", expect, got)
 			}
 
+			if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241", "bmv1"}, mc.AvailabilityClient().Devices(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect MqttClients->0-local->AvailabilityClient->Devices to be %v but got %v", expect, got)
+			}
+
 			if got := mc.AvailabilityDevice().Enabled(); got {
 				t.Error("expect MqttDevices->0-local->AvailabilityDevice->Enabled to be false")
 			}
@@ -488,6 +500,10 @@ func TestReadConfig_Complete(t *testing.T) {
 
 			if expect, got := byte(1), mc.AvailabilityDevice().Qos(); expect != got {
 				t.Errorf("expect MqttClients->0-local->AvailabilityDevice->Qos to be %d but got %d", expect, got)
+			}
+
+			if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241", "bmv1"}, mc.AvailabilityDevice().Devices(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect MqttClients->0-local->AvailabilityDevice->Devices to be %v but got %v", expect, got)
 			}
 
 			if got := mc.Structure().Enabled(); got {
@@ -514,6 +530,10 @@ func TestReadConfig_Complete(t *testing.T) {
 				t.Errorf("expect MqttClients->0-local->Structure->Qos to be %d but got %d", expect, got)
 			}
 
+			if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241", "bmv1"}, mc.Structure().Devices(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect MqttClients->0-local->Structure->Devices to be %v but got %v", expect, got)
+			}
+
 			if got := mc.Telemetry().Enabled(); got {
 				t.Error("expect MqttClients->0-local->Telemetry->Enabled to be false")
 			}
@@ -534,6 +554,14 @@ func TestReadConfig_Complete(t *testing.T) {
 				t.Error("expect MqttClients->0-local->Telemetry->Retain to be true")
 			}
 
+			if expect, got := byte(2), mc.Telemetry().Qos(); expect != got {
+				t.Errorf("expect MqttClients->0-local->Telemetry->Qos to be %d but got %d", expect, got)
+			}
+
+			if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241", "bmv1"}, mc.Telemetry().Devices(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect MqttClients->0-local->Telemetry->Devices to be %v but got %v", expect, got)
+			}
+
 			if got := mc.Realtime().Enabled(); got {
 				t.Error("expect MqttClients->0-local->Realtime->Enabled to be false")
 			}
@@ -552,6 +580,38 @@ func TestReadConfig_Complete(t *testing.T) {
 
 			if got := mc.Realtime().Retain(); !got {
 				t.Error("expect MqttClients->Realtime->Retain to be true")
+			}
+
+			if expect, got := byte(2), mc.Realtime().Qos(); expect != got {
+				t.Errorf("expect MqttClients->0-local->Realtime->Qos to be %d but got %d", expect, got)
+			}
+
+			if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241", "bmv1"}, mc.Realtime().Devices(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect MqttClients->0-local->Realtime->Devices to be %v but got %v", expect, got)
+			}
+
+			if got := mc.HassDiscovery().Enabled(); got {
+				t.Error("expect MqttClients->0-local->HassDiscovery->Enabled to be false")
+			}
+
+			if expect, got := "my-hass/", mc.HassDiscovery().TopicTemplate(); expect != got {
+				t.Errorf("expect MqttClients->0-local->HassDiscovery->TopicTemplate to be '%s' but got '%s'", expect, got)
+			}
+
+			if expect, got := 2*time.Second, mc.HassDiscovery().Interval(); expect != got {
+				t.Errorf("expect MqttClients->0-local->HassDiscovery->Interval to be '%s' but got '%s'", expect, got)
+			}
+
+			if got := mc.HassDiscovery().Retain(); !got {
+				t.Error("expect MqttClients->HassDiscovery->Retain to be true")
+			}
+
+			if expect, got := byte(2), mc.HassDiscovery().Qos(); expect != got {
+				t.Errorf("expect MqttClients->0-local->HassDiscovery->Qos to be %d but got %d", expect, got)
+			}
+
+			if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241", "bmv1"}, mc.HassDiscovery().Devices(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect MqttClients->0-local->HassDiscovery->Devices to be %v but got %v", expect, got)
 			}
 
 			if !mc.LogDebug() {
@@ -613,6 +673,10 @@ func TestReadConfig_Complete(t *testing.T) {
 			if got := mc.Realtime().Enabled(); got {
 				t.Error("expect MqttClients->2-readonly->Realtime->Enabled to be false")
 			}
+
+			if got := mc.HassDiscovery().Enabled(); got {
+				t.Error("expect MqttClients->2-readonly->HassDiscovery->Enabled to be false")
+			}
 		}
 
 	}
@@ -652,18 +716,6 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect Name of first VictronDevice to be '%s' but got %s'", expect, got)
 		}
 
-		if expect, got := []string{"Temperature", "AuxVoltage"}, vd.SkipFields(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect VictronDevices->bmv0->General->SkipFields to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"Settings"}, vd.SkipCategories(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect VictronDevices->bmv0->General->SkipCategories to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"0-local", "1-remote"}, vd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect VictronDevices->bmv0->General->ViaMqttClients to be %v but got %v", expect, got)
-		}
-
 		if expect, got := 400*time.Millisecond, vd.RestartInterval(); expect != got {
 			t.Errorf("expect VictronDevices->bmv0->General->RestartInterval to be %s but got %s", expect, got)
 		}
@@ -696,18 +748,6 @@ func TestReadConfig_Complete(t *testing.T) {
 
 		if expect, got := "modbus-rtu0", md.Name(); expect != got {
 			t.Errorf("expect Name of first ModebusDevice to be '%s' but got %s'", expect, got)
-		}
-
-		if expect, got := []string{"a", "b"}, md.SkipFields(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->SkipFields to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"A", "B", "C"}, md.SkipCategories(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->SkipCategories to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"0-local", "1-remote"}, md.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->ViaMqttClients to be %v but got %v", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, md.RestartInterval(); expect != got {
@@ -746,18 +786,6 @@ func TestReadConfig_Complete(t *testing.T) {
 
 		if expect, got := "tcw241", hd.Name(); expect != got {
 			t.Errorf("expect Name of first HttpDevice to be '%s' but got %s'", expect, got)
-		}
-
-		if expect, got := []string{}, hd.SkipFields(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HttpDevices->tcw241->General->SkipFields to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{}, hd.SkipCategories(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HttpDevices->tcw241->General->SkipCategories to be %#v but got %#v", expect, got)
-		}
-
-		if expect, got := []string{"0-local", "1-remote"}, hd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HttpDevices->tcw241->General->ViaMqttClients to be %v but got %v", expect, got)
 		}
 
 		if expect, got := time.Minute, hd.RestartInterval(); expect != got {
@@ -804,18 +832,6 @@ func TestReadConfig_Complete(t *testing.T) {
 
 		if expect, got := "bmv1", vd.Name(); expect != got {
 			t.Errorf("expect Name of first MqttDevice to be '%s' but got %s'", expect, got)
-		}
-
-		if expect, got := []string{}, vd.SkipFields(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect MqttDevices->bmv1->General->SkipFields to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{}, vd.SkipCategories(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect MqttDevices->bmv1->General->SkipCategories to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"0-local"}, vd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect MqttDevices->bmv1->General->ViaMqttClients to be %v but got %v", expect, got)
 		}
 
 		if expect, got := 50*time.Millisecond, vd.RestartInterval(); expect != got {
@@ -872,14 +888,6 @@ func TestReadConfig_Complete(t *testing.T) {
 				if expect, got := "Battery Monitor", d.Title(); expect != got {
 					t.Errorf("expect Views->%s->Devices->%d->Title to be '%s' but got '%s'", v.Name(), i, expect, got)
 				}
-
-				if expect, got := []string{"field-a", "field-b"}, d.SkipFields(); !reflect.DeepEqual(expect, got) {
-					t.Errorf("expect Views->%s->Devices->%d->SkipFields to be %v but got %v", v.Name(), i, expect, got)
-				}
-
-				if expect, got := []string{"cat-a", "cat-b", "cat-c"}, d.SkipCategories(); !reflect.DeepEqual(expect, got) {
-					t.Errorf("expect Views->%s->Devices->%d->SkipCategories to be %v but got %v", v.Name(), i, expect, got)
-				}
 			}
 
 			{
@@ -891,14 +899,6 @@ func TestReadConfig_Complete(t *testing.T) {
 
 				if expect, got := "Relay Board", d.Title(); expect != got {
 					t.Errorf("expect Views->%s->Devices->%d->Title to be '%s' but got '%s'", v.Name(), i, expect, got)
-				}
-
-				if expect, got := []string{}, d.SkipFields(); !reflect.DeepEqual(expect, got) {
-					t.Errorf("expect Views->%s->Devices->%d->SkipFields to be %v but got %v", v.Name(), i, expect, got)
-				}
-
-				if expect, got := []string{}, d.SkipCategories(); !reflect.DeepEqual(expect, got) {
-					t.Errorf("expect Views->%s->Devices->%d->SkipCategories to be %v but got %v", v.Name(), i, expect, got)
 				}
 			}
 
@@ -930,32 +930,6 @@ func TestReadConfig_Complete(t *testing.T) {
 					t.Errorf("expect Views->%s->Devices->%d->Title to be '%s' but got '%s'", v.Name(), i, expect, got)
 				}
 			}
-		}
-	}
-
-	if expect, got := 1, len(config.HassDiscovery()); expect != got {
-		t.Errorf("expect length of config.HassDiscovery to be %d but got %d", expect, got)
-	} else {
-		hd := config.HassDiscovery()[0]
-
-		if expect, got := "my-hass", hd.TopicPrefix(); expect != got {
-			t.Errorf("expect HassDiscovery->0->TopicPrefix to be '%s' but got '%s'", expect, got)
-		}
-
-		if expect, got := []string{"0-local", "1-remote"}, hd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HassDiscovery->0->ViaMqttClients to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"bmv0"}, hd.Devices(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HassDiscovery->0->Devices to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{".*"}, hd.Categories(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HassDiscovery->0->Categories to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"Voltage$", "ˆBattery"}, hd.Registers(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HassDiscovery->0->Registers to be %v but got %v", expect, got)
 		}
 	}
 }
@@ -1125,7 +1099,11 @@ func TestReadConfig_Default(t *testing.T) {
 		}
 
 		if expect, got := byte(1), mc.AvailabilityClient().Qos(); expect != got {
-			t.Errorf("expect MqttClients->0-local->Availability->Qos to be %d but got %d", expect, got)
+			t.Errorf("expect MqttClients->0-local->AvailabilityClient->Qos to be %d but got %d", expect, got)
+		}
+
+		if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241", "bmv1"}, mc.AvailabilityClient().Devices(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttClients->0-local->AvailabilityClient->Devices to be %v but got %v", expect, got)
 		}
 
 		if got := mc.AvailabilityDevice().Enabled(); !got {
@@ -1142,6 +1120,14 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if got := mc.AvailabilityDevice().Retain(); !got {
 			t.Error("expect MqttDevices->0-local->Availability->Retain to be true")
+		}
+
+		if expect, got := byte(1), mc.AvailabilityDevice().Qos(); expect != got {
+			t.Errorf("expect MqttClients->0-local->AvailabilityDevice->Qos to be %d but got %d", expect, got)
+		}
+
+		if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241", "bmv1"}, mc.AvailabilityDevice().Devices(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttClients->0-local->AvailabilityDevice->Devices to be %v but got %v", expect, got)
 		}
 
 		if got := mc.Structure().Enabled(); !got {
@@ -1164,6 +1150,14 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Error("expect MqttClients->0-local->Structure->Retain to be true")
 		}
 
+		if expect, got := byte(1), mc.Structure().Qos(); expect != got {
+			t.Errorf("expect MqttClients->0-local->Structure->Qos to be %d but got %d", expect, got)
+		}
+
+		if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241", "bmv1"}, mc.Structure().Devices(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttClients->0-local->Structure->Devices to be %v but got %v", expect, got)
+		}
+
 		if got := mc.Telemetry().Enabled(); !got {
 			t.Error("expect MqttClients->0-local->Telemetry->Enabled to be true")
 		}
@@ -1184,6 +1178,14 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Error("expect MqttClients->0-local->Telemetry->Retain to be false")
 		}
 
+		if expect, got := byte(1), mc.Telemetry().Qos(); expect != got {
+			t.Errorf("expect MqttClients->0-local->Telemetry->Qos to be %d but got %d", expect, got)
+		}
+
+		if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241", "bmv1"}, mc.Telemetry().Devices(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttClients->0-local->Telemetry->Devices to be %v but got %v", expect, got)
+		}
+
 		if got := mc.Realtime().Enabled(); got {
 			t.Error("expect MqttClients->0-local->Realtime->Enabled to be false")
 		}
@@ -1202,6 +1204,14 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if got := mc.Realtime().Retain(); got {
 			t.Error("expect MqttClients->Realtime->Retain to be false")
+		}
+
+		if expect, got := byte(1), mc.Realtime().Qos(); expect != got {
+			t.Errorf("expect MqttClients->0-local->Realtime->Qos to be %d but got %d", expect, got)
+		}
+
+		if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241", "bmv1"}, mc.Realtime().Devices(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttClients->0-local->Realtime->Devices to be %v but got %v", expect, got)
 		}
 
 		if got := mc.LogDebug(); got {
@@ -1248,18 +1258,6 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Errorf("expect Name of first VictronDevice to be '%s' but got %s'", expect, got)
 		}
 
-		if expect, got := []string{}, vd.SkipFields(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect VictronDevices->bmv0->General->SkipFields to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{}, vd.SkipCategories(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect VictronDevices->bmv0->General->SkipCategories to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"0-local"}, vd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect VictronDevices->bmv0->General->ViaMqttClients to be %v but got %v", expect, got)
-		}
-
 		if expect, got := 200*time.Millisecond, vd.RestartInterval(); expect != got {
 			t.Errorf("expect VictronDevices->bmv0->General->RestartInterval to be %s but got %s", expect, got)
 		}
@@ -1292,18 +1290,6 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if expect, got := "modbus-rtu0", md.Name(); expect != got {
 			t.Errorf("expect Name of first ModebusDevice to be '%s' but got %s'", expect, got)
-		}
-
-		if expect, got := []string{}, md.SkipFields(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->SkipFields to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{}, md.SkipCategories(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->SkipCategories to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"0-local"}, md.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->ViaMqttClients to be %v but got %v", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, md.RestartInterval(); expect != got {
@@ -1342,18 +1328,6 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if expect, got := "tcw241", hd.Name(); expect != got {
 			t.Errorf("expect Name of first HttpDevice to be '%s' but got %s'", expect, got)
-		}
-
-		if expect, got := []string{}, hd.SkipFields(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HttpDevices->tcw241->General->SkipFields to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{}, hd.SkipCategories(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HttpDevices->tcw241->General->SkipCategories to be %#v but got %#v", expect, got)
-		}
-
-		if expect, got := []string{"0-local"}, hd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HttpDevices->tcw241->General->ViaMqttClients to be %v but got %v", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, hd.RestartInterval(); expect != got {
@@ -1400,18 +1374,6 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if expect, got := "bmv1", vd.Name(); expect != got {
 			t.Errorf("expect Name of first MqttDevice to be '%s' but got %s'", expect, got)
-		}
-
-		if expect, got := []string{}, vd.SkipFields(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect MqttDevices->bmv1->General->SkipFields to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{}, vd.SkipCategories(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect MqttDevices->bmv1->General->SkipCategories to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{}, vd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect MqttDevices->bmv1->General->ViaMqttClients to be %v but got %v", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, vd.RestartInterval(); expect != got {
@@ -1465,43 +1427,8 @@ func TestReadConfig_Default(t *testing.T) {
 			if expect, got := "Battery Monitor", d.Title(); expect != got {
 				t.Errorf("expect Views->%s->Devices->%d->Title to be '%s' but got '%s'", v.Name(), i, expect, got)
 			}
-
-			if expect, got := []string{}, d.SkipFields(); !reflect.DeepEqual(expect, got) {
-				t.Errorf("expect Views->%s->Devices->%d->SkipFields to be %v but got %v", v.Name(), i, expect, got)
-			}
-
-			if expect, got := []string{}, d.SkipCategories(); !reflect.DeepEqual(expect, got) {
-				t.Errorf("expect Views->%s->Devices->%d->SkipCategories to be %v but got %v", v.Name(), i, expect, got)
-			}
 		}
 	}
-
-	if expect, got := 1, len(config.HassDiscovery()); expect != got {
-		t.Errorf("expect length of config.HassDiscovery to be %d but got %d", expect, got)
-	} else {
-		hd := config.HassDiscovery()[0]
-
-		if expect, got := "homeassistant", hd.TopicPrefix(); expect != got {
-			t.Errorf("expect HassDiscovery->0->TopicPrefix to be '%s' but got '%s'", expect, got)
-		}
-
-		if expect, got := []string{"0-local"}, hd.ViaMqttClients(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HassDiscovery->0->ViaMqttClients to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{"tcw241"}, hd.Devices(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HassDiscovery->0->Devices to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{}, hd.Categories(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HassDiscovery->0->Categories to be %v but got %v", expect, got)
-		}
-
-		if expect, got := []string{}, hd.Registers(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect HassDiscovery->0->Registers to be %v but got %v", expect, got)
-		}
-	}
-
 }
 
 // check that configuration file in the documentation do not contain any errors

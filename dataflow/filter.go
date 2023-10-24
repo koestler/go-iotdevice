@@ -2,51 +2,59 @@ package dataflow
 
 var EmptyFilter = func(Value) bool { return true }
 
-func DeviceFilter(deviceName string) FilterFunc {
+func DeviceValueFilter(deviceName string) ValueFilterFunc {
 	return func(value Value) bool {
 		return value.DeviceName() == deviceName
 	}
 }
 
-func RegisterFilter(
-	skipFields []string,
-	skipCategories []string,
-) FilterFunc {
-	skipFieldsMap := SliceToMap(skipFields)
-	skipCategoriesMap := SliceToMap(skipCategories)
+func RegisterFilter(registerFilter RegisterFilterConf) RegisterFilterFunc {
+	includeRegistersMap := sliceToMap(registerFilter.IncludeRegisters())
+	skipRegistersMap := sliceToMap(registerFilter.SkipRegisters())
+	includeCategoriesMap := sliceToMap(registerFilter.IncludeCategories())
+	skipCategoriesMap := sliceToMap(registerFilter.SkipCategories())
+	defaultInclude := registerFilter.DefaultInclude()
 
-	return func(value Value) bool {
-		reg := value.Register()
+	return func(reg Register) bool {
+		regName := reg.Name()
+		if _, ok := includeRegistersMap[regName]; ok {
+			return true
+		}
 
-		if _, ok := skipFieldsMap[reg.Name()]; ok {
+		if _, ok := skipRegistersMap[regName]; ok {
 			return false
 		}
 
-		if _, ok := skipCategoriesMap[reg.Category()]; ok {
+		categoryName := reg.Name()
+		if _, ok := includeCategoriesMap[categoryName]; ok {
+			return true
+		}
+
+		if _, ok := skipCategoriesMap[categoryName]; ok {
 			return false
 		}
 
-		return true
+		return defaultInclude
 	}
 }
 
-var NoFilter FilterFunc = func(value Value) bool {
+var NoValueFilter ValueFilterFunc = func(value Value) bool {
 	return true
 }
 
-var NonNullFilter FilterFunc = func(value Value) bool {
+var NonNullValueFilter ValueFilterFunc = func(value Value) bool {
 	_, isNullValue := value.(NullRegisterValue)
 	return !isNullValue
 }
 
-func DeviceNonNullFilter(deviceName string) FilterFunc {
-	deviceFilter := DeviceFilter(deviceName)
+func DeviceNonNullValueFilter(deviceName string) ValueFilterFunc {
+	deviceFilter := DeviceValueFilter(deviceName)
 	return func(value Value) bool {
-		return NonNullFilter(value) && deviceFilter(value)
+		return NonNullValueFilter(value) && deviceFilter(value)
 	}
 }
 
-func SliceToMap[T comparable](inp []T) map[T]struct{} {
+func sliceToMap[T comparable](inp []T) map[T]struct{} {
 	oup := make(map[T]struct{}, len(inp))
 	for _, v := range inp {
 		oup[v] = struct{}{}

@@ -15,9 +15,8 @@ import (
 	"log"
 )
 
-func runDevices(
+func runNonMqttDevices(
 	cfg *config.Config,
-	mqttClientPool *pool.Pool[mqttClient.Client],
 	modbusPool *pool.Pool[*modbus.ModbusStruct],
 	stateStorage *dataflow.ValueStorage,
 	commandStorage *dataflow.ValueStorage,
@@ -31,7 +30,6 @@ func runDevices(
 
 		dev := victronDevice.NewDevice(deviceConfig, deviceConfig, stateStorage)
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
-		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
 		watchedDev.Run()
 		devicePool.Add(watchedDev)
 	}
@@ -49,19 +47,6 @@ func runDevices(
 
 		dev := modbusDevice.NewDevice(deviceConfig, deviceConfig, modbusInstance, stateStorage, commandStorage)
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
-		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
-		watchedDev.Run()
-		devicePool.Add(watchedDev)
-	}
-
-	for _, deviceConfig := range cfg.MqttDevices() {
-		if cfg.LogWorkerStart() {
-			log.Printf("device[%s]: start mqtt type", deviceConfig.Name())
-		}
-
-		dev := mqttDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, mqttClientPool)
-		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
-		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
 		watchedDev.Run()
 		devicePool.Add(watchedDev)
 	}
@@ -73,7 +58,26 @@ func runDevices(
 
 		dev := httpDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, commandStorage)
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
-		device.RunMqttForwarders(watchedDev.GetCtx(), dev, mqttClientPool, stateStorage)
+		watchedDev.Run()
+		devicePool.Add(watchedDev)
+	}
+
+	return
+}
+
+func runMqttDevices(
+	cfg *config.Config,
+	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
+	mqttClientPool *pool.Pool[mqttClient.Client],
+	stateStorage *dataflow.ValueStorage,
+) {
+	for _, deviceConfig := range cfg.MqttDevices() {
+		if cfg.LogWorkerStart() {
+			log.Printf("device[%s]: start mqtt type", deviceConfig.Name())
+		}
+
+		dev := mqttDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, mqttClientPool)
+		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		watchedDev.Run()
 		devicePool.Add(watchedDev)
 	}

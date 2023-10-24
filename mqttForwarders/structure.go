@@ -1,10 +1,10 @@
-package device
+package mqttForwarders
 
 import (
 	"context"
 	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
-	"github.com/koestler/go-iotdevice/pool"
 	"golang.org/x/exp/maps"
 	"log"
 	"math"
@@ -30,29 +30,22 @@ type StructureMessage struct {
 
 func runStructureForwarders(
 	ctx context.Context,
-	dev Device,
-	mqttClientPool *pool.Pool[mqttClient.Client],
+	dev device.Device,
+	mc mqttClient.Client,
 ) {
-	devCfg := dev.Config()
+	// start mqtt forwarder for realtime messages (send data as soon as it arrives) output
+	mCfg := mc.Config().Structure()
 
-	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
-	for _, mc := range mqttClientPool.GetByNames(devCfg.ViaMqttClients()) {
-		mCfg := mc.Config().Structure()
-		if !mCfg.Enabled() {
-			continue
-		}
-
-		if mCfg.Interval() <= 0 {
-			go structureOnUpdateModeRoutine(ctx, dev, mc)
-		} else {
-			go structurePeriodicModeRoutine(ctx, dev, mc)
-		}
+	if mCfg.Interval() <= 0 {
+		go structureOnUpdateModeRoutine(ctx, dev, mc)
+	} else {
+		go structurePeriodicModeRoutine(ctx, dev, mc)
 	}
 }
 
 func structureOnUpdateModeRoutine(
 	ctx context.Context,
-	dev Device,
+	dev device.Device,
 	mc mqttClient.Client,
 ) {
 	devCfg := dev.Config()
@@ -88,7 +81,7 @@ func structureOnUpdateModeRoutine(
 				ticker.Reset(100 * time.Millisecond)
 			}
 			regName := reg.Name()
-			if regName == availabilityRegisterName {
+			if regName == device.AvailabilityRegisterName {
 				// do not use Availability as a register in mqtt; availability is handled separately
 				continue
 			}
@@ -105,7 +98,7 @@ func structureOnUpdateModeRoutine(
 
 func structurePeriodicModeRoutine(
 	ctx context.Context,
-	dev Device,
+	dev device.Device,
 	mc mqttClient.Client,
 ) {
 	devCfg := dev.Config()

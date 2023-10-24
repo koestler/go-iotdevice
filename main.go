@@ -97,17 +97,22 @@ func main() {
 		commandStorage := runStorage(commandStorageLogPrefix)
 		defer commandStorage.Shutdown()
 
-		// start mqtt clients
-		mqttClientPool := runMqttClient(cfg)
-		defer mqttClientPool.Shutdown()
-
 		// start modbus device handlers
 		modbusPool := runModbus(cfg)
 		defer modbusPool.Shutdown()
 
-		// start devices
-		devicePool := runDevices(cfg, mqttClientPool, modbusPool, stateStorage, commandStorage)
+		// start devices non mqtt devices
+		devicePool := runNonMqttDevices(cfg, modbusPool, stateStorage, commandStorage)
 		defer devicePool.Shutdown()
+
+		// start mqtt clients
+		mqttClientPool := runMqttClient(cfg)
+		defer mqttClientPool.Shutdown()
+
+		// run mqtt forwarders
+
+		// start mqtt clients
+		runMqttDevices(cfg, devicePool, mqttClientPool, stateStorage)
 
 		// start hass discovery
 		hassDiscovery := runHassDisovery(cfg, devicePool, mqttClientPool)

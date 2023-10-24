@@ -168,12 +168,12 @@ func append2DResponseValue(response map[string]map[string]valueResponse, value d
 	response[d0][d1] = value.GenericValue()
 }
 
-func getFilter(viewDevices []config.ViewDeviceConfig) dataflow.FilterFunc {
+func getFilter(viewDevices []config.ViewDeviceConfig) dataflow.ValueFilterFunc {
 	skipRegisterNames := make(map[string]map[string]struct{})
 	skipRegisterCategories := make(map[string]map[string]struct{})
 	for _, vd := range viewDevices {
-		skipRegisterNames[vd.Name()] = dataflow.SliceToMap(vd.SkipFields())
-		skipRegisterCategories[vd.Name()] = dataflow.SliceToMap(vd.SkipCategories())
+		skipRegisterNames[vd.Name()] = dataflow.sliceToMap(vd.SkipFields())
+		skipRegisterCategories[vd.Name()] = dataflow.sliceToMap(vd.SkipCategories())
 	}
 
 	return func(value dataflow.Value) bool {

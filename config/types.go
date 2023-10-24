@@ -2,7 +2,6 @@ package config
 
 import (
 	"net/url"
-	"regexp"
 	"time"
 )
 
@@ -26,7 +25,6 @@ type Config struct {
 	httpDevices     []HttpDeviceConfig
 	mqttDevices     []MqttDeviceConfig
 	views           []ViewConfig
-	hassDiscovery   []HassDiscovery
 }
 
 type HttpServerConfig struct {
@@ -69,18 +67,26 @@ type MqttClientConfig struct {
 	structure          MqttSectionConfig
 	telemetry          MqttSectionConfig
 	realtime           MqttSectionConfig
+	hassDiscovery      MqttSectionConfig
 
 	logDebug    bool
 	logMessages bool
 }
 
 type MqttSectionConfig struct {
-	enabled       bool
-	topicTemplate string
-	topic         string
-	interval      time.Duration
-	retain        bool
-	qos           byte
+	enabled        bool
+	topicTemplate  string
+	topic          string
+	interval       time.Duration
+	retain         bool
+	qos            byte
+	devices        []MqttDeviceSectionConfig
+	registerFilter RegisterFilterConfig
+}
+
+type MqttDeviceSectionConfig struct {
+	name           string
+	registerFilter RegisterFilterConfig
 }
 
 type ModbusConfig struct {
@@ -93,9 +99,7 @@ type ModbusConfig struct {
 
 type DeviceConfig struct {
 	name                      string
-	skipFields                []string
-	skipCategories            []string
-	viaMqttClients            []string
+	registerFilter            RegisterFilterConfig
 	restartInterval           time.Duration
 	restartIntervalMaxBackoff time.Duration
 	logDebug                  bool
@@ -150,18 +154,15 @@ type ViewConfig struct {
 type ViewDeviceConfig struct {
 	name           string
 	title          string
-	skipFields     []string
-	skipCategories []string
+	registerFilter RegisterFilterConfig
 }
 
-type HassDiscovery struct {
-	topicPrefix       string
-	viaMqttClients    []string
-	devices           []string
-	categories        []string
-	categoriesMatcher []*regexp.Regexp
-	registers         []string
-	registersMatcher  []*regexp.Regexp
+type RegisterFilterConfig struct {
+	includeRegisters  []string
+	skipRegisters     []string
+	includeCategories []string
+	skipCategories    []string
+	defaultInclude    bool
 }
 
 type VictronDeviceKind int

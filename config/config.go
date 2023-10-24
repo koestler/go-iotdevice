@@ -94,14 +94,6 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	ret.authentication, e = c.Authentication.TransformAndValidate(bypassFileCheck)
 	err = append(err, e...)
 
-	ret.mqttClients, e = TransformAndValidateMapToList(
-		c.MqttClients,
-		func(inp mqttClientConfigRead, name string) (MqttClientConfig, []error) {
-			return inp.TransformAndValidate(name)
-		},
-	)
-	err = append(err, e...)
-
 	ret.modbus, e = TransformAndValidateMapToList(
 		c.Modbus,
 		func(inp modbusConfigRead, name string) (ModbusConfig, []error) {
@@ -113,7 +105,7 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	ret.victronDevices, e = TransformAndValidateMapToList(
 		c.VictronDevices,
 		func(inp victronDeviceConfigRead, name string) (VictronDeviceConfig, []error) {
-			return inp.TransformAndValidate(name, ret.mqttClients)
+			return inp.TransformAndValidate(name)
 		},
 	)
 	err = append(err, e...)
@@ -121,7 +113,7 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	ret.modbusDevices, e = TransformAndValidateMapToList(
 		c.ModbusDevices,
 		func(inp modbusDeviceConfigRead, name string) (ModbusDeviceConfig, []error) {
-			return inp.TransformAndValidate(name, ret.mqttClients, ret.modbus)
+			return inp.TransformAndValidate(name, ret.modbus)
 		},
 	)
 	err = append(err, e...)
@@ -129,7 +121,30 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	ret.httpDevices, e = TransformAndValidateMapToList(
 		c.HttpDevices,
 		func(inp httpDeviceConfigRead, name string) (HttpDeviceConfig, []error) {
-			return inp.TransformAndValidate(name, ret.mqttClients)
+			return inp.TransformAndValidate(name)
+		},
+	)
+	err = append(err, e...)
+
+	nonMqttDevices := make(
+		[]DeviceConfig, 0,
+		len(ret.victronDevices)+len(ret.modbusDevices)+len(ret.httpDevices),
+	)
+
+	for _, d := range ret.victronDevices {
+		ret.devices = append(ret.devices, d.DeviceConfig)
+	}
+	for _, d := range ret.modbusDevices {
+		ret.devices = append(ret.devices, d.DeviceConfig)
+	}
+	for _, d := range ret.httpDevices {
+		ret.devices = append(ret.devices, d.DeviceConfig)
+	}
+
+	ret.mqttClients, e = TransformAndValidateMapToList(
+		c.MqttClients,
+		func(inp mqttClientConfigRead, name string) (MqttClientConfig, []error) {
+			return inp.TransformAndValidate(name, nonMqttDevices)
 		},
 	)
 	err = append(err, e...)
@@ -142,29 +157,11 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	)
 	err = append(err, e...)
 
-	{
-		ret.devices = make(
-			[]DeviceConfig,
-			len(ret.victronDevices)+len(ret.modbusDevices)+len(ret.httpDevices)+len(ret.mqttDevices),
-		)
-
-		i := 0
-		for _, d := range ret.victronDevices {
-			ret.devices[i] = d.DeviceConfig
-			i += 1
-		}
-		for _, d := range ret.modbusDevices {
-			ret.devices[i] = d.DeviceConfig
-			i += 1
-		}
-		for _, d := range ret.httpDevices {
-			ret.devices[i] = d.DeviceConfig
-			i += 1
-		}
-		for _, d := range ret.mqttDevices {
-			ret.devices[i] = d.DeviceConfig
-			i += 1
-		}
+	// create devices array
+	ret.devices = make([]DeviceConfig, 0, len(nonMqttDevices)+len(ret.mqttDevices))
+	ret.devices = append(ret.devices, nonMqttDevices...)
+	for _, d := range ret.mqttDevices {
+		ret.devices = append(ret.devices, d.DeviceConfig)
 	}
 
 	{
@@ -179,14 +176,6 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 			err = append(err, fmt.Errorf("section Views: %s", ve))
 		}
 	}
-
-	ret.hassDiscovery, e = TransformAndValidateList(
-		c.HassDiscovery,
-		func(idx int, inp hassDiscoveryRead) (HassDiscovery, []error) {
-			return inp.TransformAndValidate(idx, ret.mqttClients, ret.devices)
-		},
-	)
-	err = append(err, e...)
 
 	return
 }
@@ -319,7 +308,7 @@ func (c *authenticationConfigRead) TransformAndValidate(bypassFileCheck bool) (r
 	return
 }
 
-func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientConfig, err []error) {
+func (c mqttClientConfigRead) TransformAndValidate(name string, devices []DeviceConfig) (ret MqttClientConfig, err []error) {
 	ret = MqttClientConfig{
 		name:     name,
 		user:     c.User,
@@ -425,56 +414,85 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	var e []error
 	ret.availabilityClient, e = c.AvailabilityClient.TransformAndValidate(
 		fmt.Sprintf("MqttClientConfig->%s->AvailabilityClient->", name),
+		devices,
 		ret.readOnly,
 		true,
 		"%Prefix%avail/%ClientId%",
 		0,
 		true,
 		true,
+		false,
+		false,
 	)
 	err = append(err, e...)
 
 	ret.availabilityDevice, e = c.AvailabilityDevice.TransformAndValidate(
-		fmt.Sprintf("MqttClientConfig->%s->AvailabilityClient->", name),
+		fmt.Sprintf("MqttClientConfig->%s->AvailabilityDevice->", name),
+		devices,
 		ret.readOnly,
 		true,
 		"%Prefix%avail/%DeviceName%",
 		0,
 		true,
 		true,
+		true,
+		false,
 	)
 	err = append(err, e...)
 
 	ret.structure, e = c.Structure.TransformAndValidate(
 		fmt.Sprintf("MqttClientConfig->%s->Structure->", name),
+		devices,
 		ret.readOnly,
 		true,
 		"%Prefix%struct/%DeviceName%",
 		0,
 		true,
 		true,
+		true,
+		false,
 	)
 	err = append(err, e...)
 
 	ret.telemetry, e = c.Telemetry.TransformAndValidate(
 		fmt.Sprintf("MqttClientConfig->%s->Telemetry->", name),
+		devices,
 		ret.readOnly,
 		true,
 		"%Prefix%tele/%DeviceName%",
 		time.Second,
 		false,
 		false,
+		true,
+		true,
 	)
 	err = append(err, e...)
 
 	ret.realtime, e = c.Realtime.TransformAndValidate(
 		fmt.Sprintf("MqttClientConfig->%s->Realtime->", name),
+		devices,
 		ret.readOnly,
 		false,
 		"%Prefix%real/%DeviceName%/%RegisterName%",
 		0,
 		true,
 		false,
+		true,
+		true,
+	)
+	err = append(err, e...)
+
+	ret.hassDiscovery, e = c.HassDiscovery.TransformAndValidate(
+		fmt.Sprintf("MqttClientConfig->%s->HassDiscovery->", name),
+		devices,
+		ret.readOnly,
+		false,
+		"hass/",
+		0,
+		true,
+		true,
+		true,
+		true,
 	)
 	err = append(err, e...)
 
@@ -491,12 +509,15 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 
 func (c mqttSectionConfigRead) TransformAndValidate(
 	logPrefix string,
+	devices []DeviceConfig,
 	readOnly bool,
 	defaultEnabled bool,
 	defaultTopicTemplate string,
 	defaultInterval time.Duration,
 	allowZeroInterval bool,
 	defaultRetain bool,
+	allowDevices bool,
+	allowRegisterFitler bool,
 ) (ret MqttSectionConfig, err []error) {
 	if readOnly {
 		ret.enabled = false
@@ -540,106 +561,35 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 		err = append(err, fmt.Errorf("%sQos=%d but must be 0, 1 or 2", logPrefix, *c.Qos))
 	}
 
-	return
-}
-
-func (c hassDiscoveryRead) TransformAndValidate(idx int, mqttClients []MqttClientConfig, devices []DeviceConfig) (ret HassDiscovery, err []error) {
-	ret = HassDiscovery{
-		devices: c.Devices,
-	}
-
-	if c.Categories != nil {
-		ret.categories = c.Categories
+	if !allowDevices {
+		if c.Devices != nil && len(c.Devices) > 0 {
+			err = append(err, fmt.Errorf("%sDevices must not be set", logPrefix))
+		}
 	} else {
-		ret.categories = []string{}
-	}
-
-	if c.Registers != nil {
-		ret.registers = c.Registers
-	} else {
-		ret.registers = []string{}
-	}
-
-	if c.TopicPrefix == nil {
-		ret.topicPrefix = "homeassistant"
-	} else {
-		ret.topicPrefix = *c.TopicPrefix
-	}
-
-	var e []error
-
-	ret.viaMqttClients, e = allOrCheckedMqttClients(
-		c.ViaMqttClients,
-		filterReadOnlyMqttClients(mqttClients),
-		func(clientName string) error {
-			return fmt.Errorf("HassDisovery->%d->MqttClients: client='%s' is not defined or read-only", idx, clientName)
-		},
-	)
-	err = append(err, e...)
-
-	if len(ret.devices) < 1 {
-		err = append(err, fmt.Errorf("HassDiscovery->%d->Devices: must not be empty", idx))
-	} else {
-		for _, deviceName := range ret.devices {
-			if !existsByName(deviceName, devices) {
-				err = append(err, fmt.Errorf("HassDiscovery->%d->Devices: device='%s' is not defined", idx, deviceName))
+		if c.Devices != nil && len(c.Devices) > 0 {
+			for deviceName := range c.Devices {
+				if !existsByName(deviceName, devices) {
+					err = append(err, fmt.Errorf("%sDevices: device='%s' is not defined or is an MqttDevice", logPrefix, deviceName))
+				} else {
+					// ret.devices = append(ret.devices, deviceSection.TransformAndValidate())
+				}
 			}
-		}
-	}
-
-	ret.categoriesMatcher, e = stringToRegexp(c.Categories)
-	err = append(err, e...)
-
-	ret.registersMatcher, e = stringToRegexp(c.Registers)
-	err = append(err, e...)
-
-	return
-}
-
-func stringToRegexp(inp []string) (ret []*regexp.Regexp, err []error) {
-	ret = make([]*regexp.Regexp, 0, len(inp))
-	for _, v := range inp {
-		if r, e := regexp.Compile(v); e != nil {
-			err = append(err, fmt.Errorf("invalid regexp: %s", e))
 		} else {
-			ret = append(ret, r)
+			// todo
 		}
-
 	}
 
 	return
 }
 
-func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []MqttClientConfig) (ret DeviceConfig, err []error) {
+func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, err []error) {
 	ret = DeviceConfig{
 		name: name,
-	}
-
-	if c.SkipFields != nil {
-		ret.skipFields = c.SkipFields
-	} else {
-		ret.skipFields = []string{}
-	}
-
-	if c.SkipCategories != nil {
-		ret.skipCategories = c.SkipCategories
-	} else {
-		ret.skipCategories = []string{}
 	}
 
 	if !nameMatcher.MatchString(ret.name) {
 		err = append(err, fmt.Errorf("Devices->Name='%s' does not match %s", ret.name, NameRegexp))
 	}
-
-	var e []error
-	ret.viaMqttClients, e = allOrCheckedMqttClients(
-		c.ViaMqttClients,
-		filterReadOnlyMqttClients(mqttClients),
-		func(clientName string) error {
-			return fmt.Errorf("Devices->%s->ViaMqttClients: client='%s' is not defined or read-only", name, clientName)
-		},
-	)
-	err = append(err, e...)
 
 	if len(c.RestartInterval) < 1 {
 		// use default 200ms
@@ -682,14 +632,14 @@ func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []MqttCl
 	return
 }
 
-func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients []MqttClientConfig) (ret VictronDeviceConfig, err []error) {
+func (c victronDeviceConfigRead) TransformAndValidate(name string) (ret VictronDeviceConfig, err []error) {
 	ret = VictronDeviceConfig{
 		kind:   VictronDeviceKindFromString(c.Kind),
 		device: c.Device,
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.General.TransformAndValidate(name, mqttClients)
+	ret.DeviceConfig, e = c.General.TransformAndValidate(name)
 	err = append(err, e...)
 
 	if ret.kind == VictronUndefinedKind {
@@ -704,7 +654,7 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients [
 }
 
 func (c modbusDeviceConfigRead) TransformAndValidate(
-	name string, mqttClients []MqttClientConfig, modbus []ModbusConfig,
+	name string, modbus []ModbusConfig,
 ) (ret ModbusDeviceConfig, err []error) {
 	ret = ModbusDeviceConfig{
 		kind: ModbusDeviceKindFromString(c.Kind),
@@ -712,7 +662,7 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.General.TransformAndValidate(name, mqttClients)
+	ret.DeviceConfig, e = c.General.TransformAndValidate(name)
 	err = append(err, e...)
 
 	if ret.kind == ModbusUndefinedKind {
@@ -775,7 +725,7 @@ func (c relayConfigRead) TransformAndValidate() (ret RelayConfig, err []error) {
 	return
 }
 
-func (c httpDeviceConfigRead) TransformAndValidate(name string, mqttClients []MqttClientConfig) (ret HttpDeviceConfig, err []error) {
+func (c httpDeviceConfigRead) TransformAndValidate(name string) (ret HttpDeviceConfig, err []error) {
 	ret = HttpDeviceConfig{
 		kind:     HttpDeviceKindFromString(c.Kind),
 		username: c.Username,
@@ -783,7 +733,7 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string, mqttClients []Mq
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.General.TransformAndValidate(name, mqttClients)
+	ret.DeviceConfig, e = c.General.TransformAndValidate(name)
 	err = append(err, e...)
 
 	if len(c.Url) < 1 {
@@ -834,23 +784,7 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []Mq
 	)
 	err = append(err, e...)
 
-	// Do not allow for {Telemetry, Realtime}ViaMqttClients to contain MqttClients
-	// This can possibly result in an infinite loop where we listen to messages published by our self
-	filteredMqttClients := make([]MqttClientConfig, 0, len(mqttClients))
-	for _, mc := range mqttClients {
-		found := false
-		for _, n := range ret.mqttClients {
-			if n == mc.Name() {
-				found = true
-				break
-			}
-		}
-		if !found {
-			filteredMqttClients = append(filteredMqttClients, mc)
-		}
-	}
-
-	ret.DeviceConfig, e = c.General.TransformAndValidate(name, filteredMqttClients)
+	ret.DeviceConfig, e = c.General.TransformAndValidate(name)
 	err = append(err, e...)
 
 	return
@@ -951,18 +885,6 @@ func (c viewDeviceConfigRead) TransformAndValidate(
 		title: c.Title,
 	}
 
-	if c.SkipFields != nil {
-		ret.skipFields = c.SkipFields
-	} else {
-		ret.skipFields = []string{}
-	}
-
-	if c.SkipCategories != nil {
-		ret.skipCategories = c.SkipCategories
-	} else {
-		ret.skipCategories = []string{}
-	}
-
 	if !existsByName(c.Name, devices) {
 		err = append(err, fmt.Errorf("device='%s' is not defined", c.Name))
 	}
@@ -999,20 +921,6 @@ func TransformAndValidateMap[I any, O any](
 	return
 }
 
-func TransformAndValidateList[I any, O any](
-	inp []I,
-	transformer func(idx int, inp I) (ret O, err []error),
-) (ret []O, err []error) {
-	ret = make([]O, len(inp))
-	for i, cr := range inp {
-		var e []error
-		ret[i], e = transformer(i, cr)
-		err = append(err, e...)
-	}
-
-	return
-}
-
 func TransformAndValidateListUnique[I any, O Nameable](
 	inp []I,
 	transformer func(inp I) (ret O, err []error),
@@ -1029,17 +937,6 @@ func TransformAndValidateListUnique[I any, O Nameable](
 		err = append(err, e...)
 	}
 
-	return
-}
-
-func filterReadOnlyMqttClients(inp []MqttClientConfig) (oup []MqttClientConfig) {
-	oup = make([]MqttClientConfig, 0, len(inp))
-	for _, mc := range inp {
-		if mc.ReadOnly() {
-			continue
-		}
-		oup = append(oup, mc)
-	}
 	return
 }
 

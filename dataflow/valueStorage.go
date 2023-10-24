@@ -105,7 +105,7 @@ func (vs *ValueStorage) GetState() (result []Value) {
 	return
 }
 
-func (vs *ValueStorage) GetStateFiltered(filter FilterFunc) (result []Value) {
+func (vs *ValueStorage) GetStateFiltered(filter ValueFilterFunc) (result []Value) {
 	vs.mutex.RLock()
 	defer vs.mutex.RUnlock()
 
@@ -113,7 +113,7 @@ func (vs *ValueStorage) GetStateFiltered(filter FilterFunc) (result []Value) {
 	return
 }
 
-func (vs *ValueStorage) getStateFilteredUnlocked(filter FilterFunc) (result []Value) {
+func (vs *ValueStorage) getStateFilteredUnlocked(filter ValueFilterFunc) (result []Value) {
 	result = make([]Value, 0)
 	for _, value := range vs.state {
 		if filter(value) {
@@ -136,7 +136,7 @@ func (vs *ValueStorage) Wait() {
 
 const subscriptionDefaultCap = 128
 
-func (vs *ValueStorage) newSubscription(ctx context.Context, filter FilterFunc) (
+func (vs *ValueStorage) newSubscription(ctx context.Context, filter ValueFilterFunc) (
 	initial []Value, subscription ValueSubscription, elem *list.Element[ValueSubscription],
 ) {
 	vs.mutex.Lock()
@@ -154,13 +154,13 @@ func (vs *ValueStorage) newSubscription(ctx context.Context, filter FilterFunc) 
 	return
 }
 
-func (vs *ValueStorage) SubscribeReturnInitial(ctx context.Context, filter FilterFunc) (initial []Value, subscription ValueSubscription) {
+func (vs *ValueStorage) SubscribeReturnInitial(ctx context.Context, filter ValueFilterFunc) (initial []Value, subscription ValueSubscription) {
 	initial, subscription, elem := vs.newSubscription(ctx, filter)
 	go vs.sendInitialAndCleanupValueSubscription([]Value{}, subscription, elem)
 	return
 }
 
-func (vs *ValueStorage) SubscribeSendInitial(ctx context.Context, filter FilterFunc) (subscription ValueSubscription) {
+func (vs *ValueStorage) SubscribeSendInitial(ctx context.Context, filter ValueFilterFunc) (subscription ValueSubscription) {
 	initial, subscription, elem := vs.newSubscription(ctx, filter)
 	go vs.sendInitialAndCleanupValueSubscription(initial, subscription, elem)
 	return

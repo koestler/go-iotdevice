@@ -15,7 +15,6 @@ type configRead struct {
 	HttpDevices     map[string]httpDeviceConfigRead    `yaml:"HttpDevices"`
 	MqttDevices     map[string]mqttDeviceConfigRead    `yaml:"MqttDevices"`
 	Views           []viewConfigRead                   `yaml:"Views"`
-	HassDiscovery   []hassDiscoveryRead                `yaml:"HassDiscovery"`
 }
 
 type httpServerConfigRead struct {
@@ -55,17 +54,23 @@ type mqttClientConfigRead struct {
 	Structure          mqttSectionConfigRead `yaml:"Structure"`
 	Telemetry          mqttSectionConfigRead `yaml:"Telemetry"`
 	Realtime           mqttSectionConfigRead `yaml:"Realtime"`
+	HassDiscovery      mqttSectionConfigRead `yaml:"HassDiscovery"`
 
 	LogDebug    *bool `yaml:"LogDebug"`
 	LogMessages *bool `yaml:"LogMessages"`
 }
 
 type mqttSectionConfigRead struct {
-	Enabled       *bool   `yaml:"Enabled"`
-	TopicTemplate *string `yaml:"TopicTemplate"`
-	Interval      string  `yaml:"Interval"`
-	Retain        *bool   `yaml:"Retain"`
-	Qos           *byte   `yaml:"Qos"`
+	Enabled       *bool                                  `yaml:"Enabled"`
+	TopicTemplate *string                                `yaml:"TopicTemplate"`
+	Interval      string                                 `yaml:"Interval"`
+	Retain        *bool                                  `yaml:"Retain"`
+	Qos           *byte                                  `yaml:"Qos"`
+	Devices       map[string]mqttDeviceSectionConfigRead `yaml:"Devices"`
+}
+
+type mqttDeviceSectionConfigRead struct {
+	RegisterFilter registerFilterConfigRead `yaml:"RegisterFilterConfig"`
 }
 
 type modbusConfigRead struct {
@@ -76,13 +81,11 @@ type modbusConfigRead struct {
 }
 
 type deviceConfigRead struct {
-	SkipFields                []string `yaml:"SkipFields"`
-	SkipCategories            []string `yaml:"SkipCategories"`
-	ViaMqttClients            []string `yaml:"ViaMqttClients"`
-	RestartInterval           string   `yaml:"RestartInterval"`
-	RestartIntervalMaxBackoff string   `yaml:"RestartIntervalMaxBackoff"`
-	LogDebug                  *bool    `yaml:"LogDebug"`
-	LogComDebug               *bool    `yaml:"LogComDebug"`
+	RegisterFilter            registerFilterConfigRead `yaml:"RegisterFilterConfig"`
+	RestartInterval           string                   `yaml:"RestartInterval"`
+	RestartIntervalMaxBackoff string                   `yaml:"RestartIntervalMaxBackoff"`
+	LogDebug                  *bool                    `yaml:"LogDebug"`
+	LogComDebug               *bool                    `yaml:"LogComDebug"`
 }
 
 type victronDeviceConfigRead struct {
@@ -131,16 +134,15 @@ type viewConfigRead struct {
 }
 
 type viewDeviceConfigRead struct {
-	Name           string   `yaml:"Name"`
-	Title          string   `yaml:"Title"`
-	SkipFields     []string `yaml:"SkipFields"`
-	SkipCategories []string `yaml:"SkipCategories"`
+	Name           string                   `yaml:"Name"`
+	Title          string                   `yaml:"Title"`
+	RegisterFilter registerFilterConfigRead `yaml:"RegisterFilterConfig"`
 }
 
-type hassDiscoveryRead struct {
-	TopicPrefix    *string  `yaml:"TopicPrefix"`
-	ViaMqttClients []string `yaml:"ViaMqttClients"`
-	Devices        []string `yaml:"Devices"`
-	Categories     []string `yaml:"Categories"`
-	Registers      []string `yaml:"Registers"`
+type registerFilterConfigRead struct {
+	IncludeRegisters  []string `yaml:"IncludeRegisters"`
+	SkipRegisters     []string `yaml:"SkipRegisters"`
+	IncludeCategories []string `yaml:"IncludeCategories"`
+	SkipCategories    []string `yaml:"SkipCategories"`
+	DefaultInclude    bool     `yaml:"DefaultInclude"`
 }

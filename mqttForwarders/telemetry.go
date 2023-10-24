@@ -1,10 +1,10 @@
-package device
+package mqttForwarders
 
 import (
 	"context"
 	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
-	"github.com/koestler/go-iotdevice/pool"
 	"log"
 	"time"
 )
@@ -40,98 +40,92 @@ type EnumTelemetryValue struct {
 
 func runTelemetryForwarders(
 	ctx context.Context,
-	dev Device,
-	mqttClientPool *pool.Pool[mqttClient.Client],
+	dev device.Device,
+	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
 	filter func(v dataflow.Value) bool,
 ) {
 	devCfg := dev.Config()
 
-	// start mqtt forwarders for telemetry messages
-	for _, mc := range mqttClientPool.GetByNames(devCfg.ViaMqttClients()) {
-		mcCfg := mc.Config()
-		mCfg := mcCfg.Telemetry()
+	// start mqtt forwarder for telemetry messages
+	mcCfg := mc.Config()
+	mCfg := mcCfg.Telemetry()
 
-		if !mCfg.Enabled() {
-			continue
+	telemetryInterval := mCfg.Interval()
+	telemetryTopic := mcCfg.TelemetryTopic(devCfg.Name())
+
+	go func(mc mqttClient.Client) {
+		log.Printf(
+			"device[%s]->mqttClient[%s]->telemetry: start sending messages every %s",
+			devCfg.Name(), mcCfg.Name(), telemetryInterval.String(),
+		)
+		if devCfg.LogDebug() {
+			defer log.Printf(
+				"device[%s]->mqttClient[%s]->telemetry: exit",
+				devCfg.Name(), mcCfg.Name(),
+			)
 		}
 
-		telemetryInterval := mCfg.Interval()
-		telemetryTopic := mcCfg.TelemetryTopic(devCfg.Name())
+		ticker := time.NewTicker(telemetryInterval)
+		defer ticker.Stop()
 
-		go func(mc mqttClient.Client) {
-			log.Printf(
-				"device[%s]->mqttClient[%s]->telemetry: start sending messages every %s",
-				devCfg.Name(), mcCfg.Name(), telemetryInterval.String(),
-			)
-			if devCfg.LogDebug() {
-				defer log.Printf(
-					"device[%s]->mqttClient[%s]->telemetry: exit",
-					devCfg.Name(), mcCfg.Name(),
-				)
-			}
+		var avail bool
+		availChan := dev.SubscribeAvailableSendInitial(ctx)
+		for {
+			select {
+			case <-ctx.Done():
 
-			ticker := time.NewTicker(telemetryInterval)
-			defer ticker.Stop()
-
-			var avail bool
-			availChan := dev.SubscribeAvailableSendInitial(ctx)
-			for {
-				select {
-				case <-ctx.Done():
-
-					return
-				case avail = <-availChan:
-					if devCfg.LogDebug() {
-						s := "stopped"
-						if avail {
-							s = "started"
-						}
-
-						log.Printf(
-							"device[%s]->mqttClient[%s]->telemetry: %s sending due to availability",
-							devCfg.Name(), mcCfg.Name(), s,
-						)
-					}
-				case <-ticker.C:
-					if devCfg.LogDebug() {
-						log.Printf("device[%s]->mqttClient[%s]->telemetry: tick", devCfg.Name(), mcCfg.Name())
+				return
+			case avail = <-availChan:
+				if devCfg.LogDebug() {
+					s := "stopped"
+					if avail {
+						s = "started"
 					}
 
-					if !avail {
-						// do not send telemetry when device is disconnected
-						continue
-					}
+					log.Printf(
+						"device[%s]->mqttClient[%s]->telemetry: %s sending due to availability",
+						devCfg.Name(), mcCfg.Name(), s,
+					)
+				}
+			case <-ticker.C:
+				if devCfg.LogDebug() {
+					log.Printf("device[%s]->mqttClient[%s]->telemetry: tick", devCfg.Name(), mcCfg.Name())
+				}
 
-					values := storage.GetStateFiltered(filter)
+				if !avail {
+					// do not send telemetry when device is disconnected
+					continue
+				}
 
-					now := time.Now()
-					telemetryMessage := TelemetryMessage{
-						Time:          timeToString(now),
-						NextTelemetry: timeToString(now.Add(telemetryInterval)),
-						Model:         dev.Model(),
-						NumericValues: convertValuesToNumericTelemetryValues(values),
-						TextValues:    convertValuesToTextTelemetryValues(values),
-						EnumValues:    convertValuesToEnumTelemetryValues(values),
-					}
+				values := storage.GetStateFiltered(filter)
 
-					if payload, err := json.Marshal(telemetryMessage); err != nil {
-						log.Printf(
-							"device[%s]->mqttClient[%s]->telemetry: cannot generate message: %s",
-							devCfg.Name(), mcCfg.Name(), err,
-						)
-					} else {
-						mc.Publish(
-							telemetryTopic,
-							payload,
-							mCfg.Qos(),
-							mCfg.Retain(),
-						)
-					}
+				now := time.Now()
+				telemetryMessage := TelemetryMessage{
+					Time:          timeToString(now),
+					NextTelemetry: timeToString(now.Add(telemetryInterval)),
+					Model:         dev.Model(),
+					NumericValues: convertValuesToNumericTelemetryValues(values),
+					TextValues:    convertValuesToTextTelemetryValues(values),
+					EnumValues:    convertValuesToEnumTelemetryValues(values),
+				}
+
+				if payload, err := json.Marshal(telemetryMessage); err != nil {
+					log.Printf(
+						"device[%s]->mqttClient[%s]->telemetry: cannot generate message: %s",
+						devCfg.Name(), mcCfg.Name(), err,
+					)
+				} else {
+					mc.Publish(
+						telemetryTopic,
+						payload,
+						mCfg.Qos(),
+						mCfg.Retain(),
+					)
 				}
 			}
-		}(mc)
-	}
+		}
+	}(mc)
 }
 
 func convertValuesToNumericTelemetryValues(values []dataflow.Value) (ret map[string]NumericTelemetryValue) {

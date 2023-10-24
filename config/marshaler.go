@@ -21,7 +21,6 @@ func (c Config) MarshalYAML() (interface{}, error) {
 		HttpDevices:     convertMapToRead[HttpDeviceConfig, httpDeviceConfigRead](c.httpDevices),
 		MqttDevices:     convertMapToRead[MqttDeviceConfig, mqttDeviceConfigRead](c.mqttDevices),
 		Views:           convertListToRead[ViewConfig, viewConfigRead](c.views),
-		HassDiscovery:   convertListToRead[HassDiscovery, hassDiscoveryRead](c.hassDiscovery),
 	}, nil
 }
 
@@ -116,6 +115,7 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 		Structure:          c.structure.convertToRead(),
 		Telemetry:          c.telemetry.convertToRead(),
 		Realtime:           c.realtime.convertToRead(),
+		HassDiscovery:      c.hassDiscovery.convertToRead(),
 
 		LogDebug:    &c.logDebug,
 		LogMessages: &c.logMessages,
@@ -130,6 +130,14 @@ func (c MqttSectionConfig) convertToRead() mqttSectionConfigRead {
 		Interval:      c.interval.String(),
 		Retain:        &c.retain,
 		Qos:           &c.qos,
+		Devices:       convertMapToRead[MqttDeviceSectionConfig, mqttDeviceSectionConfigRead](c.devices),
+	}
+}
+
+//lint:ignore U1000 linter does not catch that this is used generic code
+func (c MqttDeviceSectionConfig) convertToRead() mqttDeviceSectionConfigRead {
+	return mqttDeviceSectionConfigRead{
+		RegisterFilter: c.registerFilter.convertToRead(),
 	}
 }
 
@@ -143,11 +151,10 @@ func (c ModbusConfig) convertToRead() modbusConfigRead {
 	}
 }
 
+//lint:ignore U1000 linter does not catch that this is used generic code
 func (c DeviceConfig) convertToRead() deviceConfigRead {
 	return deviceConfigRead{
-		SkipFields:                c.skipFields,
-		SkipCategories:            c.skipCategories,
-		ViaMqttClients:            c.viaMqttClients,
+		RegisterFilter:            c.registerFilter.convertToRead(),
 		RestartInterval:           c.restartInterval.String(),
 		RestartIntervalMaxBackoff: c.restartIntervalMaxBackoff.String(),
 		LogDebug:                  &c.logDebug,
@@ -229,18 +236,17 @@ func (c ViewDeviceConfig) convertToRead() viewDeviceConfigRead {
 	return viewDeviceConfigRead{
 		Name:           c.name,
 		Title:          c.title,
-		SkipFields:     c.skipFields,
-		SkipCategories: c.skipCategories,
+		RegisterFilter: c.registerFilter.convertToRead(),
 	}
 }
 
 //lint:ignore U1000 linter does not catch that this is used generic code
-func (c HassDiscovery) convertToRead() hassDiscoveryRead {
-	return hassDiscoveryRead{
-		TopicPrefix:    &c.topicPrefix,
-		ViaMqttClients: c.viaMqttClients,
-		Devices:        c.devices,
-		Categories:     c.categories,
-		Registers:      c.registers,
+func (c RegisterFilterConfig) convertToRead() registerFilterConfigRead {
+	return registerFilterConfigRead{
+		IncludeRegisters:  c.includeRegisters,
+		SkipRegisters:     c.skipRegisters,
+		IncludeCategories: c.includeCategories,
+		SkipCategories:    c.skipCategories,
+		DefaultInclude:    c.defaultInclude,
 	}
 }

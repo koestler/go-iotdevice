@@ -1,8 +1,9 @@
-package device
+package mqttForwarders
 
 import (
 	"context"
 	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/pool"
 	"log"
@@ -17,7 +18,7 @@ type RealtimeMessage struct {
 
 func runRealtimeForwarders(
 	ctx context.Context,
-	dev Device,
+	dev device.Device,
 	mqttClientPool *pool.Pool[mqttClient.Client],
 	storage *dataflow.ValueStorage,
 	filter func(v dataflow.Value) bool,
