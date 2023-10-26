@@ -87,7 +87,7 @@ MqttClients:                                               # optional, when empt
 
     HassDiscovery:
       Enabled: true                                        # optional, default false, whether to enable sending realtime messages
-      TopicTemplate: 'hass/'                               # optional, topic to use for homeassistant deisovery messages
+      TopicTemplate: 'homeassistant/%Component%/%NodeId%/%ObjectId%/config' # optional, topic to use for homeassistant deisovery messages
       Interval: 0s                                         # optional, default 0, 0 means disabled only send initially, otherwise the disovery messages are repeated after this interval (useful when retain is false)
       Retain: true                                         # optional, default false, the mqtt retain flag for hass disovery messages
       Devices:                                             # optional, default all, a list of devices to match

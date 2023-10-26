@@ -114,12 +114,6 @@ func main() {
 		// start mqtt clients
 		runMqttDevices(cfg, devicePool, mqttClientPool, stateStorage)
 
-		// start hass discovery
-		hassDiscovery := runHassDisovery(cfg, devicePool, mqttClientPool)
-		if hassDiscovery != nil {
-			defer hassDiscovery.Shutdown()
-		}
-
 		// start http server
 		httpServer := runHttpServer(cfg, devicePool, stateStorage, commandStorage)
 		if httpServer != nil {

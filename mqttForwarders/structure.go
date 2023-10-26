@@ -29,7 +29,7 @@ type StructureMessage struct {
 	Registers          []StructRegister `json:"Registers"`
 }
 
-func runStructureForwarders(
+func runStructureForwarder(
 	ctx context.Context,
 	dev device.Device,
 	mc mqttClient.Client,
@@ -125,8 +125,6 @@ func structurePeriodicModeRoutine(
 
 	structureTopic := mcCfg.StructureTopic(devCfg.Name())
 
-	// when a new register arrives, wait until no new register is received for 100ms
-	// and then send all updates together
 	ticker := time.NewTicker(structureInterval)
 	defer ticker.Stop()
 

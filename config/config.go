@@ -487,7 +487,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		devices,
 		ret.readOnly,
 		false,
-		"hass/",
+		"homeassistant/%Component%/%NodeId%/%ObjectId%/config",
 		0,
 		true,
 		true,
@@ -975,8 +975,6 @@ func getNames[N Nameable](list []N) (ret []string) {
 	return
 }
 
-func (c MqttClientConfig) replaceTopicTemplate(template string) (r string) {
-	r = strings.Replace(template, "%Prefix%", c.TopicPrefix(), 1)
-	r = strings.Replace(r, "%ClientId%", c.ClientId(), 1)
-	return
+func (c MqttClientConfig) getTopicTemplateOldNewPairs(oldnew ...string) []string {
+	return append(oldnew, "%Prefix%", c.TopicPrefix(), "%ClientId%", c.ClientId())
 }

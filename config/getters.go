@@ -188,7 +188,8 @@ func (c MqttClientConfig) AvailabilityClient() MqttSectionConfig {
 }
 
 func (c MqttClientConfig) AvailabilityClientTopic() string {
-	return c.replaceTopicTemplate(c.availabilityClient.topicTemplate)
+	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs()...)
+	return r.Replace(c.availabilityClient.topicTemplate)
 }
 
 func (c MqttClientConfig) AvailabilityDevice() MqttSectionConfig {
@@ -196,7 +197,8 @@ func (c MqttClientConfig) AvailabilityDevice() MqttSectionConfig {
 }
 
 func (c MqttClientConfig) AvailabilityDeviceTopic(deviceName string) string {
-	return strings.Replace(c.replaceTopicTemplate(c.availabilityDevice.topicTemplate), "%DeviceName%", deviceName, 1)
+	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs("%DeviceName%", deviceName)...)
+	return r.Replace(c.availabilityDevice.topicTemplate)
 }
 
 func (c MqttClientConfig) Structure() MqttSectionConfig {
@@ -204,7 +206,8 @@ func (c MqttClientConfig) Structure() MqttSectionConfig {
 }
 
 func (c MqttClientConfig) StructureTopic(deviceName string) string {
-	return strings.Replace(c.replaceTopicTemplate(c.structure.topicTemplate), "%DeviceName%", deviceName, 1)
+	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs("%DeviceName%", deviceName)...)
+	return r.Replace(c.structure.topicTemplate)
 }
 
 func (c MqttClientConfig) Telemetry() MqttSectionConfig {
@@ -212,7 +215,8 @@ func (c MqttClientConfig) Telemetry() MqttSectionConfig {
 }
 
 func (c MqttClientConfig) TelemetryTopic(deviceName string) string {
-	return strings.Replace(c.replaceTopicTemplate(c.telemetry.topicTemplate), "%DeviceName%", deviceName, 1)
+	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs("%DeviceName%", deviceName)...)
+	return r.Replace(c.telemetry.topicTemplate)
 }
 
 func (c MqttClientConfig) Realtime() MqttSectionConfig {
@@ -220,12 +224,24 @@ func (c MqttClientConfig) Realtime() MqttSectionConfig {
 }
 
 func (c MqttClientConfig) RealtimeTopic(deviceName, registerName string) string {
-	r := strings.Replace(c.replaceTopicTemplate(c.realtime.topicTemplate), "%DeviceName%", deviceName, 1)
-	return strings.Replace(r, "%RegisterName%", registerName, 1)
+	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs(
+		"%DeviceName%", deviceName,
+		"%RegisterName%", registerName,
+	)...)
+	return r.Replace(c.realtime.topicTemplate)
 }
 
 func (c MqttClientConfig) HassDiscovery() MqttSectionConfig {
 	return c.hassDiscovery
+}
+
+func (c MqttClientConfig) HassDiscoveryTopic(component, nodeId, objectId string) string {
+	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs(
+		"%Component%", component,
+		"%NodeId%", nodeId,
+		"%ObjectId%", objectId,
+	)...)
+	return r.Replace(c.hassDiscovery.topicTemplate)
 }
 
 func (c MqttClientConfig) LogDebug() bool {

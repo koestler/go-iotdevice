@@ -17,21 +17,26 @@ func RunMqttForwarders(
 ) {
 	for _, deviceConfig := range mqttClientConfig.AvailabilityDevice().Devices() {
 		dev := devicePool.GetByName(deviceConfig.Name())
-		runAvailabilityForwarders(mc.GetCtx(), dev.Service(), mc)
+		runAvailabilityForwarder(mc.GetCtx(), dev.Service(), mc)
 	}
 
 	for _, deviceConfig := range mqttClientConfig.Structure().Devices() {
 		dev := devicePool.GetByName(deviceConfig.Name())
-		runStructureForwarders(mc.GetCtx(), dev.Service(), mc, deviceConfig.RegisterFilter())
+		runStructureForwarder(mc.GetCtx(), dev.Service(), mc, deviceConfig.RegisterFilter())
 	}
 
 	for _, deviceConfig := range mqttClientConfig.Telemetry().Devices() {
 		dev := devicePool.GetByName(deviceConfig.Name())
-		runTelemetryForwarders(mc.GetCtx(), dev.Service(), mc, storage, deviceConfig.RegisterFilter())
+		runTelemetryForwarder(mc.GetCtx(), dev.Service(), mc, storage, deviceConfig.RegisterFilter())
 	}
 
 	for _, deviceConfig := range mqttClientConfig.Realtime().Devices() {
 		dev := devicePool.GetByName(deviceConfig.Name())
-		runRealtimeForwarders(mc.GetCtx(), dev.Service(), mc, storage, deviceConfig.RegisterFilter())
+		runRealtimeForwarder(mc.GetCtx(), dev.Service(), mc, storage, deviceConfig.RegisterFilter())
+	}
+
+	for _, deviceConfig := range mqttClientConfig.HassDiscovery().Devices() {
+		dev := devicePool.GetByName(deviceConfig.Name())
+		runHassDiscoveryForwarder(mc.GetCtx(), dev.Service(), mc, deviceConfig.RegisterFilter())
 	}
 }

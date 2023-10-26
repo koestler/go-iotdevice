@@ -39,7 +39,7 @@ type EnumTelemetryValue struct {
 	Value       string `json:"Val"`
 }
 
-func runTelemetryForwarders(
+func runTelemetryForwarder(
 	ctx context.Context,
 	dev device.Device,
 	mc mqttClient.Client,

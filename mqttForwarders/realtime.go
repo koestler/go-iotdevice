@@ -16,7 +16,7 @@ type RealtimeMessage struct {
 	EnumIdx      *int     `json:"EnumIdx,omitempty"`
 }
 
-func runRealtimeForwarders(
+func runRealtimeForwarder(
 	ctx context.Context,
 	dev device.Device,
 	mc mqttClient.Client,

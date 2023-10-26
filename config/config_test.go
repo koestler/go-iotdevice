@@ -594,7 +594,7 @@ func TestReadConfig_Complete(t *testing.T) {
 				t.Error("expect MqttClients->0-local->HassDiscovery->Enabled to be false")
 			}
 
-			if expect, got := "my-hass/", mc.HassDiscovery().TopicTemplate(); expect != got {
+			if expect, got := "homeassistant/%Component%/%NodeId%/%ObjectId%/config", mc.HassDiscovery().TopicTemplate(); expect != got {
 				t.Errorf("expect MqttClients->0-local->HassDiscovery->TopicTemplate to be '%s' but got '%s'", expect, got)
 			}
 

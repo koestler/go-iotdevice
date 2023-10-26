@@ -6,7 +6,7 @@ import (
 	"github.com/koestler/go-iotdevice/mqttClient"
 )
 
-func runAvailabilityForwarders(
+func runAvailabilityForwarder(
 	ctx context.Context,
 	dev device.Device,
 	mc mqttClient.Client,

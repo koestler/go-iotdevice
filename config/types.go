@@ -76,7 +76,6 @@ type MqttClientConfig struct {
 type MqttSectionConfig struct {
 	enabled        bool
 	topicTemplate  string
-	topic          string
 	interval       time.Duration
 	retain         bool
 	qos            byte
