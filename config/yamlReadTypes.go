@@ -81,7 +81,7 @@ type modbusConfigRead struct {
 }
 
 type deviceConfigRead struct {
-	RegisterFilter            registerFilterConfigRead `yaml:"RegisterFilterConfig"`
+	RegisterFilter            registerFilterConfigRead `yaml:"RegisterFilter"`
 	RestartInterval           string                   `yaml:"RestartInterval"`
 	RestartIntervalMaxBackoff string                   `yaml:"RestartIntervalMaxBackoff"`
 	LogDebug                  *bool                    `yaml:"LogDebug"`
@@ -136,7 +136,7 @@ type viewConfigRead struct {
 type viewDeviceConfigRead struct {
 	Name           string                   `yaml:"Name"`
 	Title          string                   `yaml:"Title"`
-	RegisterFilter registerFilterConfigRead `yaml:"RegisterFilterConfig"`
+	RegisterFilter registerFilterConfigRead `yaml:"RegisterFilter"`
 }
 
 type registerFilterConfigRead struct {

@@ -226,8 +226,6 @@ Views:                                                     # optional, a list of
           IncludeCategories:                               # optional, default empty, all registers of the given category that are not explicitly skipped are returned
           SkipCategories:                                  # optional, default empty, all registers of the given category that are not explicitly included are not returned
           DefaultInclude: True                             # optional, default true,  whether to return the registers that do not match any include/skip rule
-        SkipFields:                                        # optional, default empty, field names that are omitted when displaying this view
-        SkipCategories:                                    # optional, default empty, category names that are omitted when displaying this view
       - Name: modbus-rtu0                                  # mandatory, the arbitrary names defined above
         Title: Relay Board                                 # mandatory, a nice title displayed in the frontend
     Autoplay: true                                         # optional, default true, when true, live updates are enabled automatically when the view is open in the frontend

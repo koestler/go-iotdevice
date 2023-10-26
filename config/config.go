@@ -1,11 +1,12 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"log"
 	"net/url"
 	"os"
@@ -32,8 +33,11 @@ func ReadConfig(yamlStr []byte, bypassFileCheck bool) (config Config, err []erro
 	var configRead configRead
 
 	yamlStr = []byte(os.ExpandEnv(string(yamlStr)))
-	e := yaml.Unmarshal(yamlStr, &configRead)
-	if e != nil {
+
+	d := yaml.NewDecoder(bytes.NewReader(yamlStr))
+	d.KnownFields(true)
+
+	if e := d.Decode(&configRead); e != nil {
 		return config, []error{fmt.Errorf("cannot parse yaml: %s", e)}
 	}
 

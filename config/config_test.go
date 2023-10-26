@@ -138,10 +138,6 @@ MqttClients:                                               # optional, when empt
   2-readonly:
     Broker: "tcp://example.com:1883"
     ReadOnly: true
-    AvailabilityEnabled: true
-    StructureEnabled: true
-    TelemetryEnabled: true
-    RealtimeEnabled: true
 
 Modbus:                                                    # optional, when empty, no modbus handler is started
   bus0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
@@ -314,10 +310,10 @@ func TestReadConfig_InvalidSyntax(t *testing.T) {
 }
 
 func TestReadConfig_NoVersion(t *testing.T) {
-	_, err := ReadConfig([]byte(""), true)
+	_, err := ReadConfig([]byte("LogConfig: true"), true)
 
 	if !containsError("version must be defined", err) {
-		t.Error("no version given; expect 'version must be defined'")
+		t.Errorf("expect 'version must be defined' error, but got %s", err)
 	}
 }
 
