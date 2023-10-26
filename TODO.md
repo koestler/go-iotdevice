@@ -14,3 +14,5 @@
 - http device: remove registers that are not present anymore
 - do not have any dep on config, user interface instead
 - replace topicPrefix by generic map of replacement variables?
+- make config yaml unmarshaler strict, use gopkg.in/yaml.v3 ?
+- rename Hass to Homeassistant (cleancode)

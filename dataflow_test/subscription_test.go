@@ -97,10 +97,18 @@ func TestValueStorageSubscribeWithFilter(t *testing.T) {
 	})
 
 	t.Run("filterSkipRegisterCategories", func(t *testing.T) {
-		values := run(dataflow.RegisterFilter(
-			[]string{"register-b"},
-			[]string{"set-c"},
-		))
+		// todo: rewrite with RegisterFilter?
+		values := run(func(value dataflow.Value) bool {
+			if value.Register().Name() == "register-b" {
+				return false
+			}
+
+			if value.Register().Category() == "set-c" {
+				return false
+			}
+
+			return true
+		})
 
 		// check values
 		expect := []string{

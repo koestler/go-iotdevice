@@ -15,7 +15,7 @@ func RegisterValueFilter(registerFilter RegisterFilterConf) ValueFilterFunc {
 	}
 }
 
-var AllValueFilter ValueFilterFunc = func(value Value) bool {
+var AllValueFilter ValueFilterFunc = func(Value) bool {
 	return true
 }
 

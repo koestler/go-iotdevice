@@ -70,7 +70,7 @@ type mqttSectionConfigRead struct {
 }
 
 type mqttDeviceSectionConfigRead struct {
-	RegisterFilter registerFilterConfigRead `yaml:"RegisterFilterConfig"`
+	RegisterFilter *registerFilterConfigRead `yaml:"RegisterFilter"`
 }
 
 type modbusConfigRead struct {
@@ -144,5 +144,5 @@ type registerFilterConfigRead struct {
 	SkipRegisters     []string `yaml:"SkipRegisters"`
 	IncludeCategories []string `yaml:"IncludeCategories"`
 	SkipCategories    []string `yaml:"SkipCategories"`
-	DefaultInclude    bool     `yaml:"DefaultInclude"`
+	DefaultInclude    *bool    `yaml:"DefaultInclude"`
 }

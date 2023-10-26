@@ -60,10 +60,21 @@ func TestValueStorageGetSlice(t *testing.T) {
 		expect := []string{
 			"device-0:register-a=1.000000",
 		}
-		got := getAsStrings(storage.GetStateFiltered(dataflow.RegisterFilter(
-			[]string{"register-b"},
-			[]string{"set-b", "set-c"},
-		)))
+		got := getAsStrings(storage.GetStateFiltered(func(value dataflow.Value) bool {
+			if value.Register().Name() == "register-b" {
+				return false
+			}
+
+			if value.Register().Category() == "set-b" {
+				return false
+			}
+
+			if value.Register().Category() == "set-c" {
+				return false
+			}
+
+			return true
+		}))
 
 		if !equalIgnoreOrder(expect, got) {
 			t.Errorf("expect %#v but got %#v", expect, got)

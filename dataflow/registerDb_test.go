@@ -66,7 +66,7 @@ func TestRegisterDb(t *testing.T) {
 	wgSubscribe.Add(numbSubscriptions)
 	for i := 0; i < numbSubscriptions; i++ {
 		i := i
-		s := rdb.Subscribe(subscribeCtx)
+		s := rdb.Subscribe(subscribeCtx, AllRegisterFilter)
 		go func() {
 			defer wgSubscribe.Done()
 			got := make([]string, 0)

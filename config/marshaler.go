@@ -136,8 +136,9 @@ func (c MqttSectionConfig) convertToRead() mqttSectionConfigRead {
 
 //lint:ignore U1000 linter does not catch that this is used generic code
 func (c MqttDeviceSectionConfig) convertToRead() mqttDeviceSectionConfigRead {
+	rf := c.registerFilter.convertToRead()
 	return mqttDeviceSectionConfigRead{
-		RegisterFilter: c.registerFilter.convertToRead(),
+		RegisterFilter: &rf,
 	}
 }
 
@@ -247,6 +248,6 @@ func (c RegisterFilterConfig) convertToRead() registerFilterConfigRead {
 		SkipRegisters:     c.skipRegisters,
 		IncludeCategories: c.includeCategories,
 		SkipCategories:    c.skipCategories,
-		DefaultInclude:    c.defaultInclude,
+		DefaultInclude:    &c.defaultInclude,
 	}
 }

@@ -253,6 +253,7 @@ func (c MqttClientConfig) LogMessages() bool {
 }
 
 // Getters for MqttSection struct
+
 func (c MqttSectionConfig) Enabled() bool {
 	return c.enabled
 }
@@ -278,6 +279,7 @@ func (c MqttSectionConfig) Devices() []MqttDeviceSectionConfig {
 }
 
 // Getters for MqttDeviceSectionConfig struct
+
 func (c MqttDeviceSectionConfig) Name() string {
 	return c.name
 }

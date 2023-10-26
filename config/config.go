@@ -1,5 +1,6 @@
 package config
 
+import "C"
 import (
 	"fmt"
 	"github.com/google/uuid"
@@ -132,13 +133,13 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	)
 
 	for _, d := range ret.victronDevices {
-		ret.devices = append(ret.devices, d.DeviceConfig)
+		nonMqttDevices = append(nonMqttDevices, d.DeviceConfig)
 	}
 	for _, d := range ret.modbusDevices {
-		ret.devices = append(ret.devices, d.DeviceConfig)
+		nonMqttDevices = append(nonMqttDevices, d.DeviceConfig)
 	}
 	for _, d := range ret.httpDevices {
-		ret.devices = append(ret.devices, d.DeviceConfig)
+		nonMqttDevices = append(nonMqttDevices, d.DeviceConfig)
 	}
 
 	ret.mqttClients, e = TransformAndValidateMapToList(
@@ -450,7 +451,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		true,
 		true,
 		true,
-		false,
+		true,
 	)
 	err = append(err, e...)
 
@@ -517,7 +518,7 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 	allowZeroInterval bool,
 	defaultRetain bool,
 	allowDevices bool,
-	allowRegisterFitler bool,
+	allowRegisterFilter bool,
 ) (ret MqttSectionConfig, err []error) {
 	if readOnly {
 		ret.enabled = false
@@ -562,22 +563,60 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 	}
 
 	if !allowDevices {
-		if c.Devices != nil && len(c.Devices) > 0 {
+		if len(c.Devices) > 0 {
 			err = append(err, fmt.Errorf("%sDevices must not be set", logPrefix))
 		}
 	} else {
-		if c.Devices != nil && len(c.Devices) > 0 {
-			for deviceName := range c.Devices {
-				if !existsByName(deviceName, devices) {
-					err = append(err, fmt.Errorf("%sDevices: device='%s' is not defined or is an MqttDevice", logPrefix, deviceName))
-				} else {
-					// ret.devices = append(ret.devices, deviceSection.TransformAndValidate())
-				}
+		if len(c.Devices) == 0 {
+			// no devices given, default to all
+			c.Devices = make(map[string]mqttDeviceSectionConfigRead, len(devices))
+			for _, dev := range devices {
+				c.Devices[dev.Name()] = mqttDeviceSectionConfigRead{}
 			}
-		} else {
-			// todo
 		}
+
+		var e []error
+		ret.devices, e = TransformAndValidateMapToList(
+			c.Devices,
+			func(inp mqttDeviceSectionConfigRead, name string) (MqttDeviceSectionConfig, []error) {
+				return inp.TransformAndValidate(
+					name,
+					devices,
+					fmt.Sprintf("%s%s->", logPrefix, name),
+					allowRegisterFilter,
+				)
+			},
+		)
+		err = append(err, e...)
 	}
+
+	return
+}
+
+func (c mqttDeviceSectionConfigRead) TransformAndValidate(
+	name string,
+	devices []DeviceConfig,
+	logPrefix string,
+	allowRegisterFilter bool,
+) (ret MqttDeviceSectionConfig, err []error) {
+	ret = MqttDeviceSectionConfig{
+		name: name,
+	}
+
+	if !existsByName(name, devices) {
+		err = append(err, fmt.Errorf("%sDevices: device='%s' is not defined or is an MqttDevice", logPrefix, name))
+	}
+
+	if !allowRegisterFilter && c.RegisterFilter != nil {
+		err = append(err, fmt.Errorf("%sRegisterFilter must not be set", logPrefix))
+	}
+
+	if c.RegisterFilter == nil {
+		c.RegisterFilter = &registerFilterConfigRead{}
+	}
+	var e []error
+	ret.registerFilter, e = c.RegisterFilter.TransformAndValidate()
+	err = append(err, e...)
 
 	return
 }
@@ -590,6 +629,10 @@ func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, e
 	if !nameMatcher.MatchString(ret.name) {
 		err = append(err, fmt.Errorf("Devices->Name='%s' does not match %s", ret.name, NameRegexp))
 	}
+
+	var e []error
+	ret.registerFilter, e = c.RegisterFilter.TransformAndValidate()
+	err = append(err, e...)
 
 	if len(c.RestartInterval) < 1 {
 		// use default 200ms
@@ -887,6 +930,27 @@ func (c viewDeviceConfigRead) TransformAndValidate(
 
 	if !existsByName(c.Name, devices) {
 		err = append(err, fmt.Errorf("device='%s' is not defined", c.Name))
+	}
+
+	var e []error
+	ret.registerFilter, e = c.RegisterFilter.TransformAndValidate()
+	err = append(err, e...)
+
+	return
+}
+
+func (c registerFilterConfigRead) TransformAndValidate() (ret RegisterFilterConfig, err []error) {
+	ret = RegisterFilterConfig{
+		includeRegisters:  c.IncludeRegisters,
+		skipRegisters:     c.SkipRegisters,
+		includeCategories: c.IncludeCategories,
+		skipCategories:    c.SkipCategories,
+	}
+
+	if c.DefaultInclude == nil {
+		ret.defaultInclude = true
+	} else {
+		ret.defaultInclude = *c.DefaultInclude
 	}
 
 	return
