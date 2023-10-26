@@ -12,22 +12,22 @@ import (
 	"time"
 )
 
-type hassDiscoveryAvailabilityStruct struct {
+type homeassistantDiscoveryAvailabilityStruct struct {
 	Topic string `json:"t"`
 }
 
-type hassDiscoveryMessage struct {
+type homeassistantDiscoveryMessage struct {
 	UniqueId string `json:"uniq_id"`
 	Name     string `json:"name"`
 
-	StateTopic        string                            `json:"stat_t"`
-	Availability      []hassDiscoveryAvailabilityStruct `json:"avty"`
-	AvailabilityMode  string                            `json:"avty_mode"`
-	ValueTemplate     string                            `json:"val_tpl"`
-	UnitOfMeasurement string                            `json:"unit_of_meas,omitempty"`
+	StateTopic        string                                     `json:"stat_t"`
+	Availability      []homeassistantDiscoveryAvailabilityStruct `json:"avty"`
+	AvailabilityMode  string                                     `json:"avty_mode"`
+	ValueTemplate     string                                     `json:"val_tpl"`
+	UnitOfMeasurement string                                     `json:"unit_of_meas,omitempty"`
 }
 
-func runHassDiscoveryForwarder(
+func runHomeassistantDiscoveryForwarder(
 	ctx context.Context,
 	dev device.Device,
 	mc mqttClient.Client,
@@ -35,14 +35,14 @@ func runHassDiscoveryForwarder(
 ) {
 	filter := createRegisterValueFilter(registerFilter)
 
-	if mc.Config().HassDiscovery().Interval() <= 0 {
-		go hassDiscoveryOnUpdateModeRoutine(ctx, dev, mc, filter)
+	if mc.Config().HomeassistantDiscovery().Interval() <= 0 {
+		go homeassistantDiscoveryOnUpdateModeRoutine(ctx, dev, mc, filter)
 	} else {
-		go hassDiscoveryPeriodicModeRoutine(ctx, dev, mc, filter)
+		go homeassistantDiscoveryPeriodicModeRoutine(ctx, dev, mc, filter)
 	}
 }
 
-func hassDiscoveryOnUpdateModeRoutine(
+func homeassistantDiscoveryOnUpdateModeRoutine(
 	ctx context.Context,
 	dev device.Device,
 	mc mqttClient.Client,
@@ -53,12 +53,12 @@ func hassDiscoveryOnUpdateModeRoutine(
 		mcName := mc.Config().Name()
 
 		log.Printf(
-			"device[%s]->mqttClient[%s]->hassDiscovery: start on-update mode",
+			"device[%s]->mqttClient[%s]->homeassistantDiscovery: start on-update mode",
 			devCfg.Name(), mcName,
 		)
 
 		defer log.Printf(
-			"device[%s]->mqttClient[%s]->hassDiscovery: exit",
+			"device[%s]->mqttClient[%s]->homeassistantDiscovery: exit",
 			devCfg.Name(), mcName,
 		)
 	}
@@ -70,12 +70,12 @@ func hassDiscoveryOnUpdateModeRoutine(
 		case <-ctx.Done():
 			return
 		case reg := <-regSubscription:
-			publishHassDiscoveryMessage(mc, dev.Name(), reg)
+			publishHomeassistantDiscoveryMessage(mc, dev.Name(), reg)
 		}
 	}
 }
 
-func hassDiscoveryPeriodicModeRoutine(
+func homeassistantDiscoveryPeriodicModeRoutine(
 	ctx context.Context,
 	dev device.Device,
 	mc mqttClient.Client,
@@ -83,16 +83,16 @@ func hassDiscoveryPeriodicModeRoutine(
 ) {
 	devCfg := dev.Config()
 	mcCfg := mc.Config()
-	interval := mcCfg.HassDiscovery().Interval()
+	interval := mcCfg.HomeassistantDiscovery().Interval()
 
 	if devCfg.LogDebug() {
 		log.Printf(
-			"device[%s]->mqttClient[%s]->hassDiscovery: start periodic mode, send every %s",
+			"device[%s]->mqttClient[%s]->homeassistantDiscovery: start periodic mode, send every %s",
 			devCfg.Name(), mcCfg.Name(), interval,
 		)
 
 		defer log.Printf(
-			"device[%s]->mqttClient[%s]->hassDiscovery: exit",
+			"device[%s]->mqttClient[%s]->homeassistantDiscovery: exit",
 			devCfg.Name(), mcCfg.Name(),
 		)
 	}
@@ -106,32 +106,32 @@ func hassDiscoveryPeriodicModeRoutine(
 			return
 		case <-ticker.C:
 			for _, reg := range dev.RegisterDb().GetFiltered(filter) {
-				publishHassDiscoveryMessage(mc, dev.Name(), reg)
+				publishHomeassistantDiscoveryMessage(mc, dev.Name(), reg)
 			}
 		}
 	}
 }
 
-func publishHassDiscoveryMessage(
+func publishHomeassistantDiscoveryMessage(
 	mc mqttClient.Client,
 	deviceName string,
 	register dataflow.Register,
 ) {
-	mCfg := mc.Config().HassDiscovery()
+	mCfg := mc.Config().HomeassistantDiscovery()
 
 	var topic string
-	var msg hassDiscoveryMessage
+	var msg homeassistantDiscoveryMessage
 
 	switch register.RegisterType() {
 	case dataflow.NumberRegister:
-		topic, msg = getHassDiscoverySensorMessage(
+		topic, msg = getHomeassistantDiscoverySensorMessage(
 			mc.Config(),
 			deviceName,
 			register,
 			"{{ value_json.NumVal }}",
 		)
 	case dataflow.TextRegister:
-		topic, msg = getHassDiscoverySensorMessage(
+		topic, msg = getHomeassistantDiscoverySensorMessage(
 			mc.Config(),
 			deviceName,
 			register,
@@ -148,7 +148,7 @@ func publishHassDiscoveryMessage(
 		}
 		valueTemplate.WriteString("{% endif %}")
 
-		topic, msg = getHassDiscoverySensorMessage(
+		topic, msg = getHomeassistantDiscoverySensorMessage(
 			mc.Config(),
 			deviceName,
 			register,
@@ -158,10 +158,10 @@ func publishHassDiscoveryMessage(
 		return
 	}
 
-	log.Printf("hassDiscovery[%s]: send %s %#v", mc.Name(), topic, msg)
+	log.Printf("homeassistantDiscovery[%s]: send %s %#v", mc.Name(), topic, msg)
 
 	if payload, err := json.Marshal(msg); err != nil {
-		log.Printf("hassDiscovery: cannot generate discovery message: %s", err)
+		log.Printf("homeassistantDiscovery: cannot generate discovery message: %s", err)
 	} else {
 		mc.Publish(
 			topic,
@@ -172,22 +172,22 @@ func publishHassDiscoveryMessage(
 	}
 }
 
-func getHassDiscoverySensorMessage(
+func getHomeassistantDiscoverySensorMessage(
 	mcCfg mqttClient.Config,
 	deviceName string,
 	register dataflow.Register,
 	valueTemplate string,
-) (topic string, msg hassDiscoveryMessage) {
+) (topic string, msg homeassistantDiscoveryMessage) {
 	uniqueId := fmt.Sprintf("%s-%s", deviceName, CamelToSnakeCase(register.Name()))
 	name := fmt.Sprintf("%s %s", deviceName, register.Description())
 
-	topic = mcCfg.HassDiscoveryTopic("sensor", mcCfg.ClientId(), uniqueId)
+	topic = mcCfg.HomeassistantDiscoveryTopic("sensor", mcCfg.ClientId(), uniqueId)
 
-	msg = hassDiscoveryMessage{
+	msg = homeassistantDiscoveryMessage{
 		UniqueId:          uniqueId,
 		Name:              name,
 		StateTopic:        mcCfg.RealtimeTopic(deviceName, register.Name()),
-		Availability:      getHassDiscoveryAvailabilityTopics(deviceName, mcCfg),
+		Availability:      getHomeassistantDiscoveryAvailabilityTopics(deviceName, mcCfg),
 		AvailabilityMode:  "all",
 		ValueTemplate:     valueTemplate,
 		UnitOfMeasurement: register.Unit(),
@@ -196,12 +196,12 @@ func getHassDiscoverySensorMessage(
 	return
 }
 
-func getHassDiscoveryAvailabilityTopics(deviceName string, mcCfg mqttClient.Config) (ret []hassDiscoveryAvailabilityStruct) {
+func getHomeassistantDiscoveryAvailabilityTopics(deviceName string, mcCfg mqttClient.Config) (ret []homeassistantDiscoveryAvailabilityStruct) {
 	if mcCfg.AvailabilityClient().Enabled() {
-		ret = append(ret, hassDiscoveryAvailabilityStruct{mcCfg.AvailabilityClientTopic()})
+		ret = append(ret, homeassistantDiscoveryAvailabilityStruct{mcCfg.AvailabilityClientTopic()})
 	}
 	if mcCfg.AvailabilityDevice().Enabled() {
-		ret = append(ret, hassDiscoveryAvailabilityStruct{mcCfg.AvailabilityDeviceTopic(deviceName)})
+		ret = append(ret, homeassistantDiscoveryAvailabilityStruct{mcCfg.AvailabilityDeviceTopic(deviceName)})
 	}
 
 	return

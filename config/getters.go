@@ -235,17 +235,17 @@ func (c MqttClientConfig) RealtimeTopic(deviceName, registerName string) string 
 	return r.Replace(c.realtime.topicTemplate)
 }
 
-func (c MqttClientConfig) HassDiscovery() MqttSectionConfig {
-	return c.hassDiscovery
+func (c MqttClientConfig) HomeassistantDiscovery() MqttSectionConfig {
+	return c.homeassistantDiscovery
 }
 
-func (c MqttClientConfig) HassDiscoveryTopic(component, nodeId, objectId string) string {
+func (c MqttClientConfig) HomeassistantDiscoveryTopic(component, nodeId, objectId string) string {
 	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs(
 		"%Component%", component,
 		"%NodeId%", nodeId,
 		"%ObjectId%", objectId,
 	)...)
-	return r.Replace(c.hassDiscovery.topicTemplate)
+	return r.Replace(c.homeassistantDiscovery.topicTemplate)
 }
 
 func (c MqttClientConfig) LogDebug() bool {

@@ -121,11 +121,11 @@ MqttClients:                                               # optional, when empt
       Interval: 2s                                   # optional, default 0; 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
       Retain: true                                   # optional, default false, the mqtt retain flag for realtime messages
 
-    HassDiscovery:
+    HomeassistantDiscovery:
       Enabled: true                                          # optional, default false, whether to enable sending realtime messages
       TopicTemplate: 'my-hass/%Component%/%NodeId%/%ObjectId%/config'                                 # optional, topic to use for homeassistant deisovery messages
       Interval: 0s                                           # optional, default 0, 0 means disabled only send initially, otherwise the disovery messages are repeated after this interval (useful when retain is false)
-      Retain: true                                           # optional, default false, the mqtt retain flag for hass disovery messages
+      Retain: true                                           # optional, default false, the mqtt retain flag for homeassistant discovery messages
       Qos: 2                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
       Devices:                                               # optional, default all, a list of devices to match
 
@@ -731,10 +731,10 @@ func TestReadConfig_Complete(t *testing.T) {
 			}
 
 			{
-				mcSect := mc.HassDiscovery()
-				prefix := "MqttClients->0-local->HassDiscovery"
+				mcSect := mc.HomeassistantDiscovery()
+				prefix := "MqttClients->0-local->HomeassistantDiscovery"
 
-				if expect, got := "my-hass/a/b/c/config", mc.HassDiscoveryTopic("a", "b", "c"); expect != got {
+				if expect, got := "my-hass/a/b/c/config", mc.HomeassistantDiscoveryTopic("a", "b", "c"); expect != got {
 					t.Errorf("expect MqttDevices->0-local->AvailabilityDeviceTopic to be '%s' but got '%s'", expect, got)
 				}
 
@@ -846,8 +846,8 @@ func TestReadConfig_Complete(t *testing.T) {
 				t.Error("expect MqttClients->2-readonly->Realtime->Enabled to be false")
 			}
 
-			if got := mc.HassDiscovery().Enabled(); got {
-				t.Error("expect MqttClients->2-readonly->HassDiscovery->Enabled to be false")
+			if got := mc.HomeassistantDiscovery().Enabled(); got {
+				t.Error("expect MqttClients->2-readonly->HomeassistantDiscovery->Enabled to be false")
 			}
 		}
 
@@ -1512,10 +1512,10 @@ func TestReadConfig_Default(t *testing.T) {
 		}
 
 		{
-			mcSect := mc.HassDiscovery()
-			prefix := "MqttClients->0-local->HassDiscovery"
+			mcSect := mc.HomeassistantDiscovery()
+			prefix := "MqttClients->0-local->HomeassistantDiscovery"
 
-			if expect, got := "homeassistant/a/b/c/config", mc.HassDiscoveryTopic("a", "b", "c"); expect != got {
+			if expect, got := "homeassistant/a/b/c/config", mc.HomeassistantDiscoveryTopic("a", "b", "c"); expect != got {
 				t.Errorf("expect %s->AvailabilityDeviceTopic to be '%s' but got '%s'", prefix, expect, got)
 			}
 

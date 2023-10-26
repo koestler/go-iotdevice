@@ -110,12 +110,12 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 		ReadOnly:          &c.readOnly,
 		MaxBacklogSize:    &c.maxBacklogSize,
 
-		AvailabilityClient: c.availabilityClient.convertToRead(),
-		AvailabilityDevice: c.availabilityDevice.convertToRead(),
-		Structure:          c.structure.convertToRead(),
-		Telemetry:          c.telemetry.convertToRead(),
-		Realtime:           c.realtime.convertToRead(),
-		HassDiscovery:      c.hassDiscovery.convertToRead(),
+		AvailabilityClient:     c.availabilityClient.convertToRead(),
+		AvailabilityDevice:     c.availabilityDevice.convertToRead(),
+		Structure:              c.structure.convertToRead(),
+		Telemetry:              c.telemetry.convertToRead(),
+		Realtime:               c.realtime.convertToRead(),
+		HomeassistantDiscovery: c.homeassistantDiscovery.convertToRead(),
 
 		LogDebug:    &c.logDebug,
 		LogMessages: &c.logMessages,

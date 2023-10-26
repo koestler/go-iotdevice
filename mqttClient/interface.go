@@ -36,8 +36,8 @@ type Config interface {
 	Realtime() config.MqttSectionConfig
 	RealtimeTopic(deviceName, registerName string) string
 
-	HassDiscovery() config.MqttSectionConfig
-	HassDiscoveryTopic(component, nodeId, objectId string) string
+	HomeassistantDiscovery() config.MqttSectionConfig
+	HomeassistantDiscoveryTopic(component, nodeId, objectId string) string
 
 	LogDebug() bool
 	LogMessages() bool

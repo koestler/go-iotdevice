@@ -482,8 +482,8 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 	)
 	err = append(err, e...)
 
-	ret.hassDiscovery, e = c.HassDiscovery.TransformAndValidate(
-		fmt.Sprintf("MqttClientConfig->%s->HassDiscovery->", name),
+	ret.homeassistantDiscovery, e = c.HomeassistantDiscovery.TransformAndValidate(
+		fmt.Sprintf("MqttClientConfig->%s->HomeassistantDiscovery->", name),
 		devices,
 		ret.readOnly,
 		false,

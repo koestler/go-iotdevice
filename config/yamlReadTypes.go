@@ -49,12 +49,12 @@ type mqttClientConfigRead struct {
 	ReadOnly          *bool   `yaml:"ReadOnly"`
 	MaxBacklogSize    *int    `yaml:"MaxBacklogSize"`
 
-	AvailabilityClient mqttSectionConfigRead `yaml:"AvailabilityClient"`
-	AvailabilityDevice mqttSectionConfigRead `yaml:"AvailabilityDevice"`
-	Structure          mqttSectionConfigRead `yaml:"Structure"`
-	Telemetry          mqttSectionConfigRead `yaml:"Telemetry"`
-	Realtime           mqttSectionConfigRead `yaml:"Realtime"`
-	HassDiscovery      mqttSectionConfigRead `yaml:"HassDiscovery"`
+	AvailabilityClient     mqttSectionConfigRead `yaml:"AvailabilityClient"`
+	AvailabilityDevice     mqttSectionConfigRead `yaml:"AvailabilityDevice"`
+	Structure              mqttSectionConfigRead `yaml:"Structure"`
+	Telemetry              mqttSectionConfigRead `yaml:"Telemetry"`
+	Realtime               mqttSectionConfigRead `yaml:"Realtime"`
+	HomeassistantDiscovery mqttSectionConfigRead `yaml:"HomeassistantDiscovery"`
 
 	LogDebug    *bool `yaml:"LogDebug"`
 	LogMessages *bool `yaml:"LogMessages"`

@@ -62,12 +62,12 @@ type MqttClientConfig struct {
 	readOnly          bool
 	maxBacklogSize    int
 
-	availabilityClient MqttSectionConfig
-	availabilityDevice MqttSectionConfig
-	structure          MqttSectionConfig
-	telemetry          MqttSectionConfig
-	realtime           MqttSectionConfig
-	hassDiscovery      MqttSectionConfig
+	availabilityClient     MqttSectionConfig
+	availabilityDevice     MqttSectionConfig
+	structure              MqttSectionConfig
+	telemetry              MqttSectionConfig
+	realtime               MqttSectionConfig
+	homeassistantDiscovery MqttSectionConfig
 
 	logDebug    bool
 	logMessages bool

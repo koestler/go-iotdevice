@@ -184,11 +184,11 @@ MqttClients:                                               # optional, when empt
             SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
             DefaultInclude: False                          # optional, default true,  whether to return the registers that do not match any include/skip rule
 
-    HassDiscovery:
+    HomeassistantDiscovery:
       Enabled: true                                        # optional, default false, whether to enable sending realtime messages
       TopicTemplate: 'homeassistant/%Component%/%NodeId%/%ObjectId%/config' # optional, topic to use for homeassistant deisovery messages
       Interval: 0s                                         # optional, default 0, 0 means disabled only send initially, otherwise the disovery messages are repeated after this interval (useful when retain is false)
-      Retain: true                                         # optional, default false, the mqtt retain flag for hass disovery messages
+      Retain: true                                         # optional, default false, the mqtt retain flag for homeassistant disovery messages
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
           RegisterFilter:                                  # optional, default include all, defines which registers are show in the view,

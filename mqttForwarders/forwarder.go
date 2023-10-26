@@ -35,8 +35,8 @@ func RunMqttForwarders(
 		runRealtimeForwarder(mc.GetCtx(), dev.Service(), mc, storage, deviceConfig.RegisterFilter())
 	}
 
-	for _, deviceConfig := range mqttClientConfig.HassDiscovery().Devices() {
+	for _, deviceConfig := range mqttClientConfig.HomeassistantDiscovery().Devices() {
 		dev := devicePool.GetByName(deviceConfig.Name())
-		runHassDiscoveryForwarder(mc.GetCtx(), dev.Service(), mc, deviceConfig.RegisterFilter())
+		runHomeassistantDiscoveryForwarder(mc.GetCtx(), dev.Service(), mc, deviceConfig.RegisterFilter())
 	}
 }
