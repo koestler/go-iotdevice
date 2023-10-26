@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/koestler/go-iotdevice/config"
+	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/mileusna/useragent"
 	"log"
 	"nhooyr.io/websocket"
@@ -34,6 +34,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 		view := v
 		relativePath := "views/" + view.Name() + "/ws"
 		logPrefix := fmt.Sprintf("httpServer: %s%s", r.BasePath(), relativePath)
+		viewFilter := getFilter(view.Devices())
 
 		// the follow line uses a loop variable; it must be outside the closure
 		r.GET(relativePath, func(c *gin.Context) {
@@ -75,7 +76,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 				if valueSenderStarted {
 					return
 				}
-				go wsValuesSender(env, view, conn, senderCtx, logPrefix)
+				go wsValuesSender(env, viewFilter, conn, senderCtx, logPrefix)
 				valueSenderStarted = true
 			}
 
@@ -117,7 +118,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 
 func wsValuesSender(
 	env *Environment,
-	view config.ViewConfig,
+	viewFilter dataflow.ValueFilterFunc,
 	conn *websocket.Conn,
 	ctx context.Context,
 	logPrefix string,
@@ -128,8 +129,7 @@ func wsValuesSender(
 		defer log.Printf("%s: tx routine closed", logPrefix)
 	}
 
-	filter := getFilter(view.Devices())
-	initial, subscription := env.StateStorage.SubscribeReturnInitial(ctx, filter)
+	initial, subscription := env.StateStorage.SubscribeReturnInitial(ctx, viewFilter)
 
 	// send all values after initial connect
 	{
