@@ -1,16 +1,13 @@
 # Todos
-- redo / check homeassistant integration using mqtt realtime messages
 - mqttDevice:
- - separate structure and values in different topics
  - implement command topic / handling of relays
  - implement available / unavailable messages correctly
    - when receiver mqtt connection closed,
    - when sender mqtt connection closed mqtt connection closed
    - when device is disconnected (modbus / http etc.)
-- registerDB: should it check if a register is changed and only send the update if it is?
 - mqttDevice: implement available / unavailable messages
 - check what happens with a http connection not able to handle the bandwidth required by the subscription. This probably stalls the whole storage.
-- steam register structure update via websocket to client
+- stream register structure update via websocket to client
 - http device: remove registers that are not present anymore
 - do not have any dep on config, user interface instead
 - replace topicPrefix by generic map of replacement variables?
