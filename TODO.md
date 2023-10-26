@@ -11,3 +11,4 @@
 - http device: remove registers that are not present anymore
 - do not have any dep on config, user interface instead
 - replace topicPrefix by generic map of replacement variables?
+- write a test for RegisterFilter
