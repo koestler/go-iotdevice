@@ -1038,7 +1038,3 @@ func getNames[N Nameable](list []N) (ret []string) {
 	}
 	return
 }
-
-func (c MqttClientConfig) getTopicTemplateOldNewPairs(oldnew ...string) []string {
-	return append(oldnew, "%Prefix%", c.TopicPrefix(), "%ClientId%", c.ClientId())
-}

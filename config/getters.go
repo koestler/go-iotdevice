@@ -134,6 +134,10 @@ func (c AuthenticationConfig) HtaccessFile() string {
 
 // Getters for MqttClientConfig struct
 
+func (c MqttClientConfig) getTopicTemplateOldNewPairs(oldnew ...string) []string {
+	return append(oldnew, "%Prefix%", c.TopicPrefix(), "%ClientId%", c.ClientId())
+}
+
 func (c MqttClientConfig) Name() string {
 	return c.name
 }
