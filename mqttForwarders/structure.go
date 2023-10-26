@@ -2,6 +2,7 @@ package mqttForwarders
 
 import (
 	"context"
+	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
@@ -32,14 +33,17 @@ func runStructureForwarders(
 	ctx context.Context,
 	dev device.Device,
 	mc mqttClient.Client,
+	registerFilter config.RegisterFilterConfig,
 ) {
 	// start mqtt forwarder for realtime messages (send data as soon as it arrives) output
 	mCfg := mc.Config().Structure()
 
+	filter := createRegisterValueFilter(registerFilter)
+
 	if mCfg.Interval() <= 0 {
-		go structureOnUpdateModeRoutine(ctx, dev, mc)
+		go structureOnUpdateModeRoutine(ctx, dev, mc, filter)
 	} else {
-		go structurePeriodicModeRoutine(ctx, dev, mc)
+		go structurePeriodicModeRoutine(ctx, dev, mc, filter)
 	}
 }
 
@@ -47,6 +51,7 @@ func structureOnUpdateModeRoutine(
 	ctx context.Context,
 	dev device.Device,
 	mc mqttClient.Client,
+	filter dataflow.RegisterFilterFunc,
 ) {
 	devCfg := dev.Config()
 	mcCfg := mc.Config()
@@ -63,7 +68,7 @@ func structureOnUpdateModeRoutine(
 		)
 	}
 
-	regSubscription := dev.RegisterDb().Subscribe(ctx)
+	regSubscription := dev.RegisterDb().Subscribe(ctx, filter)
 	structureTopic := mcCfg.StructureTopic(devCfg.Name())
 
 	// when a new register arrives, wait until no new register is received for 100ms
@@ -100,6 +105,7 @@ func structurePeriodicModeRoutine(
 	ctx context.Context,
 	dev device.Device,
 	mc mqttClient.Client,
+	filter dataflow.RegisterFilterFunc,
 ) {
 	devCfg := dev.Config()
 	mcCfg := mc.Config()
@@ -129,32 +135,41 @@ func structurePeriodicModeRoutine(
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			registers := dev.RegisterDb().GetAll()
+			registers := dev.RegisterDb().GetFiltered(filter)
 			publishStruct(mc, devCfg, structureTopic, NewStructRegisters(registers...))
 		}
 	}
 }
 
-func getAvailabilityTopics(devCfg Config, mcCfg mqttClient.Config) (ret []string) {
+func getAvailabilityTopics(devCfg device.Config, mcCfg mqttClient.Config) (ret []string) {
 	ret = make([]string, 0, 2)
 	if mcCfg.AvailabilityClient().Enabled() {
 		ret = append(ret, mcCfg.AvailabilityClientTopic())
 	}
-	if mcCfg.AvailabilityDevice().Enabled() && stringContains(mcCfg.Name(), devCfg.ViaMqttClients()) {
+	if mcCfg.AvailabilityDevice().Enabled() && existsByName(devCfg.Name(), mcCfg.AvailabilityDevice().Devices()) {
 		ret = append(ret, mcCfg.AvailabilityDeviceTopic(devCfg.Name()))
 	}
 
 	return
 }
 
-func getRealtimeTopic(devCfg Config, mcCfg mqttClient.Config) string {
+func existsByName[N config.Nameable](needle string, haystack []N) bool {
+	for _, t := range haystack {
+		if needle == t.Name() {
+			return true
+		}
+	}
+	return false
+}
+
+func getRealtimeTopic(devCfg device.Config, mcCfg mqttClient.Config) string {
 	if mcCfg.Realtime().Enabled() {
 		return mcCfg.RealtimeTopic(devCfg.Name(), "%RegisterName%")
 	}
 	return ""
 }
 
-func publishStruct(mc mqttClient.Client, devCfg Config, topic string, registers []StructRegister) {
+func publishStruct(mc mqttClient.Client, devCfg device.Config, topic string, registers []StructRegister) {
 	mcCfg := mc.Config()
 	mCfg := mcCfg.Structure()
 
@@ -205,13 +220,4 @@ func NewStructRegister(reg dataflow.Register) StructRegister {
 		Sort:         reg.Sort(),
 		Controllable: reg.Controllable(),
 	}
-}
-
-func stringContains(needle string, haystack []string) bool {
-	for _, t := range haystack {
-		if t == needle {
-			return true
-		}
-	}
-	return false
 }

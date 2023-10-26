@@ -1,13 +1,5 @@
 package dataflow
 
-var EmptyFilter = func(Value) bool { return true }
-
-func DeviceValueFilter(deviceName string) ValueFilterFunc {
-	return func(value Value) bool {
-		return value.DeviceName() == deviceName
-	}
-}
-
 func RegisterFilter(registerFilter RegisterFilterConf) RegisterFilterFunc {
 	includeRegistersMap := sliceToMap(registerFilter.IncludeRegisters())
 	skipRegistersMap := sliceToMap(registerFilter.SkipRegisters())
@@ -35,22 +27,6 @@ func RegisterFilter(registerFilter RegisterFilterConf) RegisterFilterFunc {
 		}
 
 		return defaultInclude
-	}
-}
-
-var NoValueFilter ValueFilterFunc = func(value Value) bool {
-	return true
-}
-
-var NonNullValueFilter ValueFilterFunc = func(value Value) bool {
-	_, isNullValue := value.(NullRegisterValue)
-	return !isNullValue
-}
-
-func DeviceNonNullValueFilter(deviceName string) ValueFilterFunc {
-	deviceFilter := DeviceValueFilter(deviceName)
-	return func(value Value) bool {
-		return NonNullValueFilter(value) && deviceFilter(value)
 	}
 }
 

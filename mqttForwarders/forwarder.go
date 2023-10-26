@@ -1,33 +1,37 @@
 package mqttForwarders
 
 import (
-	"context"
+	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/pool"
-	"time"
+	"github.com/koestler/go-iotdevice/restarter"
 )
 
 func RunMqttForwarders(
-	ctx context.Context,
-	dev device.Device,
-	mqttClientPool *pool.Pool[mqttClient.Client],
+	mqttClientConfig config.MqttClientConfig,
+	mc mqttClient.Client,
+	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
 	storage *dataflow.ValueStorage,
 ) {
-	deviceName := dev.Config().Name()
-
-	filter := func(v dataflow.Value) bool {
-		return v.DeviceName() == deviceName && v.Register().Name() != availabilityRegisterName
-		// do not use Availability as a register in mqtt; availability is handled separately
+	for _, deviceConfig := range mqttClientConfig.AvailabilityDevice().Devices() {
+		dev := devicePool.GetByName(deviceConfig.Name())
+		runAvailabilityForwarders(mc.GetCtx(), dev.Service(), mc)
 	}
 
-	runAvailabilityForwarders(ctx, dev, mqttClientPool)
-	runStructureForwarders(ctx, dev, mqttClientPool)
-	runTelemetryForwarders(ctx, dev, mqttClientPool, storage, filter)
-	runRealtimeForwarders(ctx, dev, mqttClientPool, storage, filter)
-}
+	for _, deviceConfig := range mqttClientConfig.Structure().Devices() {
+		dev := devicePool.GetByName(deviceConfig.Name())
+		runStructureForwarders(mc.GetCtx(), dev.Service(), mc, deviceConfig.RegisterFilter())
+	}
 
-func timeToString(t time.Time) string {
-	return t.Format(time.RFC3339)
+	for _, deviceConfig := range mqttClientConfig.Telemetry().Devices() {
+		dev := devicePool.GetByName(deviceConfig.Name())
+		runTelemetryForwarders(mc.GetCtx(), dev.Service(), mc, storage, deviceConfig.RegisterFilter())
+	}
+
+	for _, deviceConfig := range mqttClientConfig.Realtime().Devices() {
+		dev := devicePool.GetByName(deviceConfig.Name())
+		runRealtimeForwarders(mc.GetCtx(), dev.Service(), mc, storage, deviceConfig.RegisterFilter())
+	}
 }

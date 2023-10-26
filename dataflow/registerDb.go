@@ -3,13 +3,13 @@ package dataflow
 import (
 	"context"
 	"github.com/koestler/go-iotdevice/list"
-	"golang.org/x/exp/maps"
 	"sync"
 )
 
 type RegisterSubscription struct {
 	ctx           context.Context
 	outputChannel chan Register
+	filter        RegisterFilterFunc
 }
 
 type RegisterDb struct {
@@ -46,7 +46,10 @@ func (rdb *RegisterDb) AddStruct(registerStructs ...RegisterStruct) {
 	// forward to subscriptions
 	for e := rdb.subscriptions.Front(); e != nil; e = e.Next() {
 		for _, reg := range registerStructs {
-			e.Value.outputChannel <- reg
+			s := e.Value
+			if s.filter(reg) {
+				s.outputChannel <- reg
+			}
 		}
 	}
 }
@@ -62,6 +65,25 @@ func (rdb *RegisterDb) GetAll() []Register {
 	return ret
 }
 
+func (rdb *RegisterDb) GetFiltered(filter RegisterFilterFunc) []Register {
+	rdb.lock.RLock()
+	defer rdb.lock.RUnlock()
+
+	ret := rdb.getFilteredUnlocked(filter)
+	return ret
+}
+
+func (rdb *RegisterDb) getFilteredUnlocked(filter RegisterFilterFunc) (ret []Register) {
+	ret = make([]Register, 0)
+	for _, r := range rdb.registers {
+		if filter(r) {
+			ret = append(ret, r)
+		}
+	}
+
+	return ret
+}
+
 func (rdb *RegisterDb) GetByName(registerName string) Register {
 	rdb.lock.RLock()
 	defer rdb.lock.RUnlock()
@@ -72,10 +94,11 @@ func (rdb *RegisterDb) GetByName(registerName string) Register {
 	return nil
 }
 
-func (rdb *RegisterDb) Subscribe(ctx context.Context) <-chan Register {
+func (rdb *RegisterDb) Subscribe(ctx context.Context, filter RegisterFilterFunc) <-chan Register {
 	s := RegisterSubscription{
 		ctx:           ctx,
 		outputChannel: make(chan Register, 16),
+		filter:        filter,
 	}
 
 	rdb.lock.Lock()
@@ -85,7 +108,7 @@ func (rdb *RegisterDb) Subscribe(ctx context.Context) <-chan Register {
 	elem := rdb.subscriptions.PushBack(s)
 
 	// create routine to send initial values and shut down the subscription once the context is canceled
-	go func(initialRegisters []RegisterStruct) {
+	go func(initialRegisters []Register) {
 		// sending initial set of registers to the output chan
 		for _, reg := range initialRegisters {
 			s.outputChannel <- reg
@@ -100,7 +123,7 @@ func (rdb *RegisterDb) Subscribe(ctx context.Context) <-chan Register {
 
 		// close output channel
 		close(s.outputChannel)
-	}(maps.Values(rdb.registers))
+	}(rdb.getFilteredUnlocked(filter))
 
 	return s.outputChannel
 }

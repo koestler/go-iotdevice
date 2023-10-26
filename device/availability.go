@@ -19,7 +19,3 @@ var availabilityRegister = dataflow.NewRegisterStruct(
 	1000,
 	false,
 )
-
-func GetAvailabilityRegister() dataflow.Register {
-	return availabilityRegister
-}

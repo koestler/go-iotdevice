@@ -16,7 +16,7 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 	}()
 
 	// filter registers by skip list
-	registers = FilterRegisters(registers, c.Config().SkipFields(), c.Config().SkipCategories())
+	registers = FilterRegisters(registers, c.Config().RegisterFilter())
 	addToRegisterDb(c.RegisterDb(), registers)
 
 	if c.Config().LogDebug() {

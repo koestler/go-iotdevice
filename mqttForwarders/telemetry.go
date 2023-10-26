@@ -2,6 +2,7 @@ package mqttForwarders
 
 import (
 	"context"
+	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
@@ -43,7 +44,7 @@ func runTelemetryForwarders(
 	dev device.Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
-	filter func(v dataflow.Value) bool,
+	registerFilter config.RegisterFilterConfig,
 ) {
 	devCfg := dev.Config()
 
@@ -53,6 +54,8 @@ func runTelemetryForwarders(
 
 	telemetryInterval := mCfg.Interval()
 	telemetryTopic := mcCfg.TelemetryTopic(devCfg.Name())
+
+	filter := createDeviceAndRegisterValueFilter(dev, registerFilter)
 
 	go func(mc mqttClient.Client) {
 		log.Printf(
@@ -102,8 +105,8 @@ func runTelemetryForwarders(
 
 				now := time.Now()
 				telemetryMessage := TelemetryMessage{
-					Time:          timeToString(now),
-					NextTelemetry: timeToString(now.Add(telemetryInterval)),
+					Time:          now.Format(time.RFC3339),
+					NextTelemetry: now.Add(telemetryInterval).Format(time.RFC3339),
 					Model:         dev.Model(),
 					NumericValues: convertValuesToNumericTelemetryValues(values),
 					TextValues:    convertValuesToTextTelemetryValues(values),

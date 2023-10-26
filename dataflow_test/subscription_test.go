@@ -81,7 +81,7 @@ func TestValueStorageSubscribeWithFilter(t *testing.T) {
 	}
 
 	t.Run("filterDevice", func(t *testing.T) {
-		values := run(dataflow.DeviceValueFilter("device-0"))
+		values := run(dataflow.DeviceNameValueFilter("device-0"))
 
 		// check values
 		expect := []string{

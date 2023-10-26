@@ -7,6 +7,7 @@ import (
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
+	"github.com/koestler/go-iotdevice/mqttForwarders"
 	"github.com/koestler/go-iotdevice/pool"
 	"log"
 	"strings"
@@ -92,7 +93,7 @@ func parseTopic(topic string) (registerName string, err error) {
 	return
 }
 
-func parsePayload(payload []byte) (msg device.RealtimeMessage, err error) {
+func parsePayload(payload []byte) (msg mqttForwarders.RealtimeMessage, err error) {
 	err = json.Unmarshal(payload, &msg)
 	return
 }

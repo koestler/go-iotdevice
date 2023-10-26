@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/device"
 	"log"
 	"time"
 )
@@ -21,6 +20,8 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 
 	// assign registers
 	registers := c.getModbusRegisters()
+	registers = dataflow.FilterRegisters(registers, c.Config().RegisterFilter())
+
 	addToRegisterDb(c.RegisterDb(), registers)
 
 	// setup polling
@@ -152,10 +153,6 @@ func (c *DeviceStruct) getModbusRegisters() (registers []ModbusRegister) {
 	registers = make([]ModbusRegister, 0, 8)
 	for i := uint16(0); i < 8; i += 1 {
 		name := fmt.Sprintf("CH%d", i+1)
-
-		if device.IsExcluded(name, category, c.Config()) {
-			continue
-		}
 
 		description := c.modbusConfig.RelayDescription(name)
 		enum := map[int]string{

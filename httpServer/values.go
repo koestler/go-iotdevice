@@ -36,7 +36,6 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 
 			relativePath := "views/" + view.Name() + "/devices/" + viewDevice.Name() + "/values"
 
-			// the following line uses a loop variable; it must be outside the closure
 			filter := getFilter([]config.ViewDeviceConfig{viewDevice})
 			r.GET(relativePath, func(c *gin.Context) {
 				// check authorization
@@ -169,28 +168,17 @@ func append2DResponseValue(response map[string]map[string]valueResponse, value d
 }
 
 func getFilter(viewDevices []config.ViewDeviceConfig) dataflow.ValueFilterFunc {
-	skipRegisterNames := make(map[string]map[string]struct{})
-	skipRegisterCategories := make(map[string]map[string]struct{})
+	filters := make(map[string]dataflow.ValueFilterFunc)
 	for _, vd := range viewDevices {
-		skipRegisterNames[vd.Name()] = dataflow.sliceToMap(vd.SkipFields())
-		skipRegisterCategories[vd.Name()] = dataflow.sliceToMap(vd.SkipCategories())
+		filters[vd.Name()] = dataflow.RegisterValueFilter(vd.RegisterFilter())
 	}
 
 	return func(value dataflow.Value) bool {
 		deviceName := value.DeviceName()
-		reg := value.Register()
-
-		if m, ok := skipRegisterNames[deviceName]; !ok {
+		if f, ok := filters[deviceName]; !ok {
 			return false // device not included
-		} else if _, ok := m[reg.Name()]; ok {
-			return false
+		} else {
+			return f(value)
 		}
-
-		m := skipRegisterCategories[deviceName]
-		if _, ok := m[reg.Category()]; ok {
-			return false
-		}
-
-		return true
 	}
 }

@@ -2,10 +2,10 @@ package mqttForwarders
 
 import (
 	"context"
+	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
-	"github.com/koestler/go-iotdevice/pool"
 	"log"
 	"time"
 )
@@ -19,34 +19,31 @@ type RealtimeMessage struct {
 func runRealtimeForwarders(
 	ctx context.Context,
 	dev device.Device,
-	mqttClientPool *pool.Pool[mqttClient.Client],
+	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
-	filter func(v dataflow.Value) bool,
+	registerFilter config.RegisterFilterConfig,
 ) {
-	// start mqtt forwarders for realtime messages (send data as soon as it arrives) output
-	for _, mc := range mqttClientPool.GetByNames(dev.Config().ViaMqttClients()) {
-		mCfg := mc.Config().Realtime()
-		if !mCfg.Enabled() {
-			continue
-		}
+	// start mqtt forwarder for realtime messages (send data as soon as it arrives) output
+	mCfg := mc.Config().Realtime()
 
-		// immediate mode: Interval is set to zero
-		// -> send values immediately when they change
-		// delayed update mode: Interval > 0 and Repeat false
-		// -> have a timer, whenever it ticks, send the newest version of the changed values
-		// periodic full mode: Interval > 0 and Repeat true
-		// -> have a timer, whenever it ticks, send all values
-		if mCfg.Interval() <= 0 {
-			go realtimeImmediateModeRoutine(ctx, dev, mc, storage, filter)
-		} else {
-			go realtimeDelayedUpdateModeRoutine(ctx, dev, mc, storage, filter)
-		}
+	filter := createDeviceAndRegisterValueFilter(dev, registerFilter)
+
+	// immediate mode: Interval is set to zero
+	// -> send values immediately when they change
+	// delayed update mode: Interval > 0 and Repeat false
+	// -> have a timer, whenever it ticks, send the newest version of the changed values
+	// periodic full mode: Interval > 0 and Repeat true
+	// -> have a timer, whenever it ticks, send all values
+	if mCfg.Interval() <= 0 {
+		go realtimeImmediateModeRoutine(ctx, dev, mc, storage, filter)
+	} else {
+		go realtimeDelayedUpdateModeRoutine(ctx, dev, mc, storage, filter)
 	}
 }
 
 func realtimeImmediateModeRoutine(
 	ctx context.Context,
-	dev Device,
+	dev device.Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
 	filter func(v dataflow.Value) bool,
@@ -74,7 +71,7 @@ func realtimeImmediateModeRoutine(
 
 func realtimeDelayedUpdateModeRoutine(
 	ctx context.Context,
-	dev Device,
+	dev device.Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
 	filter func(v dataflow.Value) bool,
@@ -122,7 +119,7 @@ func realtimeDelayedUpdateModeRoutine(
 	}
 }
 
-func publishRealtimeMessage(mc mqttClient.Client, devConfig Config, value dataflow.Value) {
+func publishRealtimeMessage(mc mqttClient.Client, devConfig device.Config, value dataflow.Value) {
 	mcCfg := mc.Config()
 	mCfg := mcCfg.Realtime()
 

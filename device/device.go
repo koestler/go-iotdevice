@@ -33,14 +33,14 @@ type State struct {
 
 func NewState(deviceConfig Config, stateStorage *dataflow.ValueStorage) State {
 	registerDb := dataflow.NewRegisterDb()
-	registerDb.Add(AvailabilityRegister)
+	registerDb.Add(availabilityRegister)
 	return State{
 		deviceConfig: deviceConfig,
 		stateStorage: stateStorage,
 		registerDb:   registerDb,
 
-		unavailableValue: dataflow.NewEnumRegisterValue(deviceConfig.Name(), AvailabilityRegister, 0),
-		availableValue:   dataflow.NewEnumRegisterValue(deviceConfig.Name(), AvailabilityRegister, 1),
+		unavailableValue: dataflow.NewEnumRegisterValue(deviceConfig.Name(), availabilityRegister, 0),
+		availableValue:   dataflow.NewEnumRegisterValue(deviceConfig.Name(), availabilityRegister, 1),
 	}
 }
 

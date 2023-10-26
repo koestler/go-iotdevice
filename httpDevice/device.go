@@ -23,7 +23,8 @@ type Config interface {
 
 type DeviceStruct struct {
 	device.State
-	httpConfig Config
+	httpConfig     Config
+	registerFilter dataflow.RegisterFilterFunc
 
 	commandStorage *dataflow.ValueStorage
 
@@ -46,6 +47,7 @@ func NewDevice(
 			stateStorage,
 		),
 		httpConfig:     teracomConfig,
+		registerFilter: dataflow.RegisterFilter(deviceConfig.RegisterFilter()),
 		commandStorage: commandStorage,
 
 		httpClient: &http.Client{
@@ -217,11 +219,6 @@ func (ds *DeviceStruct) addIgnoreRegister(
 		}
 	}
 
-	// check if register is on ignore list
-	if device.IsExcluded(registerName, category, ds.Config()) {
-		return nil
-	}
-
 	// create new register
 	sort := ds.getRegisterSort(category)
 	r := dataflow.NewRegisterStruct(
@@ -234,6 +231,13 @@ func (ds *DeviceStruct) addIgnoreRegister(
 		sort,
 		controllable,
 	)
+
+	// check if register is on ignore list
+	if !ds.registerFilter(r) {
+		return nil
+	}
+
+	ds.Config().RegisterFilter()
 
 	// add the register into the list
 	ds.RegisterDb().Add(r)

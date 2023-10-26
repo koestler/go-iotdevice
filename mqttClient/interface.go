@@ -1,6 +1,7 @@
 package mqttClient
 
 import (
+	"context"
 	"github.com/koestler/go-iotdevice/config"
 	"net/url"
 	"time"
@@ -42,6 +43,7 @@ type Config interface {
 type Client interface {
 	Name() string
 	Config() Config
+	GetCtx() context.Context
 	Run()
 	Shutdown()
 	Publish(topic string, payload []byte, qos byte, retain bool)

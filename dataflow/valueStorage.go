@@ -23,6 +23,16 @@ type ValueStorage struct {
 	inputWaitGroup sync.WaitGroup
 }
 
+type ValueSubscription struct {
+	ctx           context.Context
+	outputChannel chan Value
+	filter        ValueFilterFunc
+}
+
+func (s *ValueSubscription) Drain() <-chan Value {
+	return s.outputChannel
+}
+
 func NewValueStorage() (valueStorage *ValueStorage) {
 	ctx, cancel := context.WithCancel(context.Background())
 
