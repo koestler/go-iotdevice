@@ -81,6 +81,4 @@ func runMqttDevices(
 		watchedDev.Run()
 		devicePool.Add(watchedDev)
 	}
-
-	return
 }
