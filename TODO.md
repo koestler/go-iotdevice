@@ -12,3 +12,5 @@
 - check what happens with a http connection not able to handle the bandwidth required by the subscription. This probably stalls the whole storage.
 - steam register structure update via websocket to client
 - http device: remove registers that are not present anymore
+- do not have any dep on config, user interface instead
+- replace topicPrefix by generic map of replacement variables?

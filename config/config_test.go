@@ -67,6 +67,8 @@ MqttClients:                                               # optional, when empt
       TopicTemplate: '%Prefix%tele-X/%ClientId%/%DeviceName%/status'  # optional, what topic to use for online/offline messages
       Retain: false                              # optional, default true, the mqtt retain flag for availability messages
       Qos: 1                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
+      Devices:                                             # optional, default all, a list of devices to match
+        bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
 
     Structure:
       Enabled: false                                # optional, default true, whether to send messages containing the list of registers / types
@@ -76,6 +78,16 @@ MqttClients:                                               # optional, when empt
       Qos: 2                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
       Devices:
         bmv0:
+          RegisterFilter:                                  # optional, default include all, defines which registers are show in the view,
+                                                           # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
+            IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
+              - BatteryVoltage                             # the BatteryVoltage register is sent no matter if it's category is listed unter categories
+              - Power            
+            SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
+            IncludeCategories:                             # optional, default empty, all registers of the given category that are not explicitly skipped are returned
+              - Essential                                  # all registers of the category essential are sent; no matter if thy are listed in registers       
+            SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
+            DefaultInclude: False                          # optional, default true,  whether to return the registers that do not match any include/skip rule
         tcw241:
 
     Telemetry:
@@ -96,7 +108,22 @@ MqttClients:                                               # optional, when empt
       Interval: 0s                                           # optional, default 0, 0 means disabled only send initially, otherwise the disovery messages are repeated after this interval (useful when retain is false)
       Retain: true                                           # optional, default false, the mqtt retain flag for hass disovery messages
       Devices:                                               # optional, default all, a list of devices to match
-        - bmv0                                               # use device identifiers of the VictronDevices, ModbusDevices etc. sections
+        bmv0:                                               # use device identifiers of the VictronDevices, ModbusDevices etc. sections
+          RegisterFilter:                                  # optional, default include all, defines which registers are show in the view,
+                                                           # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
+            IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
+              - reg-inc-a
+              - reg-inc-b        
+            SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
+              - reg-skip-a
+              - reg-skip-b
+            IncludeCategories:                             # optional, default empty, all registers of the given category that are not explicitly skipped are returned
+              - cat-inc-a
+              - cat-inc-b
+            SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
+              - cat-skip-a
+              - cat-skip-b
+            DefaultInclude: False                          # optional, default true,  whether to return the registers that do not match any include/skip rule
 
     LogDebug: true                                         # optional, default false, very verbose debug log of the mqtt connection
     LogMessages: true                                      # optional, default false, log all incoming mqtt messages
@@ -153,7 +180,6 @@ ModbusDevices:                                             # optional, a list of
           - D
           - E
           - F
-      ViaMqttClients:                                      # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
       RestartInterval:                                     # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff:                           # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
@@ -171,7 +197,6 @@ ModbusDevices:                                             # optional, a list of
 HttpDevices:                                               # optional, a list of devices controlled via http
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections
     General:                                               # optional, this section is exactly the same for all devices
-      ViaMqttClients:                                      # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
       RestartInterval: 1m                                  # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff: 2m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
@@ -185,7 +210,6 @@ HttpDevices:                                               # optional, a list of
 MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     General:                                               # optional, this section is exactly the same for all devices
-      ViaMqttClients:                                      # optional, default all clients, to what mqtt servers shall telemetry messages be sent to
       RestartInterval: 50ms                                # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff: 30s                       # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
@@ -220,15 +244,6 @@ Views:                                                     # optional, a list of
     Devices:
       - Name: bmv0
         Title: Bmv 0
-
-HassDiscovery:                                             # optional, default, empty, defines which registers should be advertised via the homeassistant discovery mechanism
-                                                           # You can have multiple sections to advertise on different topics, on different MqttServers of matching different registers
-                                                           # each register is only advertised once per server / topic even if multiple entries match
-  - TopicPrefix: "my-hass"                                 # optional, default 'homeassistant', the mqtt topic used for the discovery messages
-    ViaMattClients:                                        # optional, default all clients, on what mqtt servers shall the registers by advertised
-      - 0-local
-      - 1-remote
-
 `
 
 	ValidDefaultConfig = `
@@ -275,10 +290,6 @@ Views:                                                     # optional, a list of
     Devices:                                               # mandatory, a list of devices using
       - Name: bmv0                                         # mandatory, the arbitrary names defined above
         Title: Battery Monitor                             # mandatory, a nice title displayed in the frontend
-
-HassDiscovery:                                             # optional, default, empty, defines which registers should be advertised via the homeassistant discovery mechanism
-  - Devices:
-    - tcw241
 `
 )
 

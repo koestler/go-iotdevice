@@ -74,13 +74,12 @@ type MqttClientConfig struct {
 }
 
 type MqttSectionConfig struct {
-	enabled        bool
-	topicTemplate  string
-	interval       time.Duration
-	retain         bool
-	qos            byte
-	devices        []MqttDeviceSectionConfig
-	registerFilter RegisterFilterConfig
+	enabled       bool
+	topicTemplate string
+	interval      time.Duration
+	retain        bool
+	qos           byte
+	devices       []MqttDeviceSectionConfig
 }
 
 type MqttDeviceSectionConfig struct {
