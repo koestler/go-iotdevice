@@ -8,7 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/go-cmp v0.5.9
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.4.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/json-iterator/go v1.1.12
 	github.com/mileusna/useragent v1.3.4
@@ -19,7 +19,7 @@ require (
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/sync v0.4.0
 	gopkg.in/yaml.v2 v2.4.0
-	nhooyr.io/websocket v1.8.9
+	nhooyr.io/websocket v1.8.10
 )
 
 require (
