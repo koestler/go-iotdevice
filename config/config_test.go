@@ -166,20 +166,21 @@ ModbusDevices:                                             # optional, a list of
   modbus-rtu0:                                             # mandatory, an arbitrary name used for logging and for referencing in other config sections
     General:                                               # optional, this section is exactly the same for all devices
       RegisterFilter:
-        SkipRegisters:                                          # optional, default empty, a list of field names that shall be ignored for this device
+        IncludeRegisters:                                          # optional, default empty, a list of field names that shall be ignored for this device
           - a
           - b
-        IncludeRegisters:
+        SkipRegisters:
           - c
           - d
-        SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
+        IncludeCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
           - A
           - B
           - C
-        IncludeCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
+        SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
           - D
           - E
           - F
+        DefaultInclude: False
       RestartInterval:                                     # optional, default 200ms, how fast to restart the device if it fails / disconnects
       RestartIntervalMaxBackoff:                           # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
@@ -884,6 +885,31 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect Name of first VictronDevice to be '%s' but got %s'", expect, got)
 		}
 
+		{
+			prefix := "VictronDevices->bmv0->General->RegisterFilter"
+			rf := vd.RegisterFilter()
+
+			if got := rf.IncludeRegisters(); len(got) > 0 {
+				t.Errorf("expect %s->IncludeRegisters to be empty, got %v", prefix, got)
+			}
+
+			if expect, got := []string{"Temperature", "AuxVoltage"}, rf.SkipRegisters(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect %s->SkipRegisters to be %v but got %v", prefix, expect, got)
+			}
+
+			if got := rf.IncludeCategories(); len(got) > 0 {
+				t.Errorf("expect %s->IncludeCategories to be empty but got %v", prefix, got)
+			}
+
+			if expect, got := []string{"Settings"}, rf.SkipCategories(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect %s->SkipCategories to be %v but got %v", prefix, expect, got)
+			}
+
+			if got := rf.DefaultInclude(); !got {
+				t.Errorf("expect %s->DefaultInclude to be true", prefix)
+			}
+		}
+
 		if expect, got := 400*time.Millisecond, vd.RestartInterval(); expect != got {
 			t.Errorf("expect VictronDevices->bmv0->General->RestartInterval to be %s but got %s", expect, got)
 		}
@@ -916,6 +942,31 @@ func TestReadConfig_Complete(t *testing.T) {
 
 		if expect, got := "modbus-rtu0", md.Name(); expect != got {
 			t.Errorf("expect Name of first ModebusDevice to be '%s' but got %s'", expect, got)
+		}
+
+		{
+			prefix := "ModebusDevices->modbus-rtu0->General->FilterRegister"
+			rf := md.RegisterFilter()
+
+			if expect, got := []string{"a", "b"}, rf.IncludeRegisters(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect %s->IncludeRegisters to be %v but got %#v", prefix, expect, got)
+			}
+
+			if expect, got := []string{"c", "d"}, rf.SkipRegisters(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect %s->SkipRegisters to be %v but got %v", prefix, expect, got)
+			}
+
+			if expect, got := []string{"A", "B", "C"}, rf.IncludeCategories(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect %s->IncludeCategories to be %v but got %v", prefix, expect, got)
+			}
+
+			if expect, got := []string{"D", "E", "F"}, rf.SkipCategories(); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect %s->SkipCategories to be %v but got %v", prefix, expect, got)
+			}
+
+			if got := rf.DefaultInclude(); got {
+				t.Errorf("expect %s->DefaultInclude to be false", prefix)
+			}
 		}
 
 		if expect, got := 200*time.Millisecond, md.RestartInterval(); expect != got {
