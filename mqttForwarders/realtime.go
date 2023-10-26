@@ -114,7 +114,7 @@ func realtimeDelayedUpdateModeRoutine(
 			for _, v := range updates {
 				publishRealtimeMessage(mc, devCfg, v)
 			}
-			updates = make(map[string]dataflow.Value)
+			clear(updates)
 		}
 	}
 }

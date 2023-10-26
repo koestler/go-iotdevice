@@ -96,7 +96,7 @@ func structureOnUpdateModeRoutine(
 			ticker.Stop()
 
 			publishStruct(mc, devCfg, structureTopic, maps.Values(registers))
-			registers = make(map[string]StructRegister)
+			clear(registers)
 		}
 	}
 }

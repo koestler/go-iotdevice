@@ -159,7 +159,7 @@ func wsValuesSender(
 						log.Printf("%s: error while sending value: %s", logPrefix, err)
 						return
 					}
-					values = make(map[string]map[string]valueResponse, 1)
+					clear(values)
 				} else {
 					// no data to send; stop timer
 					ticker.Stop()
