@@ -3,7 +3,6 @@ package httpServer
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/pkg/errors"
 	"log"
@@ -36,7 +35,7 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 
 			relativePath := "views/" + view.Name() + "/devices/" + viewDevice.Name() + "/values"
 
-			filter := getFilter([]config.ViewDeviceConfig{viewDevice})
+			filter := getFilter([]ViewDeviceConfig{viewDevice})
 			r.GET(relativePath, func(c *gin.Context) {
 				// check authorization
 				if !isViewAuthenticated(view, c, true) {
@@ -167,7 +166,7 @@ func append2DResponseValue(response map[string]map[string]valueResponse, value d
 	response[d0][d1] = value.GenericValue()
 }
 
-func getFilter(viewDevices []config.ViewDeviceConfig) dataflow.ValueFilterFunc {
+func getFilter(viewDevices []ViewDeviceConfig) dataflow.ValueFilterFunc {
 	filters := make(map[string]dataflow.ValueFilterFunc)
 	for _, vd := range viewDevices {
 		filters[vd.Name()] = dataflow.RegisterValueFilter(vd.RegisterFilter())

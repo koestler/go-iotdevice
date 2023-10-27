@@ -2,7 +2,6 @@ package httpServer
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/koestler/go-iotdevice/config"
 	"log"
 )
 
@@ -48,7 +47,7 @@ func setupConfig(r *gin.RouterGroup, env *Environment) {
 			response.Views = append(response.Views, viewResponse{
 				Name:  v.Name(),
 				Title: v.Title(),
-				Devices: func(devices []config.ViewDeviceConfig) (ret []deviceViewResponse) {
+				Devices: func(devices []ViewDeviceConfig) (ret []deviceViewResponse) {
 					ret = make([]deviceViewResponse, len(devices))
 					for i, c := range devices {
 						ret[i] = deviceViewResponse{

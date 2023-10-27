@@ -69,14 +69,6 @@ func (c Config) Views() []ViewConfig {
 	return c.views
 }
 
-func (c Config) GetViewNames() (ret []string) {
-	ret = []string{}
-	for _, v := range c.Views() {
-		ret = append(ret, v.Name())
-	}
-	return
-}
-
 // Getters for HttpServerConfig struct
 
 func (c HttpServerConfig) Enabled() bool {

@@ -11,7 +11,8 @@ import (
 	"path/filepath"
 )
 
-func setupFrontend(engine *gin.Engine, config Config) {
+func setupFrontend(engine *gin.Engine, env *Environment) {
+	config := env.Config
 	frontendUrl := config.FrontendProxy()
 
 	if frontendUrl != nil {
@@ -45,7 +46,7 @@ func setupFrontend(engine *gin.Engine, config Config) {
 				})
 
 				// load index file single page frontend application
-				for _, route := range append(config.GetViewNames(), "", "login") {
+				for _, route := range append(getNames(env.Views), "", "login") {
 					route = "/" + route
 					serveStatic(engine, config, route, frontendPath+"/index.html")
 				}

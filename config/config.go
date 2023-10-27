@@ -1034,7 +1034,6 @@ func existsByName[N Nameable](needle string, haystack []N) bool {
 	}
 	return false
 }
-
 func getNames[N Nameable](list []N) (ret []string) {
 	ret = make([]string, len(list))
 	for i, t := range list {
