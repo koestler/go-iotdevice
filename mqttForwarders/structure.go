@@ -2,7 +2,6 @@ package mqttForwarders
 
 import (
 	"context"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
@@ -31,45 +30,46 @@ type StructureMessage struct {
 
 func runStructureForwarder(
 	ctx context.Context,
+	cfg Config,
 	dev device.Device,
 	mc mqttClient.Client,
-	registerFilter config.RegisterFilterConfig,
+	registerFilter dataflow.RegisterFilterConf,
 ) {
 	// start mqtt forwarder for realtime messages (send data as soon as it arrives) output
-	mCfg := mc.Config().Structure()
+	mCfg := cfg.Structure()
 
 	filter := createRegisterValueFilter(registerFilter)
 
 	if mCfg.Interval() <= 0 {
-		go structureOnUpdateModeRoutine(ctx, dev, mc, filter)
+		go structureOnUpdateModeRoutine(ctx, cfg, dev, mc, filter)
 	} else {
-		go structurePeriodicModeRoutine(ctx, dev, mc, filter)
+		go structurePeriodicModeRoutine(ctx, cfg, dev, mc, filter)
 	}
 }
 
 func structureOnUpdateModeRoutine(
 	ctx context.Context,
+	cfg Config,
 	dev device.Device,
 	mc mqttClient.Client,
 	filter dataflow.RegisterFilterFunc,
 ) {
 	devCfg := dev.Config()
-	mcCfg := mc.Config()
 
 	if devCfg.LogDebug() {
 		log.Printf(
 			"device[%s]->mqttClient[%s]->structure: start on-update mode",
-			devCfg.Name(), mcCfg.Name(),
+			devCfg.Name(), mc.Name(),
 		)
 
 		defer log.Printf(
 			"device[%s]->mqttClient[%s]->structure: exit",
-			devCfg.Name(), mcCfg.Name(),
+			devCfg.Name(), mc.Name(),
 		)
 	}
 
 	regSubscription := dev.RegisterDb().Subscribe(ctx, filter)
-	structureTopic := mcCfg.StructureTopic(devCfg.Name())
+	structureTopic := cfg.StructureTopic(devCfg.Name())
 
 	// when a new register arrives, wait until no new register is received for 100ms
 	// and then send all updates together
@@ -95,7 +95,7 @@ func structureOnUpdateModeRoutine(
 		case <-ticker.C:
 			ticker.Stop()
 
-			publishStruct(mc, devCfg, structureTopic, maps.Values(registers))
+			publishStruct(cfg, mc, dev.Name(), structureTopic, maps.Values(registers))
 			clear(registers)
 		}
 	}
@@ -103,27 +103,26 @@ func structureOnUpdateModeRoutine(
 
 func structurePeriodicModeRoutine(
 	ctx context.Context,
+	cfg Config,
 	dev device.Device,
 	mc mqttClient.Client,
 	filter dataflow.RegisterFilterFunc,
 ) {
-	devCfg := dev.Config()
-	mcCfg := mc.Config()
-	structureInterval := mcCfg.Structure().Interval()
+	structureInterval := cfg.Structure().Interval()
 
-	if devCfg.LogDebug() {
+	if cfg.LogDebug() {
 		log.Printf(
 			"device[%s]->mqttClient[%s]->structure: start periodic mode, send every %s",
-			devCfg.Name(), mcCfg.Name(), structureInterval,
+			dev.Name(), mc.Name(), structureInterval,
 		)
 
 		defer log.Printf(
 			"device[%s]->mqttClient[%s]->structure: exit",
-			devCfg.Name(), mcCfg.Name(),
+			dev.Name(), mc.Name(),
 		)
 	}
 
-	structureTopic := mcCfg.StructureTopic(devCfg.Name())
+	structureTopic := cfg.StructureTopic(dev.Name())
 
 	ticker := time.NewTicker(structureInterval)
 	defer ticker.Stop()
@@ -134,24 +133,28 @@ func structurePeriodicModeRoutine(
 			return
 		case <-ticker.C:
 			registers := dev.RegisterDb().GetFiltered(filter)
-			publishStruct(mc, devCfg, structureTopic, NewStructRegisters(registers...))
+			publishStruct(cfg, mc, dev.Name(), structureTopic, NewStructRegisters(registers...))
 		}
 	}
 }
 
-func getAvailabilityTopics(devCfg device.Config, mcCfg mqttClient.Config) (ret []string) {
+func getAvailabilityTopics(cfg Config, devName string, mcCfg mqttClient.Config) (ret []string) {
 	ret = make([]string, 0, 2)
-	if mcCfg.AvailabilityClient().Enabled() {
+	if cfg.AvailabilityClient().Enabled() {
 		ret = append(ret, mcCfg.AvailabilityClientTopic())
 	}
-	if mcCfg.AvailabilityDevice().Enabled() && existsByName(devCfg.Name(), mcCfg.AvailabilityDevice().Devices()) {
-		ret = append(ret, mcCfg.AvailabilityDeviceTopic(devCfg.Name()))
+	if cfg.AvailabilityDevice().Enabled() && existsByName(devName, cfg.AvailabilityDevice().Devices()) {
+		ret = append(ret, cfg.AvailabilityDeviceTopic(devName))
 	}
 
 	return
 }
 
-func existsByName[N config.Nameable](needle string, haystack []N) bool {
+type Nameable interface {
+	Name() string
+}
+
+func existsByName[N Nameable](needle string, haystack []N) bool {
 	for _, t := range haystack {
 		if needle == t.Name() {
 			return true
@@ -160,34 +163,34 @@ func existsByName[N config.Nameable](needle string, haystack []N) bool {
 	return false
 }
 
-func getRealtimeTopic(devCfg device.Config, mcCfg mqttClient.Config) string {
-	if mcCfg.Realtime().Enabled() {
-		return mcCfg.RealtimeTopic(devCfg.Name(), "%RegisterName%")
+func getRealtimeTopic(cfg Config, devName string) string {
+	if cfg.Realtime().Enabled() {
+		return cfg.RealtimeTopic(devName, "%RegisterName%")
 	}
 	return ""
 }
 
-func publishStruct(mc mqttClient.Client, devCfg device.Config, topic string, registers []StructRegister) {
+func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic string, registers []StructRegister) {
 	mcCfg := mc.Config()
-	mCfg := mcCfg.Structure()
+	mCfg := cfg.Structure()
 
 	msg := StructureMessage{
-		AvailabilityTopics: getAvailabilityTopics(devCfg, mcCfg),
-		RealtimeTopic:      getRealtimeTopic(devCfg, mcCfg),
+		AvailabilityTopics: getAvailabilityTopics(cfg, devName, mcCfg),
+		RealtimeTopic:      getRealtimeTopic(cfg, devName),
 		Registers:          registers,
 	}
 
-	if devCfg.LogDebug() {
+	if cfg.LogDebug() {
 		log.Printf(
 			"device[%s]->mqttClient[%s]->structure: send: %v",
-			devCfg.Name(), mcCfg.Name(), msg,
+			devName, mcCfg.Name(), msg,
 		)
 	}
 
 	if payload, err := json.Marshal(msg); err != nil {
 		log.Printf(
 			"device[%s]->mqttClient[%s]->structure: cannot generate message: %s",
-			devCfg.Name(), mcCfg.Name(), err,
+			devName, mcCfg.Name(), err,
 		)
 	} else {
 		mc.Publish(

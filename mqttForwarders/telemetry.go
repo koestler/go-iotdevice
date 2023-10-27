@@ -2,7 +2,6 @@ package mqttForwarders
 
 import (
 	"context"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
@@ -41,31 +40,28 @@ type EnumTelemetryValue struct {
 
 func runTelemetryForwarder(
 	ctx context.Context,
+	cfg Config,
 	dev device.Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
-	registerFilter config.RegisterFilterConfig,
+	registerFilter dataflow.RegisterFilterConf,
 ) {
-	devCfg := dev.Config()
-
-	// start mqtt forwarder for telemetry messages
-	mcCfg := mc.Config()
-	mCfg := mcCfg.Telemetry()
+	mCfg := cfg.Telemetry()
 
 	telemetryInterval := mCfg.Interval()
-	telemetryTopic := mcCfg.TelemetryTopic(devCfg.Name())
+	telemetryTopic := cfg.TelemetryTopic(dev.Name())
 
 	filter := createDeviceAndRegisterValueFilter(dev, registerFilter)
 
 	go func(mc mqttClient.Client) {
 		log.Printf(
 			"device[%s]->mqttClient[%s]->telemetry: start sending messages every %s",
-			devCfg.Name(), mcCfg.Name(), telemetryInterval.String(),
+			dev.Name(), mc.Name(), telemetryInterval.String(),
 		)
-		if devCfg.LogDebug() {
+		if cfg.LogDebug() {
 			defer log.Printf(
 				"device[%s]->mqttClient[%s]->telemetry: exit",
-				devCfg.Name(), mcCfg.Name(),
+				dev.Name(), mc.Name(),
 			)
 		}
 
@@ -80,7 +76,7 @@ func runTelemetryForwarder(
 
 				return
 			case avail = <-availChan:
-				if devCfg.LogDebug() {
+				if cfg.LogDebug() {
 					s := "stopped"
 					if avail {
 						s = "started"
@@ -88,12 +84,12 @@ func runTelemetryForwarder(
 
 					log.Printf(
 						"device[%s]->mqttClient[%s]->telemetry: %s sending due to availability",
-						devCfg.Name(), mcCfg.Name(), s,
+						dev.Name(), mc.Name(), s,
 					)
 				}
 			case <-ticker.C:
-				if devCfg.LogDebug() {
-					log.Printf("device[%s]->mqttClient[%s]->telemetry: tick", devCfg.Name(), mcCfg.Name())
+				if cfg.LogDebug() {
+					log.Printf("device[%s]->mqttClient[%s]->telemetry: tick", dev.Name(), mc.Name())
 				}
 
 				if !avail {
@@ -116,7 +112,7 @@ func runTelemetryForwarder(
 				if payload, err := json.Marshal(telemetryMessage); err != nil {
 					log.Printf(
 						"device[%s]->mqttClient[%s]->telemetry: cannot generate message: %s",
-						devCfg.Name(), mcCfg.Name(), err,
+						dev.Name(), mc.Name(), err,
 					)
 				} else {
 					mc.Publish(

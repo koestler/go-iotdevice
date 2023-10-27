@@ -2,7 +2,6 @@ package mqttClient
 
 import (
 	"context"
-	"github.com/koestler/go-iotdevice/config"
 	"net/url"
 	"time"
 )
@@ -21,31 +20,23 @@ type Config interface {
 	TopicPrefix() string
 	MaxBacklogSize() int
 
-	AvailabilityClient() config.MqttSectionConfig
+	AvailabilityClient() MqttSectionConfig
 	AvailabilityClientTopic() string
-
-	AvailabilityDevice() config.MqttSectionConfig
-	AvailabilityDeviceTopic(deviceName string) string
-
-	Structure() config.MqttSectionConfig
-	StructureTopic(deviceName string) string
-
-	Telemetry() config.MqttSectionConfig
-	TelemetryTopic(deviceName string) string
-
-	Realtime() config.MqttSectionConfig
-	RealtimeTopic(deviceName, registerName string) string
-
-	HomeassistantDiscovery() config.MqttSectionConfig
-	HomeassistantDiscoveryTopic(component, nodeId, objectId string) string
 
 	LogDebug() bool
 	LogMessages() bool
 }
 
+type MqttSectionConfig interface {
+	Enabled() bool
+	Interval() time.Duration
+	Retain() bool
+	Qos() byte
+}
+
 type Client interface {
 	Name() string
-	Config() Config
+	Config() Config // todo: remove?
 	GetCtx() context.Context
 	Run()
 	Shutdown()

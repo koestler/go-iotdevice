@@ -8,13 +8,12 @@ import (
 
 func runAvailabilityForwarder(
 	ctx context.Context,
+	cfg Config,
 	dev device.Device,
 	mc mqttClient.Client,
 ) {
-	devCfg := dev.Config()
-
-	mCfg := mc.Config().AvailabilityDevice()
-	topic := mc.Config().AvailabilityDeviceTopic(devCfg.Name())
+	mCfg := cfg.AvailabilityDevice()
+	topic := cfg.AvailabilityDeviceTopic(dev.Name())
 
 	go func(mc mqttClient.Client) {
 		availChan := dev.SubscribeAvailableSendInitial(ctx)

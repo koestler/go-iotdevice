@@ -2,7 +2,6 @@ package mqttForwarders
 
 import (
 	"context"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
@@ -18,13 +17,14 @@ type RealtimeMessage struct {
 
 func runRealtimeForwarder(
 	ctx context.Context,
+	cfg Config,
 	dev device.Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
-	registerFilter config.RegisterFilterConfig,
+	registerFilter dataflow.RegisterFilterConf,
 ) {
 	// start mqtt forwarder for realtime messages (send data as soon as it arrives) output
-	mCfg := mc.Config().Realtime()
+	mCfg := cfg.Realtime()
 
 	filter := createDeviceAndRegisterValueFilter(dev, registerFilter)
 
@@ -35,59 +35,56 @@ func runRealtimeForwarder(
 	// periodic full mode: Interval > 0 and Repeat true
 	// -> have a timer, whenever it ticks, send all values
 	if mCfg.Interval() <= 0 {
-		go realtimeImmediateModeRoutine(ctx, dev, mc, storage, filter)
+		go realtimeImmediateModeRoutine(ctx, cfg, dev, mc, storage, filter)
 	} else {
-		go realtimeDelayedUpdateModeRoutine(ctx, dev, mc, storage, filter)
+		go realtimeDelayedUpdateModeRoutine(ctx, cfg, dev, mc, storage, filter)
 	}
 }
 
 func realtimeImmediateModeRoutine(
 	ctx context.Context,
+	cfg Config,
 	dev device.Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
 	filter func(v dataflow.Value) bool,
 ) {
-	mcCfg := mc.Config()
-	devCfg := dev.Config()
-
-	if devCfg.LogDebug() {
+	if cfg.LogDebug() {
 		log.Printf(
 			"device[%s]->mqttClient[%s]->realtime: start immediate mode",
-			devCfg.Name(), mcCfg.Name(),
+			dev.Name(), mc.Name(),
 		)
 		defer log.Printf(
 			"device[%s]->mqttClient[%s]->realtime: exit immediate mode",
-			devCfg.Name(), mcCfg.Name(),
+			dev.Name(), mc.Name(),
 		)
 	}
 
 	subscription := storage.SubscribeSendInitial(ctx, filter)
 	// for loop ends when subscription is canceled and closes its output chan
 	for value := range subscription.Drain() {
-		publishRealtimeMessage(mc, devCfg, value)
+		publishRealtimeMessage(cfg, mc, dev.Name(), value)
 	}
 }
 
 func realtimeDelayedUpdateModeRoutine(
 	ctx context.Context,
+	cfg Config,
 	dev device.Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
 	filter func(v dataflow.Value) bool,
 ) {
-	mcCfg := mc.Config()
-	devCfg := dev.Config()
-	realtimeInterval := mcCfg.Realtime().Interval()
+	realtimeInterval := cfg.Realtime().Interval()
 
-	if devCfg.LogDebug() {
+	if cfg.LogDebug() {
 		log.Printf(
 			"device[%s]->mqttClient[%s]->realtime: start delayed update mode, send every %s",
-			devCfg.Name(), mcCfg.Name(), realtimeInterval,
+			dev.Name(), mc.Name(), realtimeInterval,
 		)
 		defer log.Printf(
 			"device[%s]->mqttClient[%s]->realtime: exit delayed update mode",
-			devCfg.Name(), mcCfg.Name(),
+			dev.Name(), mc.Name(),
 		)
 	}
 
@@ -105,39 +102,38 @@ func realtimeDelayedUpdateModeRoutine(
 			// new value received, save newest version per register name
 			updates[value.Register().Name()] = value
 		case <-ticker.C:
-			if devCfg.LogDebug() {
+			if cfg.LogDebug() {
 				log.Printf(
 					"device[%s]->mqttClient[%s]->realtime: tick: send updates",
-					devCfg.Name(), mcCfg.Name(),
+					dev.Name(), mc.Name(),
 				)
 			}
 			for _, v := range updates {
-				publishRealtimeMessage(mc, devCfg, v)
+				publishRealtimeMessage(cfg, mc, dev.Name(), v)
 			}
 			clear(updates)
 		}
 	}
 }
 
-func publishRealtimeMessage(mc mqttClient.Client, devConfig device.Config, value dataflow.Value) {
-	mcCfg := mc.Config()
-	mCfg := mcCfg.Realtime()
+func publishRealtimeMessage(cfg Config, mc mqttClient.Client, devName string, value dataflow.Value) {
+	mCfg := cfg.Realtime()
 
-	if devConfig.LogDebug() {
+	if cfg.LogDebug() {
 		log.Printf(
 			"device[%s]->mqttClient[%s]->realtime: send: %s",
-			devConfig.Name(), mcCfg.Name(), value,
+			devName, mc.Name(), value,
 		)
 	}
 
 	if payload, err := json.Marshal(convertValueToRealtimeMessage(value)); err != nil {
 		log.Printf(
 			"device[%s]->mqttClient[%s]->realtime: cannot generate message: %s",
-			devConfig.Name(), mcCfg.Name(), err,
+			devName, mc.Name(), err,
 		)
 	} else {
 		mc.Publish(
-			mc.Config().RealtimeTopic(devConfig.Name(), value.Register().Name()),
+			cfg.RealtimeTopic(devName, value.Register().Name()),
 			payload,
 			mCfg.Qos(),
 			mCfg.Retain(),

@@ -78,5 +78,5 @@ type viewDeviceConfig struct {
 }
 
 func (c viewDeviceConfig) RegisterFilter() dataflow.RegisterFilterConf {
-	return c.RegisterFilter()
+	return c.ViewDeviceConfig.RegisterFilter()
 }

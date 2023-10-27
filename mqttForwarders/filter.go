@@ -1,7 +1,6 @@
 package mqttForwarders
 
 import (
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 )
@@ -11,7 +10,7 @@ var availabilityRegisterFilter = func(r dataflow.Register) bool {
 	return r.Name() != device.AvailabilityRegisterName
 }
 
-func createRegisterValueFilter(registerFilter config.RegisterFilterConfig) dataflow.RegisterFilterFunc {
+func createRegisterValueFilter(registerFilter dataflow.RegisterFilterConf) dataflow.RegisterFilterFunc {
 	f0 := availabilityRegisterFilter
 	f1 := dataflow.RegisterFilter(registerFilter)
 	return func(r dataflow.Register) bool {
@@ -19,7 +18,7 @@ func createRegisterValueFilter(registerFilter config.RegisterFilterConfig) dataf
 	}
 }
 
-func createDeviceAndRegisterValueFilter(dev device.Device, registerFilter config.RegisterFilterConfig) dataflow.ValueFilterFunc {
+func createDeviceAndRegisterValueFilter(dev device.Device, registerFilter dataflow.RegisterFilterConf) dataflow.ValueFilterFunc {
 	f0 := dataflow.DeviceNameValueFilter(dev.Name())
 	f1 := createRegisterValueFilter(registerFilter)
 	return func(v dataflow.Value) bool {
