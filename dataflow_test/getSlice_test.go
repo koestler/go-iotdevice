@@ -5,10 +5,14 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/koestler/go-iotdevice/dataflow"
+	mock_dataflow "github.com/koestler/go-iotdevice/dataflow/mock"
+	"go.uber.org/mock/gomock"
 	"testing"
 )
 
 func TestValueStorageGetSlice(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
 	storage := dataflow.NewValueStorage()
 
 	fillSetA(storage)
@@ -60,21 +64,15 @@ func TestValueStorageGetSlice(t *testing.T) {
 		expect := []string{
 			"device-0:register-a=1.000000",
 		}
-		got := getAsStrings(storage.GetStateFiltered(func(value dataflow.Value) bool {
-			if value.Register().Name() == "register-b" {
-				return false
-			}
 
-			if value.Register().Category() == "set-b" {
-				return false
-			}
+		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
+		fc.EXPECT().SkipRegisters().Return([]string{"register-b"}).AnyTimes()
+		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
+		fc.EXPECT().SkipCategories().Return([]string{"set-b", "set-c"}).AnyTimes()
+		fc.EXPECT().IncludeCategories().Return([]string{}).AnyTimes()
+		fc.EXPECT().DefaultInclude().Return(true).AnyTimes()
 
-			if value.Register().Category() == "set-c" {
-				return false
-			}
-
-			return true
-		}))
+		got := getAsStrings(storage.GetStateFiltered(dataflow.RegisterValueFilter(fc)))
 
 		if !equalIgnoreOrder(expect, got) {
 			t.Errorf("expect %#v but got %#v", expect, got)

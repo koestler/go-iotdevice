@@ -3,6 +3,8 @@ package dataflow_test
 import (
 	"context"
 	"github.com/koestler/go-iotdevice/dataflow"
+	mock_dataflow "github.com/koestler/go-iotdevice/dataflow/mock"
+	"go.uber.org/mock/gomock"
 	"sync"
 	"testing"
 )
@@ -54,6 +56,8 @@ func TestValueStorageSubscribe(t *testing.T) {
 }
 
 func TestValueStorageSubscribeWithFilter(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
 	run := func(filter dataflow.ValueFilterFunc) (values []dataflow.Value) {
 		storage := dataflow.NewValueStorage()
 		ctx, cancel := context.WithCancel(context.Background())
@@ -97,18 +101,14 @@ func TestValueStorageSubscribeWithFilter(t *testing.T) {
 	})
 
 	t.Run("filterSkipRegisterCategories", func(t *testing.T) {
-		// todo: rewrite with RegisterFilter?
-		values := run(func(value dataflow.Value) bool {
-			if value.Register().Name() == "register-b" {
-				return false
-			}
+		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
+		fc.EXPECT().SkipRegisters().Return([]string{"register-b"}).AnyTimes()
+		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
+		fc.EXPECT().SkipCategories().Return([]string{"set-c"}).AnyTimes()
+		fc.EXPECT().IncludeCategories().Return([]string{}).AnyTimes()
+		fc.EXPECT().DefaultInclude().Return(true).AnyTimes()
 
-			if value.Register().Category() == "set-c" {
-				return false
-			}
-
-			return true
-		})
+		values := run(dataflow.RegisterValueFilter(fc))
 
 		// check values
 		expect := []string{
