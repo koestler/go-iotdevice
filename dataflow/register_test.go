@@ -2,6 +2,8 @@ package dataflow_test
 
 import (
 	"github.com/koestler/go-iotdevice/dataflow"
+	mock_dataflow "github.com/koestler/go-iotdevice/dataflow/mock"
+	"go.uber.org/mock/gomock"
 	"reflect"
 	"testing"
 )
@@ -136,24 +138,27 @@ func TestEnumRegisterCreatorAndGetters(t *testing.T) {
 	}
 }
 
-/*
-Todo: implement new test using mock for RegisterFilter Struct
-
 func TestFilterRegisters(t *testing.T) {
-	stimuliRegisters := []Register{
+	stimuliRegisters := []dataflow.Register{
 		getTestTextRegisterWithName("a"),
 		getTestTextRegisterWithName("b"),
 		getTestNumberRegister(),
 		getTestEnumRegister(),
 	}
 
-	t.Run("nothing", func(t *testing.T) {
-		got := FilterRegisters(
-			stimuliRegisters,
-			RegisterFilterConf{},
-		)
+	ctrl := gomock.NewController(t)
 
-		expect := []Register{
+	t.Run("nothing", func(t *testing.T) {
+		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
+		fc.EXPECT().SkipRegisters().Return([]string{}).AnyTimes()
+		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
+		fc.EXPECT().SkipCategories().Return([]string{}).AnyTimes()
+		fc.EXPECT().IncludeCategories().Return([]string{}).AnyTimes()
+		fc.EXPECT().DefaultInclude().Return(true).AnyTimes()
+
+		got := dataflow.FilterRegisters(stimuliRegisters, fc)
+
+		expect := []dataflow.Register{
 			getTestTextRegisterWithName("a"),
 			getTestTextRegisterWithName("b"),
 			getTestNumberRegister(),
@@ -166,13 +171,16 @@ func TestFilterRegisters(t *testing.T) {
 	})
 
 	t.Run("byFields", func(t *testing.T) {
-		got := FilterRegisters(
-			stimuliRegisters,
-			[]string{"a"},
-			[]string{},
-		)
+		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
+		fc.EXPECT().SkipRegisters().Return([]string{"a"}).AnyTimes()
+		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
+		fc.EXPECT().SkipCategories().Return([]string{}).AnyTimes()
+		fc.EXPECT().IncludeCategories().Return([]string{}).AnyTimes()
+		fc.EXPECT().DefaultInclude().Return(true).AnyTimes()
 
-		expect := []Register{
+		got := dataflow.FilterRegisters(stimuliRegisters, fc)
+
+		expect := []dataflow.Register{
 			getTestTextRegisterWithName("b"),
 			getTestNumberRegister(),
 			getTestEnumRegister(),
@@ -184,13 +192,17 @@ func TestFilterRegisters(t *testing.T) {
 	})
 
 	t.Run("byCategories", func(t *testing.T) {
-		got := FilterRegisters(
-			stimuliRegisters,
-			[]string{},
-			[]string{"test-number-register-category"},
-		)
 
-		expect := []Register{
+		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
+		fc.EXPECT().SkipRegisters().Return([]string{}).AnyTimes()
+		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
+		fc.EXPECT().SkipCategories().Return([]string{"test-number-register-category"}).AnyTimes()
+		fc.EXPECT().IncludeCategories().Return([]string{}).AnyTimes()
+		fc.EXPECT().DefaultInclude().Return(true).AnyTimes()
+
+		got := dataflow.FilterRegisters(stimuliRegisters, fc)
+
+		expect := []dataflow.Register{
 			getTestTextRegisterWithName("a"),
 			getTestTextRegisterWithName("b"),
 			getTestEnumRegister(),
@@ -201,7 +213,6 @@ func TestFilterRegisters(t *testing.T) {
 		}
 	})
 }
-*/
 
 func TestSortRegisters(t *testing.T) {
 	stimuliRegisters := []dataflow.Register{

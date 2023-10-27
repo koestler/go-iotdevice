@@ -12,8 +12,6 @@ import (
 	"testing"
 )
 
-//go:generate mockgen -source register.go -destination mock/register_mock.go
-
 func TestRegisterDb(t *testing.T) {
 	const numbPopulate = 21
 	const numbGet = 18

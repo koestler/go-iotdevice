@@ -1,5 +1,17 @@
 package dataflow
 
+//go:generate mockgen -source registerFilter.go -destination mock/registerFilter_mock.go
+
+type RegisterFilterFunc func(Register) bool
+
+type RegisterFilterConf interface {
+	IncludeRegisters() []string
+	SkipRegisters() []string
+	IncludeCategories() []string
+	SkipCategories() []string
+	DefaultInclude() bool
+}
+
 func RegisterFilter(registerFilter RegisterFilterConf) RegisterFilterFunc {
 	includeRegistersMap := sliceToMap(registerFilter.IncludeRegisters())
 	skipRegistersMap := sliceToMap(registerFilter.SkipRegisters())
@@ -17,7 +29,7 @@ func RegisterFilter(registerFilter RegisterFilterConf) RegisterFilterFunc {
 			return false
 		}
 
-		categoryName := reg.Name()
+		categoryName := reg.Category()
 		if _, ok := includeCategoriesMap[categoryName]; ok {
 			return true
 		}
