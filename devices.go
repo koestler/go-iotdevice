@@ -28,6 +28,7 @@ func runNonMqttDevices(
 			log.Printf("device[%s]: start victron type", deviceConfig.Name())
 		}
 
+		deviceConfig := victronDeviceConfig{deviceConfig}
 		dev := victronDevice.NewDevice(deviceConfig, deviceConfig, stateStorage)
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		watchedDev.Run()
@@ -39,6 +40,7 @@ func runNonMqttDevices(
 			log.Printf("device[%s]: start modbus type", deviceConfig.Name())
 		}
 
+		deviceConfig := modbusDeviceConfig{deviceConfig}
 		modbusInstance := modbusPool.GetByName(deviceConfig.Bus())
 		if modbusInstance == nil {
 			log.Printf("device[%s]: start failed: bus=%s unavailable", deviceConfig.Name(), deviceConfig.Bus())
@@ -56,6 +58,7 @@ func runNonMqttDevices(
 			log.Printf("device[%s]: start tearacom type", deviceConfig.Name())
 		}
 
+		deviceConfig := httpDeviceConfig{deviceConfig}
 		dev := httpDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, commandStorage)
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		watchedDev.Run()
@@ -76,9 +79,44 @@ func runMqttDevices(
 			log.Printf("device[%s]: start mqtt type", deviceConfig.Name())
 		}
 
+		deviceConfig := mqttDeviceConfig{deviceConfig}
 		dev := mqttDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, mqttClientPool)
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		watchedDev.Run()
 		devicePool.Add(watchedDev)
 	}
+}
+
+// the following structs / methods are used to cast config.RegisterFilterConfig into dataflow.RegisterFilterConf
+
+type victronDeviceConfig struct {
+	config.VictronDeviceConfig
+}
+
+func (c victronDeviceConfig) RegisterFilter() dataflow.RegisterFilterConf {
+	return c.RegisterFilter()
+}
+
+type modbusDeviceConfig struct {
+	config.ModbusDeviceConfig
+}
+
+func (c modbusDeviceConfig) RegisterFilter() dataflow.RegisterFilterConf {
+	return c.RegisterFilter()
+}
+
+type httpDeviceConfig struct {
+	config.HttpDeviceConfig
+}
+
+func (c httpDeviceConfig) RegisterFilter() dataflow.RegisterFilterConf {
+	return c.RegisterFilter()
+}
+
+type mqttDeviceConfig struct {
+	config.MqttDeviceConfig
+}
+
+func (c mqttDeviceConfig) RegisterFilter() dataflow.RegisterFilterConf {
+	return c.RegisterFilter()
 }

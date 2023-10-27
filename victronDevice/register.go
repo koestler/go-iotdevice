@@ -1,7 +1,6 @@
 package victronDevice
 
 import (
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 )
 
@@ -29,7 +28,7 @@ func MergeRegisters(maps ...[]VictronRegister) (output []VictronRegister) {
 	return
 }
 
-func FilterRegisters(input []VictronRegister, registerFilter config.RegisterFilterConfig) (output []VictronRegister) {
+func FilterRegisters(input []VictronRegister, registerFilter dataflow.RegisterFilterConf) (output []VictronRegister) {
 	output = make([]VictronRegister, 0, len(input))
 	f := dataflow.RegisterFilter(registerFilter)
 	for _, r := range input {

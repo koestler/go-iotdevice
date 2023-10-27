@@ -2,13 +2,12 @@ package device
 
 import (
 	"context"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 )
 
 type Config interface {
 	Name() string
-	RegisterFilter() config.RegisterFilterConfig
+	RegisterFilter() dataflow.RegisterFilterConf
 	LogDebug() bool
 	LogComDebug() bool
 }
