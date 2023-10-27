@@ -170,7 +170,27 @@ func TestFilterRegisters(t *testing.T) {
 		}
 	})
 
-	t.Run("byFields", func(t *testing.T) {
+	t.Run("onlyIncludeRegisters", func(t *testing.T) {
+		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
+		fc.EXPECT().SkipRegisters().Return([]string{}).AnyTimes()
+		fc.EXPECT().IncludeRegisters().Return([]string{"a", "b"}).AnyTimes()
+		fc.EXPECT().SkipCategories().Return([]string{}).AnyTimes()
+		fc.EXPECT().IncludeCategories().Return([]string{}).AnyTimes()
+		fc.EXPECT().DefaultInclude().Return(false).AnyTimes()
+
+		got := dataflow.FilterRegisters(stimuliRegisters, fc)
+
+		expect := []dataflow.Register{
+			getTestTextRegisterWithName("a"),
+			getTestTextRegisterWithName("b"),
+		}
+
+		if !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect %#v but got %#v", expect, got)
+		}
+	})
+
+	t.Run("onlySkipRegisters", func(t *testing.T) {
 		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
 		fc.EXPECT().SkipRegisters().Return([]string{"a"}).AnyTimes()
 		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
@@ -191,7 +211,27 @@ func TestFilterRegisters(t *testing.T) {
 		}
 	})
 
-	t.Run("byCategories", func(t *testing.T) {
+	t.Run("onlyIncludeCategories", func(t *testing.T) {
+
+		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
+		fc.EXPECT().SkipRegisters().Return([]string{}).AnyTimes()
+		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
+		fc.EXPECT().SkipCategories().Return([]string{}).AnyTimes()
+		fc.EXPECT().IncludeCategories().Return([]string{"test-number-register-category"}).AnyTimes()
+		fc.EXPECT().DefaultInclude().Return(false).AnyTimes()
+
+		got := dataflow.FilterRegisters(stimuliRegisters, fc)
+
+		expect := []dataflow.Register{
+			getTestNumberRegister(),
+		}
+
+		if !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect %#v but got %#v", expect, got)
+		}
+	})
+
+	t.Run("onlySkipCategories", func(t *testing.T) {
 
 		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
 		fc.EXPECT().SkipRegisters().Return([]string{}).AnyTimes()
