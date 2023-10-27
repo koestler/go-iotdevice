@@ -3,15 +3,15 @@ package modbusDevice
 import (
 	"context"
 	"fmt"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
+	"github.com/koestler/go-iotdevice/types"
 	"time"
 )
 
 type Config interface {
 	Bus() string
-	Kind() config.ModbusDeviceKind
+	Kind() types.ModbusDeviceKind
 	Address() byte
 	RelayDescription(name string) string
 	RelayOpenLabel(name string) string
@@ -53,7 +53,7 @@ func NewDevice(
 
 func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
 	switch c.modbusConfig.Kind() {
-	case config.ModbusWaveshareRtuRelay8Kind:
+	case types.ModbusWaveshareRtuRelay8Kind:
 		return runWaveshareRtuRelay8(ctx, c)
 	default:
 		return fmt.Errorf("unknown device kind: %s", c.modbusConfig.Kind().String()), true

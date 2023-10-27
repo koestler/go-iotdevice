@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/koestler/go-iotdevice/types"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
 	"gopkg.in/yaml.v3"
@@ -680,7 +681,7 @@ func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, e
 
 func (c victronDeviceConfigRead) TransformAndValidate(name string) (ret VictronDeviceConfig, err []error) {
 	ret = VictronDeviceConfig{
-		kind:   VictronDeviceKindFromString(c.Kind),
+		kind:   types.VictronDeviceKindFromString(c.Kind),
 		device: c.Device,
 	}
 
@@ -688,11 +689,11 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string) (ret VictronD
 	ret.DeviceConfig, e = c.General.TransformAndValidate(name)
 	err = append(err, e...)
 
-	if ret.kind == VictronUndefinedKind {
+	if ret.kind == types.VictronUndefinedKind {
 		err = append(err, fmt.Errorf("VictronDevices->%s->Kind='%s' is invalid", name, c.Kind))
 	}
 
-	if ret.kind == VictronVedirectKind && len(c.Device) < 1 {
+	if ret.kind == types.VictronVedirectKind && len(c.Device) < 1 {
 		err = append(err, fmt.Errorf("VictronDevices->%s->Device must not be empty", name))
 	}
 
@@ -703,7 +704,7 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 	name string, modbus []ModbusConfig,
 ) (ret ModbusDeviceConfig, err []error) {
 	ret = ModbusDeviceConfig{
-		kind: ModbusDeviceKindFromString(c.Kind),
+		kind: types.ModbusDeviceKindFromString(c.Kind),
 		bus:  c.Bus,
 	}
 
@@ -711,7 +712,7 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 	ret.DeviceConfig, e = c.General.TransformAndValidate(name)
 	err = append(err, e...)
 
-	if ret.kind == ModbusUndefinedKind {
+	if ret.kind == types.ModbusUndefinedKind {
 		err = append(err, fmt.Errorf("ModbusDevices->%s->Kind='%s' is invalid", name, c.Kind))
 	}
 
@@ -773,7 +774,7 @@ func (c relayConfigRead) TransformAndValidate() (ret RelayConfig, err []error) {
 
 func (c httpDeviceConfigRead) TransformAndValidate(name string) (ret HttpDeviceConfig, err []error) {
 	ret = HttpDeviceConfig{
-		kind:     HttpDeviceKindFromString(c.Kind),
+		kind:     types.HttpDeviceKindFromString(c.Kind),
 		username: c.Username,
 		password: c.Password,
 	}
@@ -794,7 +795,7 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string) (ret HttpDeviceC
 		}
 	}
 
-	if ret.kind == HttpUndefinedKind {
+	if ret.kind == types.HttpUndefinedKind {
 		err = append(err, fmt.Errorf("HttpDevices->%s->Kind='%s' is invalid", name, c.Kind))
 	}
 

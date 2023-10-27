@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/koestler/go-iotdevice/types"
 	"net/url"
 	"strings"
 	"time"
@@ -346,7 +347,7 @@ func (c VictronDeviceConfig) Device() string {
 	return c.device
 }
 
-func (c VictronDeviceConfig) Kind() VictronDeviceKind {
+func (c VictronDeviceConfig) Kind() types.VictronDeviceKind {
 	return c.kind
 }
 
@@ -356,7 +357,7 @@ func (c ModbusDeviceConfig) Bus() string {
 	return c.bus
 }
 
-func (c ModbusDeviceConfig) Kind() ModbusDeviceKind {
+func (c ModbusDeviceConfig) Kind() types.ModbusDeviceKind {
 	return c.kind
 }
 
@@ -395,7 +396,7 @@ func (c HttpDeviceConfig) Url() *url.URL {
 	return c.url
 }
 
-func (c HttpDeviceConfig) Kind() HttpDeviceKind {
+func (c HttpDeviceConfig) Kind() types.HttpDeviceKind {
 	return c.kind
 }
 

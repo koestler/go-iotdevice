@@ -1,8 +1,8 @@
 package httpDevice
 
 import (
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/types"
 	"net/http"
 )
 
@@ -17,9 +17,9 @@ type Implementation interface {
 
 func implementationFactory(ds *DeviceStruct) Implementation {
 	switch k := ds.httpConfig.Kind(); k {
-	case config.HttpTeracomKind:
+	case types.HttpTeracomKind:
 		return &TeracomDevice{ds}
-	case config.HttpShellyEm3Kind:
+	case types.HttpShellyEm3Kind:
 		return &ShellyEm3Device{ds}
 	default:
 		panic("unimplemented kind: " + k.String())

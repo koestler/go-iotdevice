@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/koestler/go-iotdevice/types"
 	"net/url"
 	"time"
 )
@@ -107,13 +108,13 @@ type DeviceConfig struct {
 type VictronDeviceConfig struct {
 	DeviceConfig
 	device string
-	kind   VictronDeviceKind
+	kind   types.VictronDeviceKind
 }
 
 type ModbusDeviceConfig struct {
 	DeviceConfig
 	bus          string
-	kind         ModbusDeviceKind
+	kind         types.ModbusDeviceKind
 	address      byte
 	relays       map[string]RelayConfig
 	pollInterval time.Duration
@@ -128,7 +129,7 @@ type RelayConfig struct {
 type HttpDeviceConfig struct {
 	DeviceConfig
 	url          *url.URL
-	kind         HttpDeviceKind
+	kind         types.HttpDeviceKind
 	username     string
 	password     string
 	pollInterval time.Duration
@@ -162,27 +163,3 @@ type RegisterFilterConfig struct {
 	skipCategories    []string
 	defaultInclude    bool
 }
-
-type VictronDeviceKind int
-
-const (
-	VictronUndefinedKind VictronDeviceKind = iota
-	VictronRandomBmvKind
-	VictronRandomSolarKind
-	VictronVedirectKind
-)
-
-type ModbusDeviceKind int
-
-const (
-	ModbusUndefinedKind ModbusDeviceKind = iota
-	ModbusWaveshareRtuRelay8Kind
-)
-
-type HttpDeviceKind int
-
-const (
-	HttpUndefinedKind HttpDeviceKind = iota
-	HttpTeracomKind
-	HttpShellyEm3Kind
-)

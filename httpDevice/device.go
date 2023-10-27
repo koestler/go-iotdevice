@@ -3,9 +3,9 @@ package httpDevice
 import (
 	"context"
 	"fmt"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
+	"github.com/koestler/go-iotdevice/types"
 	"io"
 	"log"
 	"net/http"
@@ -15,7 +15,7 @@ import (
 
 type Config interface {
 	Url() *url.URL
-	Kind() config.HttpDeviceKind
+	Kind() types.HttpDeviceKind
 	Username() string
 	Password() string
 	PollInterval() time.Duration
@@ -137,7 +137,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 			}
 		}
 
-		// reset the command; this allows the same command (eg. toggle) to be sent again
+		// reset the command; this allows the same command (eG. toggle) to be sent again
 		ds.commandStorage.Fill(dataflow.NewNullRegisterValue(ds.Config().Name(), value.Register()))
 	}
 

@@ -3,14 +3,14 @@ package victronDevice
 import (
 	"context"
 	"fmt"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
+	"github.com/koestler/go-iotdevice/types"
 )
 
 type Config interface {
 	Device() string
-	Kind() config.VictronDeviceKind
+	Kind() types.VictronDeviceKind
 }
 
 type DeviceStruct struct {
@@ -36,11 +36,11 @@ func NewDevice(
 
 func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
 	switch c.victronConfig.Kind() {
-	case config.VictronVedirectKind:
+	case types.VictronVedirectKind:
 		return runVedirect(ctx, c, c.StateStorage())
-	case config.VictronRandomBmvKind:
+	case types.VictronRandomBmvKind:
 		return runRandom(ctx, c, c.StateStorage(), RegisterListBmv712)
-	case config.VictronRandomSolarKind:
+	case types.VictronRandomSolarKind:
 		return runRandom(ctx, c, c.StateStorage(), RegisterListSolar)
 	default:
 		return fmt.Errorf("unknown device kind: %s", c.victronConfig.Kind().String()), true

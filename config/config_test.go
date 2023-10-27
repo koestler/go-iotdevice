@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"github.com/koestler/go-iotdevice/types"
 	"log"
 	"os"
 	"reflect"
@@ -930,7 +931,7 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect VictronDevices->bmv0->Device to be '%s' but got '%s'", expect, got)
 		}
 
-		if expect, got := VictronVedirectKind, vd.Kind(); expect != got {
+		if expect, got := types.VictronVedirectKind, vd.Kind(); expect != got {
 			t.Errorf("expect VictronDevices->bmv0->Kind to be %s but got %s", expect, got)
 		}
 	}
@@ -989,7 +990,7 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect ModebusDevices->modbus-rtu0->Bus to be '%s' but got '%s'", expect, got)
 		}
 
-		if expect, got := ModbusWaveshareRtuRelay8Kind, md.Kind(); expect != got {
+		if expect, got := types.ModbusWaveshareRtuRelay8Kind, md.Kind(); expect != got {
 			t.Errorf("expect ModebusDevices->modbus-rtu0->Kind to be %s but got %s", expect, got)
 		}
 
@@ -1027,7 +1028,7 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect HttpDevices->tcw241->Url to be '%s' but got '%s'", expect, got)
 		}
 
-		if expect, got := HttpTeracomKind, hd.Kind(); expect != got {
+		if expect, got := types.HttpTeracomKind, hd.Kind(); expect != got {
 			t.Errorf("expect HttpDevices->tcw241->Kind to be %s but got %s", expect, got)
 		}
 
@@ -1678,7 +1679,7 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Errorf("expect VictronDevices->bmv0->Device to be '%s' but got '%s'", expect, got)
 		}
 
-		if expect, got := VictronRandomBmvKind, vd.Kind(); expect != got {
+		if expect, got := types.VictronRandomBmvKind, vd.Kind(); expect != got {
 			t.Errorf("expect VictronDevices->bmv0->Kind to be %s but got %s", expect, got)
 		}
 	}
@@ -1712,7 +1713,7 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Errorf("expect ModebusDevices->modbus-rtu0->Bus to be '%s' but got '%s'", expect, got)
 		}
 
-		if expect, got := ModbusWaveshareRtuRelay8Kind, md.Kind(); expect != got {
+		if expect, got := types.ModbusWaveshareRtuRelay8Kind, md.Kind(); expect != got {
 			t.Errorf("expect ModebusDevices->modbus-rtu0->Kind to be %s but got %s", expect, got)
 		}
 
@@ -1750,7 +1751,7 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Errorf("expect HttpDevices->tcw241->Url to be '%s' but got '%s'", expect, got)
 		}
 
-		if expect, got := HttpTeracomKind, hd.Kind(); expect != got {
+		if expect, got := types.HttpTeracomKind, hd.Kind(); expect != got {
 			t.Errorf("expect HttpDevices->tcw241->Kind to be %s but got %s", expect, got)
 		}
 
