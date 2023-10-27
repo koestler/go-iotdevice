@@ -14,7 +14,7 @@ type Config interface {
 
 type Device interface {
 	Name() string
-	Config() Config // todo: remove?
+	Config() Config
 	RegisterDb() *dataflow.RegisterDb
 	SubscribeAvailableSendInitial(ctx context.Context) (availChan <-chan bool)
 	Model() string

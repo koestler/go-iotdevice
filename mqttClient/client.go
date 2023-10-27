@@ -35,10 +35,6 @@ func (c *ClientStruct) Name() string {
 	return c.cfg.Name()
 }
 
-func (c *ClientStruct) Config() Config {
-	return c.cfg
-}
-
 func (c *ClientStruct) GetCtx() context.Context {
 	return c.ctx
 }

@@ -138,10 +138,10 @@ func structurePeriodicModeRoutine(
 	}
 }
 
-func getAvailabilityTopics(cfg Config, devName string, mcCfg mqttClient.Config) (ret []string) {
+func getAvailabilityTopics(cfg Config, devName string) (ret []string) {
 	ret = make([]string, 0, 2)
 	if cfg.AvailabilityClient().Enabled() {
-		ret = append(ret, mcCfg.AvailabilityClientTopic())
+		ret = append(ret, cfg.AvailabilityClientTopic())
 	}
 	if cfg.AvailabilityDevice().Enabled() && existsByName(devName, cfg.AvailabilityDevice().Devices()) {
 		ret = append(ret, cfg.AvailabilityDeviceTopic(devName))
@@ -171,11 +171,10 @@ func getRealtimeTopic(cfg Config, devName string) string {
 }
 
 func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic string, registers []StructRegister) {
-	mcCfg := mc.Config()
 	mCfg := cfg.Structure()
 
 	msg := StructureMessage{
-		AvailabilityTopics: getAvailabilityTopics(cfg, devName, mcCfg),
+		AvailabilityTopics: getAvailabilityTopics(cfg, devName),
 		RealtimeTopic:      getRealtimeTopic(cfg, devName),
 		Registers:          registers,
 	}
@@ -183,14 +182,14 @@ func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic strin
 	if cfg.LogDebug() {
 		log.Printf(
 			"device[%s]->mqttClient[%s]->structure: send: %v",
-			devName, mcCfg.Name(), msg,
+			devName, mc.Name(), msg,
 		)
 	}
 
 	if payload, err := json.Marshal(msg); err != nil {
 		log.Printf(
 			"device[%s]->mqttClient[%s]->structure: cannot generate message: %s",
-			devName, mcCfg.Name(), err,
+			devName, mc.Name(), err,
 		)
 	} else {
 		mc.Publish(

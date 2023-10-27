@@ -46,20 +46,20 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	counter := 0
 	for _, mc := range c.mqttClientPool.GetByNames(c.mqttConfig.MqttClients()) {
 		for _, topic := range c.mqttConfig.MqttTopics() {
-			log.Printf("mqttDevice[%s] subscribe to mqttClient=%s topic=%s", c.Name(), mc.Config().Name(), topic)
+			log.Printf("mqttDevice[%s] subscribe to mqttClient=%s topic=%s", c.Name(), mc.Name(), topic)
 			mc.AddRoute(topic, func(m mqttClient.Message) {
 				registerName, err := parseTopic(m.Topic())
 				if err != nil {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse topic: %s", c.Name(), mc.Config().Name(), err)
+					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse topic: %s", c.Name(), mc.Name(), err)
 					return
 				}
 				realtimeMessage, err := parsePayload(m.Payload())
 				if err != nil {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse payload: %s", c.Name(), mc.Config().Name(), err)
+					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse payload: %s", c.Name(), mc.Name(), err)
 					return
 				}
 
-				log.Printf("mqttDevice[%s]->mqttClient[%s]: received registerName=%v, msg=%v", c.Name(), mc.Config().Name(), registerName, realtimeMessage)
+				log.Printf("mqttDevice[%s]->mqttClient[%s]: received registerName=%v, msg=%v", c.Name(), mc.Name(), registerName, realtimeMessage)
 
 				/*
 					register := c.addIgnoreRegister(registerName, realtimeMessage)

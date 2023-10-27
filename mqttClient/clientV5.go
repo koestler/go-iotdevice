@@ -116,7 +116,7 @@ func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.
 				if !ok {
 					break
 				}
-				if c.Config().LogDebug() {
+				if c.cfg.LogDebug() {
 					log.Printf("mqttClientV5[%s]: published backlog message", c.cfg.Name())
 				}
 
@@ -163,7 +163,7 @@ func (c *ClientStruct) Publish(topic string, payload []byte, qos byte, retain bo
 
 	_, err := c.cm.Publish(c.ctx, p)
 	if err != nil {
-		if c.Config().LogDebug() {
+		if c.cfg.LogDebug() {
 			log.Printf("mqttClientV5[%s]: error during publish, add to backlog: %s", c.cfg.Name(), err)
 		}
 		c.publishBacklog.Enqueue(p)

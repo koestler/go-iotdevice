@@ -36,7 +36,6 @@ type MqttSectionConfig interface {
 
 type Client interface {
 	Name() string
-	Config() Config // todo: remove?
 	GetCtx() context.Context
 	Run()
 	Shutdown()
