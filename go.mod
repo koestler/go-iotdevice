@@ -16,6 +16,7 @@ require (
 	github.com/sigurn/crc16 v0.0.0-20211026045750-20ab5afb07e3
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07
 	github.com/tg123/go-htpasswd v1.2.1
+	go.uber.org/mock v0.3.0
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/sync v0.4.0
 	gopkg.in/yaml.v3 v3.0.1

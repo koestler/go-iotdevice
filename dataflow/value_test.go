@@ -1,6 +1,7 @@
-package dataflow
+package dataflow_test
 
 import (
+	"github.com/koestler/go-iotdevice/dataflow"
 	"reflect"
 	"testing"
 )
@@ -8,7 +9,7 @@ import (
 func TestNewNumericRegisterValue(t *testing.T) {
 	testReg := getTestNumberRegister()
 
-	nrv := NewNumericRegisterValue(
+	nrv := dataflow.NewNumericRegisterValue(
 		"device-name",
 		testReg,
 		3.14,
@@ -31,7 +32,7 @@ func TestNewNumericRegisterValue(t *testing.T) {
 	}
 
 	{
-		matchingNrv := NewNumericRegisterValue(
+		matchingNrv := dataflow.NewNumericRegisterValue(
 			"device-name",
 			getTestNumberRegister(),
 			3.14,
@@ -42,7 +43,7 @@ func TestNewNumericRegisterValue(t *testing.T) {
 	}
 
 	{
-		differentNrv := NewNumericRegisterValue(
+		differentNrv := dataflow.NewNumericRegisterValue(
 			"device-name",
 			getTestNumberRegister(),
 			3.15,
@@ -53,7 +54,7 @@ func TestNewNumericRegisterValue(t *testing.T) {
 	}
 
 	{
-		differentNrv := NewNumericRegisterValue(
+		differentNrv := dataflow.NewNumericRegisterValue(
 			"device-name",
 			getTestTextRegister(),
 			3.14,
@@ -67,7 +68,7 @@ func TestNewNumericRegisterValue(t *testing.T) {
 func TestNewTextRegisterValue(t *testing.T) {
 	testReg := getTestNumberRegister()
 
-	nrv := NewTextRegisterValue(
+	nrv := dataflow.NewTextRegisterValue(
 		"device-name",
 		testReg,
 		"foobar",
@@ -93,7 +94,7 @@ func TestNewTextRegisterValue(t *testing.T) {
 func TestNewEnumRegisterValue(t *testing.T) {
 	testReg := getTestEnumRegister()
 
-	nrv := NewEnumRegisterValue(
+	nrv := dataflow.NewEnumRegisterValue(
 		"device-name",
 		testReg,
 		1,
@@ -119,7 +120,7 @@ func TestNewEnumRegisterValue(t *testing.T) {
 func TestNewNullRegisterValue(t *testing.T) {
 	testReg := getTestEnumRegister()
 
-	nrv := NewNullRegisterValue(
+	nrv := dataflow.NewNullRegisterValue(
 		"device-name",
 		testReg,
 	)

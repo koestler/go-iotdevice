@@ -401,7 +401,7 @@ docker run --rm --name go-iotdevice -p 127.0.0.1:8000:8000 \
 
 ### run tests
 ```bash
-go install github.com/golang/mock/mockgen@v1.6.0
+go install go.uber.org/mock/mockgen@latest
 go genreate ./...
 go test ./...
 ```

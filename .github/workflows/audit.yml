@@ -30,5 +30,11 @@ jobs:
       - name: Run staticcheck
         run: staticcheck ./...
 
+      - name: Install mockgen
+        run: go install go.uber.org/mock/mockgen@latest
+
+      - name: Generate mocks
+        run: go generate -v ./...
+
       - name: Test
         run: go test -v ./...

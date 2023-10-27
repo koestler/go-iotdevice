@@ -1,16 +1,17 @@
-package dataflow
+package dataflow_test
 
 import (
+	"github.com/koestler/go-iotdevice/dataflow"
 	"reflect"
 	"testing"
 )
 
-func getTestTextRegisterWithName(name string) RegisterStruct {
-	return NewRegisterStruct(
+func getTestTextRegisterWithName(name string) dataflow.RegisterStruct {
+	return dataflow.NewRegisterStruct(
 		"test-text-register-category",
 		name,
 		"test-text-register-description",
-		TextRegister,
+		dataflow.TextRegister,
 		map[int]string{},
 		"test-text-register-unit",
 		40,
@@ -18,16 +19,16 @@ func getTestTextRegisterWithName(name string) RegisterStruct {
 	)
 }
 
-func getTestTextRegister() RegisterStruct {
+func getTestTextRegister() dataflow.RegisterStruct {
 	return getTestTextRegisterWithName("test-text-register-name")
 }
 
-func getTestNumberRegister() RegisterStruct {
-	return NewRegisterStruct(
+func getTestNumberRegister() dataflow.RegisterStruct {
+	return dataflow.NewRegisterStruct(
 		"test-number-register-category",
 		"test-number-register-name",
 		"test-number-register-description",
-		NumberRegister,
+		dataflow.NumberRegister,
 		map[int]string{},
 		"test-number-register-unit",
 		41,
@@ -35,12 +36,12 @@ func getTestNumberRegister() RegisterStruct {
 	)
 }
 
-func getTestEnumRegister() RegisterStruct {
-	return NewRegisterStruct(
+func getTestEnumRegister() dataflow.RegisterStruct {
+	return dataflow.NewRegisterStruct(
 		"test-enum-register-category",
 		"test-enum-register-name",
 		"test-enum-register-description",
-		EnumRegister,
+		dataflow.EnumRegister,
 		map[int]string{0: "A", 1: "B"},
 		"test-enum-register-unit",
 		42,
@@ -60,7 +61,7 @@ func TestTextRegisterCreatorAndGetters(t *testing.T) {
 	if expect, got := "test-text-register-description", register.Description(); expect != got {
 		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expect, got := TextRegister, register.RegisterType(); expect != got {
+	if expect, got := dataflow.TextRegister, register.RegisterType(); expect != got {
 		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
 	if expect, got := map[int]string{}, register.Enum(); !reflect.DeepEqual(expect, got) {
@@ -89,7 +90,7 @@ func TestNumberRegisterCreatorAndGetters(t *testing.T) {
 	if expect, got := "test-number-register-description", register.Description(); expect != got {
 		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expect, got := NumberRegister, register.RegisterType(); expect != got {
+	if expect, got := dataflow.NumberRegister, register.RegisterType(); expect != got {
 		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
 	if expect, got := map[int]string{}, register.Enum(); !reflect.DeepEqual(expect, got) {
@@ -118,7 +119,7 @@ func TestEnumRegisterCreatorAndGetters(t *testing.T) {
 	if expect, got := "test-enum-register-description", register.Description(); expect != got {
 		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
-	if expect, got := EnumRegister, register.RegisterType(); expect != got {
+	if expect, got := dataflow.EnumRegister, register.RegisterType(); expect != got {
 		t.Errorf("expect '%s' but got '%s'", expect, got)
 	}
 	if expect, got := map[int]string{0: "A", 1: "B"}, register.Enum(); !reflect.DeepEqual(expect, got) {
@@ -203,16 +204,16 @@ func TestFilterRegisters(t *testing.T) {
 */
 
 func TestSortRegisters(t *testing.T) {
-	stimuliRegisters := []Register{
+	stimuliRegisters := []dataflow.Register{
 		getTestNumberRegister(),
 		getTestTextRegisterWithName("a"),
 		getTestEnumRegister(),
 		getTestTextRegisterWithName("b"),
 	}
 
-	got := SortRegisters(stimuliRegisters)
+	got := dataflow.SortRegisters(stimuliRegisters)
 
-	expect := []Register{
+	expect := []dataflow.Register{
 		getTestTextRegisterWithName("a"),
 		getTestTextRegisterWithName("b"),
 		getTestNumberRegister(),
