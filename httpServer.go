@@ -33,8 +33,9 @@ func runHttpServer(
 			},
 			ProjectTitle: cfg.ProjectTitle(),
 			Views: func(inp []config.ViewConfig) (oup []httpServer.ViewConfig) {
-				for _, r := range inp {
-					oup = append(oup, viewConfig{r})
+				oup = make([]httpServer.ViewConfig, len(inp))
+				for i, r := range inp {
+					oup[i] = viewConfig{r}
 				}
 				return oup
 			}(cfg.Views()),
