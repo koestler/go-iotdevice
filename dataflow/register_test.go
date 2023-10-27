@@ -139,7 +139,7 @@ func TestEnumRegisterCreatorAndGetters(t *testing.T) {
 }
 
 func TestFilterRegisters(t *testing.T) {
-	stimuliRegisters := []dataflow.Register{
+	stimuliRegisters := []dataflow.RegisterStruct{
 		getTestTextRegisterWithName("a"),
 		getTestTextRegisterWithName("b"),
 		getTestNumberRegister(),
@@ -158,7 +158,7 @@ func TestFilterRegisters(t *testing.T) {
 
 		got := dataflow.FilterRegisters(stimuliRegisters, fc)
 
-		expect := []dataflow.Register{
+		expect := []dataflow.RegisterStruct{
 			getTestTextRegisterWithName("a"),
 			getTestTextRegisterWithName("b"),
 			getTestNumberRegister(),
@@ -180,7 +180,7 @@ func TestFilterRegisters(t *testing.T) {
 
 		got := dataflow.FilterRegisters(stimuliRegisters, fc)
 
-		expect := []dataflow.Register{
+		expect := []dataflow.RegisterStruct{
 			getTestTextRegisterWithName("a"),
 			getTestTextRegisterWithName("b"),
 		}
@@ -200,7 +200,7 @@ func TestFilterRegisters(t *testing.T) {
 
 		got := dataflow.FilterRegisters(stimuliRegisters, fc)
 
-		expect := []dataflow.Register{
+		expect := []dataflow.RegisterStruct{
 			getTestTextRegisterWithName("b"),
 			getTestNumberRegister(),
 			getTestEnumRegister(),
@@ -222,7 +222,7 @@ func TestFilterRegisters(t *testing.T) {
 
 		got := dataflow.FilterRegisters(stimuliRegisters, fc)
 
-		expect := []dataflow.Register{
+		expect := []dataflow.RegisterStruct{
 			getTestNumberRegister(),
 		}
 
@@ -242,7 +242,7 @@ func TestFilterRegisters(t *testing.T) {
 
 		got := dataflow.FilterRegisters(stimuliRegisters, fc)
 
-		expect := []dataflow.Register{
+		expect := []dataflow.RegisterStruct{
 			getTestTextRegisterWithName("a"),
 			getTestTextRegisterWithName("b"),
 			getTestEnumRegister(),
@@ -255,16 +255,16 @@ func TestFilterRegisters(t *testing.T) {
 }
 
 func TestSortRegisters(t *testing.T) {
-	stimuliRegisters := []dataflow.Register{
+	stimuliRegisters := []dataflow.RegisterStruct{
 		getTestNumberRegister(),
 		getTestTextRegisterWithName("a"),
 		getTestEnumRegister(),
 		getTestTextRegisterWithName("b"),
 	}
 
-	got := dataflow.SortRegisters(stimuliRegisters)
+	got := dataflow.SortRegisterStructs(stimuliRegisters)
 
-	expect := []dataflow.Register{
+	expect := []dataflow.RegisterStruct{
 		getTestTextRegisterWithName("a"),
 		getTestTextRegisterWithName("b"),
 		getTestNumberRegister(),

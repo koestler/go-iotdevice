@@ -8,7 +8,7 @@ import (
 
 type RegisterSubscription struct {
 	ctx           context.Context
-	outputChannel chan Register
+	outputChannel chan RegisterStruct
 	filter        RegisterFilterFunc
 }
 
@@ -54,18 +54,18 @@ func (rdb *RegisterDb) AddStruct(registerStructs ...RegisterStruct) {
 	}
 }
 
-func (rdb *RegisterDb) GetAll() []Register {
+func (rdb *RegisterDb) GetAll() []RegisterStruct {
 	rdb.lock.RLock()
 	defer rdb.lock.RUnlock()
 
-	ret := make([]Register, 0, len(rdb.registers))
+	ret := make([]RegisterStruct, 0, len(rdb.registers))
 	for _, r := range rdb.registers {
 		ret = append(ret, r)
 	}
 	return ret
 }
 
-func (rdb *RegisterDb) GetFiltered(filter RegisterFilterFunc) []Register {
+func (rdb *RegisterDb) GetFiltered(filter RegisterFilterFunc) []RegisterStruct {
 	rdb.lock.RLock()
 	defer rdb.lock.RUnlock()
 
@@ -73,8 +73,8 @@ func (rdb *RegisterDb) GetFiltered(filter RegisterFilterFunc) []Register {
 	return ret
 }
 
-func (rdb *RegisterDb) getFilteredUnlocked(filter RegisterFilterFunc) (ret []Register) {
-	ret = make([]Register, 0)
+func (rdb *RegisterDb) getFilteredUnlocked(filter RegisterFilterFunc) (ret []RegisterStruct) {
+	ret = make([]RegisterStruct, 0)
 	for _, r := range rdb.registers {
 		if filter(r) {
 			ret = append(ret, r)
@@ -84,20 +84,18 @@ func (rdb *RegisterDb) getFilteredUnlocked(filter RegisterFilterFunc) (ret []Reg
 	return ret
 }
 
-func (rdb *RegisterDb) GetByName(registerName string) Register {
+func (rdb *RegisterDb) GetByName(registerName string) (reg RegisterStruct, ok bool) {
 	rdb.lock.RLock()
 	defer rdb.lock.RUnlock()
 
-	if reg, ok := rdb.registers[registerName]; ok {
-		return reg
-	}
-	return nil
+	reg, ok = rdb.registers[registerName]
+	return
 }
 
-func (rdb *RegisterDb) Subscribe(ctx context.Context, filter RegisterFilterFunc) <-chan Register {
+func (rdb *RegisterDb) Subscribe(ctx context.Context, filter RegisterFilterFunc) <-chan RegisterStruct {
 	s := RegisterSubscription{
 		ctx:           ctx,
-		outputChannel: make(chan Register, 16),
+		outputChannel: make(chan RegisterStruct, 16),
 		filter:        filter,
 	}
 
@@ -108,7 +106,7 @@ func (rdb *RegisterDb) Subscribe(ctx context.Context, filter RegisterFilterFunc)
 	elem := rdb.subscriptions.PushBack(s)
 
 	// create routine to send initial values and shut down the subscription once the context is canceled
-	go func(initialRegisters []Register) {
+	go func(initialRegisters []RegisterStruct) {
 		// sending initial set of registers to the output chan
 		for _, reg := range initialRegisters {
 			s.outputChannel <- reg

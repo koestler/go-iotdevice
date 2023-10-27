@@ -210,7 +210,7 @@ func (ds *DeviceStruct) addIgnoreRegister(
 	controllable bool,
 ) dataflow.Register {
 	// check if this register exists already and the properties are still the same
-	if r := ds.RegisterDb().GetByName(registerName); r != nil {
+	if r, ok := ds.RegisterDb().GetByName(registerName); ok {
 		if r.Category() == category &&
 			r.Description() == description &&
 			r.RegisterType() == registerType &&

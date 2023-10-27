@@ -93,11 +93,11 @@ func TestRegisterDb(t *testing.T) {
 	})
 
 	t.Run("GetByName", func(t *testing.T) {
-		if reg := rdb.GetByName("non-existent"); reg != nil {
+		if _, ok := rdb.GetByName("non-existent"); ok {
 			t.Errorf("expect GetByName to return no result")
 		}
 
-		if got := rdb.GetByName("A0"); got == nil {
+		if got, ok := rdb.GetByName("A0"); !ok {
 			t.Errorf("expect GetByName to return ok")
 		} else if expect, got := "A0", got.Name(); expect != got {
 			t.Errorf("expect Register Name to be %s but got %s", expect, got)
@@ -109,7 +109,7 @@ func TestRegisterDb(t *testing.T) {
 	wgSubscribe.Wait()
 }
 
-func nameSlice(list []dataflow.Register) []string {
+func nameSlice(list []dataflow.RegisterStruct) []string {
 	ret := make([]string, len(list))
 	for i, r := range list {
 		ret[i] = r.Name()

@@ -199,7 +199,7 @@ func publishStruct(mc mqttClient.Client, devCfg device.Config, topic string, reg
 	}
 }
 
-func NewStructRegisters(regs ...dataflow.Register) (ret []StructRegister) {
+func NewStructRegisters(regs ...dataflow.RegisterStruct) (ret []StructRegister) {
 	ret = make([]StructRegister, len(regs))
 	for i, reg := range regs {
 		ret[i] = NewStructRegister(reg)

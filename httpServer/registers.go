@@ -54,7 +54,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 
 				registers := deviceWatcher.Service().RegisterDb().GetAll()
 				registers = dataflow.FilterRegisters(registers, viewDevice.RegisterFilter())
-				dataflow.SortRegisters(registers)
+				dataflow.SortRegisterStructs(registers)
 				response := make([]registerResponse, len(registers))
 				for i, v := range registers {
 					response[i] = registerResponse{
