@@ -21,20 +21,20 @@ jobs:
       - name: Verify dependencies
         run: go mod verify
 
-      - name: Run go vet
-        run: go vet ./...
-
       - name: Install staticcheck
         run: go install honnef.co/go/tools/cmd/staticcheck@latest
-
-      - name: Run staticcheck
-        run: staticcheck ./...
 
       - name: Install mockgen
         run: go install go.uber.org/mock/mockgen@latest
 
       - name: Generate mocks
         run: go generate -v ./...
+
+      - name: Run staticcheck
+        run: staticcheck ./...
+
+      - name: Run go vet
+        run: go vet ./...
 
       - name: Test
         run: go test -v ./...
