@@ -94,7 +94,7 @@ type victronDeviceConfig struct {
 }
 
 func (c victronDeviceConfig) RegisterFilter() dataflow.RegisterFilterConf {
-	return c.RegisterFilter()
+	return c.VictronDeviceConfig.RegisterFilter()
 }
 
 type modbusDeviceConfig struct {
@@ -102,7 +102,7 @@ type modbusDeviceConfig struct {
 }
 
 func (c modbusDeviceConfig) RegisterFilter() dataflow.RegisterFilterConf {
-	return c.RegisterFilter()
+	return c.ModbusDeviceConfig.RegisterFilter()
 }
 
 type httpDeviceConfig struct {
@@ -110,7 +110,7 @@ type httpDeviceConfig struct {
 }
 
 func (c httpDeviceConfig) RegisterFilter() dataflow.RegisterFilterConf {
-	return c.RegisterFilter()
+	return c.HttpDeviceConfig.RegisterFilter()
 }
 
 type mqttDeviceConfig struct {
@@ -118,5 +118,5 @@ type mqttDeviceConfig struct {
 }
 
 func (c mqttDeviceConfig) RegisterFilter() dataflow.RegisterFilterConf {
-	return c.RegisterFilter()
+	return c.MqttDeviceConfig.RegisterFilter()
 }
