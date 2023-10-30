@@ -24,6 +24,7 @@ type StructRegister struct {
 
 type StructureMessage struct {
 	AvailabilityTopics []string         `json:"Avail,omitempty"`
+	TelemetryTopic     string           `json:"Telemetry,omitempty"`
 	RealtimeTopic      string           `json:"Realtime,omitempty"`
 	Registers          []StructRegister `json:"Registers"`
 }
@@ -163,20 +164,24 @@ func existsByName[N Nameable](needle string, haystack []N) bool {
 	return false
 }
 
-func getRealtimeTopic(cfg Config, devName string) string {
-	if cfg.Realtime().Enabled() {
-		return cfg.RealtimeTopic(devName, "%RegisterName%")
-	}
-	return ""
-}
-
 func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic string, registers []StructRegister) {
 	mCfg := cfg.Structure()
 
 	msg := StructureMessage{
 		AvailabilityTopics: getAvailabilityTopics(cfg, devName),
-		RealtimeTopic:      getRealtimeTopic(cfg, devName),
-		Registers:          registers,
+		TelemetryTopic: func() string {
+			if cfg.Telemetry().Enabled() {
+				return cfg.TelemetryTopic(devName)
+			}
+			return ""
+		}(),
+		RealtimeTopic: func() string {
+			if cfg.Realtime().Enabled() {
+				return cfg.RealtimeTopic(devName, "%RegisterName%")
+			}
+			return ""
+		}(),
+		Registers: registers,
 	}
 
 	if cfg.LogDebug() {
