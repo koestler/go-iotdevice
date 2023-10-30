@@ -51,13 +51,13 @@ func homeassistantDiscoveryOnUpdateModeRoutine(
 ) {
 	if cfg.LogDebug() {
 		log.Printf(
-			"device[%s]->mqttClient[%s]->homeassistantDiscovery: start on-update mode",
-			dev.Name(), mc.Name(),
+			"mqttClient[%s]->device[%s]->homeassistantDiscovery: start on-update mode",
+			mc.Name(), dev.Name(),
 		)
 
 		defer log.Printf(
-			"device[%s]->mqttClient[%s]->homeassistantDiscovery: exit",
-			dev.Name(), mc.Name(),
+			"mqttClient[%s]->device[%s]->homeassistantDiscovery: exit",
+			mc.Name(), dev.Name(),
 		)
 	}
 
@@ -84,13 +84,13 @@ func homeassistantDiscoveryPeriodicModeRoutine(
 
 	if cfg.LogDebug() {
 		log.Printf(
-			"device[%s]->mqttClient[%s]->homeassistantDiscovery: start periodic mode, send every %s",
-			dev.Name(), mc.Name(), interval,
+			"mqttClient[%s]->device[%s]->homeassistantDiscovery: start periodic mode, send every %s",
+			mc.Name(), dev.Name(), interval,
 		)
 
 		defer log.Printf(
-			"device[%s]->mqttClient[%s]->homeassistantDiscovery: exit",
-			dev.Name(), mc.Name(),
+			"mqttClient[%s]->device[%s]->homeassistantDiscovery: exit",
+			mc.Name(), dev.Name(),
 		)
 	}
 
@@ -156,10 +156,10 @@ func publishHomeassistantDiscoveryMessage(
 		return
 	}
 
-	log.Printf("homeassistantDiscovery[%s]: send %s %#v", mc.Name(), topic, msg)
-
 	if payload, err := json.Marshal(msg); err != nil {
-		log.Printf("homeassistantDiscovery: cannot generate discovery message: %s", err)
+		log.Printf("mqttClient[%s]->device[%s]->homeassistantDiscovery: cannot generate discovery message: %s",
+			mc.Name(), deviceName, err,
+		)
 	} else {
 		mc.Publish(
 			topic,

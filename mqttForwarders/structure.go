@@ -58,13 +58,13 @@ func structureOnUpdateModeRoutine(
 
 	if devCfg.LogDebug() {
 		log.Printf(
-			"device[%s]->mqttClient[%s]->structure: start on-update mode",
-			devCfg.Name(), mc.Name(),
+			"mqttClient[%s]->device[%s]->structure: start on-update mode",
+			mc.Name(), devCfg.Name(),
 		)
 
 		defer log.Printf(
-			"device[%s]->mqttClient[%s]->structure: exit",
-			devCfg.Name(), mc.Name(),
+			"mqttClient[%s]->device[%s]->structure: exit",
+			mc.Name(), devCfg.Name(),
 		)
 	}
 
@@ -112,13 +112,13 @@ func structurePeriodicModeRoutine(
 
 	if cfg.LogDebug() {
 		log.Printf(
-			"device[%s]->mqttClient[%s]->structure: start periodic mode, send every %s",
-			dev.Name(), mc.Name(), structureInterval,
+			"mqttClient[%s]->device[%s]->structure: start periodic mode, send every %s",
+			mc.Name(), dev.Name(), structureInterval,
 		)
 
 		defer log.Printf(
-			"device[%s]->mqttClient[%s]->structure: exit",
-			dev.Name(), mc.Name(),
+			"mqttClient[%s]->device[%s]->structure: exit",
+			mc.Name(), dev.Name(),
 		)
 	}
 
@@ -181,15 +181,15 @@ func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic strin
 
 	if cfg.LogDebug() {
 		log.Printf(
-			"device[%s]->mqttClient[%s]->structure: send: %v",
-			devName, mc.Name(), msg,
+			"mqttClient[%s]->device[%s]->structure: send: %v",
+			mc.Name(), devName, msg,
 		)
 	}
 
 	if payload, err := json.Marshal(msg); err != nil {
 		log.Printf(
-			"device[%s]->mqttClient[%s]->structure: cannot generate message: %s",
-			devName, mc.Name(), err,
+			"mqttClient[%s]->device[%s]->structure: cannot generate message: %s",
+			mc.Name(), devName, err,
 		)
 	} else {
 		mc.Publish(

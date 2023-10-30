@@ -51,12 +51,12 @@ func realtimeImmediateModeRoutine(
 ) {
 	if cfg.LogDebug() {
 		log.Printf(
-			"device[%s]->mqttClient[%s]->realtime: start immediate mode",
-			dev.Name(), mc.Name(),
+			"mqttClient[%s]->device[%s]->realtime: start immediate mode",
+			mc.Name(), dev.Name(),
 		)
 		defer log.Printf(
-			"device[%s]->mqttClient[%s]->realtime: exit immediate mode",
-			dev.Name(), mc.Name(),
+			"mqttClient[%s]->device[%s]->realtime: exit immediate mode",
+			mc.Name(), dev.Name(),
 		)
 	}
 
@@ -79,12 +79,12 @@ func realtimeDelayedUpdateModeRoutine(
 
 	if cfg.LogDebug() {
 		log.Printf(
-			"device[%s]->mqttClient[%s]->realtime: start delayed update mode, send every %s",
-			dev.Name(), mc.Name(), realtimeInterval,
+			"mqttClient[%s]->device[%s]->realtime: start delayed update mode, send every %s",
+			mc.Name(), dev.Name(), realtimeInterval,
 		)
 		defer log.Printf(
-			"device[%s]->mqttClient[%s]->realtime: exit delayed update mode",
-			dev.Name(), mc.Name(),
+			"mqttClient[%s]->device[%s]->realtime: exit delayed update mode",
+			mc.Name(), dev.Name(),
 		)
 	}
 
@@ -104,8 +104,8 @@ func realtimeDelayedUpdateModeRoutine(
 		case <-ticker.C:
 			if cfg.LogDebug() {
 				log.Printf(
-					"device[%s]->mqttClient[%s]->realtime: tick: send updates",
-					dev.Name(), mc.Name(),
+					"mqttClient[%s]->device[%s]->realtime: tick: send updates",
+					mc.Name(), dev.Name(),
 				)
 			}
 			for _, v := range updates {
@@ -121,15 +121,15 @@ func publishRealtimeMessage(cfg Config, mc mqttClient.Client, devName string, va
 
 	if cfg.LogDebug() {
 		log.Printf(
-			"device[%s]->mqttClient[%s]->realtime: send: %s",
-			devName, mc.Name(), value,
+			"mqttClient[%s]->device[%s]->realtime: send: %s",
+			mc.Name(), devName, value,
 		)
 	}
 
 	if payload, err := json.Marshal(convertValueToRealtimeMessage(value)); err != nil {
 		log.Printf(
-			"device[%s]->mqttClient[%s]->realtime: cannot generate message: %s",
-			devName, mc.Name(), err,
+			"mqttClient[%s]->device[%s]->realtime: cannot generate message: %s",
+			mc.Name(), devName, err,
 		)
 	} else {
 		mc.Publish(
