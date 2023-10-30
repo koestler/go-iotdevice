@@ -38,20 +38,25 @@ func (rdb *RegisterDb) AddStruct(registerStructs ...RegisterStruct) {
 	rdb.lock.Lock()
 	defer rdb.lock.Unlock()
 
-	// save to map
 	for _, reg := range registerStructs {
-		rdb.registers[reg.Name()] = reg
-	}
+		// check if present and equal
+		oldReg, ok := rdb.registers[reg.Name()]
+		if ok && reg.Equals(oldReg) {
+			continue
+		}
 
-	// forward to subscriptions
-	for e := rdb.subscriptions.Front(); e != nil; e = e.Next() {
-		for _, reg := range registerStructs {
+		// save to map
+		rdb.registers[reg.Name()] = reg
+
+		// forward to subscriptions
+		for e := rdb.subscriptions.Front(); e != nil; e = e.Next() {
 			s := e.Value
 			if s.filter(reg) {
 				s.outputChannel <- reg
 			}
 		}
 	}
+
 }
 
 func (rdb *RegisterDb) GetAll() []RegisterStruct {

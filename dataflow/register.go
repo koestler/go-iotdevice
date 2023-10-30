@@ -1,6 +1,9 @@
 package dataflow
 
-import "sort"
+import (
+	"reflect"
+	"sort"
+)
 
 //go:generate mockgen -source register.go -destination mock/register_mock.go
 
@@ -106,4 +109,23 @@ func FilterRegisters[R Register](input []R, registerFilter RegisterFilterConf) (
 func SortRegisterStructs(input []RegisterStruct) []RegisterStruct {
 	sort.SliceStable(input, func(i, j int) bool { return input[i].Sort() < input[j].Sort() })
 	return input
+}
+
+func (r RegisterStruct) Equals(b RegisterStruct) bool {
+	if r.category == b.category &&
+		r.name == b.name &&
+		r.description == b.description &&
+		r.registerType == b.registerType &&
+		r.unit == b.unit &&
+		r.sort == b.sort &&
+		r.controllable == b.controllable {
+
+		if r.registerType == EnumRegister {
+			return reflect.DeepEqual(r.enum, b.enum)
+		}
+
+		return true
+	}
+
+	return false
 }
