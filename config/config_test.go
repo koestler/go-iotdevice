@@ -1579,8 +1579,8 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Interval to be '%s' but got '%s'", prefix, expect, got)
 			}
 
-			if got := mcSect.Retain(); !got {
-				t.Errorf("expect %s->Retain to be true", prefix)
+			if got := mcSect.Retain(); got {
+				t.Errorf("expect %s->Retain to be false", prefix)
 			}
 
 			if expect, got := byte(1), mcSect.Qos(); expect != got {

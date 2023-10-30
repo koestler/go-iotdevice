@@ -501,7 +501,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		0,
 		true,
 		true,
-		true,
+		false,
 		true,
 		true,
 	)

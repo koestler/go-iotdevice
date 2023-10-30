@@ -119,14 +119,12 @@ MqttClients:                                               # optional, when empt
     AvailabilityClient:
       Enabled: true                                        # optional, default true, whether to send online messages and register an offline message as will
       TopicTemplate: '%Prefix%avail/%ClientId%'            # optional, what topic to use for online/offline messages of the go-iotdevice instance
-      Interval: 0s                                         # optional, default 0s, 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
       Retain: true                                         # optional, default true, the mqtt retain flag for availability messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
 
     AvailabilityDevice:
       Enabled: true                                        # optional, default true, whether to send online messages and register an offline message as will
       TopicTemplate: '%Prefix%avail/%DeviceName%'          # optional, what topic to use for online/offline messages of a specific device
-      Interval: 0s                                         # optional, default 0s, 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
       Retain: true                                         # optional, default true, the mqtt retain flag for availability messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
@@ -188,7 +186,7 @@ MqttClients:                                               # optional, when empt
       Enabled: true                                        # optional, default false, whether to enable sending realtime messages
       TopicTemplate: 'homeassistant/%Component%/%NodeId%/%ObjectId%/config' # optional, topic to use for homeassistant deisovery messages
       Interval: 0s                                         # optional, default 0, 0 means disabled only send initially, otherwise the disovery messages are repeated after this interval (useful when retain is false)
-      Retain: true                                         # optional, default false, the mqtt retain flag for homeassistant disovery messages
+      Retain: false                                        # optional, default false, the mqtt retain flag for homeassistant disovery messages
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
           RegisterFilter:                                  # optional, default include all, defines which registers are show in the view,
