@@ -45,8 +45,9 @@ func NewV5(
 	// setup logging
 	if cfg.LogDebug() {
 		prefix := fmt.Sprintf("mqttClientV5[%s]: ", cfg.Name())
-		client.cliCfg.Debug = logger{prefix: prefix + "autoPaho: "}
+		client.cliCfg.Debug = logger{prefix: prefix + "debug: "}
 		client.cliCfg.PahoDebug = logger{prefix: prefix + "paho: "}
+		client.router.SetDebugLogger(logger{prefix: prefix + "router: "})
 	}
 
 	// configure login
