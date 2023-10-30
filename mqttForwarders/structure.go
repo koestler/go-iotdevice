@@ -203,6 +203,7 @@ func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic strin
 
 func NewStructRegisters(regs ...dataflow.RegisterStruct) (ret []StructRegister) {
 	ret = make([]StructRegister, len(regs))
+	dataflow.SortRegisterStructs(regs)
 	for i, reg := range regs {
 		ret[i] = NewStructRegister(reg)
 	}
