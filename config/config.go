@@ -830,18 +830,32 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string) (ret HttpDeviceC
 
 func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []MqttClientConfig) (ret MqttDeviceConfig, err []error) {
 	ret = MqttDeviceConfig{
-		mqttTopics: c.MqttTopics,
+		kind:        types.MqttDeviceKindFromString(c.Kind),
+		mqttClients: make([]string, 0, len(c.MqttClients)),
+		mqttTopics:  c.MqttTopics,
+	}
+
+	if ret.kind == types.MqttDeviceUndefinedKind {
+		err = append(err, fmt.Errorf("MqttDevices->%s->Kind='%s' is invalid", name, c.Kind))
+	}
+
+	if len(c.MqttClients) < 1 {
+		err = append(err, fmt.Errorf("MqttDevices->%s->MqttClients: must not be empty", name))
+	} else {
+		for _, clientName := range c.MqttClients {
+			if !existsByName(clientName, mqttClients) {
+				err = append(err, fmt.Errorf("MqttDevices->%s->MqttClients: client='%s' is not defined", name, clientName))
+			} else {
+				ret.mqttClients = append(ret.mqttClients, clientName)
+			}
+		}
+	}
+
+	if len(c.MqttTopics) < 1 {
+		err = append(err, fmt.Errorf("MqttDevices->%s->MqttTopics: must not be empty", name))
 	}
 
 	var e []error
-	ret.mqttClients, e = allOrCheckedMqttClients(
-		c.MqttClients, mqttClients,
-		func(clientName string) error {
-			return fmt.Errorf("MqttDevices->%s->mqttClients: client='%s' is not defined", name, clientName)
-		},
-	)
-	err = append(err, e...)
-
 	ret.DeviceConfig, e = c.General.TransformAndValidate(name)
 	err = append(err, e...)
 
@@ -1014,24 +1028,6 @@ func TransformAndValidateListUnique[I any, O Nameable](
 
 		ret = append(ret, r)
 		err = append(err, e...)
-	}
-
-	return
-}
-
-func allOrCheckedMqttClients(inp []string, mqttClients []MqttClientConfig, errorFunc func(clientName string) error) (oup []string, err []error) {
-	if len(inp) < 1 {
-		return getNames(mqttClients), nil
-	}
-
-	oup = make([]string, 0, len(inp))
-
-	for _, clientName := range inp {
-		if !existsByName(clientName, mqttClients) {
-			err = append(err, errorFunc(clientName))
-		} else {
-			oup = append(oup, clientName)
-		}
 	}
 
 	return

@@ -408,14 +408,18 @@ func (c HttpDeviceConfig) LogDebug() bool {
 	return c.logDebug
 }
 
-func (c MqttDeviceConfig) MqttTopics() []string {
-	return c.mqttTopics
-}
+// Getters for MqttDeviceCofig struct
 
-// Getters for MqttDeviceConfig struct
+func (c MqttDeviceConfig) Kind() types.MqttDeviceKind {
+	return c.kind
+}
 
 func (c MqttDeviceConfig) MqttClients() []string {
 	return c.mqttClients
+}
+
+func (c MqttDeviceConfig) MqttTopics() []string {
+	return c.mqttTopics
 }
 
 // Getters for ViewConfig struct

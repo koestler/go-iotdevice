@@ -206,10 +206,11 @@ MqttDevices:                                               # optional, a list of
       RestartIntervalMaxBackoff: 1m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
       LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
+    Kind: GoIotdevice                                      # mandatory, only GoIotdevice is supported at the moment
+    MqttClients:                                           # mandatory, at least 1 topic must be defined, on which mqtt server(s) we subscribe
+      - local                                              # identifier as defined in the MqttClients section
     MqttTopics:                                            # mandatory, at least 1 topic must be defined
       - stat/go-iotdevice/bmv1/+                           # what topic to subscribe to; must match RealtimeTopic of the sending device; %RegisterName% must be replaced by +
-    MqttClients:                                           # optional, default all clients, on which mqtt server(s) we subscribe
-      - local                                              # identifier as defined in the MqttClients section
 
 Views:                                                     # optional, a list of views (=categories in the frontend / paths in the api URLs)
   - Name: victron                                          # mandatory, a technical name used in the URLs

@@ -120,8 +120,9 @@ type httpDeviceConfigRead struct {
 
 type mqttDeviceConfigRead struct {
 	General     deviceConfigRead `yaml:"General"`
-	MqttTopics  []string         `yaml:"MqttTopics"`
+	Kind        string           `yaml:"Kind"`
 	MqttClients []string         `yaml:"MqttClients"`
+	MqttTopics  []string         `yaml:"MqttTopics"`
 }
 
 type viewConfigRead struct {

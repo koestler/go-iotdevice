@@ -137,8 +137,9 @@ type HttpDeviceConfig struct {
 
 type MqttDeviceConfig struct {
 	DeviceConfig
-	mqttTopics  []string
+	kind        types.MqttDeviceKind
 	mqttClients []string
+	mqttTopics  []string
 }
 
 type ViewConfig struct {

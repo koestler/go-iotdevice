@@ -215,8 +215,9 @@ func (c HttpDeviceConfig) convertToRead() httpDeviceConfigRead {
 func (c MqttDeviceConfig) convertToRead() mqttDeviceConfigRead {
 	return mqttDeviceConfigRead{
 		General:     c.DeviceConfig.convertToRead(),
-		MqttTopics:  c.mqttTopics,
+		Kind:        c.kind.String(),
 		MqttClients: c.mqttClients,
+		MqttTopics:  c.mqttTopics,
 	}
 }
 

@@ -216,10 +216,11 @@ MqttDevices:                                               # optional, a list of
       RestartIntervalMaxBackoff: 30s                       # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
       LogComDebug: true                                    # optional, default false, enable a verbose log of the communication with the device
-    MqttTopics:                                            # mandatory, at least 1 topic must be defined
-      - stat/go-iotdevice/bmv1/+                           # what topic to subscribe to; must match RealtimeTopic of the sending device; %RegisterName% must be replaced by +
+    Kind: GoIotdevice
     MqttClients:                                           # optional, default all clients, on which mqtt server(s) we subscribe
       - 1-remote                                           # identifier as defined in the MqttClients section
+    MqttTopics:                                            # mandatory, at least 1 topic must be defined
+      - stat/go-iotdevice/bmv1/+                           # what topic to subscribe to; must match RealtimeTopic of the sending device; %RegisterName% must be replaced by +
 
 Views:                                                     # optional, a list of views (=categories in the frontend / paths in the api URLs)
   - Name: private                                          # mandatory, a technical name used in the URLs
@@ -283,6 +284,9 @@ HttpDevices:                                               # optional, a list of
 
 MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
+    Kind: GoIotdevice
+    MqttClients:
+      - 0-local
     MqttTopics:                                            # mandatory, at least 1 topic must be defined
       - stat/bmv1/+                                        # what topic to subscribe to; must match RealtimeTopic of the sending device; %RegisterName% must be replaced by +
 
@@ -1070,14 +1074,17 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Error("expect MqttDevices->bmv1->General->LogComDebug to be true")
 		}
 
-		if expect, got := []string{"stat/go-iotdevice/bmv1/+"}, vd.MqttTopics(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect MqttDevices->bmv1->MqttTopics to be %v but got %v", expect, got)
+		if expect, got := types.MqttDeviceGoIotdeviceKind, vd.Kind(); expect != got {
+			t.Errorf("expect MqttDevices->bmv1->Kind to be %v but got %v", expect, got)
 		}
 
 		if expect, got := []string{"1-remote"}, vd.MqttClients(); !reflect.DeepEqual(expect, got) {
 			t.Errorf("expect MqttDevices->bmv1->MqttClients to be %v but got %v", expect, got)
 		}
 
+		if expect, got := []string{"stat/go-iotdevice/bmv1/+"}, vd.MqttTopics(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttDevices->bmv1->MqttTopics to be %v but got %v", expect, got)
+		}
 	}
 
 	if expect, got := 2, len(config.Views()); expect != got {
@@ -1793,14 +1800,17 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Error("expect MqttDevices->bmv1->General->LogComDebug to be false")
 		}
 
-		if expect, got := []string{"stat/bmv1/+"}, vd.MqttTopics(); !reflect.DeepEqual(expect, got) {
-			t.Errorf("expect MqttDevices->bmv1->MqttTopics to be %v but got %v", expect, got)
+		if expect, got := types.MqttDeviceGoIotdeviceKind, vd.Kind(); expect != got {
+			t.Errorf("expect MqttDevices->bmv1->Kind to be %v but got %v", expect, got)
 		}
 
 		if expect, got := []string{"0-local"}, vd.MqttClients(); !reflect.DeepEqual(expect, got) {
 			t.Errorf("expect MqttDevices->bmv1->MqttClients to be %v but got %v", expect, got)
 		}
 
+		if expect, got := []string{"stat/bmv1/+"}, vd.MqttTopics(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect MqttDevices->bmv1->MqttTopics to be %v but got %v", expect, got)
+		}
 	}
 
 	if expect, got := 1, len(config.Views()); expect != got {
