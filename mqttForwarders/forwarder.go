@@ -52,28 +52,38 @@ func RunMqttForwarders(
 	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
 	storage *dataflow.ValueStorage,
 ) {
-	for _, deviceConfig := range cfg.AvailabilityDevice().Devices() {
-		dev := devicePool.GetByName(deviceConfig.Name())
-		runAvailabilityForwarder(mc.GetCtx(), cfg, dev.Service(), mc)
+	if sCfg := cfg.AvailabilityDevice(); sCfg.Enabled() {
+		for _, deviceConfig := range sCfg.Devices() {
+			dev := devicePool.GetByName(deviceConfig.Name())
+			runAvailabilityForwarder(mc.GetCtx(), cfg, dev.Service(), mc)
+		}
 	}
 
-	for _, deviceConfig := range cfg.Structure().Devices() {
-		dev := devicePool.GetByName(deviceConfig.Name())
-		runStructureForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.RegisterFilter())
+	if sCfg := cfg.Structure(); sCfg.Enabled() {
+		for _, deviceConfig := range sCfg.Devices() {
+			dev := devicePool.GetByName(deviceConfig.Name())
+			runStructureForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.RegisterFilter())
+		}
 	}
 
-	for _, deviceConfig := range cfg.Telemetry().Devices() {
-		dev := devicePool.GetByName(deviceConfig.Name())
-		runTelemetryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, storage, deviceConfig.RegisterFilter())
+	if sCfg := cfg.Telemetry(); sCfg.Enabled() {
+		for _, deviceConfig := range sCfg.Devices() {
+			dev := devicePool.GetByName(deviceConfig.Name())
+			runTelemetryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, storage, deviceConfig.RegisterFilter())
+		}
 	}
 
-	for _, deviceConfig := range cfg.Realtime().Devices() {
-		dev := devicePool.GetByName(deviceConfig.Name())
-		runRealtimeForwarder(mc.GetCtx(), cfg, dev.Service(), mc, storage, deviceConfig.RegisterFilter())
+	if sCfg := cfg.Realtime(); sCfg.Enabled() {
+		for _, deviceConfig := range sCfg.Devices() {
+			dev := devicePool.GetByName(deviceConfig.Name())
+			runRealtimeForwarder(mc.GetCtx(), cfg, dev.Service(), mc, storage, deviceConfig.RegisterFilter())
+		}
 	}
 
-	for _, deviceConfig := range cfg.HomeassistantDiscovery().Devices() {
-		dev := devicePool.GetByName(deviceConfig.Name())
-		runHomeassistantDiscoveryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.RegisterFilter())
+	if sCfg := cfg.HomeassistantDiscovery(); sCfg.Enabled() {
+		for _, deviceConfig := range cfg.HomeassistantDiscovery().Devices() {
+			dev := devicePool.GetByName(deviceConfig.Name())
+			runHomeassistantDiscoveryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.RegisterFilter())
+		}
 	}
 }

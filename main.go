@@ -109,8 +109,6 @@ func main() {
 		mqttClientPool := runMqttClient(cfg, devicePool, stateStorage)
 		defer mqttClientPool.Shutdown()
 
-		// run mqtt forwarders
-
 		// start mqtt clients
 		runMqttDevices(cfg, devicePool, mqttClientPool, stateStorage)
 
