@@ -424,6 +424,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		true,
 		"%Prefix%avail/%ClientId%",
 		0,
+		false,
 		true,
 		true,
 		false,
@@ -438,6 +439,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		true,
 		"%Prefix%avail/%DeviceName%",
 		0,
+		false,
 		true,
 		true,
 		true,
@@ -456,6 +458,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		true,
 		true,
 		true,
+		true,
 	)
 	err = append(err, e...)
 
@@ -466,6 +469,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		true,
 		"%Prefix%tele/%DeviceName%",
 		time.Second,
+		true,
 		false,
 		false,
 		true,
@@ -481,6 +485,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		"%Prefix%real/%DeviceName%/%RegisterName%",
 		0,
 		true,
+		true,
 		false,
 		true,
 		true,
@@ -494,6 +499,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		false,
 		"homeassistant/%Component%/%NodeId%/%ObjectId%/config",
 		0,
+		true,
 		true,
 		true,
 		true,
@@ -519,6 +525,7 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 	defaultEnabled bool,
 	defaultTopicTemplate string,
 	defaultInterval time.Duration,
+	allowInterval bool,
 	allowZeroInterval bool,
 	defaultRetain bool,
 	allowDevices bool,
@@ -540,7 +547,11 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 		ret.topicTemplate = *c.TopicTemplate
 	}
 
-	if len(c.Interval) < 1 {
+	if !allowInterval {
+		if len(c.Interval) > 0 {
+			err = append(err, fmt.Errorf("%sInterval not supported", logPrefix))
+		}
+	} else if len(c.Interval) < 1 {
 		ret.interval = defaultInterval
 	} else if interval, e := time.ParseDuration(c.Interval); e != nil {
 		err = append(err, fmt.Errorf("%sInterval='%s' parse error: %s", logPrefix, c.Interval, e))
