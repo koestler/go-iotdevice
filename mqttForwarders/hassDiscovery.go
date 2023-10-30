@@ -31,15 +31,44 @@ func runHomeassistantDiscoveryForwarder(
 	cfg Config,
 	dev device.Device,
 	mc mqttClient.Client,
-	registerFilter dataflow.RegisterFilterConf,
+	hassRegisterFilter dataflow.RegisterFilterConf,
 ) {
-	filter := createRegisterValueFilter(registerFilter)
+
+	// check if realtime messages are activated
+	realtimeCfg := getRealtimeCfg(cfg, dev.Name())
+
+	if realtimeCfg == nil {
+		log.Printf(
+			"mqttClient[%s]->device[%s]->homeassistantDiscovery: "+
+				"realtime messages are not enabled for this device; do not send any discovery messages",
+			mc.Name(), dev.Name(),
+		)
+
+		return
+	}
+
+	hassFilter := createRegisterValueFilter(hassRegisterFilter)
+	realtimeFilter := createRegisterValueFilter(realtimeCfg.RegisterFilter())
+	var filter dataflow.RegisterFilterFunc = func(r dataflow.Register) bool {
+		return hassFilter(r) && realtimeFilter(r)
+	}
 
 	if cfg.HomeassistantDiscovery().Interval() <= 0 {
 		go homeassistantDiscoveryOnUpdateModeRoutine(ctx, cfg, dev, mc, filter)
 	} else {
 		go homeassistantDiscoveryPeriodicModeRoutine(ctx, cfg, dev, mc, filter)
 	}
+}
+
+func getRealtimeCfg(cfg Config, deviceName string) MqttDeviceSectionConfig {
+	if cfg.Realtime().Enabled() {
+		for _, d := range cfg.Realtime().Devices() {
+			if d.Name() == deviceName {
+				return d
+			}
+		}
+	}
+	return nil
 }
 
 func homeassistantDiscoveryOnUpdateModeRoutine(
