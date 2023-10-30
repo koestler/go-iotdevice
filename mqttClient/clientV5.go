@@ -78,20 +78,17 @@ func (c *ClientStruct) Run() {
 func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Connack) {
 	return func(cm *autopaho.ConnectionManager, conack *paho.Connack) {
 		log.Printf("mqttClientV5[%s]: connection is up", c.cfg.Name())
+
+		c.subscriptionsMutex.RLock()
+		defer c.subscriptionsMutex.RUnlock()
+
 		// subscribe topics
 		if len(c.subscriptions) > 0 {
 			if _, err := cm.Subscribe(c.ctx, &paho.Subscribe{
 				Subscriptions: func() (ret []paho.SubscribeOptions) {
-					c.subscriptionsMutex.RLock()
-					defer c.subscriptionsMutex.RUnlock()
-
 					ret = make([]paho.SubscribeOptions, 0, len(c.subscriptions))
-
 					for _, s := range c.subscriptions {
-						ret = append(ret, paho.SubscribeOptions{
-							Topic: s.subscribeTopic,
-							QoS:   byte(1),
-						})
+						ret = append(ret, s.pahoOptions())
 					}
 					return
 				}(),
