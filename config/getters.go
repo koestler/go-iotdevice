@@ -432,14 +432,6 @@ func (c ViewConfig) Devices() []ViewDeviceConfig {
 	return c.devices
 }
 
-func (c ViewConfig) DeviceNames() []string {
-	names := make([]string, len(c.devices))
-	for i, device := range c.devices {
-		names[i] = device.Name()
-	}
-	return names
-}
-
 func (c ViewConfig) Autoplay() bool {
 	return c.autoplay
 }

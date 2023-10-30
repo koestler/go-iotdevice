@@ -48,7 +48,6 @@ type ViewConfig interface {
 	Name() string
 	Title() string
 	Devices() []ViewDeviceConfig
-	DeviceNames() []string
 	Autoplay() bool
 	IsAllowed(user string) bool
 	IsPublic() bool

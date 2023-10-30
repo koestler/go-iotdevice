@@ -66,9 +66,9 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 	// add dynamic routes
 	for _, v := range env.Views {
 		view := v
-		for _, dn := range view.DeviceNames() {
+		for _, dn := range view.Devices() {
 			// the following line uses a loop variable; it must be outside the closure
-			deviceName := dn
+			deviceName := dn.Name()
 			deviceWatcher := env.DevicePool.GetByName(deviceName)
 			if deviceWatcher == nil {
 				continue
