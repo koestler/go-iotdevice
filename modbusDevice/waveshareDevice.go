@@ -38,16 +38,10 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 
 		for _, register := range registers {
 			value := 0
-			if address, err := registerAddress(register); err != nil {
-				if c.Config().LogDebug() {
-					log.Printf("waveshareDevice[%s]: state=%x, register=%v, address=%v", c.Name(), state, register, address)
-				}
-
+			if address, err := registerAddress(register); err == nil {
 				if state[address] {
 					value = 1
 				}
-			} else if c.Config().LogDebug() {
-				log.Printf("waveshareDevice[%s]: cannot decode state: %s", c.Name(), err)
 			}
 
 			c.StateStorage().Fill(dataflow.NewEnumRegisterValue(
