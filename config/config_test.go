@@ -1406,8 +1406,8 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->StructureTopic to be '%s' but got '%s'", prefix, expect, got)
 			}
 
-			if got := mcSect.Enabled(); !got {
-				t.Errorf("expect %s->Enabled to be true", prefix)
+			if got := mcSect.Enabled(); got {
+				t.Errorf("expect %s->Enabled to be false", prefix)
 			}
 
 			if expect, got := "%Prefix%struct/%DeviceName%", mcSect.TopicTemplate(); expect != got {
@@ -1462,8 +1462,8 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->TelemetryTopic to be '%s' but got '%s'", prefix, expect, got)
 			}
 
-			if got := mcSect.Enabled(); !got {
-				t.Errorf("expect %s->Enabled to be true", prefix)
+			if got := mcSect.Enabled(); got {
+				t.Errorf("expect %s->Enabled to be false", prefix)
 			}
 
 			if expect, got := "%Prefix%tele/%DeviceName%", mcSect.TopicTemplate(); expect != got {

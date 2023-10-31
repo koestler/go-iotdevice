@@ -52,7 +52,7 @@ MqttClients:                                               # optional, when empt
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
 
     Structure:
-      Enabled: true                                        # optional, default true, whether to send messages containing the list of registers / types
+      Enabled: true                                        # optional, default false, whether to send messages containing the list of registers / types
       TopicTemplate: '%Prefix%struct/%DeviceName%'         # optional, what topic to use for structure messages
       Interval: 0s                                         # optional, default 0, 0 means disabled only send initially, otherwise the structure is repeated after this interval (useful when retain is false)
       Retain: true                                         # optional, default true, the mqtt retain flag for structure messages
@@ -69,7 +69,7 @@ MqttClients:                                               # optional, when empt
 
 
     Telemetry:
-      Enabled: true                                        # optional, default true, whether to send telemetry messages (one per device)
+      Enabled: true                                        # optional, default false, whether to send telemetry messages (one per device)
       TopicTemplate: '%Prefix%tele/%DeviceName%'           # optional, what topic to use for telemetry messages
       Interval: 1s                                         # optional, default 1s, how often to sent telemetry mqtt messages
       Retain: false                                        # optional, default false, the mqtt retain flag for telemetry messages
