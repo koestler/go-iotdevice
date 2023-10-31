@@ -19,7 +19,7 @@ Version: 42
 `
 
 	ValidCompleteConfig = `
-Version: 1                                                 # configuration file format; must be set to 1 for >v2 of this tool.
+Version: 2                                                 # configuration file format; must be set to 1 for >v2 of this tool.
 ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice: is shown in the http frontend
 LogConfig: true                                            # optional, default false, outputs the used configuration including defaults on startup
 LogWorkerStart: true                                       # optional, default false, outputs what devices and mqtt clients are started
@@ -250,7 +250,7 @@ Views:                                                     # optional, a list of
 `
 
 	ValidDefaultConfig = `
-Version: 1                                                 # configuration file format; must be set to 1 for >v2 of this tool.
+Version: 2                                                 # configuration file format; must be set to 1 for >v2 of this tool.
 
 HttpServer:                                                # optional, when missing: http server is not started
   Bind: "[::1]"
@@ -318,14 +318,14 @@ func TestReadConfig_InvalidSyntax(t *testing.T) {
 func TestReadConfig_NoVersion(t *testing.T) {
 	_, err := ReadConfig([]byte("LogConfig: true"), true)
 
-	if !containsError("version must be defined", err) {
+	if !containsError("Version must be defined", err) {
 		t.Errorf("expect 'version must be defined' error, but got %s", err)
 	}
 }
 
 func TestReadConfig_InvalidUnknownVersion(t *testing.T) {
 	_, err := ReadConfig([]byte(InvalidUnknownVersionConfig), true)
-	if len(err) != 1 || err[0].Error() != "version=42 is not supported" {
+	if len(err) != 1 || !strings.Contains(err[0].Error(), "version=42 is not supported") {
 		t.Errorf("expect 1 error: 'version=42 is not supported' but got: %v", err)
 	}
 }
@@ -338,7 +338,7 @@ func TestReadConfig_Complete(t *testing.T) {
 	}
 
 	// General Section
-	if expect, got := 1, config.Version(); expect != got {
+	if expect, got := 2, config.Version(); expect != got {
 		t.Errorf("expect Version to be %d but got %d", expect, got)
 	}
 
@@ -1173,7 +1173,7 @@ func TestReadConfig_Default(t *testing.T) {
 	}
 
 	// General Section
-	if expect, got := 1, config.Version(); expect != got {
+	if expect, got := 2, config.Version(); expect != got {
 		t.Errorf("expect Version to be %d but got %d", expect, got)
 	}
 

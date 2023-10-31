@@ -1,4 +1,4 @@
-Version: 1                                                 # configuration file format; must be set to 1 for >v2 of this tool.
+Version: 2                                                 # configuration file format; must be set to 2 for >=v3 of this tool.
 ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice: is shown in the http frontend
 LogConfig: true                                            # optional, default true, outputs the used configuration including defaults on startup
 LogWorkerStart: true                                       # optional, default true, outputs what devices and mqtt clients are started

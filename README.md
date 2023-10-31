@@ -77,7 +77,7 @@ Here is a fully documented configuration file including all options:
 ```yaml
 # documentation/full-config.yaml
 
-Version: 1                                                 # configuration file format; must be set to 1 for >v2 of this tool.
+Version: 2                                                 # configuration file format; must be set to 2 for >=v3 of this tool.
 ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice: is shown in the http frontend
 LogConfig: true                                            # optional, default true, outputs the used configuration including defaults on startup
 LogWorkerStart: true                                       # optional, default true, outputs what devices and mqtt clients are started
@@ -285,10 +285,11 @@ MqttDevices:                                               # optional, a list of
       RestartIntervalMaxBackoff: 1m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
       LogDebug: false                                      # optional, default false, enable debug log output
       LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
+    Kind: GoIotdevice                                      # mandatory, only GoIotdevice is supported at the moment
+    MqttClients:                                           # mandatory, at least 1 topic must be defined, on which mqtt server(s) we subscribe
+      - local                                              # identifier as defined in the MqttClients section
     MqttTopics:                                            # mandatory, at least 1 topic must be defined
       - stat/go-iotdevice/bmv1/+                           # what topic to subscribe to; must match RealtimeTopic of the sending device; %RegisterName% must be replaced by +
-    MqttClients:                                           # optional, default all clients, on which mqtt server(s) we subscribe
-      - local                                              # identifier as defined in the MqttClients section
 
 Views:                                                     # optional, a list of views (=categories in the frontend / paths in the api URLs)
   - Name: victron                                          # mandatory, a technical name used in the URLs

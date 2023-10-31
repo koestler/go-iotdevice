@@ -67,11 +67,11 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	var e []error
 
 	if c.Version == nil {
-		err = append(err, fmt.Errorf("version must be defined. Use Version=1"))
+		err = append(err, fmt.Errorf("Version must be defined. Use Version=2"))
 	} else {
 		ret.version = *c.Version
-		if ret.version != 1 {
-			err = append(err, fmt.Errorf("version=%d is not supported", ret.version))
+		if ret.version != 2 {
+			err = append(err, fmt.Errorf("version=%d is not supported, only version=2 is supported", ret.version))
 		}
 	}
 
