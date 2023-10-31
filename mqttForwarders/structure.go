@@ -62,11 +62,6 @@ func structureOnUpdateModeRoutine(
 			"mqttClient[%s]->device[%s]->structure: start on-update mode",
 			mc.Name(), devCfg.Name(),
 		)
-
-		defer log.Printf(
-			"mqttClient[%s]->device[%s]->structure: exit",
-			mc.Name(), devCfg.Name(),
-		)
 	}
 
 	regSubscription := dev.RegisterDb().Subscribe(ctx, filter)
@@ -115,11 +110,6 @@ func structurePeriodicModeRoutine(
 		log.Printf(
 			"mqttClient[%s]->device[%s]->structure: start periodic mode, send every %s",
 			mc.Name(), dev.Name(), structureInterval,
-		)
-
-		defer log.Printf(
-			"mqttClient[%s]->device[%s]->structure: exit",
-			mc.Name(), dev.Name(),
 		)
 	}
 

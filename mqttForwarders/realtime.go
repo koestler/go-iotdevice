@@ -54,10 +54,6 @@ func realtimeImmediateModeRoutine(
 			"mqttClient[%s]->device[%s]->realtime: start immediate mode",
 			mc.Name(), dev.Name(),
 		)
-		defer log.Printf(
-			"mqttClient[%s]->device[%s]->realtime: exit immediate mode",
-			mc.Name(), dev.Name(),
-		)
 	}
 
 	subscription := storage.SubscribeSendInitial(ctx, filter)
@@ -81,10 +77,6 @@ func realtimeDelayedUpdateModeRoutine(
 		log.Printf(
 			"mqttClient[%s]->device[%s]->realtime: start delayed update mode, send every %s",
 			mc.Name(), dev.Name(), realtimeInterval,
-		)
-		defer log.Printf(
-			"mqttClient[%s]->device[%s]->realtime: exit delayed update mode",
-			mc.Name(), dev.Name(),
 		)
 	}
 

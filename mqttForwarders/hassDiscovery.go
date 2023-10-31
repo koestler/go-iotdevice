@@ -83,11 +83,6 @@ func homeassistantDiscoveryOnUpdateModeRoutine(
 			"mqttClient[%s]->device[%s]->homeassistantDiscovery: start on-update mode",
 			mc.Name(), dev.Name(),
 		)
-
-		defer log.Printf(
-			"mqttClient[%s]->device[%s]->homeassistantDiscovery: exit",
-			mc.Name(), dev.Name(),
-		)
 	}
 
 	regSubscription := dev.RegisterDb().Subscribe(ctx, filter)
@@ -115,11 +110,6 @@ func homeassistantDiscoveryPeriodicModeRoutine(
 		log.Printf(
 			"mqttClient[%s]->device[%s]->homeassistantDiscovery: start periodic mode, send every %s",
 			mc.Name(), dev.Name(), interval,
-		)
-
-		defer log.Printf(
-			"mqttClient[%s]->device[%s]->homeassistantDiscovery: exit",
-			mc.Name(), dev.Name(),
 		)
 	}
 

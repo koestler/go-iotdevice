@@ -54,14 +54,10 @@ func runTelemetryForwarder(
 	filter := createDeviceAndRegisterValueFilter(dev, registerFilter)
 
 	go func(mc mqttClient.Client) {
-		log.Printf(
-			"mqttClient[%s]->device[%s]->telemetry: start sending messages every %s",
-			mc.Name(), dev.Name(), telemetryInterval.String(),
-		)
 		if cfg.LogDebug() {
-			defer log.Printf(
-				"mqttClient[%s]->device[%s]->telemetry: exit",
-				mc.Name(), dev.Name(),
+			log.Printf(
+				"mqttClient[%s]->device[%s]->telemetry: start sending messages every %s",
+				mc.Name(), dev.Name(), telemetryInterval.String(),
 			)
 		}
 
