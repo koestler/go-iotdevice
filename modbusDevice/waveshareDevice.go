@@ -74,7 +74,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	execCommand := func(value dataflow.Value) {
 		if c.Config().LogDebug() {
 			log.Printf(
-				"waveshareDevice[%s]: controllable command: %s",
+				"waveshareDevice[%s]: value command: %s",
 				c.Config().Name(), value.String(),
 			)
 		}
@@ -95,19 +95,19 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 			return
 		}
 
-		if c.Config().LogDebug() {
-			log.Printf(
-				"waveshareDevice[%s]: controllable command: %v",
-				c.Config().Name(), command,
-			)
-		}
-
 		var relayNr uint16
 		if modbusRegister, ok := value.Register().(ModbusRegister); !ok {
 			// unknown register
 			return
 		} else {
 			relayNr = modbusRegister.address
+		}
+
+		if c.Config().LogDebug() {
+			log.Printf(
+				"waveshareDevice[%s]: write relayNr=%v, command: %v",
+				c.Config().Name(), relayNr, command,
+			)
 		}
 
 		if err := WriteRelay(c.modbus.WriteRead, c.modbusConfig.Address(), relayNr, command); err != nil {
