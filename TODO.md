@@ -5,3 +5,6 @@
 - stream register structure update via websocket to client
 - http device: remove registers that are not present anymore
 - test RegisterFilter for all different device types
+- config
+  - remove General (makes config unnecessary verbose)
+  - RegisterFilter -> Filter
