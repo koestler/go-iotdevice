@@ -18,6 +18,7 @@ var buildTime string
 type CmdOptions struct {
 	Version    bool           `long:"version" description:"Print the build version and timestamp"`
 	Config     flags.Filename `short:"c" long:"config" description:"Config File in yaml format" default:"./config.yaml"`
+	DryRun     bool           `short:"d" long:"dry-run" description:"Read and check the config and exit."`
 	CpuProfile flags.Filename `long:"cpuprofile" description:"write cpu profile to <file>"`
 	MemProfile flags.Filename `long:"memprofile" description:"write memory profile to <file>"`
 }
@@ -72,6 +73,10 @@ func main() {
 	// read cmd parameters and configuration file; on error: os.Exit
 	cmdOptions, cmdName := getCmdOptions()
 	cfg := getConfig(cmdOptions, cmdName)
+	if cmdOptions.DryRun {
+		os.Exit(ExitSuccess)
+		return
+	}
 
 	// call defer statements before os.Exit
 	exitCode := func() (exitCode int) {

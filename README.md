@@ -64,6 +64,7 @@ Usage:
 Application Options:
       --version     Print the build version and timestamp
   -c, --config=     Config File in yaml format (default: ./config.yaml)
+  -d, --dry-run     Read and check the config and exit.
       --cpuprofile= write cpu profile to <file>
       --memprofile= write memory profile to <file>
 
