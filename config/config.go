@@ -697,7 +697,7 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string) (ret VictronD
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.General.TransformAndValidate(name)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
 	err = append(err, e...)
 
 	if ret.kind == types.VictronUndefinedKind {
@@ -720,7 +720,7 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.General.TransformAndValidate(name)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
 	err = append(err, e...)
 
 	if ret.kind == types.ModbusUndefinedKind {
@@ -791,7 +791,7 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string) (ret HttpDeviceC
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.General.TransformAndValidate(name)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
 	err = append(err, e...)
 
 	if len(c.Url) < 1 {
@@ -856,7 +856,7 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []Mq
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.General.TransformAndValidate(name)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
 	err = append(err, e...)
 
 	return

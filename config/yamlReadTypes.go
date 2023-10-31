@@ -89,18 +89,18 @@ type deviceConfigRead struct {
 }
 
 type victronDeviceConfigRead struct {
-	General deviceConfigRead `yaml:"General"`
-	Device  string           `yaml:"Device"`
-	Kind    string           `yaml:"Kind"`
+	deviceConfigRead `yaml:",inline"`
+	Device           string `yaml:"Device"`
+	Kind             string `yaml:"Kind"`
 }
 
 type modbusDeviceConfigRead struct {
-	General      deviceConfigRead           `yaml:"General"`
-	Bus          string                     `yaml:"Bus"`
-	Kind         string                     `yaml:"Kind"`
-	Address      string                     `yaml:"Address"`
-	Relays       map[string]relayConfigRead `yaml:"Relays"`
-	PollInterval string                     `yaml:"PollInterval"`
+	deviceConfigRead `yaml:",inline"`
+	Bus              string                     `yaml:"Bus"`
+	Kind             string                     `yaml:"Kind"`
+	Address          string                     `yaml:"Address"`
+	Relays           map[string]relayConfigRead `yaml:"Relays"`
+	PollInterval     string                     `yaml:"PollInterval"`
 }
 
 type relayConfigRead struct {
@@ -110,19 +110,19 @@ type relayConfigRead struct {
 }
 
 type httpDeviceConfigRead struct {
-	General      deviceConfigRead `yaml:"General"`
-	Url          string           `yaml:"Url"`
-	Kind         string           `yaml:"Kind"`
-	Username     string           `yaml:"Username"`
-	Password     string           `yaml:"Password"`
-	PollInterval string           `yaml:"PollInterval"`
+	deviceConfigRead `yaml:",inline"`
+	Url              string `yaml:"Url"`
+	Kind             string `yaml:"Kind"`
+	Username         string `yaml:"Username"`
+	Password         string `yaml:"Password"`
+	PollInterval     string `yaml:"PollInterval"`
 }
 
 type mqttDeviceConfigRead struct {
-	General     deviceConfigRead `yaml:"General"`
-	Kind        string           `yaml:"Kind"`
-	MqttClients []string         `yaml:"MqttClients"`
-	MqttTopics  []string         `yaml:"MqttTopics"`
+	deviceConfigRead `yaml:",inline"`
+	Kind             string   `yaml:"Kind"`
+	MqttClients      []string `yaml:"MqttClients"`
+	MqttTopics       []string `yaml:"MqttTopics"`
 }
 
 type viewConfigRead struct {

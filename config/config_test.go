@@ -149,43 +149,41 @@ Modbus:                                                    # optional, when empt
 
 VictronDevices:                                            # optional, a list of Victron Energy devices to connect to
   bmv0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
-    General:                                               # optional, this section is exactly the same for all devices
-      Filter:
-        SkipRegisters:                                          # optional, default empty, a list of field names that shall be ignored for this device
-          - Temperature                                      # for BMV devices without a temperature sensor connect
-          - AuxVoltage                                       # for BMV devices without a mid- or starter-voltage reading
-        SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
-          - Settings                                         # for solar devices it might make sense to not fetch / output the settings
-      RestartInterval: 400ms                               # optional, default 200ms, how fast to restart the device if it fails / disconnects
-      RestartIntervalMaxBackoff: 2m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
-      LogDebug: true                                       # optional, default false, enable debug log output
-      LogComDebug: true                                    # optional, default false, enable a verbose log of the communication with the device
+    Filter:
+      SkipRegisters:                                          # optional, default empty, a list of field names that shall be ignored for this device
+        - Temperature                                      # for BMV devices without a temperature sensor connect
+        - AuxVoltage                                       # for BMV devices without a mid- or starter-voltage reading
+      SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
+        - Settings                                         # for solar devices it might make sense to not fetch / output the settings
+    RestartInterval: 400ms                               # optional, default 200ms, how fast to restart the device if it fails / disconnects
+    RestartIntervalMaxBackoff: 2m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    LogDebug: true                                       # optional, default false, enable debug log output
+    LogComDebug: true                                    # optional, default false, enable a verbose log of the communication with the device
     Device: /dev/serial/by-id/usb-VictronEnergy_BV_VE_Direct_cable_VEHTVQT-if00-port0 # mandatory except if Kind: Random*, the path to the usb-to-serial converter
     Kind: Vedirect                                         # mandatory, possibilities: Vedirect, RandomBmv, RandomSolar, always set to Vedirect expect for development
 
 ModbusDevices:                                             # optional, a list of devices connected via ModBus
   modbus-rtu0:                                             # mandatory, an arbitrary name used for logging and for referencing in other config sections
-    General:                                               # optional, this section is exactly the same for all devices
-      Filter:
-        IncludeRegisters:                                          # optional, default empty, a list of field names that shall be ignored for this device
-          - a
-          - b
-        SkipRegisters:
-          - c
-          - d
-        IncludeCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
-          - A
-          - B
-          - C
-        SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
-          - D
-          - E
-          - F
-        DefaultInclude: False
-      RestartInterval:                                     # optional, default 200ms, how fast to restart the device if it fails / disconnects
-      RestartIntervalMaxBackoff:                           # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
-      LogDebug: false                                      # optional, default false, enable debug log output
-      LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
+    Filter:
+      IncludeRegisters:                                          # optional, default empty, a list of field names that shall be ignored for this device
+        - a
+        - b
+      SkipRegisters:
+        - c
+        - d
+      IncludeCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
+        - A
+        - B
+        - C
+      SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
+        - D
+        - E
+        - F
+      DefaultInclude: False
+    RestartInterval:                                     # optional, default 200ms, how fast to restart the device if it fails / disconnects
+    RestartIntervalMaxBackoff:                           # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    LogDebug: false                                      # optional, default false, enable debug log output
+    LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
     Bus: bus0                                              # mandatory, the identifier of the modbus to use
     Kind: WaveshareRtuRelay8                               # mandatory, type/model of the device; possibilities: WaveshareRtuRelay8
     Address: 0x01                                          # mandatory, the modbus address of the device in hex as a string, e.g. 0x0A
@@ -198,11 +196,10 @@ ModbusDevices:                                             # optional, a list of
 
 HttpDevices:                                               # optional, a list of devices controlled via http
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections
-    General:                                               # optional, this section is exactly the same for all devices
-      RestartInterval: 1m                                  # optional, default 200ms, how fast to restart the device if it fails / disconnects
-      RestartIntervalMaxBackoff: 2m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
-      LogDebug: false                                      # optional, default false, enable debug log output
-      LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
+    RestartInterval: 1m                                  # optional, default 200ms, how fast to restart the device if it fails / disconnects
+    RestartIntervalMaxBackoff: 2m                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    LogDebug: false                                      # optional, default false, enable debug log output
+    LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
     Url: http://control0/                                  # mandatory, URL to the device; supported protocol is http/https; e.g. http://device0.local/
     Kind: Teracom                                          # mandatory, type/model of the device; possibilities: Teracom, Shelly3m
     Username: admin                                        # optional, username used to log in
@@ -211,11 +208,10 @@ HttpDevices:                                               # optional, a list of
 
 MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
-    General:                                               # optional, this section is exactly the same for all devices
-      RestartInterval: 50ms                                # optional, default 200ms, how fast to restart the device if it fails / disconnects
-      RestartIntervalMaxBackoff: 30s                       # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
-      LogDebug: false                                      # optional, default false, enable debug log output
-      LogComDebug: true                                    # optional, default false, enable a verbose log of the communication with the device
+    RestartInterval: 50ms                                # optional, default 200ms, how fast to restart the device if it fails / disconnects
+    RestartIntervalMaxBackoff: 30s                       # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    LogDebug: false                                      # optional, default false, enable debug log output
+    LogComDebug: true                                    # optional, default false, enable a verbose log of the communication with the device
     Kind: GoIotdevice
     MqttClients:                                           # optional, default all clients, on which mqtt server(s) we subscribe
       - 1-remote                                           # identifier as defined in the MqttClients section
