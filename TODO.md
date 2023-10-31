@@ -1,11 +1,6 @@
 # Todos
 - mqttDevice:
  - implement command topic / handling of relays
- - implement available / unavailable messages correctly
-   - when receiver mqtt connection closed,
-   - when sender mqtt connection closed mqtt connection closed
-   - when device is disconnected (modbus / http etc.)
-   - mqttDevice: implement available / unavailable messages
 - check what happens with a http connection not able to handle the bandwidth required by the subscription. This probably stalls the whole storage.
 - stream register structure update via websocket to client
 - http device: remove registers that are not present anymore
