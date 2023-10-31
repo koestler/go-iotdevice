@@ -47,7 +47,7 @@ func NewDevice(
 			stateStorage,
 		),
 		httpConfig:     teracomConfig,
-		registerFilter: dataflow.RegisterFilter(deviceConfig.RegisterFilter()),
+		registerFilter: dataflow.RegisterFilter(deviceConfig.Filter()),
 		commandStorage: commandStorage,
 
 		httpClient: &http.Client{
@@ -237,7 +237,7 @@ func (ds *DeviceStruct) addIgnoreRegister(
 		return nil
 	}
 
-	ds.Config().RegisterFilter()
+	ds.Config().Filter()
 
 	// add the register into the list
 	ds.RegisterDb().Add(r)

@@ -44,14 +44,14 @@ func runTelemetryForwarder(
 	dev device.Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
-	registerFilter dataflow.RegisterFilterConf,
+	filterConf dataflow.RegisterFilterConf,
 ) {
 	mCfg := cfg.Telemetry()
 
 	telemetryInterval := mCfg.Interval()
 	telemetryTopic := cfg.TelemetryTopic(dev.Name())
 
-	filter := createDeviceAndRegisterValueFilter(dev, registerFilter)
+	filter := createDeviceAndRegisterValueFilter(dev, filterConf)
 
 	go func(mc mqttClient.Client) {
 		if cfg.LogDebug() {

@@ -57,7 +57,7 @@ type ViewConfig interface {
 type ViewDeviceConfig interface {
 	Name() string
 	Title() string
-	RegisterFilter() dataflow.RegisterFilterConf
+	Filter() dataflow.RegisterFilterConf
 }
 
 type AuthenticationConfig interface {

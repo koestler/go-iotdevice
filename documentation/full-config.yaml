@@ -59,7 +59,7 @@ MqttClients:                                               # optional, when empt
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
-          RegisterFilter:                                  # optional, default include all, defines which registers are show in the view,
+          Filter:                                          # optional, default include all, defines which registers are show in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
             SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
@@ -76,7 +76,7 @@ MqttClients:                                               # optional, when empt
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
-          RegisterFilter:                                  # optional, default include all, defines which registers are show in the view,
+          Filter:                                          # optional, default include all, defines which registers are show in the view,
             # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
             SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
@@ -92,7 +92,7 @@ MqttClients:                                               # optional, when empt
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # messages are only sent for this device
-          RegisterFilter:                                  # optional, default include all, defines which registers are show in the view,
+          Filter:                                          # optional, default include all, defines which registers are show in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
               - BatteryVoltage                             # the BatteryVoltage register is sent no matter if it's category is listed unter categories
@@ -110,7 +110,7 @@ MqttClients:                                               # optional, when empt
       Retain: false                                        # optional, default false, the mqtt retain flag for homeassistant disovery messages
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
-          RegisterFilter:                                  # optional, default include all, defines which registers are show in the view,
+          Filter:                                          # optional, default include all, defines which registers are show in the view,
             # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
             SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
@@ -131,7 +131,7 @@ Modbus:                                                    # optional, when empt
 VictronDevices:                                            # optional, a list of Victron Energy devices to connect to
   bmv0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     General:                                               # optional, this section is exactly the same for all devices
-      RegisterFilter:                                      # optional, default include all, defines which registers are show in the view,
+      Filter:                                              # optional, default include all, defines which registers are show in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
         IncludeRegisters:                                  # optional, default empty, if a register is on this list, it is returned
         SkipRegisters:                                     # optional, default empty, if a register is on this list, it is not returned
@@ -151,7 +151,7 @@ VictronDevices:                                            # optional, a list of
 ModbusDevices:                                             # optional, a list of devices connected via ModBus
   modbus-rtu0:                                             # mandatory, an arbitrary name used for logging and for referencing in other config sections
     General:                                               # optional, this section is exactly the same for all devices
-      RegisterFilter:                                      # optional, default include all, defines which registers are show in the view,
+      Filter:                                              # optional, default include all, defines which registers are show in the view,
         # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
         IncludeRegisters:                                  # optional, default empty, if a register is on this list, it is returned
         SkipRegisters:                                     # optional, default empty, if a register is on this list, it is not returned
@@ -175,7 +175,7 @@ ModbusDevices:                                             # optional, a list of
 HttpDevices:                                               # optional, a list of devices controlled via http
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections
     General:                                               # optional, this section is exactly the same for all devices
-      RegisterFilter:                                      # optional, default include all, defines which registers are show in the view,
+      Filter:                                              # optional, default include all, defines which registers are show in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
         IncludeRegisters:                                  # optional, default empty, if a register is on this list, it is returned
         SkipRegisters:                                     # optional, default empty, if a register is on this list, it is not returned
@@ -195,7 +195,7 @@ HttpDevices:                                               # optional, a list of
 MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     General:                                               # optional, this section is exactly the same for all devices
-      RegisterFilter:                                      # optional, default include all, defines which registers are show in the view,
+      Filter:                                              # optional, default include all, defines which registers are show in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
         IncludeRegisters:                                  # optional, default empty, if a register is on this list, it is returned
         SkipRegisters:                                     # optional, default empty, if a register is on this list, it is not returned
@@ -218,7 +218,7 @@ Views:                                                     # optional, a list of
     Devices:                                               # mandatory, a list of devices using
       - Name: bmv0                                         # mandatory, the arbitrary names defined above
         Title: Battery Monitor                             # mandatory, a nice title displayed in the frontend
-        RegisterFilter:                                    # optional, default include all, defines which registers are show in the view,
+        Filter:                                            # optional, default include all, defines which registers are show in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
           IncludeRegisters:                                # optional, default empty, if a register is on this list, it is returned
           SkipRegisters:                                   # optional, default empty, if a register is on this list, it is not returned

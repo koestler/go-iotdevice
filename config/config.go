@@ -529,7 +529,7 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 	allowZeroInterval bool,
 	defaultRetain bool,
 	allowDevices bool,
-	allowRegisterFilter bool,
+	allowFilter bool,
 ) (ret MqttSectionConfig, err []error) {
 	if readOnly {
 		ret.enabled = false
@@ -598,7 +598,7 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 					name,
 					devices,
 					fmt.Sprintf("%s%s->", logPrefix, name),
-					allowRegisterFilter,
+					allowFilter,
 				)
 			},
 		)
@@ -612,7 +612,7 @@ func (c mqttDeviceSectionConfigRead) TransformAndValidate(
 	name string,
 	devices []DeviceConfig,
 	logPrefix string,
-	allowRegisterFilter bool,
+	allowFilter bool,
 ) (ret MqttDeviceSectionConfig, err []error) {
 	ret = MqttDeviceSectionConfig{
 		name: name,
@@ -622,15 +622,15 @@ func (c mqttDeviceSectionConfigRead) TransformAndValidate(
 		err = append(err, fmt.Errorf("%sDevices: device='%s' is not defined or is an MqttDevice", logPrefix, name))
 	}
 
-	if !allowRegisterFilter && c.RegisterFilter != nil {
-		err = append(err, fmt.Errorf("%sRegisterFilter must not be set", logPrefix))
+	if !allowFilter && c.Filter != nil {
+		err = append(err, fmt.Errorf("%sFilter must not be set", logPrefix))
 	}
 
-	if c.RegisterFilter == nil {
-		c.RegisterFilter = &registerFilterConfigRead{}
+	if c.Filter == nil {
+		c.Filter = &filterConfigRead{}
 	}
 	var e []error
-	ret.registerFilter, e = c.RegisterFilter.TransformAndValidate()
+	ret.filter, e = c.Filter.TransformAndValidate()
 	err = append(err, e...)
 
 	return
@@ -646,7 +646,7 @@ func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, e
 	}
 
 	var e []error
-	ret.registerFilter, e = c.RegisterFilter.TransformAndValidate()
+	ret.filter, e = c.Filter.TransformAndValidate()
 	err = append(err, e...)
 
 	if len(c.RestartInterval) < 1 {
@@ -962,14 +962,14 @@ func (c viewDeviceConfigRead) TransformAndValidate(
 	}
 
 	var e []error
-	ret.registerFilter, e = c.RegisterFilter.TransformAndValidate()
+	ret.filter, e = c.Filter.TransformAndValidate()
 	err = append(err, e...)
 
 	return
 }
 
-func (c registerFilterConfigRead) TransformAndValidate() (ret RegisterFilterConfig, err []error) {
-	ret = RegisterFilterConfig{
+func (c filterConfigRead) TransformAndValidate() (ret FilterConfig, err []error) {
+	ret = FilterConfig{
 		includeRegisters:  c.IncludeRegisters,
 		skipRegisters:     c.SkipRegisters,
 		includeCategories: c.IncludeCategories,

@@ -77,6 +77,6 @@ type viewDeviceConfig struct {
 	config.ViewDeviceConfig
 }
 
-func (c viewDeviceConfig) RegisterFilter() dataflow.RegisterFilterConf {
-	return c.ViewDeviceConfig.RegisterFilter()
+func (c viewDeviceConfig) Filter() dataflow.RegisterFilterConf {
+	return c.ViewDeviceConfig.Filter()
 }

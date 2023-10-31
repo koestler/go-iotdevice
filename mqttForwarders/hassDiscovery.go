@@ -31,7 +31,7 @@ func runHomeassistantDiscoveryForwarder(
 	cfg Config,
 	dev device.Device,
 	mc mqttClient.Client,
-	hassRegisterFilter dataflow.RegisterFilterConf,
+	filterConf dataflow.RegisterFilterConf,
 ) {
 
 	// check if realtime messages are activated
@@ -47,8 +47,8 @@ func runHomeassistantDiscoveryForwarder(
 		return
 	}
 
-	hassFilter := createRegisterValueFilter(hassRegisterFilter)
-	realtimeFilter := createRegisterValueFilter(realtimeCfg.RegisterFilter())
+	hassFilter := createRegisterValueFilter(filterConf)
+	realtimeFilter := createRegisterValueFilter(realtimeCfg.Filter())
 	var filter dataflow.RegisterFilterFunc = func(r dataflow.Register) bool {
 		return hassFilter(r) && realtimeFilter(r)
 	}

@@ -55,7 +55,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 		return fmt.Errorf("no registers found for deviceId=%x", deviceId), true
 	}
 	// filter registers by skip list and add to db for outside use
-	registers = FilterRegisters(registers, c.Config().RegisterFilter())
+	registers = FilterRegisters(registers, c.Config().Filter())
 	addToRegisterDb(c.RegisterDb(), registers)
 
 	// start polling loop

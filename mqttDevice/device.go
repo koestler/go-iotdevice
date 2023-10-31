@@ -48,7 +48,7 @@ func NewDevice(
 		),
 		mqttConfig:     mqttConfig,
 		mqttClientPool: mqttClientPool,
-		registerFilter: dataflow.RegisterFilter(deviceConfig.RegisterFilter()),
+		registerFilter: dataflow.RegisterFilter(deviceConfig.Filter()),
 		avail:          make(map[string]bool),
 	}
 }

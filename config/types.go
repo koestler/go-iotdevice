@@ -84,8 +84,8 @@ type MqttSectionConfig struct {
 }
 
 type MqttDeviceSectionConfig struct {
-	name           string
-	registerFilter RegisterFilterConfig
+	name   string
+	filter FilterConfig
 }
 
 type ModbusConfig struct {
@@ -98,7 +98,7 @@ type ModbusConfig struct {
 
 type DeviceConfig struct {
 	name                      string
-	registerFilter            RegisterFilterConfig
+	filter                    FilterConfig
 	restartInterval           time.Duration
 	restartIntervalMaxBackoff time.Duration
 	logDebug                  bool
@@ -152,12 +152,12 @@ type ViewConfig struct {
 }
 
 type ViewDeviceConfig struct {
-	name           string
-	title          string
-	registerFilter RegisterFilterConfig
+	name   string
+	title  string
+	filter FilterConfig
 }
 
-type RegisterFilterConfig struct {
+type FilterConfig struct {
 	includeRegisters  []string
 	skipRegisters     []string
 	includeCategories []string

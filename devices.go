@@ -87,36 +87,36 @@ func runMqttDevices(
 	}
 }
 
-// the following structs / methods are used to cast config.RegisterFilterConfig into dataflow.RegisterFilterConf
+// the following structs / methods are used to cast config.FilterConfig into dataflow.RegisterFilterConf
 
 type victronDeviceConfig struct {
 	config.VictronDeviceConfig
 }
 
-func (c victronDeviceConfig) RegisterFilter() dataflow.RegisterFilterConf {
-	return c.VictronDeviceConfig.RegisterFilter()
+func (c victronDeviceConfig) Filter() dataflow.RegisterFilterConf {
+	return c.VictronDeviceConfig.Filter()
 }
 
 type modbusDeviceConfig struct {
 	config.ModbusDeviceConfig
 }
 
-func (c modbusDeviceConfig) RegisterFilter() dataflow.RegisterFilterConf {
-	return c.ModbusDeviceConfig.RegisterFilter()
+func (c modbusDeviceConfig) Filter() dataflow.RegisterFilterConf {
+	return c.ModbusDeviceConfig.Filter()
 }
 
 type httpDeviceConfig struct {
 	config.HttpDeviceConfig
 }
 
-func (c httpDeviceConfig) RegisterFilter() dataflow.RegisterFilterConf {
-	return c.HttpDeviceConfig.RegisterFilter()
+func (c httpDeviceConfig) Filter() dataflow.RegisterFilterConf {
+	return c.HttpDeviceConfig.Filter()
 }
 
 type mqttDeviceConfig struct {
 	config.MqttDeviceConfig
 }
 
-func (c mqttDeviceConfig) RegisterFilter() dataflow.RegisterFilterConf {
-	return c.MqttDeviceConfig.RegisterFilter()
+func (c mqttDeviceConfig) Filter() dataflow.RegisterFilterConf {
+	return c.MqttDeviceConfig.Filter()
 }

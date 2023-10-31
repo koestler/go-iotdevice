@@ -281,8 +281,8 @@ func (c MqttDeviceSectionConfig) Name() string {
 	return c.name
 }
 
-func (c MqttDeviceSectionConfig) RegisterFilter() RegisterFilterConfig {
-	return c.registerFilter
+func (c MqttDeviceSectionConfig) Filter() FilterConfig {
+	return c.filter
 }
 
 // Getters for ModbusConfig struct
@@ -313,8 +313,8 @@ func (c DeviceConfig) Name() string {
 	return c.name
 }
 
-func (c DeviceConfig) RegisterFilter() RegisterFilterConfig {
-	return c.registerFilter
+func (c DeviceConfig) Filter() FilterConfig {
+	return c.filter
 }
 
 func (c DeviceConfig) RestartInterval() time.Duration {
@@ -463,28 +463,28 @@ func (c ViewDeviceConfig) Title() string {
 	return c.title
 }
 
-func (c ViewDeviceConfig) RegisterFilter() RegisterFilterConfig {
-	return c.registerFilter
+func (c ViewDeviceConfig) Filter() FilterConfig {
+	return c.filter
 }
 
-// Getters for RegisterFilterConfig struct
+// Getters for FilterConfig struct
 
-func (c RegisterFilterConfig) IncludeRegisters() []string {
+func (c FilterConfig) IncludeRegisters() []string {
 	return c.includeRegisters
 }
 
-func (c RegisterFilterConfig) SkipRegisters() []string {
+func (c FilterConfig) SkipRegisters() []string {
 	return c.skipRegisters
 }
 
-func (c RegisterFilterConfig) IncludeCategories() []string {
+func (c FilterConfig) IncludeCategories() []string {
 	return c.includeCategories
 }
 
-func (c RegisterFilterConfig) SkipCategories() []string {
+func (c FilterConfig) SkipCategories() []string {
 	return c.skipCategories
 }
 
-func (c RegisterFilterConfig) DefaultInclude() bool {
+func (c FilterConfig) DefaultInclude() bool {
 	return c.defaultInclude
 }

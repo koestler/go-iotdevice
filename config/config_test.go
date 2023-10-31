@@ -79,7 +79,7 @@ MqttClients:                                               # optional, when empt
       Qos: 2                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
       Devices:
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
-          RegisterFilter:                                  # optional, default include all, defines which registers are show in the view,
+          Filter:                                  # optional, default include all, defines which registers are show in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
               - reg-inc-a
@@ -104,7 +104,7 @@ MqttClients:                                               # optional, when empt
       Qos: 2                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
       Devices:
         modbus-rtu0:
-          RegisterFilter:                                  # optional, default include all, defines which registers are show in the view,
+          Filter:                                  # optional, default include all, defines which registers are show in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
               - BatteryVoltage                             # the BatteryVoltage register is sent no matter if it's category is listed unter categories
@@ -150,7 +150,7 @@ Modbus:                                                    # optional, when empt
 VictronDevices:                                            # optional, a list of Victron Energy devices to connect to
   bmv0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     General:                                               # optional, this section is exactly the same for all devices
-      RegisterFilter:
+      Filter:
         SkipRegisters:                                          # optional, default empty, a list of field names that shall be ignored for this device
           - Temperature                                      # for BMV devices without a temperature sensor connect
           - AuxVoltage                                       # for BMV devices without a mid- or starter-voltage reading
@@ -166,7 +166,7 @@ VictronDevices:                                            # optional, a list of
 ModbusDevices:                                             # optional, a list of devices connected via ModBus
   modbus-rtu0:                                             # mandatory, an arbitrary name used for logging and for referencing in other config sections
     General:                                               # optional, this section is exactly the same for all devices
-      RegisterFilter:
+      Filter:
         IncludeRegisters:                                          # optional, default empty, a list of field names that shall be ignored for this device
           - a
           - b
@@ -228,7 +228,7 @@ Views:                                                     # optional, a list of
     Devices:                                               # mandatory, a list of devices using
       - Name: bmv0                                         # mandatory, the arbitrary names defined above
         Title: Battery Monitor                             # mandatory, a nice title displayed in the frontend
-        RegisterFilter:
+        Filter:
           SkipRegisters:                                        # optional, default empty, field names that are omitted when displaying this view
             - field-a
             - field-b
@@ -540,7 +540,7 @@ func TestReadConfig_Complete(t *testing.T) {
 					t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 				} else {
 					prefix := prefix + "->Devices->bmv0"
-					rf := mcSect.Devices()[0].RegisterFilter()
+					rf := mcSect.Devices()[0].Filter()
 
 					if got := rf.IncludeRegisters(); len(got) > 0 {
 						t.Errorf("expect %s->IncludeRegisters to be empty, got %v", prefix, got)
@@ -596,7 +596,7 @@ func TestReadConfig_Complete(t *testing.T) {
 					t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 				} else {
 					prefix := prefix + "->Devices->bmv0"
-					rf := mcSect.Devices()[0].RegisterFilter()
+					rf := mcSect.Devices()[0].Filter()
 
 					if expect, got := []string{"reg-inc-a", "reg-inc-b"}, rf.IncludeRegisters(); !reflect.DeepEqual(expect, got) {
 						t.Errorf("expect %s->IncludeRegisters to be %v but got %#v", prefix, expect, got)
@@ -652,7 +652,7 @@ func TestReadConfig_Complete(t *testing.T) {
 					t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 				} else {
 					prefix := prefix + "->Devices->modbus-rtu0"
-					rf := mcSect.Devices()[0].RegisterFilter()
+					rf := mcSect.Devices()[0].Filter()
 
 					if expect, got := []string{"BatteryVoltage", "Power"}, rf.IncludeRegisters(); !reflect.DeepEqual(expect, got) {
 						t.Errorf("expect %s->IncludeRegisters to be %v but got %#v", prefix, expect, got)
@@ -708,7 +708,7 @@ func TestReadConfig_Complete(t *testing.T) {
 					t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 				} else {
 					prefix := prefix + "->Devices->bmv0"
-					rf := mcSect.Devices()[0].RegisterFilter()
+					rf := mcSect.Devices()[0].Filter()
 
 					if got := rf.IncludeRegisters(); len(got) > 0 {
 						t.Errorf("expect %s->IncludeRegisters to be empty, got %v", prefix, got)
@@ -764,7 +764,7 @@ func TestReadConfig_Complete(t *testing.T) {
 					t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 				} else {
 					prefix := prefix + "->Devices->bmv0"
-					rf := mcSect.Devices()[0].RegisterFilter()
+					rf := mcSect.Devices()[0].Filter()
 
 					if got := rf.IncludeRegisters(); len(got) > 0 {
 						t.Errorf("expect %s->IncludeRegisters to be empty, got %v", prefix, got)
@@ -891,8 +891,8 @@ func TestReadConfig_Complete(t *testing.T) {
 		}
 
 		{
-			prefix := "VictronDevices->bmv0->General->RegisterFilter"
-			rf := vd.RegisterFilter()
+			prefix := "VictronDevices->bmv0->General->Filter"
+			rf := vd.Filter()
 
 			if got := rf.IncludeRegisters(); len(got) > 0 {
 				t.Errorf("expect %s->IncludeRegisters to be empty, got %v", prefix, got)
@@ -951,7 +951,7 @@ func TestReadConfig_Complete(t *testing.T) {
 
 		{
 			prefix := "ModebusDevices->modbus-rtu0->General->FilterRegister"
-			rf := md.RegisterFilter()
+			rf := md.Filter()
 
 			if expect, got := []string{"a", "b"}, rf.IncludeRegisters(); !reflect.DeepEqual(expect, got) {
 				t.Errorf("expect %s->IncludeRegisters to be %v but got %#v", prefix, expect, got)
@@ -1374,7 +1374,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
-				rf := mcSect.Devices()[0].RegisterFilter()
+				rf := mcSect.Devices()[0].Filter()
 
 				if got := rf.IncludeRegisters(); len(got) > 0 {
 					t.Errorf("expect %s->IncludeRegisters to be empty, got %v", prefix, got)
@@ -1430,7 +1430,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
-				rf := mcSect.Devices()[0].RegisterFilter()
+				rf := mcSect.Devices()[0].Filter()
 
 				if got := rf.IncludeRegisters(); len(got) > 0 {
 					t.Errorf("expect %s->IncludeRegisters to be empty, got %v", prefix, got)
@@ -1486,7 +1486,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
-				rf := mcSect.Devices()[0].RegisterFilter()
+				rf := mcSect.Devices()[0].Filter()
 
 				if got := rf.IncludeRegisters(); len(got) > 0 {
 					t.Errorf("expect %s->IncludeRegisters to be empty, got %v", prefix, got)
@@ -1542,7 +1542,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
-				rf := mcSect.Devices()[0].RegisterFilter()
+				rf := mcSect.Devices()[0].Filter()
 
 				if got := rf.IncludeRegisters(); len(got) > 0 {
 					t.Errorf("expect %s->IncludeRegisters to be empty, got %v", prefix, got)
@@ -1598,7 +1598,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
-				rf := mcSect.Devices()[0].RegisterFilter()
+				rf := mcSect.Devices()[0].Filter()
 
 				if got := rf.IncludeRegisters(); len(got) > 0 {
 					t.Errorf("expect %s->IncludeRegisters to be empty, got %v", prefix, got)

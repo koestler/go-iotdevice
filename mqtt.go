@@ -92,6 +92,6 @@ type forwarderMqttDeviceSectionConfig struct {
 	config.MqttDeviceSectionConfig
 }
 
-func (c forwarderMqttDeviceSectionConfig) RegisterFilter() dataflow.RegisterFilterConf {
-	return c.MqttDeviceSectionConfig.RegisterFilter()
+func (c forwarderMqttDeviceSectionConfig) Filter() dataflow.RegisterFilterConf {
+	return c.MqttDeviceSectionConfig.Filter()
 }

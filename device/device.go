@@ -7,7 +7,7 @@ import (
 
 type Config interface {
 	Name() string
-	RegisterFilter() dataflow.RegisterFilterConf
+	Filter() dataflow.RegisterFilterConf
 	LogDebug() bool
 	LogComDebug() bool
 }

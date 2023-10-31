@@ -34,12 +34,12 @@ func runStructureForwarder(
 	cfg Config,
 	dev device.Device,
 	mc mqttClient.Client,
-	registerFilter dataflow.RegisterFilterConf,
+	filterConf dataflow.RegisterFilterConf,
 ) {
 	// start mqtt forwarder for realtime messages (send data as soon as it arrives) output
 	mCfg := cfg.Structure()
 
-	filter := createRegisterValueFilter(registerFilter)
+	filter := createRegisterValueFilter(filterConf)
 
 	if mCfg.Interval() <= 0 {
 		go structureOnUpdateModeRoutine(ctx, cfg, dev, mc, filter)

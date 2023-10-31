@@ -21,12 +21,12 @@ func runRealtimeForwarder(
 	dev device.Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
-	registerFilter dataflow.RegisterFilterConf,
+	filterConf dataflow.RegisterFilterConf,
 ) {
 	// start mqtt forwarder for realtime messages (send data as soon as it arrives) output
 	mCfg := cfg.Realtime()
 
-	filter := createDeviceAndRegisterValueFilter(dev, registerFilter)
+	filter := createDeviceAndRegisterValueFilter(dev, filterConf)
 
 	// immediate mode: Interval is set to zero
 	// -> send values immediately when they change

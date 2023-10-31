@@ -94,9 +94,9 @@ func (r RegisterStruct) Controllable() bool {
 	return r.controllable
 }
 
-func FilterRegisters[R Register](input []R, registerFilter RegisterFilterConf) (output []R) {
+func FilterRegisters[R Register](input []R, filterConf RegisterFilterConf) (output []R) {
 	output = make([]R, 0, len(input))
-	f := RegisterFilter(registerFilter)
+	f := RegisterFilter(filterConf)
 
 	for _, r := range input {
 		if f(r) {

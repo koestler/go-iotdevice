@@ -136,9 +136,9 @@ func (c MqttSectionConfig) convertToRead() mqttSectionConfigRead {
 
 //lint:ignore U1000 linter does not catch that this is used generic code
 func (c MqttDeviceSectionConfig) convertToRead() mqttDeviceSectionConfigRead {
-	rf := c.registerFilter.convertToRead()
+	rf := c.filter.convertToRead()
 	return mqttDeviceSectionConfigRead{
-		RegisterFilter: &rf,
+		Filter: &rf,
 	}
 }
 
@@ -155,7 +155,7 @@ func (c ModbusConfig) convertToRead() modbusConfigRead {
 //lint:ignore U1000 linter does not catch that this is used generic code
 func (c DeviceConfig) convertToRead() deviceConfigRead {
 	return deviceConfigRead{
-		RegisterFilter:            c.registerFilter.convertToRead(),
+		Filter:                    c.filter.convertToRead(),
 		RestartInterval:           c.restartInterval.String(),
 		RestartIntervalMaxBackoff: c.restartIntervalMaxBackoff.String(),
 		LogDebug:                  &c.logDebug,
@@ -236,15 +236,15 @@ func (c ViewConfig) convertToRead() viewConfigRead {
 //lint:ignore U1000 linter does not catch that this is used generic code
 func (c ViewDeviceConfig) convertToRead() viewDeviceConfigRead {
 	return viewDeviceConfigRead{
-		Name:           c.name,
-		Title:          c.title,
-		RegisterFilter: c.registerFilter.convertToRead(),
+		Name:   c.name,
+		Title:  c.title,
+		Filter: c.filter.convertToRead(),
 	}
 }
 
 //lint:ignore U1000 linter does not catch that this is used generic code
-func (c RegisterFilterConfig) convertToRead() registerFilterConfigRead {
-	return registerFilterConfigRead{
+func (c FilterConfig) convertToRead() filterConfigRead {
+	return filterConfigRead{
 		IncludeRegisters:  c.includeRegisters,
 		SkipRegisters:     c.skipRegisters,
 		IncludeCategories: c.includeCategories,

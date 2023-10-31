@@ -20,7 +20,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 
 	// assign registers
 	registers := c.getModbusRegisters()
-	registers = dataflow.FilterRegisters(registers, c.Config().RegisterFilter())
+	registers = dataflow.FilterRegisters(registers, c.Config().Filter())
 
 	addToRegisterDb(c.RegisterDb(), registers)
 
