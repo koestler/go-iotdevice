@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/pkg/errors"
 	"log"
+	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -21,8 +24,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	// assign registers
 	registers := c.getModbusRegisters()
 	registers = dataflow.FilterRegisters(registers, c.Config().Filter())
-
-	addToRegisterDb(c.RegisterDb(), registers)
+	c.RegisterDb().AddStruct(registers...)
 
 	// setup polling
 	execPoll := func() error {
@@ -36,8 +38,10 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 
 		for _, register := range registers {
 			value := 0
-			if state[register.address] {
-				value = 1
+			if address, err := registerAddress(register); err != nil {
+				if state[address] {
+					value = 1
+				}
 			}
 
 			c.StateStorage().Fill(dataflow.NewEnumRegisterValue(
@@ -96,11 +100,17 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 		}
 
 		var relayNr uint16
-		if modbusRegister, ok := value.Register().(ModbusRegister); !ok {
+		if address, err := registerAddress(value.Register()); err != nil {
+			if c.Config().LogDebug() {
+				log.Printf("waveshareDevice[%s]: cannot get register address, register=%v, err: %s",
+					c.Config().Name(),
+					value.Register(), err,
+				)
+			}
 			// unknown register
 			return
 		} else {
-			relayNr = modbusRegister.address
+			relayNr = uint16(address)
 		}
 
 		if c.Config().LogDebug() {
@@ -148,9 +158,9 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	}
 }
 
-func (c *DeviceStruct) getModbusRegisters() (registers []ModbusRegister) {
+func (c *DeviceStruct) getModbusRegisters() (registers []dataflow.RegisterStruct) {
 	category := "Relays"
-	registers = make([]ModbusRegister, 0, 8)
+	registers = make([]dataflow.RegisterStruct, 0, 8)
 	for i := uint16(0); i < 8; i += 1 {
 		name := fmt.Sprintf("CH%d", i+1)
 
@@ -160,16 +170,26 @@ func (c *DeviceStruct) getModbusRegisters() (registers []ModbusRegister) {
 			1: c.modbusConfig.RelayClosedLabel(name),
 		}
 
-		r := NewModbusRegister(
-			category,
-			name,
-			description,
-			i,
+		r := dataflow.NewRegisterStruct(
+			category, name, description,
+			dataflow.EnumRegister,
 			enum,
+			"",
 			int(i),
+			true,
 		)
 		registers = append(registers, r)
 	}
 
 	return
+}
+
+var addrMatcher = regexp.MustCompile("^CH([0-9])$")
+
+func registerAddress(r dataflow.Register) (address int, err error) {
+	matches := addrMatcher.FindStringSubmatch(r.Name())
+	if matches == nil {
+		return 0, errors.New("invalid registerName")
+	}
+	return strconv.Atoi(matches[1])
 }
