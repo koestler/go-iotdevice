@@ -191,5 +191,7 @@ func registerAddress(r dataflow.Register) (address int, err error) {
 	if matches == nil {
 		return 0, errors.New("invalid registerName")
 	}
-	return strconv.Atoi(matches[1])
+	i, err := strconv.Atoi(matches[1])
+	i -= 1 // CH1 has address 0
+	return i, err
 }
