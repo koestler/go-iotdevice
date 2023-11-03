@@ -38,6 +38,8 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	switch c.victronConfig.Kind() {
 	case types.VictronVedirectKind:
 		return runVedirect(ctx, c, c.StateStorage())
+	case types.VictronVebusKind:
+		return runVebus(ctx, c, c.StateStorage())
 	case types.VictronRandomBmvKind:
 		return runRandom(ctx, c, c.StateStorage(), RegisterListBmv712)
 	case types.VictronRandomSolarKind:

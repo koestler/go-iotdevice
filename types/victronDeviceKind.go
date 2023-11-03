@@ -7,6 +7,7 @@ const (
 	VictronRandomBmvKind
 	VictronRandomSolarKind
 	VictronVedirectKind
+	VictronVebusKind
 )
 
 func (dk VictronDeviceKind) String() string {
@@ -17,20 +18,24 @@ func (dk VictronDeviceKind) String() string {
 		return "RandomSolar"
 	case VictronVedirectKind:
 		return "Vedirect"
+	case VictronVebusKind:
+		return "Vebus"
 	default:
 		return "Undefined"
 	}
 }
 
 func VictronDeviceKindFromString(s string) VictronDeviceKind {
-	if s == "RandomBmv" {
+	switch s {
+	case "RandomBmv":
 		return VictronRandomBmvKind
-	}
-	if s == "RandomSolar" {
+	case "RandomSolar":
 		return VictronRandomSolarKind
-	}
-	if s == "Vedirect" {
+	case "Vedirect":
 		return VictronVedirectKind
+	case "Vebus":
+		return VictronVebusKind
+	default:
+		return VictronUndefinedKind
 	}
-	return VictronUndefinedKind
 }
