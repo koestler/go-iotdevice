@@ -194,7 +194,7 @@ HttpDevices:                                               # optional, a list of
 
 MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
-    Kind: GoIotdevice                                      # mandatory, only GoIotdevice is supported at the moment
+    Kind: GoIotdeviceV3                                    # mandatory, only GoIotdevice is supported at the moment
     MqttClients:                                           # mandatory, at least 1 topic must be defined, on which mqtt server(s) we subscribe
       - local                                              # identifier as defined in the MqttClients section
     MqttTopics:                                            # mandatory, at least 1 topic must be defined

@@ -4,21 +4,21 @@ type MqttDeviceKind int
 
 const (
 	MqttDeviceUndefinedKind MqttDeviceKind = iota
-	MqttDeviceGoIotdeviceKind
+	MqttDeviceGoIotdeviceV3Kind
 )
 
 func (dk MqttDeviceKind) String() string {
 	switch dk {
-	case MqttDeviceGoIotdeviceKind:
-		return "GoIotdevice"
+	case MqttDeviceGoIotdeviceV3Kind:
+		return "GoIotdeviceV3"
 	default:
 		return "Undefined"
 	}
 }
 
 func MqttDeviceKindFromString(s string) MqttDeviceKind {
-	if s == "GoIotdevice" {
-		return MqttDeviceGoIotdeviceKind
+	if s == "GoIotdeviceV3" {
+		return MqttDeviceGoIotdeviceV3Kind
 	}
 
 	return MqttDeviceUndefinedKind

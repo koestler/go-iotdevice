@@ -212,7 +212,7 @@ MqttDevices:                                               # optional, a list of
     RestartIntervalMaxBackoff: 30s                       # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
     LogDebug: false                                      # optional, default false, enable debug log output
     LogComDebug: true                                    # optional, default false, enable a verbose log of the communication with the device
-    Kind: GoIotdevice
+    Kind: GoIotdeviceV3
     MqttClients:                                           # optional, default all clients, on which mqtt server(s) we subscribe
       - 1-remote                                           # identifier as defined in the MqttClients section
     MqttTopics:                                            # mandatory, at least 1 topic must be defined
@@ -280,7 +280,7 @@ HttpDevices:                                               # optional, a list of
 
 MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
-    Kind: GoIotdevice
+    Kind: GoIotdeviceV3
     MqttClients:
       - 0-local
     MqttTopics:                                            # mandatory, at least 1 topic must be defined
@@ -1070,7 +1070,7 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Error("expect MqttDevices->bmv1->General->LogComDebug to be true")
 		}
 
-		if expect, got := types.MqttDeviceGoIotdeviceKind, vd.Kind(); expect != got {
+		if expect, got := types.MqttDeviceGoIotdeviceV3Kind, vd.Kind(); expect != got {
 			t.Errorf("expect MqttDevices->bmv1->Kind to be %v but got %v", expect, got)
 		}
 
@@ -1796,7 +1796,7 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Error("expect MqttDevices->bmv1->General->LogComDebug to be false")
 		}
 
-		if expect, got := types.MqttDeviceGoIotdeviceKind, vd.Kind(); expect != got {
+		if expect, got := types.MqttDeviceGoIotdeviceV3Kind, vd.Kind(); expect != got {
 			t.Errorf("expect MqttDevices->bmv1->Kind to be %v but got %v", expect, got)
 		}
 
