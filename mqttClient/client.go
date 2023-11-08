@@ -40,8 +40,6 @@ func (c *ClientStruct) GetCtx() context.Context {
 }
 
 func (c *ClientStruct) AddRoute(subscribeTopic string, messageHandler MessageHandler) {
-	log.Printf("mqttClient[%s]: add route for topic='%s'", c.cfg.Name(), subscribeTopic)
-
 	s := subscription{subscribeTopic: subscribeTopic}
 
 	if c.cfg.LogMessages() {
