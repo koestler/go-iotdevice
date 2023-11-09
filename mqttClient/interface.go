@@ -18,6 +18,7 @@ type Config interface {
 	ConnectRetryDelay() time.Duration
 	ConnectTimeout() time.Duration
 	TopicPrefix() string
+	ReadOnly() bool
 	MaxBacklogSize() int
 
 	AvailabilityClient() MqttSectionConfig

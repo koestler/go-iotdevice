@@ -152,6 +152,11 @@ func (c *ClientStruct) Shutdown() {
 }
 
 func (c *ClientStruct) Publish(topic string, payload []byte, qos byte, retain bool) {
+	if c.cfg.ReadOnly() {
+		log.Printf("mqttClientV5[%s]: message dropped due to readOnly flag: %s %s", c.cfg.Name(), topic, payload)
+		return
+	}
+
 	p := &paho.Publish{
 		QoS:     qos,
 		Topic:   topic,
