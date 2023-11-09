@@ -19,14 +19,14 @@ type StructRegister struct {
 	Enum         map[int]string `json:"Enum,omitempty"`
 	Unit         string         `json:"Unit,omitempty" example:"W"`
 	Sort         int            `json:"Sort" example:"100"`
-	Controllable bool           `json:"Cont" example:"false"`
+	Controllable bool           `json:"Cmnd" example:"false"`
 }
 
 type StructureMessage struct {
 	AvailabilityTopics []string         `json:"Avail,omitempty"`
-	TelemetryTopic     string           `json:"Telemetry,omitempty"`
-	RealtimeTopic      string           `json:"Realtime,omitempty"`
-	Registers          []StructRegister `json:"Registers"`
+	TelemetryTopic     string           `json:"Tele,omitempty"`
+	RealtimeTopic      string           `json:"Real,omitempty"`
+	Registers          []StructRegister `json:"Regs"`
 }
 
 func runStructureForwarder(
