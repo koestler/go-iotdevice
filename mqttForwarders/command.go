@@ -73,6 +73,7 @@ func setupCommandSubscription(
 		msg, err := parseCommandMessagePayload(m.Payload())
 		if err != nil {
 			log.Printf("mqttDevice[%s]->mqttClient[%s]->command: cannod parse message: %s", mc.Name(), dev.Name(), err)
+			return
 		}
 
 		switch register.RegisterType() {
@@ -105,7 +106,7 @@ func setupCommandSubscription(
 			}
 		}
 
-		log.Printf("mqttDevice[%s]->mqttClient[%s]->command: invalid command message: %v", mc.Name(), dev.Name(), msg)
+		log.Printf("mqttDevice[%s]->mqttClient[%s]->command: invalid command message: %#v", mc.Name(), dev.Name(), msg)
 	})
 }
 
