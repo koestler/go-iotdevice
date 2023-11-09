@@ -2,15 +2,14 @@ package mqttDevice
 
 import (
 	"context"
-	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/mqttForwarders"
 	"github.com/koestler/go-iotdevice/pool"
+	"github.com/koestler/go-iotdevice/topicMatcher"
 	"github.com/koestler/go-iotdevice/types"
 	"log"
-	"regexp"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -109,33 +108,6 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 
 func parseStructPayload(payload []byte) (msg mqttForwarders.StructureMessage, err error) {
 	err = json.Unmarshal(payload, &msg)
-	return
-}
-
-func parseRealtimeTopic(matcher *regexp.Regexp, topic string) (registerName string, err error) {
-	matches := matcher.FindStringSubmatch(topic)
-	if matches == nil {
-		err = fmt.Errorf("topic='%s' does not match", topic)
-	} else {
-		registerName = matches[1]
-	}
-
-	return
-
-}
-
-func createRealtimeTopicMatcher(topicTemplate string) (matcher *regexp.Regexp, err error) {
-	// create regexp to match against
-	regNameExpr := "([^\\/]+)"
-
-	// must not have anything before / after
-	expr := "^" + strings.Replace(regexp.QuoteMeta(topicTemplate), "%RegisterName%", regNameExpr, 1) + "$"
-
-	matcher, err = regexp.Compile(expr)
-	if err != nil {
-		return nil, fmt.Errorf("cannot create topic machter: invalid regexp: %s", err)
-	}
-
 	return
 }
 
@@ -243,14 +215,15 @@ func (c *DeviceStruct) setupRealtimeSubscription(mc mqttClient.Client, topicTemp
 		log.Printf("mqttDevice[%s]->mqttClient[%s]: subscribe to topic=%s", c.Name(), mc.Name(), topic)
 	}
 
-	topicMatcher, err := createRealtimeTopicMatcher(topicTemplate)
+	tm, err := topicMatcher.CreateMatcherSingleVariable(topicTemplate, "%RegisterName%")
+
 	if err != nil {
 		log.Printf("mqttDevice[%s]->mqttClient[%s]: invalid realtime topic: %s", c.Name(), mc.Name(), err)
 		return
 	}
 
 	mc.AddRoute(topic, func(m mqttClient.Message) {
-		registerName, err := parseRealtimeTopic(topicMatcher, m.Topic())
+		registerName, err := tm.ParseTopic(m.Topic())
 		if err != nil {
 			log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse realtime topic: %s", c.Name(), mc.Name(), err)
 			return
