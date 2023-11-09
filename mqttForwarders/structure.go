@@ -26,6 +26,7 @@ type StructureMessage struct {
 	AvailabilityTopics []string         `json:"Avail,omitempty"`
 	TelemetryTopic     string           `json:"Tele,omitempty"`
 	RealtimeTopic      string           `json:"Real,omitempty"`
+	CommandTopic       string           `json:"Cmnd,omitempty"`
 	Registers          []StructRegister `json:"Regs"`
 }
 
@@ -72,7 +73,7 @@ func structureOnUpdateModeRoutine(
 	ticker := time.NewTicker(math.MaxInt64)
 	defer ticker.Stop()
 
-	registers := make(map[string]StructRegister)
+	registers := make(map[string]dataflow.RegisterStruct)
 	for {
 		select {
 		case <-ctx.Done():
@@ -87,7 +88,7 @@ func structureOnUpdateModeRoutine(
 				continue
 			}
 
-			registers[regName] = NewStructRegister(reg)
+			registers[regName] = reg
 		case <-ticker.C:
 			ticker.Stop()
 
@@ -124,7 +125,7 @@ func structurePeriodicModeRoutine(
 			return
 		case <-ticker.C:
 			registers := dev.RegisterDb().GetFiltered(filter)
-			publishStruct(cfg, mc, dev.Name(), structureTopic, NewStructRegisters(registers...))
+			publishStruct(cfg, mc, dev.Name(), structureTopic, registers)
 		}
 	}
 }
@@ -154,8 +155,12 @@ func existsByName[N Nameable](needle string, haystack []N) bool {
 	return false
 }
 
-func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic string, registers []StructRegister) {
+func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic string, registers []dataflow.RegisterStruct) {
 	mCfg := cfg.Structure()
+
+	dataflow.SortRegisterStructs(registers)
+
+	structRegisters, countControllable := applyCommandFiltersToRegisters(cfg, devName, registers)
 
 	msg := StructureMessage{
 		AvailabilityTopics: getAvailabilityTopics(cfg, devName),
@@ -171,7 +176,13 @@ func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic strin
 			}
 			return ""
 		}(),
-		Registers: registers,
+		CommandTopic: func() string {
+			if countControllable < 1 {
+				return ""
+			}
+			return cfg.CommandTopic(devName, "%RegisterName%")
+		}(),
+		Registers: structRegisters,
 	}
 
 	if cfg.LogDebug() {
@@ -196,13 +207,42 @@ func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic strin
 	}
 }
 
-func NewStructRegisters(regs ...dataflow.RegisterStruct) (ret []StructRegister) {
-	ret = make([]StructRegister, len(regs))
-	dataflow.SortRegisterStructs(regs)
-	for i, reg := range regs {
-		ret[i] = NewStructRegister(reg)
+func applyCommandFiltersToRegisters(cfg Config, devName string, inp []dataflow.RegisterStruct) (oup []StructRegister, countControllable int) {
+	oup = make([]StructRegister, len(inp))
+
+	// by default, nothing is controllable
+	filter := func(register dataflow.Register) bool {
+		return false
 	}
-	return ret
+
+	// when command is enabled, use filter of given device
+	var dev MqttDeviceSectionConfig
+	if cfg.Command().Enabled() {
+		dev = getCommandDevice(cfg, devName)
+	}
+	if dev != nil {
+		filter = dataflow.RegisterFilter(dev.Filter())
+	}
+
+	for i, r := range inp {
+		sr := NewStructRegister(r)
+		sr.Controllable = filter(r)
+		if sr.Controllable {
+			countControllable++
+		}
+		oup[i] = sr
+	}
+
+	return
+}
+
+func getCommandDevice(cfg Config, deviceName string) (r MqttDeviceSectionConfig) {
+	for _, c := range cfg.Command().Devices() {
+		if c.Name() == deviceName {
+			return c
+		}
+	}
+	return nil
 }
 
 func NewStructRegister(reg dataflow.Register) StructRegister {
