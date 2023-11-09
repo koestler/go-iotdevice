@@ -520,7 +520,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 	ret.command, e = c.Command.TransformAndValidate(
 		fmt.Sprintf("MqttClientConfig->%s->Command->", name),
 		devices,
-		ret.readOnly,
+		false, // command is not affected by read only
 		false,
 		"%Prefix%cmnd/%DeviceName%/%RegisterName%",
 		0,
