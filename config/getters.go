@@ -25,8 +25,12 @@ func (c Config) LogWorkerStart() bool {
 	return c.logWorkerStart
 }
 
-func (c Config) LogStorageDebug() bool {
-	return c.logStorageDebug
+func (c Config) LogStateStorageDebug() bool {
+	return c.logStateStorageDebug
+}
+
+func (c Config) LogCommandStorageDebug() bool {
+	return c.logCommandStorageDebug
 }
 
 func (c Config) HttpServer() HttpServerConfig {

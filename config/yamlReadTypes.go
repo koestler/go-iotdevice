@@ -1,20 +1,21 @@
 package config
 
 type configRead struct {
-	Version         *int                               `yaml:"Version"`
-	ProjectTitle    string                             `yaml:"ProjectTitle"`
-	LogConfig       *bool                              `yaml:"LogConfig"`
-	LogWorkerStart  *bool                              `yaml:"LogWorkerStart"`
-	LogStorageDebug *bool                              `yaml:"LogStorageDebug"`
-	HttpServer      *httpServerConfigRead              `yaml:"HttpServer"`
-	Authentication  *authenticationConfigRead          `yaml:"Authentication"`
-	MqttClients     map[string]mqttClientConfigRead    `yaml:"MqttClients"`
-	Modbus          map[string]modbusConfigRead        `yaml:"Modbus"`
-	VictronDevices  map[string]victronDeviceConfigRead `yaml:"VictronDevices"`
-	ModbusDevices   map[string]modbusDeviceConfigRead  `yaml:"ModbusDevices"`
-	HttpDevices     map[string]httpDeviceConfigRead    `yaml:"HttpDevices"`
-	MqttDevices     map[string]mqttDeviceConfigRead    `yaml:"MqttDevices"`
-	Views           []viewConfigRead                   `yaml:"Views"`
+	Version                *int                               `yaml:"Version"`
+	ProjectTitle           string                             `yaml:"ProjectTitle"`
+	LogConfig              *bool                              `yaml:"LogConfig"`
+	LogWorkerStart         *bool                              `yaml:"LogWorkerStart"`
+	LogStateStorageDebug   *bool                              `yaml:"LogStateStorageDebug"`
+	LogCommandStorageDebug *bool                              `yaml:"LogCommandStorageDebug"`
+	HttpServer             *httpServerConfigRead              `yaml:"HttpServer"`
+	Authentication         *authenticationConfigRead          `yaml:"Authentication"`
+	MqttClients            map[string]mqttClientConfigRead    `yaml:"MqttClients"`
+	Modbus                 map[string]modbusConfigRead        `yaml:"Modbus"`
+	VictronDevices         map[string]victronDeviceConfigRead `yaml:"VictronDevices"`
+	ModbusDevices          map[string]modbusDeviceConfigRead  `yaml:"ModbusDevices"`
+	HttpDevices            map[string]httpDeviceConfigRead    `yaml:"HttpDevices"`
+	MqttDevices            map[string]mqttDeviceConfigRead    `yaml:"MqttDevices"`
+	Views                  []viewConfigRead                   `yaml:"Views"`
 }
 
 type httpServerConfigRead struct {

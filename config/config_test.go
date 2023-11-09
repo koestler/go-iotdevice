@@ -23,7 +23,8 @@ Version: 2                                                 # configuration file 
 ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice: is shown in the http frontend
 LogConfig: true                                            # optional, default false, outputs the used configuration including defaults on startup
 LogWorkerStart: true                                       # optional, default false, outputs what devices and mqtt clients are started
-LogStorageDebug: true                                      # optional, default false, outputs all write to the internal value storage
+LogStateStorageDebug: true                                 # optional, default false, outputs all write to the internal value storage
+LogCommandStorageDebug: true                               # optional, default false, outputs all write to the internal value storage
 
 HttpServer:                                                # optional, when missing: http server is not started
   Bind: "[::1]"                                            # optional, default ::1 (ipv6 loopback), what address to bind to, use "0:0:0:0" when started within docker
@@ -354,8 +355,12 @@ func TestReadConfig_Complete(t *testing.T) {
 		t.Errorf("expect LogWorkerStart to be true")
 	}
 
-	if !config.LogStorageDebug() {
-		t.Errorf("expect LogStorageDebug to be true")
+	if !config.LogStateStorageDebug() {
+		t.Errorf("expect LogStateStorageDebug to be true")
+	}
+
+	if !config.LogCommandStorageDebug() {
+		t.Errorf("expect LogCommandStorageDebug to be true")
 	}
 
 	{
@@ -1250,8 +1255,12 @@ func TestReadConfig_Default(t *testing.T) {
 		t.Errorf("expect LogWorkerStart to be true")
 	}
 
-	if config.LogStorageDebug() {
-		t.Errorf("expect LogStorageDebug to be false")
+	if config.LogStateStorageDebug() {
+		t.Errorf("expect LogStateStorageDebug to be false")
+	}
+
+	if config.LogCommandStorageDebug() {
+		t.Errorf("expect LogCommandStorageDebug to be false")
 	}
 
 	{

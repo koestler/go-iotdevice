@@ -7,20 +7,21 @@ import (
 
 func (c Config) MarshalYAML() (interface{}, error) {
 	return configRead{
-		Version:         &c.version,
-		ProjectTitle:    c.projectTitle,
-		LogConfig:       &c.logConfig,
-		LogWorkerStart:  &c.logWorkerStart,
-		LogStorageDebug: &c.logStorageDebug,
-		HttpServer:      convertEnableableToRead[HttpServerConfig, httpServerConfigRead](c.httpServer),
-		Authentication:  convertEnableableToRead[AuthenticationConfig, authenticationConfigRead](c.authentication),
-		MqttClients:     convertMapToRead[MqttClientConfig, mqttClientConfigRead](c.mqttClients),
-		Modbus:          convertMapToRead[ModbusConfig, modbusConfigRead](c.modbus),
-		VictronDevices:  convertMapToRead[VictronDeviceConfig, victronDeviceConfigRead](c.victronDevices),
-		ModbusDevices:   convertMapToRead[ModbusDeviceConfig, modbusDeviceConfigRead](c.modbusDevices),
-		HttpDevices:     convertMapToRead[HttpDeviceConfig, httpDeviceConfigRead](c.httpDevices),
-		MqttDevices:     convertMapToRead[MqttDeviceConfig, mqttDeviceConfigRead](c.mqttDevices),
-		Views:           convertListToRead[ViewConfig, viewConfigRead](c.views),
+		Version:                &c.version,
+		ProjectTitle:           c.projectTitle,
+		LogConfig:              &c.logConfig,
+		LogWorkerStart:         &c.logWorkerStart,
+		LogStateStorageDebug:   &c.logStateStorageDebug,
+		LogCommandStorageDebug: &c.logCommandStorageDebug,
+		HttpServer:             convertEnableableToRead[HttpServerConfig, httpServerConfigRead](c.httpServer),
+		Authentication:         convertEnableableToRead[AuthenticationConfig, authenticationConfigRead](c.authentication),
+		MqttClients:            convertMapToRead[MqttClientConfig, mqttClientConfigRead](c.mqttClients),
+		Modbus:                 convertMapToRead[ModbusConfig, modbusConfigRead](c.modbus),
+		VictronDevices:         convertMapToRead[VictronDeviceConfig, victronDeviceConfigRead](c.victronDevices),
+		ModbusDevices:          convertMapToRead[ModbusDeviceConfig, modbusDeviceConfigRead](c.modbusDevices),
+		HttpDevices:            convertMapToRead[HttpDeviceConfig, httpDeviceConfigRead](c.httpDevices),
+		MqttDevices:            convertMapToRead[MqttDeviceConfig, mqttDeviceConfigRead](c.mqttDevices),
+		Views:                  convertListToRead[ViewConfig, viewConfigRead](c.views),
 	}, nil
 }
 

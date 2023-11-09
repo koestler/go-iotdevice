@@ -2,7 +2,8 @@ Version: 2                                                 # configuration file 
 ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice: is shown in the http frontend
 LogConfig: true                                            # optional, default true, outputs the used configuration including defaults on startup
 LogWorkerStart: true                                       # optional, default true, outputs what devices and mqtt clients are started
-LogStorageDebug: false                                     # optional, default false, outputs all write to the internal value storage
+LogStateStorageDebug: false                                # optional, default false, outputs all write to the internal state value storage
+LogCommandStorageDebug: false                              # optional, default false, outputs all write to the internal command value storage
 
 HttpServer:                                                # optional, when missing: http server is not started
   Bind: "[::1]"                                            # mandatory, use [::1] (ipv6 loopback) to enable on both ipv4 and 6 and 0.0.0.0 to only enable ipv4

@@ -89,8 +89,12 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 		ret.logWorkerStart = false
 	}
 
-	if c.LogStorageDebug != nil && *c.LogStorageDebug {
-		ret.logStorageDebug = true
+	if c.LogStateStorageDebug != nil && *c.LogStateStorageDebug {
+		ret.logStateStorageDebug = true
+	}
+
+	if c.LogCommandStorageDebug != nil && *c.LogCommandStorageDebug {
+		ret.logCommandStorageDebug = true
 	}
 
 	ret.httpServer, e = c.HttpServer.TransformAndValidate()

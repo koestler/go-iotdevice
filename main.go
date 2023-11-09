@@ -91,14 +91,16 @@ func main() {
 
 		// start storage
 		stateStorageLogPrefix := ""
-		commandStorageLogPrefix := ""
-		if cfg.LogStorageDebug() {
+		if cfg.LogStateStorageDebug() {
 			stateStorageLogPrefix = "stateStorage"
-			commandStorageLogPrefix = "commandStorage"
 		}
-
 		stateStorage := runStorage(stateStorageLogPrefix)
 		defer stateStorage.Shutdown()
+
+		commandStorageLogPrefix := ""
+		if cfg.LogCommandStorageDebug() {
+			commandStorageLogPrefix = "commandStorage"
+		}
 		commandStorage := runStorage(commandStorageLogPrefix)
 		defer commandStorage.Shutdown()
 

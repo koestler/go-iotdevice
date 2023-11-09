@@ -11,21 +11,22 @@ type Nameable interface {
 }
 
 type Config struct {
-	version         int
-	projectTitle    string
-	logConfig       bool
-	logWorkerStart  bool
-	logStorageDebug bool
-	httpServer      HttpServerConfig
-	authentication  AuthenticationConfig
-	mqttClients     []MqttClientConfig
-	modbus          []ModbusConfig
-	devices         []DeviceConfig
-	victronDevices  []VictronDeviceConfig
-	modbusDevices   []ModbusDeviceConfig
-	httpDevices     []HttpDeviceConfig
-	mqttDevices     []MqttDeviceConfig
-	views           []ViewConfig
+	version                int
+	projectTitle           string
+	logConfig              bool
+	logWorkerStart         bool
+	logStateStorageDebug   bool
+	logCommandStorageDebug bool
+	httpServer             HttpServerConfig
+	authentication         AuthenticationConfig
+	mqttClients            []MqttClientConfig
+	modbus                 []ModbusConfig
+	devices                []DeviceConfig
+	victronDevices         []VictronDeviceConfig
+	modbusDevices          []ModbusDeviceConfig
+	httpDevices            []HttpDeviceConfig
+	mqttDevices            []MqttDeviceConfig
+	views                  []ViewConfig
 }
 
 type HttpServerConfig struct {
