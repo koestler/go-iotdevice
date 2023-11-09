@@ -262,7 +262,8 @@ func TestSortRegisters(t *testing.T) {
 		getTestTextRegisterWithName("b"),
 	}
 
-	got := dataflow.SortRegisterStructs(stimuliRegisters)
+	got := stimuliRegisters
+	dataflow.SortRegisterStructs(got)
 
 	expect := []dataflow.RegisterStruct{
 		getTestTextRegisterWithName("a"),

@@ -106,9 +106,8 @@ func FilterRegisters[R Register](input []R, filterConf RegisterFilterConf) (outp
 	return
 }
 
-func SortRegisterStructs(input []RegisterStruct) []RegisterStruct {
+func SortRegisterStructs(input []RegisterStruct) {
 	sort.SliceStable(input, func(i, j int) bool { return input[i].Sort() < input[j].Sort() })
-	return input
 }
 
 func (r RegisterStruct) Equals(b RegisterStruct) bool {
