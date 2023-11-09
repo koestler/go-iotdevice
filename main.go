@@ -117,7 +117,7 @@ func main() {
 		defer mqttClientPool.Shutdown()
 
 		// start mqtt clients
-		runMqttDevices(cfg, devicePool, mqttClientPool, stateStorage)
+		runMqttDevices(cfg, devicePool, mqttClientPool, stateStorage, commandStorage)
 
 		// start http server
 		httpServer := runHttpServer(cfg, devicePool, stateStorage, commandStorage)

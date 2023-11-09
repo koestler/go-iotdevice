@@ -73,6 +73,7 @@ func runMqttDevices(
 	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
 	mqttClientPool *pool.Pool[mqttClient.Client],
 	stateStorage *dataflow.ValueStorage,
+	commandStorage *dataflow.ValueStorage,
 ) {
 	for _, deviceConfig := range cfg.MqttDevices() {
 		if cfg.LogWorkerStart() {
@@ -80,7 +81,7 @@ func runMqttDevices(
 		}
 
 		deviceConfig := mqttDeviceConfig{deviceConfig}
-		dev := mqttDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, mqttClientPool)
+		dev := mqttDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, commandStorage, mqttClientPool)
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		watchedDev.Run()
 		devicePool.Add(watchedDev)

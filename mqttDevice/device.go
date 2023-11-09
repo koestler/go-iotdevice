@@ -26,6 +26,7 @@ type DeviceStruct struct {
 	mqttConfig Config
 
 	mqttClientPool *pool.Pool[mqttClient.Client]
+	commandStorage *dataflow.ValueStorage
 
 	registerFilter    dataflow.RegisterFilterFunc
 	subscriptionSetup atomic.Bool
@@ -38,6 +39,7 @@ func NewDevice(
 	deviceConfig device.Config,
 	mqttConfig Config,
 	stateStorage *dataflow.ValueStorage,
+	commandStorage *dataflow.ValueStorage,
 	mqttClientPool *pool.Pool[mqttClient.Client],
 ) *DeviceStruct {
 	return &DeviceStruct{
@@ -47,6 +49,7 @@ func NewDevice(
 		),
 		mqttConfig:     mqttConfig,
 		mqttClientPool: mqttClientPool,
+		commandStorage: commandStorage,
 		registerFilter: dataflow.RegisterFilter(deviceConfig.Filter()),
 		avail:          make(map[string]bool),
 	}
@@ -93,6 +96,10 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 						}
 						if topicTemplate := structMessage.RealtimeTopic; len(topicTemplate) > 0 {
 							c.setupRealtimeSubscription(mc, topicTemplate)
+						}
+
+						if topicTemplate := structMessage.CommandTopic; len(topicTemplate) > 0 {
+							go c.runCommandForwarder(ctx, mc, topicTemplate, structMessage.Registers)
 						}
 					}
 
@@ -262,4 +269,64 @@ func (c *DeviceStruct) setupRealtimeSubscription(mc mqttClient.Client, topicTemp
 			}
 		}
 	})
+}
+
+func (c *DeviceStruct) runCommandForwarder(
+	ctx context.Context,
+	mc mqttClient.Client,
+	topicTemplate string,
+	registers []mqttForwarders.StructRegister,
+) {
+	deviceName := c.Config().Name()
+
+	commandRegister := filterCommandRegisters(registers)
+	filter := func(v dataflow.Value) bool {
+		if v.DeviceName() != deviceName {
+			return false
+		}
+
+		_, ok := commandRegister[v.Register().Name()]
+		return ok
+	}
+
+	subscription := c.commandStorage.SubscribeSendInitial(ctx, filter)
+	for command := range subscription.Drain() {
+		topic := strings.Replace(topicTemplate, "%RegisterName%", command.Register().Name(), 1)
+
+		var msg mqttForwarders.CommandMessage
+
+		if numeric, ok := command.(dataflow.NumericRegisterValue); ok {
+			v := numeric.Value()
+			msg.NumericValue = &v
+		} else if text, ok := command.(dataflow.TextRegisterValue); ok {
+			v := text.Value()
+			msg.TextValue = &v
+		} else if enum, ok := command.(dataflow.EnumRegisterValue); ok {
+			v := enum.EnumIdx()
+			msg.EnumIdx = &v
+		} else {
+			continue
+		}
+
+		if payload, err := json.Marshal(msg); err != nil {
+			log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot generate command message: %s",
+				c.Name(), mc.Name(), err,
+			)
+		} else {
+			mc.Publish(topic, payload, 1, false)
+		}
+
+		// reset the command; this allows the same command (eG. toggle) to be sent again
+		c.commandStorage.Fill(dataflow.NewNullRegisterValue(deviceName, command.Register()))
+	}
+}
+
+func filterCommandRegisters(inp []mqttForwarders.StructRegister) (oup map[string]struct{}) {
+	oup = make(map[string]struct{})
+	for _, r := range inp {
+		if r.Controllable {
+			oup[r.Name] = struct{}{}
+		}
+	}
+	return
 }
