@@ -133,7 +133,6 @@ MqttClients:                                               # optional, when empt
     Command:
       Enabled: false                                 # optional, default false, whether to enable sending realtime messages
       TopicTemplate: '%Prefix%cmnd-X/go-iotdevice/%DeviceName%/%RegisterName%' # optional, what topic to use for realtime messages
-      Retain: false                                   # optional, default false, the mqtt retain flag for realtime messages
 
     LogDebug: true                                         # optional, default false, very verbose debug log of the mqtt connection
     LogMessages: true                                      # optional, default false, log all incoming mqtt messages

@@ -588,7 +588,7 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 
 	if !allowRetain {
 		if c.Retain != nil {
-			err = append(err, fmt.Errorf("%Retain not supported", logPrefix))
+			err = append(err, fmt.Errorf("%sRetain not supported", logPrefix))
 		}
 	} else if c.Retain == nil {
 		ret.retain = defaultRetain
