@@ -241,6 +241,18 @@ func (c MqttClientConfig) HomeassistantDiscoveryTopic(component, nodeId, objectI
 	return r.Replace(c.homeassistantDiscovery.topicTemplate)
 }
 
+func (c MqttClientConfig) Command() MqttSectionConfig {
+	return c.command
+}
+
+func (c MqttClientConfig) CommandTopic(deviceName, registerName string) string {
+	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs(
+		"%DeviceName%", deviceName,
+		"%RegisterName%", registerName,
+	)...)
+	return r.Replace(c.command.topicTemplate)
+}
+
 func (c MqttClientConfig) LogDebug() bool {
 	return c.logDebug
 }

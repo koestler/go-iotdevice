@@ -118,6 +118,23 @@ MqttClients:                                               # optional, when empt
             SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
             DefaultInclude: True                           # optional, default true,  whether to return the registers that do not match any include/skip rule
 
+    Command:
+      Enabled: true                                        # optional, default false, whether to receive and execute command messages
+      TopicTemplate: '%Prefix%cmnd/%DeviceName%/%RegisterName%' # optional, what topic to use for realtime messages
+      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
+      Devices:                                             # optional, default all, a list of devices to match
+        bmv0:                                              # messages are only sent for this device
+          Filter:                                          # optional, default include all, defines which registers are show in the view,
+            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
+            IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
+              - BatteryVoltage                             # the BatteryVoltage register is sent no matter if it's category is listed unter categories
+              - Power
+            SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
+            IncludeCategories:                             # optional, default empty, all registers of the given category that are not explicitly skipped are returned
+              - Essential                                  # all registers of the category essential are sent; no matter if thy are listed in registers
+            SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
+            DefaultInclude: False                          # optional, default true,  whether to return the registers that do not match any include/skip rule
+
     LogDebug: false                                        # optional, default false, very verbose debug log of the mqtt connection
     LogMessages: false                                     # optional, default false, log all incoming mqtt messages
 

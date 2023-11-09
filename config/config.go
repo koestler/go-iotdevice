@@ -427,6 +427,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		false,
 		true,
 		true,
+		true,
 		false,
 		false,
 	)
@@ -440,6 +441,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		"%Prefix%avail/%DeviceName%",
 		0,
 		false,
+		true,
 		true,
 		true,
 		true,
@@ -459,6 +461,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		true,
 		true,
 		true,
+		true,
 	)
 	err = append(err, e...)
 
@@ -471,6 +474,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		time.Second,
 		true,
 		false,
+		true,
 		false,
 		true,
 		true,
@@ -484,6 +488,7 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		false,
 		"%Prefix%real/%DeviceName%/%RegisterName%",
 		0,
+		true,
 		true,
 		true,
 		false,
@@ -501,6 +506,23 @@ func (c mqttClientConfigRead) TransformAndValidate(name string, devices []Device
 		0,
 		true,
 		true,
+		true,
+		false,
+		true,
+		true,
+	)
+	err = append(err, e...)
+
+	ret.command, e = c.Command.TransformAndValidate(
+		fmt.Sprintf("MqttClientConfig->%s->Command->", name),
+		devices,
+		ret.readOnly,
+		false,
+		"%Prefix%cmnd/%DeviceName%/%RegisterName%",
+		0,
+		false,
+		true,
+		false,
 		false,
 		true,
 		true,
@@ -527,6 +549,7 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 	defaultInterval time.Duration,
 	allowInterval bool,
 	allowZeroInterval bool,
+	allowRetain bool,
 	defaultRetain bool,
 	allowDevices bool,
 	allowFilter bool,
@@ -563,7 +586,11 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 		ret.interval = interval
 	}
 
-	if c.Retain == nil {
+	if !allowRetain {
+		if c.Retain != nil {
+			err = append(err, fmt.Errorf("%Retain not supported", logPrefix))
+		}
+	} else if c.Retain == nil {
 		ret.retain = defaultRetain
 	} else {
 		ret.retain = *c.Retain

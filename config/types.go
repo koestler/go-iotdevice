@@ -69,6 +69,7 @@ type MqttClientConfig struct {
 	telemetry              MqttSectionConfig
 	realtime               MqttSectionConfig
 	homeassistantDiscovery MqttSectionConfig
+	command                MqttSectionConfig
 
 	logDebug    bool
 	logMessages bool

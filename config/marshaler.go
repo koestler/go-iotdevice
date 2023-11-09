@@ -116,6 +116,7 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 		Telemetry:              c.telemetry.convertToRead(),
 		Realtime:               c.realtime.convertToRead(),
 		HomeassistantDiscovery: c.homeassistantDiscovery.convertToRead(),
+		Command:                c.command.convertToRead(),
 
 		LogDebug:    &c.logDebug,
 		LogMessages: &c.logMessages,

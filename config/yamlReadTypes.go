@@ -55,6 +55,7 @@ type mqttClientConfigRead struct {
 	Telemetry              mqttSectionConfigRead `yaml:"Telemetry"`
 	Realtime               mqttSectionConfigRead `yaml:"Realtime"`
 	HomeassistantDiscovery mqttSectionConfigRead `yaml:"HomeassistantDiscovery"`
+	Command                mqttSectionConfigRead `yaml:"Command"`
 
 	LogDebug    *bool `yaml:"LogDebug"`
 	LogMessages *bool `yaml:"LogMessages"`

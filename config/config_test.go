@@ -130,6 +130,11 @@ MqttClients:                                               # optional, when empt
       Qos: 2                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
       Devices:                                               # optional, default all, a list of devices to match
 
+    Command:
+      Enabled: false                                 # optional, default false, whether to enable sending realtime messages
+      TopicTemplate: '%Prefix%cmnd-X/go-iotdevice/%DeviceName%/%RegisterName%' # optional, what topic to use for realtime messages
+      Retain: false                                   # optional, default false, the mqtt retain flag for realtime messages
+
     LogDebug: true                                         # optional, default false, very verbose debug log of the mqtt connection
     LogMessages: true                                      # optional, default false, log all incoming mqtt messages
 
@@ -784,6 +789,62 @@ func TestReadConfig_Complete(t *testing.T) {
 				}
 			}
 
+			{
+				mcSect := mc.Command()
+				prefix := "MqttClients->0-local->Command"
+
+				if expect, got := "my-prefix/cmnd-X/go-iotdevice/my-dev/my-reg", mc.CommandTopic("my-dev", "my-reg"); expect != got {
+					t.Errorf("expect MqttDevices->0-local->CommandTopic to be '%s' but got '%s'", expect, got)
+				}
+
+				if got := mcSect.Enabled(); got {
+					t.Errorf("expect %s->Enabled to be false", prefix)
+				}
+
+				if expect, got := "%Prefix%cmnd-X/go-iotdevice/%DeviceName%/%RegisterName%", mcSect.TopicTemplate(); expect != got {
+					t.Errorf("expect %s->TopicTemplate to be '%s' but got '%s'", prefix, expect, got)
+				}
+
+				if expect, got := 0*time.Second, mcSect.Interval(); expect != got {
+					t.Errorf("expect %s->Interval to be '%s' but got '%s'", prefix, expect, got)
+				}
+
+				if got := mcSect.Retain(); got {
+					t.Errorf("expect %s->Retain to be false", prefix)
+				}
+
+				if expect, got := byte(1), mcSect.Qos(); expect != got {
+					t.Errorf("expect %s->Qos to be %d but got %d", prefix, expect, got)
+				}
+
+				if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+					t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
+				} else {
+					prefix := prefix + "->Devices->bmv0"
+					rf := mcSect.Devices()[0].Filter()
+
+					if got := rf.IncludeRegisters(); len(got) > 0 {
+						t.Errorf("expect %s->IncludeRegisters to be empty, got %v", prefix, got)
+					}
+
+					if got := rf.SkipRegisters(); len(got) > 0 {
+						t.Errorf("expect %s->SkipRegisters to be empty but got %v", prefix, got)
+					}
+
+					if got := rf.IncludeCategories(); len(got) > 0 {
+						t.Errorf("expect %s->IncludeCategories to be empty but got %v", prefix, got)
+					}
+
+					if got := rf.SkipCategories(); len(got) > 0 {
+						t.Errorf("expect %s->SkipCategories to be empty but got %v", prefix, got)
+					}
+
+					if got := rf.DefaultInclude(); !got {
+						t.Errorf("expect %s->DefaultInclude to be true", prefix)
+					}
+				}
+			}
+
 			if !mc.LogDebug() {
 				t.Error("expect MqttClients->0-local->LogDebug to be true")
 			}
@@ -847,6 +908,11 @@ func TestReadConfig_Complete(t *testing.T) {
 			if got := mc.HomeassistantDiscovery().Enabled(); got {
 				t.Error("expect MqttClients->2-readonly->HomeassistantDiscovery->Enabled to be false")
 			}
+
+			if got := mc.HomeassistantDiscovery().Enabled(); got {
+				t.Error("expect MqttClients->2-readonly->Command->Enabled to be false")
+			}
+
 		}
 
 	}
@@ -1575,6 +1641,62 @@ func TestReadConfig_Default(t *testing.T) {
 			}
 
 			if expect, got := "homeassistant/%Component%/%NodeId%/%ObjectId%/config", mcSect.TopicTemplate(); expect != got {
+				t.Errorf("expect %s->TopicTemplate to be '%s' but got '%s'", prefix, expect, got)
+			}
+
+			if expect, got := 0*time.Second, mcSect.Interval(); expect != got {
+				t.Errorf("expect %s->Interval to be '%s' but got '%s'", prefix, expect, got)
+			}
+
+			if got := mcSect.Retain(); got {
+				t.Errorf("expect %s->Retain to be false", prefix)
+			}
+
+			if expect, got := byte(1), mcSect.Qos(); expect != got {
+				t.Errorf("expect %s->Qos to be %d but got %d", prefix, expect, got)
+			}
+
+			if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
+			} else {
+				prefix := prefix + "->Devices->bmv0"
+				rf := mcSect.Devices()[0].Filter()
+
+				if got := rf.IncludeRegisters(); len(got) > 0 {
+					t.Errorf("expect %s->IncludeRegisters to be empty, got %v", prefix, got)
+				}
+
+				if got := rf.SkipRegisters(); len(got) > 0 {
+					t.Errorf("expect %s->SkipRegisters to be empty but got %v", prefix, got)
+				}
+
+				if got := rf.IncludeCategories(); len(got) > 0 {
+					t.Errorf("expect %s->IncludeCategories to be empty but got %v", prefix, got)
+				}
+
+				if got := rf.SkipCategories(); len(got) > 0 {
+					t.Errorf("expect %s->SkipCategories to be empty but got %v", prefix, got)
+				}
+
+				if got := rf.DefaultInclude(); !got {
+					t.Errorf("expect %s->DefaultInclude to be true", prefix)
+				}
+			}
+		}
+
+		{
+			mcSect := mc.Command()
+			prefix := "MqttClients->0-local->Command"
+
+			if expect, got := "go-iotdevice/cmnd/my-dev/reg-name", mc.CommandTopic("my-dev", "reg-name"); expect != got {
+				t.Errorf("expect %s->RealtimeTopic to be '%s' but got '%s'", prefix, expect, got)
+			}
+
+			if got := mcSect.Enabled(); got {
+				t.Errorf("expect %s->Enabled to be false", prefix)
+			}
+
+			if expect, got := "%Prefix%cmnd/%DeviceName%/%RegisterName%", mcSect.TopicTemplate(); expect != got {
 				t.Errorf("expect %s->TopicTemplate to be '%s' but got '%s'", prefix, expect, got)
 			}
 
