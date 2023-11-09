@@ -14,7 +14,8 @@ import (
 func runMqttClient(
 	cfg *config.Config,
 	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
-	storage *dataflow.ValueStorage,
+	stateStorage *dataflow.ValueStorage,
+	commandStorage *dataflow.ValueStorage,
 ) (mqttClientPool *pool.Pool[mqttClient.Client]) {
 	// run pool
 	mqttClientPool = pool.RunPool[mqttClient.Client]()
@@ -33,7 +34,7 @@ func runMqttClient(
 		mqttClientPool.Add(client)
 
 		forwarderCfg := forwarderConfig{c}
-		mqttForwarders.RunMqttForwarders(forwarderCfg, client, devicePool, storage)
+		mqttForwarders.RunMqttForwarders(forwarderCfg, client, devicePool, stateStorage, commandStorage)
 	}
 
 	return
@@ -73,6 +74,10 @@ func (c forwarderConfig) Realtime() mqttForwarders.MqttSectionConfig {
 
 func (c forwarderConfig) HomeassistantDiscovery() mqttForwarders.MqttSectionConfig {
 	return forwarderMqttSectionConfig{c.MqttClientConfig.HomeassistantDiscovery()}
+}
+
+func (c forwarderConfig) Command() mqttForwarders.MqttSectionConfig {
+	return forwarderMqttSectionConfig{c.MqttClientConfig.Command()}
 }
 
 type forwarderMqttSectionConfig struct {

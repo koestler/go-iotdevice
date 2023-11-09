@@ -30,6 +30,9 @@ type Config interface {
 	HomeassistantDiscovery() MqttSectionConfig
 	HomeassistantDiscoveryTopic(component, nodeId, objectId string) string
 
+	Command() MqttSectionConfig
+	CommandTopic(deviceName, registerName string) string
+
 	LogDebug() bool
 }
 
@@ -50,7 +53,8 @@ func RunMqttForwarders(
 	cfg Config,
 	mc mqttClient.Client,
 	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
-	storage *dataflow.ValueStorage,
+	stateStorage *dataflow.ValueStorage,
+	commandStorage *dataflow.ValueStorage,
 ) {
 	if sCfg := cfg.AvailabilityDevice(); sCfg.Enabled() {
 		for _, deviceConfig := range sCfg.Devices() {
@@ -69,14 +73,14 @@ func RunMqttForwarders(
 	if sCfg := cfg.Telemetry(); sCfg.Enabled() {
 		for _, deviceConfig := range sCfg.Devices() {
 			dev := devicePool.GetByName(deviceConfig.Name())
-			runTelemetryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, storage, deviceConfig.Filter())
+			runTelemetryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, stateStorage, deviceConfig.Filter())
 		}
 	}
 
 	if sCfg := cfg.Realtime(); sCfg.Enabled() {
 		for _, deviceConfig := range sCfg.Devices() {
 			dev := devicePool.GetByName(deviceConfig.Name())
-			runRealtimeForwarder(mc.GetCtx(), cfg, dev.Service(), mc, storage, deviceConfig.Filter())
+			runRealtimeForwarder(mc.GetCtx(), cfg, dev.Service(), mc, stateStorage, deviceConfig.Filter())
 		}
 	}
 
@@ -84,6 +88,13 @@ func RunMqttForwarders(
 		for _, deviceConfig := range cfg.HomeassistantDiscovery().Devices() {
 			dev := devicePool.GetByName(deviceConfig.Name())
 			runHomeassistantDiscoveryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.Filter())
+		}
+	}
+
+	if sCfg := cfg.Command(); sCfg.Enabled() {
+		for _, deviceConfig := range cfg.Command().Devices() {
+			dev := devicePool.GetByName(deviceConfig.Name())
+			runCommandForwarder(mc.GetCtx(), cfg, dev.Service(), mc, commandStorage, deviceConfig.Filter())
 		}
 	}
 }

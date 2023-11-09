@@ -25,3 +25,10 @@ func createDeviceAndRegisterValueFilter(dev device.Device, registerFilter datafl
 		return f0(v) && f1(v.Register())
 	}
 }
+
+func createControllableAndRegisterValueFilter(registerFilter dataflow.RegisterFilterConf) dataflow.RegisterFilterFunc {
+	f0 := createRegisterValueFilter(registerFilter)
+	return func(r dataflow.Register) bool {
+		return r.Controllable() && f0(r)
+	}
+}
