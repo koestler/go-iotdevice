@@ -210,19 +210,7 @@ func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic strin
 func applyCommandFiltersToRegisters(cfg Config, devName string, inp []dataflow.RegisterStruct) (oup []StructRegister, countControllable int) {
 	oup = make([]StructRegister, len(inp))
 
-	// by default, nothing is controllable
-	filter := func(register dataflow.Register) bool {
-		return false
-	}
-
-	// when command is enabled, use filter of given device
-	var dev MqttDeviceSectionConfig
-	if cfg.Command().Enabled() {
-		dev = getCommandDevice(cfg, devName)
-	}
-	if dev != nil {
-		filter = dataflow.RegisterFilter(dev.Filter())
-	}
+	filter := getCommandFilter(cfg, devName)
 
 	for i, r := range inp {
 		sr := NewStructRegister(r)
@@ -234,15 +222,6 @@ func applyCommandFiltersToRegisters(cfg Config, devName string, inp []dataflow.R
 	}
 
 	return
-}
-
-func getCommandDevice(cfg Config, deviceName string) (r MqttDeviceSectionConfig) {
-	for _, c := range cfg.Command().Devices() {
-		if c.Name() == deviceName {
-			return c
-		}
-	}
-	return nil
 }
 
 func NewStructRegister(reg dataflow.Register) StructRegister {

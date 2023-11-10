@@ -9,9 +9,9 @@ import (
 )
 
 type CommandMessage struct {
-	NumericValue *float64 `json:"NumVal"`
-	TextValue    *string  `json:"TextVal"`
-	EnumIdx      *int     `json:"EnumIdx"`
+	NumericValue *float64 `json:"NumVal,omitempty"`
+	TextValue    *string  `json:"TextVal,omitempty"`
+	EnumIdx      *int     `json:"EnumIdx,omitempty"`
 }
 
 func runCommandForwarder(
