@@ -35,7 +35,7 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 
 			relativePath := "views/" + view.Name() + "/devices/" + viewDevice.Name() + "/values"
 
-			filter := getFilter([]ViewDeviceConfig{viewDevice})
+			filter := getViewValueFilter([]ViewDeviceConfig{viewDevice})
 			r.GET(relativePath, func(c *gin.Context) {
 				// check authorization
 				if !isViewAuthenticated(view, c, true) {
@@ -43,7 +43,7 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 					return
 				}
 				values := env.StateStorage.GetStateFiltered(filter)
-				jsonGetResponse(c, compile1DResponse(values))
+				jsonGetResponse(c, compile1DValueResponse(values))
 			})
 			if env.Config.LogConfig() {
 				log.Printf("httpServer: GET %s%s -> serve values as json", r.BasePath(), relativePath)
@@ -139,7 +139,7 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 	}
 }
 
-func compile1DResponse(values []dataflow.Value) (response map[string]valueResponse) {
+func compile1DValueResponse(values []dataflow.Value) (response map[string]valueResponse) {
 	response = make(map[string]valueResponse, len(values))
 	for _, value := range values {
 		response[value.Register().Name()] = value.GenericValue()
@@ -147,26 +147,26 @@ func compile1DResponse(values []dataflow.Value) (response map[string]valueRespon
 	return
 }
 
-func compile2DResponse(values []dataflow.Value) (response map[string]map[string]valueResponse) {
-	response = make(map[string]map[string]valueResponse, 1)
+func compile2DValueResponse(values []dataflow.Value) (response map[string]map[string]valueResponse) {
+	response = make(map[string]map[string]valueResponse)
 	for _, value := range values {
-		append2DResponseValue(response, value)
+		append2DValueResponse(response, value)
 	}
 	return
 }
 
-func append2DResponseValue(response map[string]map[string]valueResponse, value dataflow.Value) {
+func append2DValueResponse(response map[string]map[string]valueResponse, value dataflow.Value) {
 	d0 := value.DeviceName()
 	d1 := value.Register().Name()
 
 	if _, ok := response[d0]; !ok {
-		response[d0] = make(map[string]valueResponse, 1)
+		response[d0] = make(map[string]valueResponse)
 	}
 
 	response[d0][d1] = value.GenericValue()
 }
 
-func getFilter(viewDevices []ViewDeviceConfig) dataflow.ValueFilterFunc {
+func getViewValueFilter(viewDevices []ViewDeviceConfig) dataflow.ValueFilterFunc {
 	filters := make(map[string]dataflow.ValueFilterFunc)
 	for _, vd := range viewDevices {
 		filters[vd.Name()] = dataflow.RegisterValueFilter(vd.Filter())

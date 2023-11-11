@@ -55,25 +55,58 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 				registers := deviceWatcher.Service().RegisterDb().GetAll()
 				registers = dataflow.FilterRegisters(registers, viewDevice.Filter())
 				dataflow.SortRegisterStructs(registers)
-				response := make([]registerResponse, len(registers))
-				for i, v := range registers {
-					response[i] = registerResponse{
-						Category:    v.Category(),
-						Name:        v.Name(),
-						Description: v.Description(),
-						Type:        v.RegisterType().String(),
-						Enum:        v.Enum(),
-						Unit:        v.Unit(),
-						Sort:        v.Sort(),
-						Commandable: v.Commandable(),
-					}
-				}
+
 				setCacheControlPublic(c, 10*time.Second)
-				jsonGetResponse(c, response)
+				jsonGetResponse(c, compile1DRegisterResponse(registers))
 			})
 			if env.Config.LogConfig() {
 				log.Printf("httpServer: GET %s%s -> serve fields", r.BasePath(), relativePath)
 			}
 		}
 	}
+}
+
+func createRegisterResponse(r dataflow.Register) registerResponse {
+	return registerResponse{
+		Category:    r.Category(),
+		Name:        r.Name(),
+		Description: r.Description(),
+		Type:        r.RegisterType().String(),
+		Enum:        r.Enum(),
+		Unit:        r.Unit(),
+		Sort:        r.Sort(),
+		Commandable: r.Commandable(),
+	}
+}
+
+func compile1DRegisterResponse(registers []dataflow.RegisterStruct) (response []registerResponse) {
+	response = make([]registerResponse, len(registers))
+	for i, v := range registers {
+		response[i] = createRegisterResponse(v)
+	}
+	return
+}
+
+func compile2DRegisterResponse(values []dataflow.Value) (response map[string]map[string]registerResponse) {
+	response = make(map[string]map[string]registerResponse)
+	for _, value := range values {
+		append2DRegisterResponse(response, value)
+	}
+	return
+}
+
+func append2DRegisterResponse(m map[string]map[string]registerResponse, value dataflow.Value) (created bool) {
+	d0 := value.DeviceName()
+	d1 := value.Register().Name()
+
+	if _, ok := m[d0]; !ok {
+		m[d0] = make(map[string]registerResponse)
+	}
+
+	if _, ok := m[d0][d1]; !ok {
+		m[d0][d1] = createRegisterResponse(value.Register())
+		return true
+	}
+
+	return false
 }

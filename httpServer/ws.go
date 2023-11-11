@@ -12,7 +12,9 @@ import (
 )
 
 type outputMessage struct {
-	Values map[string]map[string]valueResponse `json:"values"`
+	Operation string                                 `json:"op"`
+	Registers map[string]map[string]registerResponse `json:"registers,omitempty"`
+	Values    map[string]map[string]valueResponse    `json:"values,omitempty"`
 }
 
 type authMessage struct {
@@ -34,7 +36,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 		view := v
 		relativePath := "views/" + view.Name() + "/ws"
 		logPrefix := fmt.Sprintf("httpServer: %s%s", r.BasePath(), relativePath)
-		viewFilter := getFilter(view.Devices())
+		viewFilter := getViewValueFilter(view.Devices())
 
 		// the follow line uses a loop variable; it must be outside the closure
 		r.GET(relativePath, func(c *gin.Context) {
@@ -132,9 +134,10 @@ func wsValuesSender(
 	initial, subscription := env.StateStorage.SubscribeReturnInitial(ctx, viewFilter)
 
 	// send all values after initial connect
+	registers := compile2DRegisterResponse(initial)
 	{
-		response := compile2DResponse(initial)
-		if err := wsSendValuesResponse(ctx, conn, response); err != nil {
+		values := compile2DValueResponse(initial)
+		if err := wsSendResponse(ctx, conn, "init", registers, values); err != nil {
 			log.Printf("%s: error while sending initial values: %s", logPrefix, err)
 			return
 		}
@@ -149,17 +152,21 @@ func wsValuesSender(
 
 		tickerRunning := true
 		valuesC := subscription.Drain()
-		values := make(map[string]map[string]valueResponse, 1)
+
+		newRegisters := make(map[string]map[string]registerResponse)
+		newValues := make(map[string]map[string]valueResponse)
 		for {
 			select {
 			case <-ticker.C:
-				if len(values) > 0 {
+				if len(newValues) > 0 {
 					// there is data to send, send it
-					if err := wsSendValuesResponse(ctx, conn, values); err != nil {
+					if err := wsSendResponse(ctx, conn, "inc", newRegisters, newValues); err != nil {
 						log.Printf("%s: error while sending value: %s", logPrefix, err)
 						return
 					}
-					clear(values)
+
+					clear(newRegisters)
+					clear(newValues)
 				} else {
 					// no data to send; stop timer
 					ticker.Stop()
@@ -167,7 +174,11 @@ func wsValuesSender(
 				}
 			case v, ok := <-valuesC:
 				if ok {
-					append2DResponseValue(values, v)
+					if append2DRegisterResponse(registers, v) {
+						append2DRegisterResponse(newRegisters, v)
+					}
+					append2DValueResponse(newValues, v)
+
 					if !tickerRunning {
 						ticker.Reset(tickerDuration)
 						tickerRunning = true
@@ -181,14 +192,22 @@ func wsValuesSender(
 	}
 }
 
-func wsSendValuesResponse(ctx context.Context, conn *websocket.Conn, values map[string]map[string]valueResponse) error {
+func wsSendResponse(
+	ctx context.Context,
+	conn *websocket.Conn,
+	operation string,
+	registers map[string]map[string]registerResponse,
+	values map[string]map[string]valueResponse,
+) error {
 	w, err := conn.Writer(ctx, websocket.MessageText)
 	if err != nil {
 		return err
 	}
 
 	err1 := json.NewEncoder(w).Encode(outputMessage{
-		Values: values,
+		Operation: operation,
+		Registers: registers,
+		Values:    values,
 	})
 	err2 := w.Close()
 	if err1 != nil {
