@@ -72,7 +72,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 		c.SetAvailable(false)
 	}()
 
-	// setup subscription to listen for updates of controllable registers
+	// setup subscription to listen for updates of commandable registers
 	_, commandSubscription := c.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullValueFilter(c.Config().Name()))
 
 	execCommand := func(value dataflow.Value) {
@@ -122,7 +122,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 
 		if err := WriteRelay(c.modbus.WriteRead, c.modbusConfig.Address(), relayNr, command); err != nil {
 			log.Printf(
-				"waveshareDevice[%s]: control request genration failed: %s",
+				"waveshareDevice[%s]: command request genration failed: %s",
 				c.Config().Name(), err,
 			)
 		} else {
@@ -134,7 +134,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 			))
 
 			if c.Config().LogDebug() {
-				log.Printf("waveshareDevice[%s]: control request successful", c.Config().Name())
+				log.Printf("waveshareDevice[%s]: command request successful", c.Config().Name())
 			}
 		}
 

@@ -12,14 +12,14 @@ import (
 )
 
 type StructRegister struct {
-	Category     string         `json:"Cat" example:"Monitor"`
-	Name         string         `json:"Name" example:"PanelPower"`
-	Description  string         `json:"Desc" example:"Panel power"`
-	Type         string         `json:"Type" example:"number"`
-	Enum         map[int]string `json:"Enum,omitempty"`
-	Unit         string         `json:"Unit,omitempty" example:"W"`
-	Sort         int            `json:"Sort" example:"100"`
-	Controllable bool           `json:"Cmnd" example:"false"`
+	Category    string         `json:"Cat" example:"Monitor"`
+	Name        string         `json:"Name" example:"PanelPower"`
+	Description string         `json:"Desc" example:"Panel power"`
+	Type        string         `json:"Type" example:"number"`
+	Enum        map[int]string `json:"Enum,omitempty"`
+	Unit        string         `json:"Unit,omitempty" example:"W"`
+	Sort        int            `json:"Sort" example:"100"`
+	Commandable bool           `json:"Cmnd" example:"false"`
 }
 
 type StructureMessage struct {
@@ -160,7 +160,7 @@ func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic strin
 
 	dataflow.SortRegisterStructs(registers)
 
-	structRegisters, countControllable := applyCommandFiltersToRegisters(cfg, devName, registers)
+	structRegisters, countCommandable := applyCommandFiltersToRegisters(cfg, devName, registers)
 
 	msg := StructureMessage{
 		AvailabilityTopics: getAvailabilityTopics(cfg, devName),
@@ -177,7 +177,7 @@ func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic strin
 			return ""
 		}(),
 		CommandTopic: func() string {
-			if countControllable < 1 {
+			if countCommandable < 1 {
 				return ""
 			}
 			return cfg.CommandTopic(devName, "%RegisterName%")
@@ -207,16 +207,16 @@ func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic strin
 	}
 }
 
-func applyCommandFiltersToRegisters(cfg Config, devName string, inp []dataflow.RegisterStruct) (oup []StructRegister, countControllable int) {
+func applyCommandFiltersToRegisters(cfg Config, devName string, inp []dataflow.RegisterStruct) (oup []StructRegister, countCommandable int) {
 	oup = make([]StructRegister, len(inp))
 
 	filter := getCommandFilter(cfg, devName)
 
 	for i, r := range inp {
 		sr := NewStructRegister(r)
-		sr.Controllable = filter(r)
-		if sr.Controllable {
-			countControllable++
+		sr.Commandable = filter(r)
+		if sr.Commandable {
+			countCommandable++
 		}
 		oup[i] = sr
 	}
@@ -226,13 +226,13 @@ func applyCommandFiltersToRegisters(cfg Config, devName string, inp []dataflow.R
 
 func NewStructRegister(reg dataflow.Register) StructRegister {
 	return StructRegister{
-		Category:     reg.Category(),
-		Name:         reg.Name(),
-		Description:  reg.Description(),
-		Type:         reg.RegisterType().String(),
-		Enum:         reg.Enum(),
-		Unit:         reg.Unit(),
-		Sort:         reg.Sort(),
-		Controllable: reg.Controllable(),
+		Category:    reg.Category(),
+		Name:        reg.Name(),
+		Description: reg.Description(),
+		Type:        reg.RegisterType().String(),
+		Enum:        reg.Enum(),
+		Unit:        reg.Unit(),
+		Sort:        reg.Sort(),
+		Commandable: reg.Commandable(),
 	}
 }

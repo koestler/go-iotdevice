@@ -75,8 +75,8 @@ func TestTextRegisterCreatorAndGetters(t *testing.T) {
 	if expect, got := 40, register.Sort(); expect != got {
 		t.Errorf("expect %d but got %d", expect, got)
 	}
-	if got := register.Controllable(); got {
-		t.Errorf("expect controllable to be false")
+	if got := register.Commandable(); got {
+		t.Errorf("expect commandable to be false")
 	}
 }
 
@@ -104,8 +104,8 @@ func TestNumberRegisterCreatorAndGetters(t *testing.T) {
 	if expect, got := 41, register.Sort(); expect != got {
 		t.Errorf("expect %d but got %d", expect, got)
 	}
-	if got := register.Controllable(); got {
-		t.Errorf("expect controllable to be false")
+	if got := register.Commandable(); got {
+		t.Errorf("expect commandable to be false")
 	}
 }
 
@@ -133,8 +133,8 @@ func TestEnumRegisterCreatorAndGetters(t *testing.T) {
 	if expect, got := 42, register.Sort(); expect != got {
 		t.Errorf("expect %d but got %d", expect, got)
 	}
-	if got := register.Controllable(); got {
-		t.Errorf("expect controllable to be false")
+	if got := register.Commandable(); got {
+		t.Errorf("expect commandable to be false")
 	}
 }
 

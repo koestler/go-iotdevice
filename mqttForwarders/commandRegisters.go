@@ -3,7 +3,7 @@ package mqttForwarders
 import "github.com/koestler/go-iotdevice/dataflow"
 
 func getCommandFilter(cfg Config, devName string) dataflow.RegisterFilterFunc {
-	// by default, nothing is controllable
+	// by default, nothing is commandable
 	filter := func(dataflow.Register) bool {
 		return false
 	}
@@ -14,9 +14,9 @@ func getCommandFilter(cfg Config, devName string) dataflow.RegisterFilterFunc {
 		dev = getCommandDevice(cfg, devName)
 	}
 	if dev != nil {
-		controlEnabledFilter := dataflow.RegisterFilter(dev.Filter())
+		commandEnabledFilter := dataflow.RegisterFilter(dev.Filter())
 		filter = func(r dataflow.Register) bool {
-			return r.Controllable() && controlEnabledFilter(r)
+			return r.Commandable() && commandEnabledFilter(r)
 		}
 	}
 

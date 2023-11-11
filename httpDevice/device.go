@@ -95,19 +95,19 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 		ds.SetAvailable(false)
 	}()
 
-	// setup subscription to listen for updates of controllable registers
+	// setup subscription to listen for updates of commandable registers
 	_, commandSubscription := ds.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullValueFilter(ds.Config().Name()))
 
 	execCommand := func(value dataflow.Value) {
 		if ds.Config().LogDebug() {
 			log.Printf(
-				"httpDevice[%s]: controllable command: %s",
+				"httpDevice[%s]: command: %s",
 				ds.Name(), value.String(),
 			)
 		}
-		if request, onSuccess, err := ds.impl.ControlValueRequest(value); err != nil {
+		if request, onSuccess, err := ds.impl.CommandValueRequest(value); err != nil {
 			log.Printf(
-				"httpDevice[%s]: control request genration failed: %s",
+				"httpDevice[%s]: command request genration failed: %s",
 				ds.Name(), err,
 			)
 		} else {
@@ -115,7 +115,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 			request.SetBasicAuth(ds.httpConfig.Username(), ds.httpConfig.Password())
 			if resp, err := ds.httpClient.Do(request); err != nil {
 				log.Printf(
-					"httpDevice[%s]: control request failed: %s",
+					"httpDevice[%s]: command request failed: %s",
 					ds.Name(), err,
 				)
 			} else {
@@ -125,12 +125,12 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 
 				if resp.StatusCode != http.StatusOK {
 					log.Printf(
-						"httpDevice[%s]: control request failed with code: %d",
+						"httpDevice[%s]: command request failed with code: %d",
 						ds.Config().Name(), resp.StatusCode,
 					)
 				} else {
 					if ds.Config().LogDebug() {
-						log.Printf("httpDevice[%s]: control request successful", ds.Config().Name())
+						log.Printf("httpDevice[%s]: command request successful", ds.Config().Name())
 					}
 					onSuccess()
 				}
@@ -207,7 +207,7 @@ func (ds *DeviceStruct) addIgnoreRegister(
 	category, registerName, description, unit string,
 	registerType dataflow.RegisterType,
 	enum map[int]string,
-	controllable bool,
+	commandable bool,
 ) dataflow.Register {
 	// check if this register exists already and the properties are still the same
 	if r, ok := ds.RegisterDb().GetByName(registerName); ok {
@@ -229,7 +229,7 @@ func (ds *DeviceStruct) addIgnoreRegister(
 		enum,
 		unit,
 		sort,
-		controllable,
+		commandable,
 	)
 
 	// check if register is on ignore list

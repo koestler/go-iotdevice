@@ -15,7 +15,7 @@ type Register interface {
 	Enum() map[int]string
 	Unit() string
 	Sort() int
-	Controllable() bool
+	Commandable() bool
 }
 
 type RegisterStruct struct {
@@ -26,7 +26,7 @@ type RegisterStruct struct {
 	enum         map[int]string
 	unit         string
 	sort         int
-	controllable bool
+	commandable  bool
 }
 
 func NewRegisterStruct(
@@ -35,7 +35,7 @@ func NewRegisterStruct(
 	enum map[int]string,
 	unit string,
 	sort int,
-	controllable bool,
+	commandable bool,
 ) RegisterStruct {
 	return RegisterStruct{
 		category:     category,
@@ -45,7 +45,7 @@ func NewRegisterStruct(
 		enum:         enum,
 		unit:         unit,
 		sort:         sort,
-		controllable: controllable,
+		commandable:  commandable,
 	}
 }
 
@@ -58,7 +58,7 @@ func NewRegisterStructByInterface(reg Register) RegisterStruct {
 		enum:         reg.Enum(),
 		unit:         reg.Unit(),
 		sort:         reg.Sort(),
-		controllable: reg.Controllable(),
+		commandable:  reg.Commandable(),
 	}
 }
 
@@ -90,8 +90,8 @@ func (r RegisterStruct) Sort() int {
 	return r.sort
 }
 
-func (r RegisterStruct) Controllable() bool {
-	return r.controllable
+func (r RegisterStruct) Commandable() bool {
+	return r.commandable
 }
 
 func FilterRegisters[R Register](input []R, filterConf RegisterFilterConf) (output []R) {
@@ -117,7 +117,7 @@ func (r RegisterStruct) Equals(b RegisterStruct) bool {
 		r.registerType == b.registerType &&
 		r.unit == b.unit &&
 		r.sort == b.sort &&
-		r.controllable == b.controllable {
+		r.commandable == b.commandable {
 
 		if r.registerType == EnumRegister {
 			return reflect.DeepEqual(r.enum, b.enum)

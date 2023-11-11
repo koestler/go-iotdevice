@@ -37,6 +37,6 @@ func (s StructRegister) Sort() int {
 	return s.StructRegister.Sort
 }
 
-func (s StructRegister) Controllable() bool {
-	return s.StructRegister.Controllable
+func (s StructRegister) Commandable() bool {
+	return s.StructRegister.Commandable
 }
