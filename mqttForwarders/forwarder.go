@@ -65,7 +65,7 @@ func RunMqttForwarders(
 
 	// delay first avail / struct / realtime message to give hass time to first process the discovery message and then
 	// get the initial state from the realtime message
-	time.Sleep(5 * time.Second)
+	time.Sleep(time.Second)
 
 	if sCfg := cfg.AvailabilityDevice(); sCfg.Enabled() {
 		for _, deviceConfig := range sCfg.Devices() {

@@ -89,6 +89,17 @@ func getRealtimeCfg(cfg Config, deviceName string) MqttDeviceSectionConfig {
 	return nil
 }
 
+func getAvailabilityDeviceCfg(cfg Config, deviceName string) MqttDeviceSectionConfig {
+	if cfg.AvailabilityDevice().Enabled() {
+		for _, d := range cfg.AvailabilityDevice().Devices() {
+			if d.Name() == deviceName {
+				return d
+			}
+		}
+	}
+	return nil
+}
+
 func homeassistantDiscoveryOnUpdateModeRoutine(
 	ctx context.Context,
 	cfg Config,
@@ -302,8 +313,12 @@ func getHomeassistantDiscoveryAvailabilityTopics(cfg Config, deviceName string) 
 	if cfg.AvailabilityClient().Enabled() {
 		ret = append(ret, homeassistantDiscoveryAvailabilityStruct{cfg.AvailabilityClientTopic()})
 	}
+
 	if cfg.AvailabilityDevice().Enabled() {
-		ret = append(ret, homeassistantDiscoveryAvailabilityStruct{cfg.AvailabilityDeviceTopic(deviceName)})
+		availCfg := getAvailabilityDeviceCfg(cfg, deviceName)
+		if availCfg != nil {
+			ret = append(ret, homeassistantDiscoveryAvailabilityStruct{cfg.AvailabilityDeviceTopic(deviceName)})
+		}
 	}
 
 	return
