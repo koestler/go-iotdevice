@@ -56,6 +56,17 @@ func RunMqttForwarders(
 	stateStorage *dataflow.ValueStorage,
 	commandStorage *dataflow.ValueStorage,
 ) {
+	if sCfg := cfg.HomeassistantDiscovery(); sCfg.Enabled() {
+		for _, deviceConfig := range cfg.HomeassistantDiscovery().Devices() {
+			dev := devicePool.GetByName(deviceConfig.Name())
+			runHomeassistantDiscoveryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.Filter())
+		}
+	}
+
+	// delay first avail / struct / realtime message to give hass time to first process the discovery message and then
+	// get the initial state from the realtime message
+	time.Sleep(5 * time.Second)
+
 	if sCfg := cfg.AvailabilityDevice(); sCfg.Enabled() {
 		for _, deviceConfig := range sCfg.Devices() {
 			dev := devicePool.GetByName(deviceConfig.Name())
@@ -81,13 +92,6 @@ func RunMqttForwarders(
 		for _, deviceConfig := range sCfg.Devices() {
 			dev := devicePool.GetByName(deviceConfig.Name())
 			runRealtimeForwarder(mc.GetCtx(), cfg, dev.Service(), mc, stateStorage, deviceConfig.Filter())
-		}
-	}
-
-	if sCfg := cfg.HomeassistantDiscovery(); sCfg.Enabled() {
-		for _, deviceConfig := range cfg.HomeassistantDiscovery().Devices() {
-			dev := devicePool.GetByName(deviceConfig.Name())
-			runHomeassistantDiscoveryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.Filter())
 		}
 	}
 

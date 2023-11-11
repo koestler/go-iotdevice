@@ -6,7 +6,10 @@ import (
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/mqttClient"
+	"golang.org/x/exp/maps"
 	"log"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -36,6 +39,8 @@ type homeassistantDiscoverySwitchMessage struct {
 	ValueTemplate string `json:"val_tpl"`
 	PayloadOff    string `json:"pl_off"`
 	PayloadOn     string `json:"pl_on"`
+	StateOff      string `json:"stat_off"`
+	StateOn       string `json:"stat_on"`
 }
 
 func runHomeassistantDiscoveryForwarder(
@@ -173,27 +178,35 @@ func publishHomeassistantDiscoveryMessage(
 	case dataflow.EnumRegister:
 		// generate Jinja2 template to translate enumIdx to string
 		enum := register.Enum()
-		var valueTemplate strings.Builder
-		op := "if"
-		for idx, value := range enum {
-			fmt.Fprintf(&valueTemplate, "{%% %s value_json.EnumIdx == %d %%}%s", op, idx, value)
-			op = "elif"
-		}
-		valueTemplate.WriteString("{% endif %}")
+		keys := maps.Keys(enum)
+		sort.Ints(keys)
 
-		if commandFilter(register) {
-			offIdx := 0
-			onIdx := 1
+		if commandFilter(register) && len(keys) >= 2 {
+			offIdx := keys[0]
+			onIdx := keys[1]
 
 			topic, msg = getHomeassistantDiscoverySwitchMessage(
 				cfg,
 				deviceName,
 				register,
-				valueTemplate.String(),
+				"{{ value_json.EnumIdx }}",
 				getCommandPayload(CommandMessage{EnumIdx: &offIdx}, mc.Name(), deviceName),
 				getCommandPayload(CommandMessage{EnumIdx: &onIdx}, mc.Name(), deviceName),
+				strconv.Itoa(offIdx),
+				strconv.Itoa(onIdx),
 			)
 		} else {
+			// format value_template like this:
+			// {% if value_json.EnumIdx == 0 %}OFF{% elif value_json.EnumIdx == 1 %}ON{% elif value_json.EnumIdx == 2 %}in pulse{% endif %}
+			var valueTemplate strings.Builder
+			op := "if"
+			for idx := range keys {
+				value := enum[idx]
+				fmt.Fprintf(&valueTemplate, "{%% %s value_json.EnumIdx == %d %%}%s", op, idx, value)
+				op = "elif"
+			}
+			valueTemplate.WriteString("{% endif %}")
+
 			topic, msg = getHomeassistantDiscoverySensorMessage(
 				cfg,
 				deviceName,
@@ -245,7 +258,9 @@ func getHomeassistantDiscoverySwitchMessage(
 	register dataflow.Register,
 	valueTemplate,
 	payloadOff,
-	payloadOn string,
+	payloadOn,
+	stateOff,
+	stateOn string,
 ) (topic string, msg homeassistantDiscoverySwitchMessage) {
 	uniqueId, base := getHomeassistantDiscoveryBaseMessage(cfg, deviceName, register)
 
@@ -258,6 +273,8 @@ func getHomeassistantDiscoverySwitchMessage(
 		ValueTemplate:                     valueTemplate,
 		PayloadOff:                        payloadOff,
 		PayloadOn:                         payloadOn,
+		StateOff:                          stateOff,
+		StateOn:                           stateOn,
 	}
 
 	return

@@ -34,7 +34,7 @@ func runMqttClient(
 		mqttClientPool.Add(client)
 
 		forwarderCfg := forwarderConfig{c}
-		mqttForwarders.RunMqttForwarders(forwarderCfg, client, devicePool, stateStorage, commandStorage)
+		go mqttForwarders.RunMqttForwarders(forwarderCfg, client, devicePool, stateStorage, commandStorage)
 	}
 
 	return
