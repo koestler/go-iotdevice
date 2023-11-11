@@ -230,11 +230,17 @@ func (c *DeviceStruct) setupRealtimeSubscription(mc mqttClient.Client, topicTemp
 	}
 
 	mc.AddRoute(topic, func(m mqttClient.Message) {
+		if len(m.Payload()) < 1 {
+			// ignore empty messages; those are used to remove retained messages
+			return
+		}
+
 		registerName, err := tm.ParseTopic(m.Topic())
 		if err != nil {
 			log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse realtime topic: %s", c.Name(), mc.Name(), err)
 			return
 		}
+
 		realtimeMessage, err := parseRealtimePayload(m.Payload())
 		if err != nil {
 			log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse realtime payload: %s", c.Name(), mc.Name(), err)
