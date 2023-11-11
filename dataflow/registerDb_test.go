@@ -128,7 +128,7 @@ func mockRegister(t *testing.T, name string) dataflow.Register {
 	m.EXPECT().Enum().Return(nil)
 	m.EXPECT().Unit().Return("")
 	m.EXPECT().Sort().Return(0)
-	m.EXPECT().Controllable().Return(false)
+	m.EXPECT().Commandable().Return(false)
 
 	return m
 }
