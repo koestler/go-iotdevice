@@ -3,4 +3,3 @@
 - stream register structure update via websocket to client
 - http device: remove registers that are not present anymore
 - control -> command (use only one word in the project)
-- 

@@ -50,6 +50,8 @@ type mqttClientConfigRead struct {
 	ReadOnly          *bool   `yaml:"ReadOnly"`
 	MaxBacklogSize    *int    `yaml:"MaxBacklogSize"`
 
+	MqttDevices map[string]mqttClientDeviceConfigRead `yaml:"MqttDevices"`
+
 	AvailabilityClient     mqttSectionConfigRead `yaml:"AvailabilityClient"`
 	AvailabilityDevice     mqttSectionConfigRead `yaml:"AvailabilityDevice"`
 	Structure              mqttSectionConfigRead `yaml:"Structure"`
@@ -60,6 +62,10 @@ type mqttClientConfigRead struct {
 
 	LogDebug    *bool `yaml:"LogDebug"`
 	LogMessages *bool `yaml:"LogMessages"`
+}
+
+type mqttClientDeviceConfigRead struct {
+	MqttTopics []string `yaml:"MqttTopics"`
 }
 
 type mqttSectionConfigRead struct {
@@ -122,9 +128,7 @@ type httpDeviceConfigRead struct {
 
 type mqttDeviceConfigRead struct {
 	deviceConfigRead `yaml:",inline"`
-	Kind             string   `yaml:"Kind"`
-	MqttClients      []string `yaml:"MqttClients"`
-	MqttTopics       []string `yaml:"MqttTopics"`
+	Kind             string `yaml:"Kind"`
 }
 
 type viewConfigRead struct {

@@ -17,8 +17,7 @@ import (
 
 type Config interface {
 	Kind() types.MqttDeviceKind
-	MqttClients() []string
-	MqttTopics() []string
+	MqttClientTopics() map[string][]string
 }
 
 type DeviceStruct struct {
@@ -67,8 +66,13 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		return
 	}
 
-	for _, mc := range c.mqttClientPool.GetByNames(mCfg.MqttClients()) {
-		for _, topic := range mCfg.MqttTopics() {
+	for mqttClientName, topics := range mCfg.MqttClientTopics() {
+		mc := c.mqttClientPool.GetByName(mqttClientName)
+		if mc == nil {
+			continue
+		}
+
+		for _, topic := range topics {
 			if c.Config().LogDebug() {
 				log.Printf("mqttDevice[%s]->mqttClient[%s]: subscribe to topic=%s", c.Name(), mc.Name(), topic)
 			}

@@ -111,6 +111,8 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 		ReadOnly:          &c.readOnly,
 		MaxBacklogSize:    &c.maxBacklogSize,
 
+		MqttDevices: convertMapToRead[MqttClientDeviceConfig, mqttClientDeviceConfigRead](c.mqttDevices),
+
 		AvailabilityClient:     c.availabilityClient.convertToRead(),
 		AvailabilityDevice:     c.availabilityDevice.convertToRead(),
 		Structure:              c.structure.convertToRead(),
@@ -121,6 +123,13 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 
 		LogDebug:    &c.logDebug,
 		LogMessages: &c.logMessages,
+	}
+}
+
+//lint:ignore U1000 linter does not catch that this is used generic code
+func (c MqttClientDeviceConfig) convertToRead() mqttClientDeviceConfigRead {
+	return mqttClientDeviceConfigRead{
+		MqttTopics: c.mqttTopics,
 	}
 }
 
@@ -218,8 +227,6 @@ func (c MqttDeviceConfig) convertToRead() mqttDeviceConfigRead {
 	return mqttDeviceConfigRead{
 		deviceConfigRead: c.DeviceConfig.convertToRead(),
 		Kind:             c.kind.String(),
-		MqttClients:      c.mqttClients,
-		MqttTopics:       c.mqttTopics,
 	}
 }
 

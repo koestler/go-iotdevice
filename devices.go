@@ -80,7 +80,7 @@ func runMqttDevices(
 			log.Printf("device[%s]: start mqtt type", deviceConfig.Name())
 		}
 
-		deviceConfig := mqttDeviceConfig{deviceConfig}
+		deviceConfig := mqttDeviceConfig{deviceConfig, cfg.MqttClients()}
 		dev := mqttDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, commandStorage, mqttClientPool)
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		watchedDev.Run()
@@ -116,8 +116,29 @@ func (c httpDeviceConfig) Filter() dataflow.RegisterFilterConf {
 
 type mqttDeviceConfig struct {
 	config.MqttDeviceConfig
+	mqttClients []config.MqttClientConfig
 }
 
 func (c mqttDeviceConfig) Filter() dataflow.RegisterFilterConf {
 	return c.MqttDeviceConfig.Filter()
+}
+
+func (c mqttDeviceConfig) MqttClientTopics() map[string][]string {
+	ret := make(map[string][]string)
+
+	for _, mc := range c.mqttClients {
+		for _, d := range mc.MqttDevices() {
+			if d.Name() != c.Name() {
+				continue
+			}
+
+			if _, ok := ret[mc.Name()]; !ok {
+				ret[mc.Name()] = make([]string, 0)
+			}
+
+			ret[mc.Name()] = append(ret[mc.Name()], d.MqttTopics()...)
+		}
+	}
+
+	return ret
 }

@@ -64,6 +64,8 @@ type MqttClientConfig struct {
 	readOnly          bool
 	maxBacklogSize    int
 
+	mqttDevices []MqttClientDeviceConfig
+
 	availabilityClient     MqttSectionConfig
 	availabilityDevice     MqttSectionConfig
 	structure              MqttSectionConfig
@@ -74,6 +76,11 @@ type MqttClientConfig struct {
 
 	logDebug    bool
 	logMessages bool
+}
+
+type MqttClientDeviceConfig struct {
+	name       string
+	mqttTopics []string
 }
 
 type MqttSectionConfig struct {

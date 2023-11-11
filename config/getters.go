@@ -184,6 +184,10 @@ func (c MqttClientConfig) MaxBacklogSize() int {
 	return c.maxBacklogSize
 }
 
+func (c MqttClientConfig) MqttDevices() []MqttClientDeviceConfig {
+	return c.mqttDevices
+}
+
 func (c MqttClientConfig) AvailabilityClient() MqttSectionConfig {
 	return c.availabilityClient
 }
@@ -263,6 +267,16 @@ func (c MqttClientConfig) LogDebug() bool {
 
 func (c MqttClientConfig) LogMessages() bool {
 	return c.logMessages
+}
+
+// Getters for MqttClientDeviceConfig
+
+func (c MqttClientDeviceConfig) Name() string {
+	return c.name
+}
+
+func (c MqttClientDeviceConfig) MqttTopics() []string {
+	return c.mqttTopics
 }
 
 // Getters for MqttSection struct
@@ -428,14 +442,6 @@ func (c HttpDeviceConfig) LogDebug() bool {
 
 func (c MqttDeviceConfig) Kind() types.MqttDeviceKind {
 	return c.kind
-}
-
-func (c MqttDeviceConfig) MqttClients() []string {
-	return c.mqttClients
-}
-
-func (c MqttDeviceConfig) MqttTopics() []string {
-	return c.mqttTopics
 }
 
 // Getters for ViewConfig struct

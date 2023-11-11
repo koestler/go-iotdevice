@@ -118,6 +118,11 @@ MqttClients:                                               # optional, when empt
     ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overriding MaxBacklogSize, AvailabilityEnable, StructureEnable, TelemetryEnable, RealtimeEnable)
     MaxBacklogSize: 256                                    # optional, default 256, max number of mqtt messages to store when connection is offline
 
+    MqttDevices:                                           # optional, default empty, which mqtt devices shall receive messages from this client
+      bmv1:                                                # mandatory, the identifier of the MqttDevice
+        MqttTopics:                                        # mandatory, at least 1 topic must be defined
+          - stat/go-iotdevice/bmv1/+                       # what topic to subscribe to; must match RealtimeTopic of the sending device; %RegisterName% must be replaced by +
+
     AvailabilityClient:
       Enabled: true                                        # optional, default true, whether to send online messages and register an offline message as will
       TopicTemplate: '%Prefix%avail/%ClientId%'            # optional, what topic to use for online/offline messages of the go-iotdevice instance
@@ -293,10 +298,6 @@ HttpDevices:                                               # optional, a list of
 MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Kind: GoIotdeviceV3                                    # mandatory, only GoIotdevice is supported at the moment
-    MqttClients:                                           # mandatory, at least 1 topic must be defined, on which mqtt server(s) we subscribe
-      - local                                              # identifier as defined in the MqttClients section
-    MqttTopics:                                            # mandatory, at least 1 topic must be defined
-      - stat/go-iotdevice/bmv1/+                           # what topic to subscribe to; must match RealtimeTopic of the sending device; %RegisterName% must be replaced by +
     Filter:                                                # optional, default include all, defines which registers are show in the view,
       # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
       IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
