@@ -41,7 +41,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 		// the follow line uses a loop variable; it must be outside the closure
 		r.GET(relativePath, func(c *gin.Context) {
 			var websocketAcceptOptions = websocket.AcceptOptions{
-				CompressionMode: websocket.CompressionContextTakeover,
+				CompressionMode: websocket.CompressionNoContextTakeover,
 			}
 
 			ua := useragent.Parse(c.GetHeader("User-Agent"))
