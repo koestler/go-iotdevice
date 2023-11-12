@@ -394,18 +394,36 @@ certbot certonly --authenticator webroot --webroot-path /srv/www-acme-challenge/
 service nginx reload 
 ```
 
+## Mqtt Interface
+
+
+## Http Interface
+
+The http server logs after startup of the tool what exact routes it serves given the current configuration.
+There are the following endpoints:
+
+
+
 ## Development
 
 ### Run locally
 For development this backend can be compiled and run locally.
 In addition, it's then best to also und run the [frontend](https://github.com/koestler/js-iotdevice) locally. 
-There is a good starting point for a development configuration.
 
+This tool can proxy requests to a local server serving the frontend. Use eg.:
+
+```yaml
+HttpServer:                                                # optional, when missing: http server is not started
+  Bind: "[::1]"                                            # mandatory, use [::1] (ipv6 loopback) to enable on both ipv4 and 6 and 0.0.0.0 to only enable ipv4
+  Port: 8000                                               # optional, default 8000
+  FrontendProxy: "http://127.0.0.1:3000/"
+ ```  
+ 
+Build and run: 
+  
 ```bash
-cp documentation/dev-config.yml config.yml
 go build && ./go-iotdevice
 ```
-
 
 ### Compile and run inside docker
 Alternatively, if you don't have golang installed locally, you can compile and run 

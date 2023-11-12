@@ -21,7 +21,7 @@ type registerResponse struct {
 }
 
 // setupRegisters godoc
-// @Summary Outputs information about all the available fields.
+// @Summary Outputs information about all the available registers.
 // @Description Depending on the device model (bmv, bluesolar) a different set of variables are available.
 // @Description This endpoint outputs a list of fields (variables) including a name, a unit and a datatype.
 // @ID registers
@@ -60,7 +60,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 				jsonGetResponse(c, compile1DRegisterResponse(registers))
 			})
 			if env.Config.LogConfig() {
-				log.Printf("httpServer: GET %s%s -> serve fields", r.BasePath(), relativePath)
+				log.Printf("httpServer: GET %s%s -> serve registers", r.BasePath(), relativePath)
 			}
 		}
 	}
