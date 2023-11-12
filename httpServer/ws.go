@@ -11,8 +11,9 @@ import (
 	"time"
 )
 
+// registers / values maps use deviceName as the first dimension and registerName as the second dimension.
 type outputMessage struct {
-	Operation string                                 `json:"op"`
+	Operation string                                 `json:"op" example:"init"`
 	Registers map[string]map[string]registerResponse `json:"registers,omitempty"`
 	Values    map[string]map[string]valueResponse    `json:"values,omitempty"`
 }
@@ -22,11 +23,11 @@ type authMessage struct {
 }
 
 // setupViewWs godoc
-// @Summary Websocket that sends all values initially and sends updates of changed values subsequently.
-// @ID viewWs
+// @Summary Realtime values websocket
+// @Description Websocket that sends all registers and values initially and sends updates of changed values subsequently.
 // @Param viewName path string true "View name as provided by the config endpoint"
 // @Produce json
-// @success 200 {array} valueResponse
+// @success 200 {array} outputMessage
 // @Failure 404 {object} ErrorResponse
 // @Router /views/{viewName}/ws [get]
 // @Security ApiKeyAuth

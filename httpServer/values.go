@@ -10,14 +10,16 @@ import (
 )
 
 type valueResponse interface{}
+type values1DResponse map[string]valueResponse
+type values2DResponse map[string]map[string]valueResponse
 
 // setupValuesGetJson godoc
-// @Summary Outputs the latest values of all the fields of a device.
-// @ID valuesGetJson
+// @Summary List values
+// @Description Outputs the latest values of all the registers of a device.
 // @Param viewName path string true "View name as provided by the config endpoint"
 // @Param deviceName path string true "Device name as provided in devices array of the config endpoint"
 // @Produce json
-// @success 200 {array} valueResponse
+// @success 200 {object} values1DResponse
 // @Failure 404 {object} ErrorResponse
 // @Router /views/{viewName}/devices/{deviceName}/values [get]
 // @Security ApiKeyAuth
@@ -53,12 +55,12 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 }
 
 // setupValuesPatch godoc
-// @Summary Sets commandable registers
-// @ID valuesPatch
+// @Summary Set value
+// @Description Sets a commandable register to a certain value.
 // @Param viewName path string true "View name as provided by the config endpoint"
 // @Param deviceName path string true "Device name as provided in devices array of the config endpoint"
 // @Produce json
-// @success 200 {array} valueResponse
+// @success 200
 // @Failure 404 {object} ErrorResponse
 // @Router /views/{viewName}/devices/{deviceName}/values [patch]
 // @Security ApiKeyAuth
@@ -139,7 +141,7 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 	}
 }
 
-func compile1DValueResponse(values []dataflow.Value) (response map[string]valueResponse) {
+func compile1DValueResponse(values []dataflow.Value) (response values1DResponse) {
 	response = make(map[string]valueResponse, len(values))
 	for _, value := range values {
 		response[value.Register().Name()] = value.GenericValue()
@@ -147,7 +149,7 @@ func compile1DValueResponse(values []dataflow.Value) (response map[string]valueR
 	return
 }
 
-func compile2DValueResponse(values []dataflow.Value) (response map[string]map[string]valueResponse) {
+func compile2DValueResponse(values []dataflow.Value) (response values2DResponse) {
 	response = make(map[string]map[string]valueResponse)
 	for _, value := range values {
 		append2DValueResponse(response, value)

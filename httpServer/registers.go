@@ -21,9 +21,11 @@ type registerResponse struct {
 }
 
 // setupRegisters godoc
-// @Summary Outputs information about all the available registers.
-// @Description Depending on the device model (bmv, bluesolar) a different set of variables are available.
-// @Description This endpoint outputs a list of fields (variables) including a name, a unit and a datatype.
+// @Summary List registers
+// @Description Outputs information about all the available registers (not the current values) of the given device.
+// @Description Depending on the device model (bmv, bluesolar) a different set of registers are available.
+// @Description On some devices (eg. TCW241), the registers are even dynamic and configurable on the device.
+// @Description This endpoint outputs a list of fields including a name, a unit and a datatype.
 // @ID registers
 // @Param viewName path string true "View name as provided by the config endpoint"
 // @Param deviceName path string true "Device name as provided in devices array of the config endpoint"
