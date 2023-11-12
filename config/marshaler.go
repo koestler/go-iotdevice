@@ -7,21 +7,21 @@ import (
 
 func (c Config) MarshalYAML() (interface{}, error) {
 	return configRead{
-		Version:         &c.version,
-		ProjectTitle:    c.projectTitle,
-		LogConfig:       &c.logConfig,
-		LogWorkerStart:  &c.logWorkerStart,
-		LogStorageDebug: &c.logStorageDebug,
-		HttpServer:      convertEnableableToRead[HttpServerConfig, httpServerConfigRead](c.httpServer),
-		Authentication:  convertEnableableToRead[AuthenticationConfig, authenticationConfigRead](c.authentication),
-		MqttClients:     convertMapToRead[MqttClientConfig, mqttClientConfigRead](c.mqttClients),
-		Modbus:          convertMapToRead[ModbusConfig, modbusConfigRead](c.modbus),
-		VictronDevices:  convertMapToRead[VictronDeviceConfig, victronDeviceConfigRead](c.victronDevices),
-		ModbusDevices:   convertMapToRead[ModbusDeviceConfig, modbusDeviceConfigRead](c.modbusDevices),
-		HttpDevices:     convertMapToRead[HttpDeviceConfig, httpDeviceConfigRead](c.httpDevices),
-		MqttDevices:     convertMapToRead[MqttDeviceConfig, mqttDeviceConfigRead](c.mqttDevices),
-		Views:           convertListToRead[ViewConfig, viewConfigRead](c.views),
-		HassDiscovery:   convertListToRead[HassDiscovery, hassDiscoveryRead](c.hassDiscovery),
+		Version:                &c.version,
+		ProjectTitle:           c.projectTitle,
+		LogConfig:              &c.logConfig,
+		LogWorkerStart:         &c.logWorkerStart,
+		LogStateStorageDebug:   &c.logStateStorageDebug,
+		LogCommandStorageDebug: &c.logCommandStorageDebug,
+		HttpServer:             convertEnableableToRead[HttpServerConfig, httpServerConfigRead](c.httpServer),
+		Authentication:         convertEnableableToRead[AuthenticationConfig, authenticationConfigRead](c.authentication),
+		MqttClients:            convertMapToRead[MqttClientConfig, mqttClientConfigRead](c.mqttClients),
+		Modbus:                 convertMapToRead[ModbusConfig, modbusConfigRead](c.modbus),
+		VictronDevices:         convertMapToRead[VictronDeviceConfig, victronDeviceConfigRead](c.victronDevices),
+		ModbusDevices:          convertMapToRead[ModbusDeviceConfig, modbusDeviceConfigRead](c.modbusDevices),
+		HttpDevices:            convertMapToRead[HttpDeviceConfig, httpDeviceConfigRead](c.httpDevices),
+		MqttDevices:            convertMapToRead[MqttDeviceConfig, mqttDeviceConfigRead](c.mqttDevices),
+		Views:                  convertListToRead[ViewConfig, viewConfigRead](c.views),
 	}, nil
 }
 
@@ -65,7 +65,7 @@ func convertListToRead[I convertable[O], O any](inp []I) (oup []O) {
 	return
 }
 
-//lint:ignore U1000 linter does not catch that this is used genric code
+//lint:ignore U1000 linter does not catch that this is used generic code
 func (c HttpServerConfig) convertToRead() httpServerConfigRead {
 	frontendProxy := ""
 	if c.frontendProxy != nil {
@@ -84,7 +84,7 @@ func (c HttpServerConfig) convertToRead() httpServerConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used genric code
+//lint:ignore U1000 linter does not catch that this is used generic code
 func (c AuthenticationConfig) convertToRead() authenticationConfigRead {
 	jwtSecret := string(c.jwtSecret)
 	return authenticationConfigRead{
@@ -94,33 +94,66 @@ func (c AuthenticationConfig) convertToRead() authenticationConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used genric code
+//lint:ignore U1000 linter does not catch that this is used generic code
 func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 	return mqttClientConfigRead{
-		Broker:            c.broker.String(),
-		ProtocolVersion:   &c.protocolVersion,
-		User:              c.user,
-		Password:          c.password,
-		ClientId:          &c.clientId,
-		Qos:               &c.qos,
+		Broker:          c.broker.String(),
+		ProtocolVersion: &c.protocolVersion,
+
+		User:     c.user,
+		Password: c.password,
+		ClientId: &c.clientId,
+
 		KeepAlive:         c.keepAlive.String(),
 		ConnectRetryDelay: c.connectRetryDelay.String(),
 		ConnectTimeout:    c.connectTimeout.String(),
-		AvailabilityTopic: &c.availabilityTopic,
-		TelemetryInterval: c.telemetryInterval.String(),
-		TelemetryTopic:    &c.telemetryTopic,
-		TelemetryRetain:   &c.telemetryRetain,
-		RealtimeEnable:    &c.realtimeEnable,
-		RealtimeTopic:     &c.realtimeTopic,
-		RealtimeRetain:    &c.realtimeRetain,
-		TopicPrefix:       c.topicPrefix,
+		TopicPrefix:       &c.topicPrefix,
+		ReadOnly:          &c.readOnly,
 		MaxBacklogSize:    &c.maxBacklogSize,
-		LogDebug:          &c.logDebug,
-		LogMessages:       &c.logMessages,
+
+		MqttDevices: convertMapToRead[MqttClientDeviceConfig, mqttClientDeviceConfigRead](c.mqttDevices),
+
+		AvailabilityClient:     c.availabilityClient.convertToRead(),
+		AvailabilityDevice:     c.availabilityDevice.convertToRead(),
+		Structure:              c.structure.convertToRead(),
+		Telemetry:              c.telemetry.convertToRead(),
+		Realtime:               c.realtime.convertToRead(),
+		HomeassistantDiscovery: c.homeassistantDiscovery.convertToRead(),
+		Command:                c.command.convertToRead(),
+
+		LogDebug:    &c.logDebug,
+		LogMessages: &c.logMessages,
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used genric code
+//lint:ignore U1000 linter does not catch that this is used generic code
+func (c MqttClientDeviceConfig) convertToRead() mqttClientDeviceConfigRead {
+	return mqttClientDeviceConfigRead{
+		MqttTopics: c.mqttTopics,
+	}
+}
+
+//lint:ignore U1000 linter does not catch that this is used generic code
+func (c MqttSectionConfig) convertToRead() mqttSectionConfigRead {
+	return mqttSectionConfigRead{
+		Enabled:       &c.enabled,
+		TopicTemplate: &c.topicTemplate,
+		Interval:      c.interval.String(),
+		Retain:        &c.retain,
+		Qos:           &c.qos,
+		Devices:       convertMapToRead[MqttDeviceSectionConfig, mqttDeviceSectionConfigRead](c.devices),
+	}
+}
+
+//lint:ignore U1000 linter does not catch that this is used generic code
+func (c MqttDeviceSectionConfig) convertToRead() mqttDeviceSectionConfigRead {
+	rf := c.filter.convertToRead()
+	return mqttDeviceSectionConfigRead{
+		Filter: &rf,
+	}
+}
+
+//lint:ignore U1000 linter does not catch that this is used generic code
 func (c ModbusConfig) convertToRead() modbusConfigRead {
 	return modbusConfigRead{
 		Device:      c.device,
@@ -130,12 +163,10 @@ func (c ModbusConfig) convertToRead() modbusConfigRead {
 	}
 }
 
+//lint:ignore U1000 linter does not catch that this is used generic code
 func (c DeviceConfig) convertToRead() deviceConfigRead {
 	return deviceConfigRead{
-		SkipFields:                c.skipFields,
-		SkipCategories:            c.skipCategories,
-		TelemetryViaMqttClients:   c.telemetryViaMqttClients,
-		RealtimeViaMqttClients:    c.realtimeViaMqttClients,
+		Filter:                    c.filter.convertToRead(),
 		RestartInterval:           c.restartInterval.String(),
 		RestartIntervalMaxBackoff: c.restartIntervalMaxBackoff.String(),
 		LogDebug:                  &c.logDebug,
@@ -143,22 +174,22 @@ func (c DeviceConfig) convertToRead() deviceConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used genric code
+//lint:ignore U1000 linter does not catch that this is used generic code
 func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 	return victronDeviceConfigRead{
-		General: c.DeviceConfig.convertToRead(),
-		Device:  c.device,
-		Kind:    c.kind.String(),
+		deviceConfigRead: c.DeviceConfig.convertToRead(),
+		Device:           c.device,
+		Kind:             c.kind.String(),
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used genric code
+//lint:ignore U1000 linter does not catch that this is used generic code
 func (c ModbusDeviceConfig) convertToRead() modbusDeviceConfigRead {
 	return modbusDeviceConfigRead{
-		General: c.DeviceConfig.convertToRead(),
-		Bus:     c.bus,
-		Kind:    c.kind.String(),
-		Address: fmt.Sprintf("0x%02x", c.address),
+		deviceConfigRead: c.DeviceConfig.convertToRead(),
+		Bus:              c.bus,
+		Kind:             c.kind.String(),
+		Address:          fmt.Sprintf("0x%02x", c.address),
 		Relays: func(inp map[string]RelayConfig) (oup map[string]relayConfigRead) {
 			oup = make(map[string]relayConfigRead, len(inp))
 			for k, v := range inp {
@@ -170,7 +201,7 @@ func (c ModbusDeviceConfig) convertToRead() modbusDeviceConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used genric code
+//lint:ignore U1000 linter does not catch that this is used generic code
 func (c RelayConfig) convertToRead() relayConfigRead {
 	return relayConfigRead{
 		Description: &c.description,
@@ -179,28 +210,27 @@ func (c RelayConfig) convertToRead() relayConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used genric code
+//lint:ignore U1000 linter does not catch that this is used generic code
 func (c HttpDeviceConfig) convertToRead() httpDeviceConfigRead {
 	return httpDeviceConfigRead{
-		General:      c.DeviceConfig.convertToRead(),
-		Url:          c.url.String(),
-		Kind:         c.kind.String(),
-		Username:     c.username,
-		Password:     c.password,
-		PollInterval: c.pollInterval.String(),
+		deviceConfigRead: c.DeviceConfig.convertToRead(),
+		Url:              c.url.String(),
+		Kind:             c.kind.String(),
+		Username:         c.username,
+		Password:         c.password,
+		PollInterval:     c.pollInterval.String(),
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used genric code
+//lint:ignore U1000 linter does not catch that this is used generic code
 func (c MqttDeviceConfig) convertToRead() mqttDeviceConfigRead {
 	return mqttDeviceConfigRead{
-		General:     c.DeviceConfig.convertToRead(),
-		MqttTopics:  c.mqttTopics,
-		MqttClients: c.mqttClients,
+		deviceConfigRead: c.DeviceConfig.convertToRead(),
+		Kind:             c.kind.String(),
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used genric code
+//lint:ignore U1000 linter does not catch that this is used generic code
 func (c ViewConfig) convertToRead() viewConfigRead {
 	return viewConfigRead{
 		Name:         c.name,
@@ -212,23 +242,22 @@ func (c ViewConfig) convertToRead() viewConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used genric code
+//lint:ignore U1000 linter does not catch that this is used generic code
 func (c ViewDeviceConfig) convertToRead() viewDeviceConfigRead {
 	return viewDeviceConfigRead{
-		Name:           c.name,
-		Title:          c.title,
-		SkipFields:     c.skipFields,
-		SkipCategories: c.skipCategories,
+		Name:   c.name,
+		Title:  c.title,
+		Filter: c.filter.convertToRead(),
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used genric code
-func (c HassDiscovery) convertToRead() hassDiscoveryRead {
-	return hassDiscoveryRead{
-		TopicPrefix:    &c.topicPrefix,
-		ViaMqttClients: c.viaMqttClients,
-		Devices:        c.devices,
-		Categories:     c.categories,
-		Registers:      c.registers,
+//lint:ignore U1000 linter does not catch that this is used generic code
+func (c FilterConfig) convertToRead() filterConfigRead {
+	return filterConfigRead{
+		IncludeRegisters:  c.includeRegisters,
+		SkipRegisters:     c.skipRegisters,
+		IncludeCategories: c.includeCategories,
+		SkipCategories:    c.skipCategories,
+		DefaultInclude:    &c.defaultInclude,
 	}
 }

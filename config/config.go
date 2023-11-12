@@ -1,11 +1,13 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/koestler/go-iotdevice/types"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"log"
 	"net/url"
 	"os"
@@ -32,8 +34,11 @@ func ReadConfig(yamlStr []byte, bypassFileCheck bool) (config Config, err []erro
 	var configRead configRead
 
 	yamlStr = []byte(os.ExpandEnv(string(yamlStr)))
-	e := yaml.Unmarshal(yamlStr, &configRead)
-	if e != nil {
+
+	d := yaml.NewDecoder(bytes.NewReader(yamlStr))
+	d.KnownFields(true)
+
+	if e := d.Decode(&configRead); e != nil {
 		return config, []error{fmt.Errorf("cannot parse yaml: %s", e)}
 	}
 
@@ -62,11 +67,11 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	var e []error
 
 	if c.Version == nil {
-		err = append(err, fmt.Errorf("version must be defined. Use Version=1"))
+		err = append(err, fmt.Errorf("Version must be defined. Use Version=2"))
 	} else {
 		ret.version = *c.Version
-		if ret.version != 1 {
-			err = append(err, fmt.Errorf("version=%d is not supported", ret.version))
+		if ret.version != 2 {
+			err = append(err, fmt.Errorf("version=%d is not supported, only version=2 is supported", ret.version))
 		}
 	}
 
@@ -84,22 +89,18 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 		ret.logWorkerStart = false
 	}
 
-	if c.LogStorageDebug != nil && *c.LogStorageDebug {
-		ret.logStorageDebug = true
+	if c.LogStateStorageDebug != nil && *c.LogStateStorageDebug {
+		ret.logStateStorageDebug = true
+	}
+
+	if c.LogCommandStorageDebug != nil && *c.LogCommandStorageDebug {
+		ret.logCommandStorageDebug = true
 	}
 
 	ret.httpServer, e = c.HttpServer.TransformAndValidate()
 	err = append(err, e...)
 
 	ret.authentication, e = c.Authentication.TransformAndValidate(bypassFileCheck)
-	err = append(err, e...)
-
-	ret.mqttClients, e = TransformAndValidateMapToList(
-		c.MqttClients,
-		func(inp mqttClientConfigRead, name string) (MqttClientConfig, []error) {
-			return inp.TransformAndValidate(name)
-		},
-	)
 	err = append(err, e...)
 
 	ret.modbus, e = TransformAndValidateMapToList(
@@ -113,7 +114,7 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	ret.victronDevices, e = TransformAndValidateMapToList(
 		c.VictronDevices,
 		func(inp victronDeviceConfigRead, name string) (VictronDeviceConfig, []error) {
-			return inp.TransformAndValidate(name, ret.mqttClients)
+			return inp.TransformAndValidate(name)
 		},
 	)
 	err = append(err, e...)
@@ -121,7 +122,7 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	ret.modbusDevices, e = TransformAndValidateMapToList(
 		c.ModbusDevices,
 		func(inp modbusDeviceConfigRead, name string) (ModbusDeviceConfig, []error) {
-			return inp.TransformAndValidate(name, ret.mqttClients, ret.modbus)
+			return inp.TransformAndValidate(name, ret.modbus)
 		},
 	)
 	err = append(err, e...)
@@ -129,7 +130,7 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	ret.httpDevices, e = TransformAndValidateMapToList(
 		c.HttpDevices,
 		func(inp httpDeviceConfigRead, name string) (HttpDeviceConfig, []error) {
-			return inp.TransformAndValidate(name, ret.mqttClients)
+			return inp.TransformAndValidate(name)
 		},
 	)
 	err = append(err, e...)
@@ -137,35 +138,34 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	ret.mqttDevices, e = TransformAndValidateMapToList(
 		c.MqttDevices,
 		func(inp mqttDeviceConfigRead, name string) (MqttDeviceConfig, []error) {
-			return inp.TransformAndValidate(name, ret.mqttClients)
+			return inp.TransformAndValidate(name)
 		},
 	)
 	err = append(err, e...)
 
-	{
-		ret.devices = make(
-			[]DeviceConfig,
-			len(ret.victronDevices)+len(ret.modbusDevices)+len(ret.httpDevices)+len(ret.mqttDevices),
-		)
-
-		i := 0
-		for _, d := range ret.victronDevices {
-			ret.devices[i] = d.DeviceConfig
-			i += 1
-		}
-		for _, d := range ret.modbusDevices {
-			ret.devices[i] = d.DeviceConfig
-			i += 1
-		}
-		for _, d := range ret.httpDevices {
-			ret.devices[i] = d.DeviceConfig
-			i += 1
-		}
-		for _, d := range ret.mqttDevices {
-			ret.devices[i] = d.DeviceConfig
-			i += 1
-		}
+	ret.devices = make([]DeviceConfig, 0, len(
+		ret.victronDevices)+len(ret.modbusDevices)+len(ret.httpDevices)+len(ret.mqttDevices),
+	)
+	for _, d := range ret.victronDevices {
+		ret.devices = append(ret.devices, d.DeviceConfig)
 	}
+	for _, d := range ret.modbusDevices {
+		ret.devices = append(ret.devices, d.DeviceConfig)
+	}
+	for _, d := range ret.httpDevices {
+		ret.devices = append(ret.devices, d.DeviceConfig)
+	}
+	for _, d := range ret.mqttDevices {
+		ret.devices = append(ret.devices, d.DeviceConfig)
+	}
+
+	ret.mqttClients, e = TransformAndValidateMapToList(
+		c.MqttClients,
+		func(inp mqttClientConfigRead, name string) (MqttClientConfig, []error) {
+			return inp.TransformAndValidate(name, ret.devices, ret.mqttDevices)
+		},
+	)
+	err = append(err, e...)
 
 	{
 		var viewsErr []error
@@ -179,14 +179,6 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 			err = append(err, fmt.Errorf("section Views: %s", ve))
 		}
 	}
-
-	ret.hassDiscovery, e = TransformAndValidateList(
-		c.HassDiscovery,
-		func(idx int, inp hassDiscoveryRead) (HassDiscovery, []error) {
-			return inp.TransformAndValidate(idx, ret.mqttClients, ret.devices)
-		},
-	)
-	err = append(err, e...)
 
 	return
 }
@@ -319,25 +311,30 @@ func (c *authenticationConfigRead) TransformAndValidate(bypassFileCheck bool) (r
 	return
 }
 
-func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientConfig, err []error) {
+func (c mqttClientConfigRead) TransformAndValidate(
+	name string,
+	devices []DeviceConfig,
+	mqttDevices []MqttDeviceConfig,
+) (ret MqttClientConfig, err []error) {
 	ret = MqttClientConfig{
-		name:        name,
-		user:        c.User,
-		password:    c.Password,
-		topicPrefix: c.TopicPrefix,
+		name:     name,
+		user:     c.User,
+		password: c.Password,
 	}
 
+	errPrefix := fmt.Sprintf("MqttClients->%s", ret.name)
+
 	if !nameMatcher.MatchString(ret.name) {
-		err = append(err, fmt.Errorf("MqttClientConfig->Name='%s' does not match %s", ret.name, NameRegexp))
+		err = append(err, fmt.Errorf("%s name does not match %s", errPrefix, NameRegexp))
 	}
 
 	if len(c.Broker) < 1 {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->Broker must not be empty", name))
+		err = append(err, fmt.Errorf("%s->Broker must not be empty", errPrefix))
 	} else {
 		if broker, e := url.ParseRequestURI(c.Broker); e != nil {
-			err = append(err, fmt.Errorf("MqttClientConfig->%s->Broker invalid url: %s", name, e))
+			err = append(err, fmt.Errorf("%s->Broker invalid url: %s", errPrefix, e))
 		} else if broker == nil {
-			err = append(err, fmt.Errorf("MqttClientConfig->%s->Broker cannot parse broker", name))
+			err = append(err, fmt.Errorf("%s->Broker cannot parse broker", errPrefix))
 		} else {
 			ret.broker = broker
 		}
@@ -345,10 +342,10 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 
 	if c.ProtocolVersion == nil {
 		ret.protocolVersion = 5
-	} else if *c.ProtocolVersion == 3 || *c.ProtocolVersion == 5 {
+	} else if *c.ProtocolVersion == 5 {
 		ret.protocolVersion = *c.ProtocolVersion
 	} else {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->Protocol=%d but must be 3 or 5", name, *c.ProtocolVersion))
+		err = append(err, fmt.Errorf("%s->Protocol=%d but must be 5 (3 is not supported anymore)", errPrefix, *c.ProtocolVersion))
 	}
 
 	if c.ClientId == nil {
@@ -357,116 +354,204 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 		ret.clientId = *c.ClientId
 	}
 
-	if c.Qos == nil {
-		ret.qos = 1 // default qos is 1
-	} else if *c.Qos == 0 || *c.Qos == 1 || *c.Qos == 2 {
-		ret.qos = *c.Qos
-	} else {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->Qos=%d but must be 0, 1 or 2", name, *c.Qos))
-	}
-
 	if len(c.KeepAlive) < 1 {
-		// use default 60s
 		ret.keepAlive = time.Minute
 	} else if keepAlive, e := time.ParseDuration(c.KeepAlive); e != nil {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->KeepAlive='%s' parse error: %s",
-			name, c.KeepAlive, e,
+		err = append(err, fmt.Errorf("%s->KeepAlive='%s' parse error: %s",
+			errPrefix, c.KeepAlive, e,
 		))
 	} else if keepAlive < time.Second {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->KeepAlive='%s' must be >=1s",
-			name, c.KeepAlive,
+		err = append(err, fmt.Errorf("%s->KeepAlive='%s' must be >=1s",
+			errPrefix, c.KeepAlive,
 		))
 	} else if keepAlive%time.Second != 0 {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->KeepAlive='%s' must be a multiple of a second",
-			name, c.KeepAlive,
+		err = append(err, fmt.Errorf("%s->KeepAlive='%s' must be a multiple of a second",
+			errPrefix, c.KeepAlive,
 		))
 	} else {
 		ret.keepAlive = keepAlive
 	}
 
 	if len(c.ConnectRetryDelay) < 1 {
-		// use default 10s
 		ret.connectRetryDelay = 10 * time.Second
 	} else if connectRetryDelay, e := time.ParseDuration(c.ConnectRetryDelay); e != nil {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->ConnectRetryDelay='%s' parse error: %s",
-			name, c.ConnectRetryDelay, e,
+		err = append(err, fmt.Errorf("%s->ConnectRetryDelay='%s' parse error: %s",
+			errPrefix, c.ConnectRetryDelay, e,
 		))
 	} else if connectRetryDelay < 100*time.Millisecond {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->ConnectRetryDelay='%s' must be >=100ms",
-			name, c.ConnectRetryDelay,
+		err = append(err, fmt.Errorf("%s->ConnectRetryDelay='%s' must be >=100ms",
+			errPrefix, c.ConnectRetryDelay,
 		))
 	} else {
 		ret.connectRetryDelay = connectRetryDelay
 	}
 
 	if len(c.ConnectTimeout) < 1 {
-		// use default 5s
 		ret.connectTimeout = 5 * time.Second
 	} else if connectTimeout, e := time.ParseDuration(c.ConnectTimeout); e != nil {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->ConnectTimeout='%s' parse error: %s",
-			name, c.ConnectTimeout, e,
+		err = append(err, fmt.Errorf("%s->ConnectTimeout='%s' parse error: %s",
+			errPrefix, c.ConnectTimeout, e,
 		))
 	} else if connectTimeout < 100*time.Millisecond {
-		err = append(err, fmt.Errorf("MqttClientConfig->%s->ConnectTimeout='%s' must be >=100ms",
-			name, c.ConnectTimeout,
+		err = append(err, fmt.Errorf("%s->ConnectTimeout='%s' must be >=100ms",
+			errPrefix, c.ConnectTimeout,
 		))
 	} else {
 		ret.connectTimeout = connectTimeout
 	}
 
-	if c.AvailabilityTopic == nil {
-		// use default
-		ret.availabilityTopic = "%Prefix%tele/%ClientId%/status"
+	if c.TopicPrefix == nil {
+		ret.topicPrefix = "go-iotdevice/"
 	} else {
-		ret.availabilityTopic = *c.AvailabilityTopic
+		ret.topicPrefix = *c.TopicPrefix
 	}
 
-	if len(c.TelemetryInterval) < 1 {
-		// use default 10s
-		ret.telemetryInterval = 10 * time.Second
-	} else if telemetryInterval, e := time.ParseDuration(c.TelemetryInterval); e != nil {
-		err = append(err, fmt.Errorf("HttpServerConfig->TelemetryInterval='%s' parse error: %s", c.TelemetryInterval, e))
-	} else if telemetryInterval < 0 {
-		err = append(err, fmt.Errorf("HttpServerConfig->TelemetryInterval='%s' must be positive", c.TelemetryInterval))
+	if c.ReadOnly == nil {
+		ret.readOnly = false
 	} else {
-		ret.telemetryInterval = telemetryInterval
+		ret.readOnly = *c.ReadOnly
 	}
 
-	if c.TelemetryTopic == nil {
-		ret.telemetryTopic = "%Prefix%tele/go-iotdevice/%DeviceName%/state"
-	} else {
-		ret.telemetryTopic = *c.TelemetryTopic
-	}
-
-	if c.TelemetryRetain == nil {
-		ret.realtimeRetain = false
-	} else {
-		ret.telemetryRetain = *c.TelemetryRetain
-	}
-
-	if c.RealtimeEnable == nil {
-		ret.realtimeEnable = false
-	} else {
-		ret.realtimeEnable = *c.RealtimeEnable
-	}
-
-	if c.RealtimeTopic == nil {
-		ret.realtimeTopic = "%Prefix%stat/go-iotdevice/%DeviceName%/%ValueName%"
-	} else {
-		ret.realtimeTopic = *c.RealtimeTopic
-	}
-
-	if c.RealtimeRetain == nil {
-		ret.realtimeRetain = true
-	} else {
-		ret.realtimeRetain = *c.RealtimeRetain
-	}
-
-	if c.MaxBacklogSize == nil {
+	if ret.readOnly {
+		ret.maxBacklogSize = 0
+	} else if c.MaxBacklogSize == nil {
 		ret.maxBacklogSize = 256
 	} else {
 		ret.maxBacklogSize = *c.MaxBacklogSize
 	}
+
+	var e []error
+	ret.mqttDevices, e = TransformAndValidateMapToList(
+		c.MqttDevices,
+		func(inp mqttClientDeviceConfigRead, name string) (MqttClientDeviceConfig, []error) {
+			return inp.TransformAndValidate(
+				name, fmt.Sprintf("%s->MqttDevices->", errPrefix),
+				mqttDevices,
+			)
+		},
+	)
+	err = append(err, e...)
+
+	nonLoopMqttDevices := make([]DeviceConfig, 0, len(devices)-len(ret.mqttDevices))
+	for _, d := range devices {
+		// do not allow to send mqtt messages for any de
+		if existsByName(d.Name(), ret.mqttDevices) {
+			continue
+		}
+		nonLoopMqttDevices = append(nonLoopMqttDevices, d)
+	}
+
+	ret.availabilityClient, e = c.AvailabilityClient.TransformAndValidate(
+		fmt.Sprintf("%s->AvailabilityClient->", errPrefix),
+		nonLoopMqttDevices,
+		ret.readOnly,
+		true,
+		"%Prefix%avail/%ClientId%",
+		0,
+		false,
+		true,
+		true,
+		true,
+		false,
+		false,
+	)
+	err = append(err, e...)
+
+	ret.availabilityDevice, e = c.AvailabilityDevice.TransformAndValidate(
+		fmt.Sprintf("%s->AvailabilityDevice->", errPrefix),
+		nonLoopMqttDevices,
+		ret.readOnly,
+		true,
+		"%Prefix%avail/%DeviceName%",
+		0,
+		false,
+		true,
+		true,
+		true,
+		true,
+		false,
+	)
+	err = append(err, e...)
+
+	ret.structure, e = c.Structure.TransformAndValidate(
+		fmt.Sprintf("%s->Structure->", errPrefix),
+		nonLoopMqttDevices,
+		ret.readOnly,
+		false,
+		"%Prefix%struct/%DeviceName%",
+		0,
+		true,
+		true,
+		true,
+		true,
+		true,
+		true,
+	)
+	err = append(err, e...)
+
+	ret.telemetry, e = c.Telemetry.TransformAndValidate(
+		fmt.Sprintf("%s->Telemetry->", errPrefix),
+		nonLoopMqttDevices,
+		ret.readOnly,
+		false,
+		"%Prefix%tele/%DeviceName%",
+		time.Second,
+		true,
+		false,
+		true,
+		false,
+		true,
+		true,
+	)
+	err = append(err, e...)
+
+	ret.realtime, e = c.Realtime.TransformAndValidate(
+		fmt.Sprintf("%s->Realtime->", errPrefix),
+		nonLoopMqttDevices,
+		ret.readOnly,
+		false,
+		"%Prefix%real/%DeviceName%/%RegisterName%",
+		0,
+		true,
+		true,
+		true,
+		false,
+		true,
+		true,
+	)
+	err = append(err, e...)
+
+	ret.homeassistantDiscovery, e = c.HomeassistantDiscovery.TransformAndValidate(
+		fmt.Sprintf("%s->HomeassistantDiscovery->", errPrefix),
+		nonLoopMqttDevices,
+		ret.readOnly,
+		false,
+		"homeassistant/%Component%/%NodeId%/%ObjectId%/config",
+		0,
+		true,
+		true,
+		true,
+		false,
+		true,
+		true,
+	)
+	err = append(err, e...)
+
+	ret.command, e = c.Command.TransformAndValidate(
+		fmt.Sprintf("%s->Command->", errPrefix),
+		nonLoopMqttDevices,
+		false, // command is not affected by read only
+		false,
+		"%Prefix%cmnd/%DeviceName%/%RegisterName%",
+		0,
+		false,
+		true,
+		false,
+		false,
+		true,
+		true,
+	)
+	err = append(err, e...)
 
 	if c.LogDebug != nil && *c.LogDebug {
 		ret.logDebug = true
@@ -479,87 +564,153 @@ func (c mqttClientConfigRead) TransformAndValidate(name string) (ret MqttClientC
 	return
 }
 
-func (c hassDiscoveryRead) TransformAndValidate(idx int, mqttClients []MqttClientConfig, devices []DeviceConfig) (ret HassDiscovery, err []error) {
-	ret = HassDiscovery{
-		devices: c.Devices,
+func (c mqttClientDeviceConfigRead) TransformAndValidate(
+	name string,
+	logPrefix string,
+	mqttDevices []MqttDeviceConfig,
+) (ret MqttClientDeviceConfig, err []error) {
+	ret = MqttClientDeviceConfig{
+		name:       name,
+		mqttTopics: c.MqttTopics,
 	}
 
-	if c.Categories != nil {
-		ret.categories = c.Categories
-	} else {
-		ret.categories = []string{}
+	if !existsByName(name, mqttDevices) {
+		err = append(err, fmt.Errorf("%s: MqttDevice='%s' is not defined", logPrefix, name))
 	}
 
-	if c.Registers != nil {
-		ret.registers = c.Registers
-	} else {
-		ret.registers = []string{}
+	if len(ret.mqttTopics) < 1 {
+		err = append(err, fmt.Errorf("%s%s->MqttTopics must not be empty", logPrefix, name))
 	}
 
-	if c.TopicPrefix == nil {
-		ret.topicPrefix = "homeassistant"
+	return
+}
+
+func (c mqttSectionConfigRead) TransformAndValidate(
+	logPrefix string,
+	devices []DeviceConfig,
+	readOnly bool,
+	defaultEnabled bool,
+	defaultTopicTemplate string,
+	defaultInterval time.Duration,
+	allowInterval bool,
+	allowZeroInterval bool,
+	allowRetain bool,
+	defaultRetain bool,
+	allowDevices bool,
+	allowFilter bool,
+) (ret MqttSectionConfig, err []error) {
+	if readOnly {
+		ret.enabled = false
+	} else if c.Enabled == nil {
+		ret.enabled = defaultEnabled
 	} else {
-		ret.topicPrefix = *c.TopicPrefix
+		ret.enabled = *c.Enabled
 	}
 
-	var e []error
-
-	ret.viaMqttClients, e = allOrCheckedMqttClients(
-		c.ViaMqttClients, mqttClients,
-		func(clientName string) error {
-			return fmt.Errorf("HassDisovery->%d->MqttClients: client='%s' is not defined", idx, clientName)
-		},
-	)
-	err = append(err, e...)
-
-	if len(ret.devices) < 1 {
-		err = append(err, fmt.Errorf("HassDiscovery->%d->Devices: must not be empty", idx))
+	if c.TopicTemplate == nil {
+		ret.topicTemplate = defaultTopicTemplate
+	} else if len(*c.TopicTemplate) < 1 {
+		err = append(err, fmt.Errorf("%sTopicTemplate must no be empty", logPrefix))
 	} else {
-		for _, deviceName := range ret.devices {
-			if !existsByName(deviceName, devices) {
-				err = append(err, fmt.Errorf("HassDiscovery->%d->Devices: device='%s' is not defined", idx, deviceName))
+		ret.topicTemplate = *c.TopicTemplate
+	}
+
+	if !allowInterval {
+		if len(c.Interval) > 0 {
+			err = append(err, fmt.Errorf("%sInterval not supported", logPrefix))
+		}
+	} else if len(c.Interval) < 1 {
+		ret.interval = defaultInterval
+	} else if interval, e := time.ParseDuration(c.Interval); e != nil {
+		err = append(err, fmt.Errorf("%sInterval='%s' parse error: %s", logPrefix, c.Interval, e))
+	} else if allowZeroInterval && interval < 0 {
+		err = append(err, fmt.Errorf("%sInterval='%s' must be >= 0", logPrefix, c.Interval))
+	} else if !allowZeroInterval && interval <= 0 {
+		err = append(err, fmt.Errorf("%sInterval='%s' must be > 0", logPrefix, c.Interval))
+	} else {
+		ret.interval = interval
+	}
+
+	if !allowRetain {
+		if c.Retain != nil {
+			err = append(err, fmt.Errorf("%sRetain not supported", logPrefix))
+		}
+	} else if c.Retain == nil {
+		ret.retain = defaultRetain
+	} else {
+		ret.retain = *c.Retain
+	}
+
+	if c.Qos == nil {
+		ret.qos = 1
+	} else if *c.Qos == 0 || *c.Qos == 1 || *c.Qos == 2 {
+		ret.qos = *c.Qos
+	} else {
+		err = append(err, fmt.Errorf("%sQos=%d but must be 0, 1 or 2", logPrefix, *c.Qos))
+	}
+
+	if !allowDevices {
+		if len(c.Devices) > 0 {
+			err = append(err, fmt.Errorf("%sDevices must not be set", logPrefix))
+		}
+	} else {
+		if len(c.Devices) == 0 {
+			// no devices given, default to all
+			c.Devices = make(map[string]mqttDeviceSectionConfigRead, len(devices))
+			for _, dev := range devices {
+				c.Devices[dev.Name()] = mqttDeviceSectionConfigRead{}
 			}
 		}
-	}
 
-	ret.categoriesMatcher, e = stringToRegexp(c.Categories)
-	err = append(err, e...)
-
-	ret.registersMatcher, e = stringToRegexp(c.Registers)
-	err = append(err, e...)
-
-	return
-}
-
-func stringToRegexp(inp []string) (ret []*regexp.Regexp, err []error) {
-	ret = make([]*regexp.Regexp, 0, len(inp))
-	for _, v := range inp {
-		if r, e := regexp.Compile(v); e != nil {
-			err = append(err, fmt.Errorf("invalid regexp: %s", e))
-		} else {
-			ret = append(ret, r)
-		}
-
+		var e []error
+		ret.devices, e = TransformAndValidateMapToList(
+			c.Devices,
+			func(inp mqttDeviceSectionConfigRead, name string) (MqttDeviceSectionConfig, []error) {
+				return inp.TransformAndValidate(
+					name,
+					devices,
+					fmt.Sprintf("%s%s->", logPrefix, name),
+					allowFilter,
+				)
+			},
+		)
+		err = append(err, e...)
 	}
 
 	return
 }
 
-func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []MqttClientConfig) (ret DeviceConfig, err []error) {
-	ret = DeviceConfig{
+func (c mqttDeviceSectionConfigRead) TransformAndValidate(
+	name string,
+	devices []DeviceConfig,
+	logPrefix string,
+	allowFilter bool,
+) (ret MqttDeviceSectionConfig, err []error) {
+	ret = MqttDeviceSectionConfig{
 		name: name,
 	}
 
-	if c.SkipFields != nil {
-		ret.skipFields = c.SkipFields
-	} else {
-		ret.skipFields = []string{}
+	if !existsByName(name, devices) {
+		err = append(err, fmt.Errorf("%sDevices: device='%s' is not defined or is an MqttDevice", logPrefix, name))
 	}
 
-	if c.SkipCategories != nil {
-		ret.skipCategories = c.SkipCategories
-	} else {
-		ret.skipCategories = []string{}
+	if !allowFilter && c.Filter != nil {
+		err = append(err, fmt.Errorf("%sFilter must not be set", logPrefix))
+	}
+
+	if c.Filter == nil {
+		c.Filter = &filterConfigRead{}
+	}
+	var e []error
+	ret.filter, e = c.Filter.TransformAndValidate()
+	err = append(err, e...)
+
+	return
+}
+
+func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, err []error) {
+	ret = DeviceConfig{
+		name: name,
 	}
 
 	if !nameMatcher.MatchString(ret.name) {
@@ -567,20 +718,7 @@ func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []MqttCl
 	}
 
 	var e []error
-	ret.telemetryViaMqttClients, e = allOrCheckedMqttClients(
-		c.TelemetryViaMqttClients, mqttClients,
-		func(clientName string) error {
-			return fmt.Errorf("Devices->%s->TelemetryViaMqttClients: client='%s' is not defined", name, clientName)
-		},
-	)
-	err = append(err, e...)
-
-	ret.realtimeViaMqttClients, e = allOrCheckedMqttClients(
-		c.RealtimeViaMqttClients, mqttClients,
-		func(clientName string) error {
-			return fmt.Errorf("Devices->%s->RealtimeViaMqttClients: client='%s' is not defined", name, clientName)
-		},
-	)
+	ret.filter, e = c.Filter.TransformAndValidate()
 	err = append(err, e...)
 
 	if len(c.RestartInterval) < 1 {
@@ -624,21 +762,21 @@ func (c deviceConfigRead) TransformAndValidate(name string, mqttClients []MqttCl
 	return
 }
 
-func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients []MqttClientConfig) (ret VictronDeviceConfig, err []error) {
+func (c victronDeviceConfigRead) TransformAndValidate(name string) (ret VictronDeviceConfig, err []error) {
 	ret = VictronDeviceConfig{
-		kind:   VictronDeviceKindFromString(c.Kind),
+		kind:   types.VictronDeviceKindFromString(c.Kind),
 		device: c.Device,
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.General.TransformAndValidate(name, mqttClients)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
 	err = append(err, e...)
 
-	if ret.kind == VictronUndefinedKind {
+	if ret.kind == types.VictronUndefinedKind {
 		err = append(err, fmt.Errorf("VictronDevices->%s->Kind='%s' is invalid", name, c.Kind))
 	}
 
-	if ret.kind == VictronVedirectKind && len(c.Device) < 1 {
+	if ret.kind == types.VictronVedirectKind && len(c.Device) < 1 {
 		err = append(err, fmt.Errorf("VictronDevices->%s->Device must not be empty", name))
 	}
 
@@ -646,18 +784,18 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string, mqttClients [
 }
 
 func (c modbusDeviceConfigRead) TransformAndValidate(
-	name string, mqttClients []MqttClientConfig, modbus []ModbusConfig,
+	name string, modbus []ModbusConfig,
 ) (ret ModbusDeviceConfig, err []error) {
 	ret = ModbusDeviceConfig{
-		kind: ModbusDeviceKindFromString(c.Kind),
+		kind: types.ModbusDeviceKindFromString(c.Kind),
 		bus:  c.Bus,
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.General.TransformAndValidate(name, mqttClients)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
 	err = append(err, e...)
 
-	if ret.kind == ModbusUndefinedKind {
+	if ret.kind == types.ModbusUndefinedKind {
 		err = append(err, fmt.Errorf("ModbusDevices->%s->Kind='%s' is invalid", name, c.Kind))
 	}
 
@@ -717,15 +855,15 @@ func (c relayConfigRead) TransformAndValidate() (ret RelayConfig, err []error) {
 	return
 }
 
-func (c httpDeviceConfigRead) TransformAndValidate(name string, mqttClients []MqttClientConfig) (ret HttpDeviceConfig, err []error) {
+func (c httpDeviceConfigRead) TransformAndValidate(name string) (ret HttpDeviceConfig, err []error) {
 	ret = HttpDeviceConfig{
-		kind:     HttpDeviceKindFromString(c.Kind),
+		kind:     types.HttpDeviceKindFromString(c.Kind),
 		username: c.Username,
 		password: c.Password,
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.General.TransformAndValidate(name, mqttClients)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
 	err = append(err, e...)
 
 	if len(c.Url) < 1 {
@@ -740,7 +878,7 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string, mqttClients []Mq
 		}
 	}
 
-	if ret.kind == HttpUndefinedKind {
+	if ret.kind == types.HttpUndefinedKind {
 		err = append(err, fmt.Errorf("HttpDevices->%s->Kind='%s' is invalid", name, c.Kind))
 	}
 
@@ -762,37 +900,17 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string, mqttClients []Mq
 	return
 }
 
-func (c mqttDeviceConfigRead) TransformAndValidate(name string, mqttClients []MqttClientConfig) (ret MqttDeviceConfig, err []error) {
+func (c mqttDeviceConfigRead) TransformAndValidate(name string) (ret MqttDeviceConfig, err []error) {
 	ret = MqttDeviceConfig{
-		mqttTopics: c.MqttTopics,
+		kind: types.MqttDeviceKindFromString(c.Kind),
+	}
+
+	if ret.kind == types.MqttDeviceUndefinedKind {
+		err = append(err, fmt.Errorf("MqttDevices->%s->Kind='%s' is invalid", name, c.Kind))
 	}
 
 	var e []error
-	ret.mqttClients, e = allOrCheckedMqttClients(
-		c.MqttClients, mqttClients,
-		func(clientName string) error {
-			return fmt.Errorf("MqttDevices->%s->mqttClients: client='%s' is not defined", name, clientName)
-		},
-	)
-	err = append(err, e...)
-
-	// Do not allow for {Telemetry, Realtime}ViaMqttClients to contain MqttClients
-	// This can possibly result in an infinite loop where we listen to messages published by our self
-	filteredMqttClients := make([]MqttClientConfig, 0, len(mqttClients))
-	for _, mc := range mqttClients {
-		found := false
-		for _, n := range ret.mqttClients {
-			if n == mc.Name() {
-				found = true
-				break
-			}
-		}
-		if !found {
-			filteredMqttClients = append(filteredMqttClients, mc)
-		}
-	}
-
-	ret.DeviceConfig, e = c.General.TransformAndValidate(name, filteredMqttClients)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
 	err = append(err, e...)
 
 	return
@@ -893,20 +1011,29 @@ func (c viewDeviceConfigRead) TransformAndValidate(
 		title: c.Title,
 	}
 
-	if c.SkipFields != nil {
-		ret.skipFields = c.SkipFields
-	} else {
-		ret.skipFields = []string{}
-	}
-
-	if c.SkipCategories != nil {
-		ret.skipCategories = c.SkipCategories
-	} else {
-		ret.skipCategories = []string{}
-	}
-
 	if !existsByName(c.Name, devices) {
 		err = append(err, fmt.Errorf("device='%s' is not defined", c.Name))
+	}
+
+	var e []error
+	ret.filter, e = c.Filter.TransformAndValidate()
+	err = append(err, e...)
+
+	return
+}
+
+func (c filterConfigRead) TransformAndValidate() (ret FilterConfig, err []error) {
+	ret = FilterConfig{
+		includeRegisters:  c.IncludeRegisters,
+		skipRegisters:     c.SkipRegisters,
+		includeCategories: c.IncludeCategories,
+		skipCategories:    c.SkipCategories,
+	}
+
+	if c.DefaultInclude == nil {
+		ret.defaultInclude = true
+	} else {
+		ret.defaultInclude = *c.DefaultInclude
 	}
 
 	return
@@ -941,20 +1068,6 @@ func TransformAndValidateMap[I any, O any](
 	return
 }
 
-func TransformAndValidateList[I any, O any](
-	inp []I,
-	transformer func(idx int, inp I) (ret O, err []error),
-) (ret []O, err []error) {
-	ret = make([]O, len(inp))
-	for i, cr := range inp {
-		var e []error
-		ret[i], e = transformer(i, cr)
-		err = append(err, e...)
-	}
-
-	return
-}
-
 func TransformAndValidateListUnique[I any, O Nameable](
 	inp []I,
 	transformer func(inp I) (ret O, err []error),
@@ -974,24 +1087,6 @@ func TransformAndValidateListUnique[I any, O Nameable](
 	return
 }
 
-func allOrCheckedMqttClients(inp []string, mqttClients []MqttClientConfig, errorFunc func(clientName string) error) (oup []string, err []error) {
-	if len(inp) < 1 {
-		return getNames(mqttClients), nil
-	}
-
-	oup = make([]string, 0, len(inp))
-
-	for _, clientName := range inp {
-		if !existsByName(clientName, mqttClients) {
-			err = append(err, errorFunc(clientName))
-		} else {
-			oup = append(oup, clientName)
-		}
-	}
-
-	return
-}
-
 func existsByName[N Nameable](needle string, haystack []N) bool {
 	for _, t := range haystack {
 		if needle == t.Name() {
@@ -1000,7 +1095,6 @@ func existsByName[N Nameable](needle string, haystack []N) bool {
 	}
 	return false
 }
-
 func getNames[N Nameable](list []N) (ret []string) {
 	ret = make([]string, len(list))
 	for i, t := range list {

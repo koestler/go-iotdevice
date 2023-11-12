@@ -1,8 +1,8 @@
 package config
 
 import (
+	"github.com/koestler/go-iotdevice/types"
 	"net/url"
-	"regexp"
 	"time"
 )
 
@@ -11,22 +11,22 @@ type Nameable interface {
 }
 
 type Config struct {
-	version         int
-	projectTitle    string
-	logConfig       bool
-	logWorkerStart  bool
-	logStorageDebug bool
-	httpServer      HttpServerConfig
-	authentication  AuthenticationConfig
-	mqttClients     []MqttClientConfig
-	modbus          []ModbusConfig
-	devices         []DeviceConfig
-	victronDevices  []VictronDeviceConfig
-	modbusDevices   []ModbusDeviceConfig
-	httpDevices     []HttpDeviceConfig
-	mqttDevices     []MqttDeviceConfig
-	views           []ViewConfig
-	hassDiscovery   []HassDiscovery
+	version                int
+	projectTitle           string
+	logConfig              bool
+	logWorkerStart         bool
+	logStateStorageDebug   bool
+	logCommandStorageDebug bool
+	httpServer             HttpServerConfig
+	authentication         AuthenticationConfig
+	mqttClients            []MqttClientConfig
+	modbus                 []ModbusConfig
+	devices                []DeviceConfig
+	victronDevices         []VictronDeviceConfig
+	modbusDevices          []ModbusDeviceConfig
+	httpDevices            []HttpDeviceConfig
+	mqttDevices            []MqttDeviceConfig
+	views                  []ViewConfig
 }
 
 type HttpServerConfig struct {
@@ -49,27 +49,52 @@ type AuthenticationConfig struct {
 }
 
 type MqttClientConfig struct {
-	name              string
-	broker            *url.URL
-	protocolVersion   int
-	user              string
-	password          string
-	clientId          string
-	qos               byte
+	name            string
+	broker          *url.URL
+	protocolVersion int
+
+	user     string
+	password string
+	clientId string
+
 	keepAlive         time.Duration
 	connectRetryDelay time.Duration
 	connectTimeout    time.Duration
-	availabilityTopic string
-	telemetryInterval time.Duration
-	telemetryTopic    string
-	telemetryRetain   bool
-	realtimeEnable    bool
-	realtimeTopic     string
-	realtimeRetain    bool
 	topicPrefix       string
+	readOnly          bool
 	maxBacklogSize    int
-	logDebug          bool
-	logMessages       bool
+
+	mqttDevices []MqttClientDeviceConfig
+
+	availabilityClient     MqttSectionConfig
+	availabilityDevice     MqttSectionConfig
+	structure              MqttSectionConfig
+	telemetry              MqttSectionConfig
+	realtime               MqttSectionConfig
+	homeassistantDiscovery MqttSectionConfig
+	command                MqttSectionConfig
+
+	logDebug    bool
+	logMessages bool
+}
+
+type MqttClientDeviceConfig struct {
+	name       string
+	mqttTopics []string
+}
+
+type MqttSectionConfig struct {
+	enabled       bool
+	topicTemplate string
+	interval      time.Duration
+	retain        bool
+	qos           byte
+	devices       []MqttDeviceSectionConfig
+}
+
+type MqttDeviceSectionConfig struct {
+	name   string
+	filter FilterConfig
 }
 
 type ModbusConfig struct {
@@ -82,10 +107,7 @@ type ModbusConfig struct {
 
 type DeviceConfig struct {
 	name                      string
-	skipFields                []string
-	skipCategories            []string
-	telemetryViaMqttClients   []string
-	realtimeViaMqttClients    []string
+	filter                    FilterConfig
 	restartInterval           time.Duration
 	restartIntervalMaxBackoff time.Duration
 	logDebug                  bool
@@ -95,13 +117,13 @@ type DeviceConfig struct {
 type VictronDeviceConfig struct {
 	DeviceConfig
 	device string
-	kind   VictronDeviceKind
+	kind   types.VictronDeviceKind
 }
 
 type ModbusDeviceConfig struct {
 	DeviceConfig
 	bus          string
-	kind         ModbusDeviceKind
+	kind         types.ModbusDeviceKind
 	address      byte
 	relays       map[string]RelayConfig
 	pollInterval time.Duration
@@ -116,7 +138,7 @@ type RelayConfig struct {
 type HttpDeviceConfig struct {
 	DeviceConfig
 	url          *url.URL
-	kind         HttpDeviceKind
+	kind         types.HttpDeviceKind
 	username     string
 	password     string
 	pollInterval time.Duration
@@ -124,8 +146,7 @@ type HttpDeviceConfig struct {
 
 type MqttDeviceConfig struct {
 	DeviceConfig
-	mqttTopics  []string
-	mqttClients []string
+	kind types.MqttDeviceKind
 }
 
 type ViewConfig struct {
@@ -138,42 +159,15 @@ type ViewConfig struct {
 }
 
 type ViewDeviceConfig struct {
-	name           string
-	title          string
-	skipFields     []string
-	skipCategories []string
+	name   string
+	title  string
+	filter FilterConfig
 }
 
-type HassDiscovery struct {
-	topicPrefix       string
-	viaMqttClients    []string
-	devices           []string
-	categories        []string
-	categoriesMatcher []*regexp.Regexp
-	registers         []string
-	registersMatcher  []*regexp.Regexp
+type FilterConfig struct {
+	includeRegisters  []string
+	skipRegisters     []string
+	includeCategories []string
+	skipCategories    []string
+	defaultInclude    bool
 }
-
-type VictronDeviceKind int
-
-const (
-	VictronUndefinedKind VictronDeviceKind = iota
-	VictronRandomBmvKind
-	VictronRandomSolarKind
-	VictronVedirectKind
-)
-
-type ModbusDeviceKind int
-
-const (
-	ModbusUndefinedKind ModbusDeviceKind = iota
-	ModbusWaveshareRtuRelay8Kind
-)
-
-type HttpDeviceKind int
-
-const (
-	HttpUndefinedKind HttpDeviceKind = iota
-	HttpTeracomKind
-	HttpShellyEm3Kind
-)

@@ -5,10 +5,14 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/koestler/go-iotdevice/dataflow"
+	mock_dataflow "github.com/koestler/go-iotdevice/dataflow/mock"
+	"go.uber.org/mock/gomock"
 	"testing"
 )
 
 func TestValueStorageGetSlice(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
 	storage := dataflow.NewValueStorage()
 
 	fillSetA(storage)
@@ -50,7 +54,7 @@ func TestValueStorageGetSlice(t *testing.T) {
 			"device-0:register-a=1.000000",
 			"device-0:register-b=10.000000",
 		}
-		got := getAsStrings(storage.GetStateFiltered(dataflow.DeviceFilter("device-0")))
+		got := getAsStrings(storage.GetStateFiltered(dataflow.DeviceNameValueFilter("device-0")))
 		if !equalIgnoreOrder(expect, got) {
 			t.Errorf("expect %#v but got %#v", expect, got)
 		}
@@ -60,10 +64,15 @@ func TestValueStorageGetSlice(t *testing.T) {
 		expect := []string{
 			"device-0:register-a=1.000000",
 		}
-		got := getAsStrings(storage.GetStateFiltered(dataflow.RegisterFilter(
-			[]string{"register-b"},
-			[]string{"set-b", "set-c"},
-		)))
+
+		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
+		fc.EXPECT().SkipRegisters().Return([]string{"register-b"}).AnyTimes()
+		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
+		fc.EXPECT().SkipCategories().Return([]string{"set-b", "set-c"}).AnyTimes()
+		fc.EXPECT().IncludeCategories().Return([]string{}).AnyTimes()
+		fc.EXPECT().DefaultInclude().Return(true).AnyTimes()
+
+		got := getAsStrings(storage.GetStateFiltered(dataflow.RegisterValueFilter(fc)))
 
 		if !equalIgnoreOrder(expect, got) {
 			t.Errorf("expect %#v but got %#v", expect, got)
@@ -83,7 +92,7 @@ func BenchmarkValueStorageFill(b *testing.B) {
 	}
 }
 
-func BenchmarkValueStorageGetSlice(b *testing.B) {
+func BenchmarkValueStorageGetState(b *testing.B) {
 	storage := dataflow.NewValueStorage()
 	fillSetA(storage)
 	fillSetB(storage)
@@ -92,6 +101,22 @@ func BenchmarkValueStorageGetSlice(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		storage.GetState()
+	}
+}
+
+func BenchmarkValueStorageGetStateFiltered(b *testing.B) {
+	storage := dataflow.NewValueStorage()
+	fillSetA(storage)
+	fillSetB(storage)
+	fillSetC(storage)
+	storage.Wait()
+
+	deviceFilter := func(value dataflow.Value) bool {
+		return value.DeviceName() == "device-0"
+	}
+
+	for i := 0; i < b.N; i++ {
+		storage.GetStateFiltered(deviceFilter)
 	}
 }
 

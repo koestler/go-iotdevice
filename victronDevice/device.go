@@ -3,22 +3,21 @@ package victronDevice
 import (
 	"context"
 	"fmt"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
+	"github.com/koestler/go-iotdevice/types"
 )
 
 type Config interface {
 	Device() string
-	Kind() config.VictronDeviceKind
+	Kind() types.VictronDeviceKind
 }
 
 type DeviceStruct struct {
 	device.State
 	victronConfig Config
 
-	registers []VictronRegister
-	model     string
+	model string
 }
 
 func NewDevice(
@@ -37,33 +36,15 @@ func NewDevice(
 
 func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
 	switch c.victronConfig.Kind() {
-	case config.VictronVedirectKind:
+	case types.VictronVedirectKind:
 		return runVedirect(ctx, c, c.StateStorage())
-	case config.VictronRandomBmvKind:
+	case types.VictronRandomBmvKind:
 		return runRandom(ctx, c, c.StateStorage(), RegisterListBmv712)
-	case config.VictronRandomSolarKind:
+	case types.VictronRandomSolarKind:
 		return runRandom(ctx, c, c.StateStorage(), RegisterListSolar)
 	default:
 		return fmt.Errorf("unknown device kind: %s", c.victronConfig.Kind().String()), true
 	}
-}
-
-func (c *DeviceStruct) Registers() []dataflow.Register {
-	ret := make([]dataflow.Register, len(c.registers)+1)
-	for i, r := range c.registers {
-		ret[i] = r.(dataflow.Register)
-	}
-	ret[len(c.registers)] = device.GetAvailabilityRegister()
-	return ret
-}
-
-func (c *DeviceStruct) GetRegister(registerName string) dataflow.Register {
-	for _, r := range c.registers {
-		if r.Name() == registerName {
-			return r
-		}
-	}
-	return nil
 }
 
 func (c *DeviceStruct) Model() string {

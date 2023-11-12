@@ -1,4 +1,4 @@
-package hassDiscovery
+package mqttForwarders
 
 import (
 	"regexp"

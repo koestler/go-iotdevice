@@ -35,13 +35,11 @@ func (c *ClientStruct) Name() string {
 	return c.cfg.Name()
 }
 
-func (c *ClientStruct) Config() Config {
-	return c.cfg
+func (c *ClientStruct) GetCtx() context.Context {
+	return c.ctx
 }
 
 func (c *ClientStruct) AddRoute(subscribeTopic string, messageHandler MessageHandler) {
-	log.Printf("mqttClient[%s]: add route for topic='%s'", c.cfg.Name(), subscribeTopic)
-
 	s := subscription{subscribeTopic: subscribeTopic}
 
 	if c.cfg.LogMessages() {
@@ -73,4 +71,20 @@ func (c *ClientStruct) AddRoute(subscribeTopic string, messageHandler MessageHan
 			payload: p.Payload,
 		})
 	})
+
+	// send subscribe
+	_, _ = c.cm.Subscribe(c.ctx, &paho.Subscribe{
+		Subscriptions: func() (ret []paho.SubscribeOptions) {
+			return []paho.SubscribeOptions{
+				s.pahoOptions(),
+			}
+		}(),
+	})
+}
+
+func (s subscription) pahoOptions() paho.SubscribeOptions {
+	return paho.SubscribeOptions{
+		Topic: s.subscribeTopic,
+		QoS:   byte(1),
+	}
 }

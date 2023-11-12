@@ -18,6 +18,7 @@ var buildTime string
 type CmdOptions struct {
 	Version    bool           `long:"version" description:"Print the build version and timestamp"`
 	Config     flags.Filename `short:"c" long:"config" description:"Config File in yaml format" default:"./config.yaml"`
+	DryRun     bool           `short:"d" long:"dry-run" description:"Read and check the config and exit."`
 	CpuProfile flags.Filename `long:"cpuprofile" description:"write cpu profile to <file>"`
 	MemProfile flags.Filename `long:"memprofile" description:"write memory profile to <file>"`
 }
@@ -72,6 +73,10 @@ func main() {
 	// read cmd parameters and configuration file; on error: os.Exit
 	cmdOptions, cmdName := getCmdOptions()
 	cfg := getConfig(cmdOptions, cmdName)
+	if cmdOptions.DryRun {
+		os.Exit(ExitSuccess)
+		return
+	}
 
 	// call defer statements before os.Exit
 	exitCode := func() (exitCode int) {
@@ -86,34 +91,33 @@ func main() {
 
 		// start storage
 		stateStorageLogPrefix := ""
-		commandStorageLogPrefix := ""
-		if cfg.LogStorageDebug() {
+		if cfg.LogStateStorageDebug() {
 			stateStorageLogPrefix = "stateStorage"
-			commandStorageLogPrefix = "commandStorage"
 		}
-
 		stateStorage := runStorage(stateStorageLogPrefix)
 		defer stateStorage.Shutdown()
+
+		commandStorageLogPrefix := ""
+		if cfg.LogCommandStorageDebug() {
+			commandStorageLogPrefix = "commandStorage"
+		}
 		commandStorage := runStorage(commandStorageLogPrefix)
 		defer commandStorage.Shutdown()
-
-		// start mqtt clients
-		mqttClientPool := runMqttClient(cfg)
-		defer mqttClientPool.Shutdown()
 
 		// start modbus device handlers
 		modbusPool := runModbus(cfg)
 		defer modbusPool.Shutdown()
 
-		// start devices
-		devicePool := runDevices(cfg, mqttClientPool, modbusPool, stateStorage, commandStorage)
+		// start devices non mqtt devices
+		devicePool := runNonMqttDevices(cfg, modbusPool, stateStorage, commandStorage)
 		defer devicePool.Shutdown()
 
-		// start hass discovery
-		hassDiscovery := runHassDisovery(cfg, devicePool, mqttClientPool)
-		if hassDiscovery != nil {
-			defer hassDiscovery.Shutdown()
-		}
+		// start mqtt clients
+		mqttClientPool := runMqttClient(cfg, devicePool, stateStorage, commandStorage)
+		defer mqttClientPool.Shutdown()
+
+		// start mqtt clients
+		runMqttDevices(cfg, devicePool, mqttClientPool, stateStorage, commandStorage)
 
 		// start http server
 		httpServer := runHttpServer(cfg, devicePool, stateStorage, commandStorage)

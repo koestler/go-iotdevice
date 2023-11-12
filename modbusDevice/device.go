@@ -3,15 +3,15 @@ package modbusDevice
 import (
 	"context"
 	"fmt"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
+	"github.com/koestler/go-iotdevice/types"
 	"time"
 )
 
 type Config interface {
 	Bus() string
-	Kind() config.ModbusDeviceKind
+	Kind() types.ModbusDeviceKind
 	Address() byte
 	RelayDescription(name string) string
 	RelayOpenLabel(name string) string
@@ -30,9 +30,7 @@ type DeviceStruct struct {
 	modbusConfig Config
 
 	commandStorage *dataflow.ValueStorage
-
-	modbus    Modbus
-	registers ModbusRegisters
+	modbus         Modbus
 }
 
 func NewDevice(
@@ -55,29 +53,11 @@ func NewDevice(
 
 func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
 	switch c.modbusConfig.Kind() {
-	case config.ModbusWaveshareRtuRelay8Kind:
+	case types.ModbusWaveshareRtuRelay8Kind:
 		return runWaveshareRtuRelay8(ctx, c)
 	default:
 		return fmt.Errorf("unknown device kind: %s", c.modbusConfig.Kind().String()), true
 	}
-}
-
-func (c *DeviceStruct) Registers() []dataflow.Register {
-	ret := make([]dataflow.Register, len(c.registers)+1)
-	for i, r := range c.registers {
-		ret[i] = r.(dataflow.Register)
-	}
-	ret[len(c.registers)] = device.GetAvailabilityRegister()
-	return ret
-}
-
-func (c *DeviceStruct) GetRegister(registerName string) dataflow.Register {
-	for _, r := range c.registers {
-		if r.Name() == registerName {
-			return r
-		}
-	}
-	return nil
 }
 
 func (c *DeviceStruct) Model() string {

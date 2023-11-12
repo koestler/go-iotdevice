@@ -1,8 +1,11 @@
-package dataflow
+package dataflow_test
 
 import (
 	"context"
 	"fmt"
+	"github.com/koestler/go-iotdevice/dataflow"
+	mock_dataflow "github.com/koestler/go-iotdevice/dataflow/mock"
+	"go.uber.org/mock/gomock"
 	"reflect"
 	"sort"
 	"sync"
@@ -14,7 +17,7 @@ func TestRegisterDb(t *testing.T) {
 	const numbGet = 18
 	const numbSubscriptions = 32
 
-	rdb := NewRegisterDb()
+	rdb := dataflow.NewRegisterDb()
 
 	getCtx, getCancel := context.WithCancel(context.Background())
 
@@ -30,7 +33,7 @@ func TestRegisterDb(t *testing.T) {
 	sort.Strings(expect)
 
 	// populate storage
-	rdb.Add(mockRegister{name: "A0"}, mockRegister{name: "A1"}, mockRegister{name: "A2"})
+	rdb.Add(mockRegister(t, "A0"), mockRegister(t, "A1"), mockRegister(t, "A2"))
 	wgPopulate := sync.WaitGroup{}
 	wgPopulate.Add(numbPopulate)
 	for i := 0; i < numbPopulate; i++ {
@@ -38,9 +41,9 @@ func TestRegisterDb(t *testing.T) {
 		go func() {
 			defer wgPopulate.Done()
 			rdb.Add(
-				mockRegister{name: fmt.Sprintf("B%d", i)},
-				mockRegister{name: fmt.Sprintf("C%d", i)},
-				mockRegister{name: fmt.Sprintf("D%d", i)},
+				mockRegister(t, fmt.Sprintf("B%d", i)),
+				mockRegister(t, fmt.Sprintf("C%d", i)),
+				mockRegister(t, fmt.Sprintf("D%d", i)),
 			)
 		}()
 	}
@@ -66,11 +69,11 @@ func TestRegisterDb(t *testing.T) {
 	wgSubscribe.Add(numbSubscriptions)
 	for i := 0; i < numbSubscriptions; i++ {
 		i := i
-		s := rdb.Subscribe(subscribeCtx)
+		s := rdb.Subscribe(subscribeCtx, dataflow.AllRegisterFilter)
 		go func() {
 			defer wgSubscribe.Done()
 			got := make([]string, 0)
-			for o := range s.outputChannel {
+			for o := range s {
 				got = append(got, o.Name())
 			}
 			sort.Strings(got)
@@ -90,21 +93,14 @@ func TestRegisterDb(t *testing.T) {
 	})
 
 	t.Run("GetByName", func(t *testing.T) {
-		{
-			_, okGot := rdb.GetByName("non-existent")
-			if okGot {
-				t.Errorf("expect GetByName to return no result")
-			}
+		if _, ok := rdb.GetByName("non-existent"); ok {
+			t.Errorf("expect GetByName to return no result")
 		}
-		{
-			regGot, okGot := rdb.GetByName("A0")
-			if !okGot {
-				t.Errorf("expect GetByName to return ok")
-			}
-			if expect, got := "A0", regGot.Name(); expect != got {
-				t.Errorf("expect Register Name to be %s but got %s", expect, got)
-			}
 
+		if got, ok := rdb.GetByName("A0"); !ok {
+			t.Errorf("expect GetByName to return ok")
+		} else if expect, got := "A0", got.Name(); expect != got {
+			t.Errorf("expect Register Name to be %s but got %s", expect, got)
 		}
 	})
 
@@ -113,7 +109,7 @@ func TestRegisterDb(t *testing.T) {
 	wgSubscribe.Wait()
 }
 
-func nameSlice(list []RegisterStruct) []string {
+func nameSlice(list []dataflow.RegisterStruct) []string {
 	ret := make([]string, len(list))
 	for i, r := range list {
 		ret[i] = r.Name()
@@ -122,38 +118,17 @@ func nameSlice(list []RegisterStruct) []string {
 	return ret
 }
 
-type mockRegister struct {
-	name string
-}
+func mockRegister(t *testing.T, name string) dataflow.Register {
+	ctrl := gomock.NewController(t)
+	m := mock_dataflow.NewMockRegister(ctrl)
+	m.EXPECT().Category().Return("")
+	m.EXPECT().Name().Return(name)
+	m.EXPECT().Description().Return("")
+	m.EXPECT().RegisterType().Return(dataflow.NumberRegister)
+	m.EXPECT().Enum().Return(nil)
+	m.EXPECT().Unit().Return("")
+	m.EXPECT().Sort().Return(0)
+	m.EXPECT().Commandable().Return(false)
 
-func (r mockRegister) Category() string {
-	return ""
-}
-
-func (r mockRegister) Name() string {
-	return r.name
-}
-
-func (r mockRegister) Description() string {
-	return ""
-}
-
-func (r mockRegister) RegisterType() RegisterType {
-	return NumberRegister
-}
-
-func (r mockRegister) Enum() map[int]string {
-	return nil
-}
-
-func (r mockRegister) Unit() string {
-	return ""
-}
-
-func (r mockRegister) Sort() int {
-	return 0
-}
-
-func (r mockRegister) Controllable() bool {
-	return false
+	return m
 }

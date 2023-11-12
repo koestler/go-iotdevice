@@ -3,20 +3,19 @@ package httpDevice
 import (
 	"context"
 	"fmt"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
+	"github.com/koestler/go-iotdevice/types"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
-	"sync"
 	"time"
 )
 
 type Config interface {
 	Url() *url.URL
-	Kind() config.HttpDeviceKind
+	Kind() types.HttpDeviceKind
 	Username() string
 	Password() string
 	PollInterval() time.Duration
@@ -24,7 +23,8 @@ type Config interface {
 
 type DeviceStruct struct {
 	device.State
-	httpConfig Config
+	httpConfig     Config
+	registerFilter dataflow.RegisterFilterFunc
 
 	commandStorage *dataflow.ValueStorage
 
@@ -32,9 +32,7 @@ type DeviceStruct struct {
 	pollRequest *http.Request
 	impl        Implementation
 
-	registers      map[string]dataflow.Register
-	sort           map[string]int
-	registersMutex sync.RWMutex
+	sort map[string]int
 }
 
 func NewDevice(
@@ -49,6 +47,7 @@ func NewDevice(
 			stateStorage,
 		),
 		httpConfig:     teracomConfig,
+		registerFilter: dataflow.RegisterFilter(deviceConfig.Filter()),
 		commandStorage: commandStorage,
 
 		httpClient: &http.Client{
@@ -57,8 +56,7 @@ func NewDevice(
 			Timeout: time.Second,
 		},
 
-		registers: make(map[string]dataflow.Register),
-		sort:      make(map[string]int),
+		sort: make(map[string]int),
 	}
 
 	// setup impl
@@ -97,19 +95,19 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 		ds.SetAvailable(false)
 	}()
 
-	// setup subscription to listen for updates of controllable registers
-	commandSubscription := ds.commandStorage.Subscribe(ctx, dataflow.DeviceNonNullFilter(ds.Config().Name()))
+	// setup subscription to listen for updates of commandable registers
+	_, commandSubscription := ds.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullValueFilter(ds.Config().Name()))
 
 	execCommand := func(value dataflow.Value) {
 		if ds.Config().LogDebug() {
 			log.Printf(
-				"httpDevice[%s]: controllable command: %s",
+				"httpDevice[%s]: command: %s",
 				ds.Name(), value.String(),
 			)
 		}
-		if request, onSuccess, err := ds.impl.ControlValueRequest(value); err != nil {
+		if request, onSuccess, err := ds.impl.CommandValueRequest(value); err != nil {
 			log.Printf(
-				"httpDevice[%s]: control request genration failed: %s",
+				"httpDevice[%s]: command request genration failed: %s",
 				ds.Name(), err,
 			)
 		} else {
@@ -117,7 +115,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 			request.SetBasicAuth(ds.httpConfig.Username(), ds.httpConfig.Password())
 			if resp, err := ds.httpClient.Do(request); err != nil {
 				log.Printf(
-					"httpDevice[%s]: control request failed: %s",
+					"httpDevice[%s]: command request failed: %s",
 					ds.Name(), err,
 				)
 			} else {
@@ -127,19 +125,19 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 
 				if resp.StatusCode != http.StatusOK {
 					log.Printf(
-						"httpDevice[%s]: control request failed with code: %d",
+						"httpDevice[%s]: command request failed with code: %d",
 						ds.Config().Name(), resp.StatusCode,
 					)
 				} else {
 					if ds.Config().LogDebug() {
-						log.Printf("httpDevice[%s]: control request successful", ds.Config().Name())
+						log.Printf("httpDevice[%s]: command request successful", ds.Config().Name())
 					}
 					onSuccess()
 				}
 			}
 		}
 
-		// reset the command; this allows the same command (eg. toggle) to be sent again
+		// reset the command; this allows the same command (eG. toggle) to be sent again
 		ds.commandStorage.Fill(dataflow.NewNullRegisterValue(ds.Config().Name(), value.Register()))
 	}
 
@@ -154,7 +152,9 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 				return err, false
 			}
 		case value := <-commandSubscription.Drain():
-			execCommand(value)
+			if value != nil {
+				execCommand(value)
+			}
 		}
 	}
 }
@@ -200,7 +200,6 @@ func (ds *DeviceStruct) poll() error {
 		return err
 	}
 
-	ds.SetLastUpdatedNow()
 	return nil
 }
 
@@ -208,24 +207,16 @@ func (ds *DeviceStruct) addIgnoreRegister(
 	category, registerName, description, unit string,
 	registerType dataflow.RegisterType,
 	enum map[int]string,
-	controllable bool,
+	commandable bool,
 ) dataflow.Register {
 	// check if this register exists already and the properties are still the same
-	ds.registersMutex.RLock()
-	if r, ok := ds.registers[registerName]; ok {
+	if r, ok := ds.RegisterDb().GetByName(registerName); ok {
 		if r.Category() == category &&
 			r.Description() == description &&
 			r.RegisterType() == registerType &&
 			r.Unit() == unit {
-			ds.registersMutex.RUnlock()
 			return r
 		}
-	}
-	ds.registersMutex.RUnlock()
-
-	// check if register is on ignore list
-	if device.IsExcluded(registerName, category, ds.Config()) {
-		return nil
 	}
 
 	// create new register
@@ -238,43 +229,20 @@ func (ds *DeviceStruct) addIgnoreRegister(
 		enum,
 		unit,
 		sort,
-		controllable,
+		commandable,
 	)
 
-	ds.addRegister(r)
+	// check if register is on ignore list
+	if !ds.registerFilter(r) {
+		return nil
+	}
+
+	ds.Config().Filter()
+
+	// add the register into the list
+	ds.RegisterDb().Add(r)
 
 	return r
-}
-
-func (ds *DeviceStruct) addRegister(register dataflow.Register) {
-	ds.registersMutex.Lock()
-	defer ds.registersMutex.Unlock()
-
-	ds.registers[register.Name()] = register
-}
-
-func (ds *DeviceStruct) Registers() []dataflow.Register {
-	ds.registersMutex.RLock()
-	defer ds.registersMutex.RUnlock()
-
-	ret := make([]dataflow.Register, len(ds.registers)+1)
-	i := 0
-	for _, r := range ds.registers {
-		ret[i] = r
-		i += 1
-	}
-	ret[len(ds.registers)] = device.GetAvailabilityRegister()
-	return ret
-}
-
-func (ds *DeviceStruct) GetRegister(registerName string) dataflow.Register {
-	ds.registersMutex.RLock()
-	defer ds.registersMutex.RUnlock()
-
-	if r, ok := ds.registers[registerName]; ok {
-		return r
-	}
-	return nil
 }
 
 func (ds *DeviceStruct) Model() string {

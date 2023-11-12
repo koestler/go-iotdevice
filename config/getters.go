@@ -1,8 +1,9 @@
 package config
 
 import (
+	"github.com/koestler/go-iotdevice/types"
 	"net/url"
-	"regexp"
+	"strings"
 	"time"
 )
 
@@ -24,8 +25,12 @@ func (c Config) LogWorkerStart() bool {
 	return c.logWorkerStart
 }
 
-func (c Config) LogStorageDebug() bool {
-	return c.logStorageDebug
+func (c Config) LogStateStorageDebug() bool {
+	return c.logStateStorageDebug
+}
+
+func (c Config) LogCommandStorageDebug() bool {
+	return c.logCommandStorageDebug
 }
 
 func (c Config) HttpServer() HttpServerConfig {
@@ -66,18 +71,6 @@ func (c Config) MqttDevices() []MqttDeviceConfig {
 
 func (c Config) Views() []ViewConfig {
 	return c.views
-}
-
-func (c Config) HassDiscovery() []HassDiscovery {
-	return c.hassDiscovery
-}
-
-func (c Config) GetViewNames() (ret []string) {
-	ret = []string{}
-	for _, v := range c.Views() {
-		ret = append(ret, v.Name())
-	}
-	return
 }
 
 // Getters for HttpServerConfig struct
@@ -138,6 +131,10 @@ func (c AuthenticationConfig) HtaccessFile() string {
 
 // Getters for MqttClientConfig struct
 
+func (c MqttClientConfig) getTopicTemplateOldNewPairs(oldnew ...string) []string {
+	return append(oldnew, "%Prefix%", c.TopicPrefix(), "%ClientId%", c.ClientId())
+}
+
 func (c MqttClientConfig) Name() string {
 	return c.name
 }
@@ -163,10 +160,6 @@ func (c MqttClientConfig) ClientId() string {
 	return c.clientId
 }
 
-func (c MqttClientConfig) Qos() byte {
-	return c.qos
-}
-
 func (c MqttClientConfig) KeepAlive() time.Duration {
 	return c.keepAlive
 }
@@ -179,40 +172,93 @@ func (c MqttClientConfig) ConnectTimeout() time.Duration {
 	return c.connectTimeout
 }
 
-func (c MqttClientConfig) AvailabilityTopic() string {
-	return c.availabilityTopic
-}
-
-func (c MqttClientConfig) TelemetryInterval() time.Duration {
-	return c.telemetryInterval
-}
-
-func (c MqttClientConfig) TelemetryTopic() string {
-	return c.telemetryTopic
-}
-
-func (c MqttClientConfig) TelemetryRetain() bool {
-	return c.telemetryRetain
-}
-
-func (c MqttClientConfig) RealtimeEnable() bool {
-	return c.realtimeEnable
-}
-
-func (c MqttClientConfig) RealtimeTopic() string {
-	return c.realtimeTopic
-}
-
-func (c MqttClientConfig) RealtimeRetain() bool {
-	return c.realtimeRetain
-}
-
 func (c MqttClientConfig) TopicPrefix() string {
 	return c.topicPrefix
 }
 
+func (c MqttClientConfig) ReadOnly() bool {
+	return c.readOnly
+}
+
 func (c MqttClientConfig) MaxBacklogSize() int {
 	return c.maxBacklogSize
+}
+
+func (c MqttClientConfig) MqttDevices() []MqttClientDeviceConfig {
+	return c.mqttDevices
+}
+
+func (c MqttClientConfig) AvailabilityClient() MqttSectionConfig {
+	return c.availabilityClient
+}
+
+func (c MqttClientConfig) AvailabilityClientTopic() string {
+	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs()...)
+	return r.Replace(c.availabilityClient.topicTemplate)
+}
+
+func (c MqttClientConfig) AvailabilityDevice() MqttSectionConfig {
+	return c.availabilityDevice
+}
+
+func (c MqttClientConfig) AvailabilityDeviceTopic(deviceName string) string {
+	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs("%DeviceName%", deviceName)...)
+	return r.Replace(c.availabilityDevice.topicTemplate)
+}
+
+func (c MqttClientConfig) Structure() MqttSectionConfig {
+	return c.structure
+}
+
+func (c MqttClientConfig) StructureTopic(deviceName string) string {
+	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs("%DeviceName%", deviceName)...)
+	return r.Replace(c.structure.topicTemplate)
+}
+
+func (c MqttClientConfig) Telemetry() MqttSectionConfig {
+	return c.telemetry
+}
+
+func (c MqttClientConfig) TelemetryTopic(deviceName string) string {
+	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs("%DeviceName%", deviceName)...)
+	return r.Replace(c.telemetry.topicTemplate)
+}
+
+func (c MqttClientConfig) Realtime() MqttSectionConfig {
+	return c.realtime
+}
+
+func (c MqttClientConfig) RealtimeTopic(deviceName, registerName string) string {
+	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs(
+		"%DeviceName%", deviceName,
+		"%RegisterName%", registerName,
+	)...)
+	return r.Replace(c.realtime.topicTemplate)
+}
+
+func (c MqttClientConfig) HomeassistantDiscovery() MqttSectionConfig {
+	return c.homeassistantDiscovery
+}
+
+func (c MqttClientConfig) HomeassistantDiscoveryTopic(component, nodeId, objectId string) string {
+	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs(
+		"%Component%", component,
+		"%NodeId%", nodeId,
+		"%ObjectId%", objectId,
+	)...)
+	return r.Replace(c.homeassistantDiscovery.topicTemplate)
+}
+
+func (c MqttClientConfig) Command() MqttSectionConfig {
+	return c.command
+}
+
+func (c MqttClientConfig) CommandTopic(deviceName, registerName string) string {
+	r := strings.NewReplacer(c.getTopicTemplateOldNewPairs(
+		"%DeviceName%", deviceName,
+		"%RegisterName%", registerName,
+	)...)
+	return r.Replace(c.command.topicTemplate)
 }
 
 func (c MqttClientConfig) LogDebug() bool {
@@ -221,6 +267,52 @@ func (c MqttClientConfig) LogDebug() bool {
 
 func (c MqttClientConfig) LogMessages() bool {
 	return c.logMessages
+}
+
+// Getters for MqttClientDeviceConfig
+
+func (c MqttClientDeviceConfig) Name() string {
+	return c.name
+}
+
+func (c MqttClientDeviceConfig) MqttTopics() []string {
+	return c.mqttTopics
+}
+
+// Getters for MqttSection struct
+
+func (c MqttSectionConfig) Enabled() bool {
+	return c.enabled
+}
+
+func (c MqttSectionConfig) TopicTemplate() string {
+	return c.topicTemplate
+}
+
+func (c MqttSectionConfig) Interval() time.Duration {
+	return c.interval
+}
+
+func (c MqttSectionConfig) Retain() bool {
+	return c.retain
+}
+
+func (c MqttSectionConfig) Qos() byte {
+	return c.qos
+}
+
+func (c MqttSectionConfig) Devices() []MqttDeviceSectionConfig {
+	return c.devices
+}
+
+// Getters for MqttDeviceSectionConfig struct
+
+func (c MqttDeviceSectionConfig) Name() string {
+	return c.name
+}
+
+func (c MqttDeviceSectionConfig) Filter() FilterConfig {
+	return c.filter
 }
 
 // Getters for ModbusConfig struct
@@ -251,20 +343,8 @@ func (c DeviceConfig) Name() string {
 	return c.name
 }
 
-func (c DeviceConfig) SkipFields() []string {
-	return c.skipFields
-}
-
-func (c DeviceConfig) SkipCategories() []string {
-	return c.skipCategories
-}
-
-func (c DeviceConfig) TelemetryViaMqttClients() []string {
-	return c.telemetryViaMqttClients
-}
-
-func (c DeviceConfig) RealtimeViaMqttClients() []string {
-	return c.realtimeViaMqttClients
+func (c DeviceConfig) Filter() FilterConfig {
+	return c.filter
 }
 
 func (c DeviceConfig) RestartInterval() time.Duration {
@@ -289,7 +369,7 @@ func (c VictronDeviceConfig) Device() string {
 	return c.device
 }
 
-func (c VictronDeviceConfig) Kind() VictronDeviceKind {
+func (c VictronDeviceConfig) Kind() types.VictronDeviceKind {
 	return c.kind
 }
 
@@ -299,7 +379,7 @@ func (c ModbusDeviceConfig) Bus() string {
 	return c.bus
 }
 
-func (c ModbusDeviceConfig) Kind() ModbusDeviceKind {
+func (c ModbusDeviceConfig) Kind() types.ModbusDeviceKind {
 	return c.kind
 }
 
@@ -338,7 +418,7 @@ func (c HttpDeviceConfig) Url() *url.URL {
 	return c.url
 }
 
-func (c HttpDeviceConfig) Kind() HttpDeviceKind {
+func (c HttpDeviceConfig) Kind() types.HttpDeviceKind {
 	return c.kind
 }
 
@@ -358,14 +438,10 @@ func (c HttpDeviceConfig) LogDebug() bool {
 	return c.logDebug
 }
 
-func (c MqttDeviceConfig) MqttTopics() []string {
-	return c.mqttTopics
-}
+// Getters for MqttDeviceCofig struct
 
-// Getters for MqttDeviceConfig struct
-
-func (c MqttDeviceConfig) MqttClients() []string {
-	return c.mqttClients
+func (c MqttDeviceConfig) Kind() types.MqttDeviceKind {
+	return c.kind
 }
 
 // Getters for ViewConfig struct
@@ -380,14 +456,6 @@ func (c ViewConfig) Title() string {
 
 func (c ViewConfig) Devices() []ViewDeviceConfig {
 	return c.devices
-}
-
-func (c ViewConfig) DeviceNames() []string {
-	names := make([]string, len(c.devices))
-	for i, device := range c.devices {
-		names[i] = device.Name()
-	}
-	return names
 }
 
 func (c ViewConfig) Autoplay() bool {
@@ -417,40 +485,28 @@ func (c ViewDeviceConfig) Title() string {
 	return c.title
 }
 
-func (c ViewDeviceConfig) SkipFields() []string {
-	return c.skipFields
+func (c ViewDeviceConfig) Filter() FilterConfig {
+	return c.filter
 }
 
-func (c ViewDeviceConfig) SkipCategories() []string {
+// Getters for FilterConfig struct
+
+func (c FilterConfig) IncludeRegisters() []string {
+	return c.includeRegisters
+}
+
+func (c FilterConfig) SkipRegisters() []string {
+	return c.skipRegisters
+}
+
+func (c FilterConfig) IncludeCategories() []string {
+	return c.includeCategories
+}
+
+func (c FilterConfig) SkipCategories() []string {
 	return c.skipCategories
 }
 
-// Gettters for HassDiscovery struct
-
-func (c HassDiscovery) TopicPrefix() string {
-	return c.topicPrefix
-}
-
-func (c HassDiscovery) ViaMqttClients() []string {
-	return c.viaMqttClients
-}
-
-func (c HassDiscovery) Devices() []string {
-	return c.devices
-}
-
-func (c HassDiscovery) Categories() []string {
-	return c.categories
-}
-
-func (c HassDiscovery) CategoriesMatcher() []*regexp.Regexp {
-	return c.categoriesMatcher
-}
-
-func (c HassDiscovery) Registers() []string {
-	return c.registers
-}
-
-func (c HassDiscovery) RegistersMatcher() []*regexp.Regexp {
-	return c.registersMatcher
+func (c FilterConfig) DefaultInclude() bool {
+	return c.defaultInclude
 }

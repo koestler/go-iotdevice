@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/device"
+	"github.com/pkg/errors"
 	"log"
+	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -20,7 +22,9 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	}
 
 	// assign registers
-	c.registers = c.getModbusRegisters()
+	registers := c.getModbusRegisters()
+	registers = dataflow.FilterRegisters(registers, c.Config().Filter())
+	c.RegisterDb().AddStruct(registers...)
 
 	// setup polling
 	execPoll := func() error {
@@ -32,10 +36,12 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 			return fmt.Errorf("waveshareDevice[%s]: read failed: %s", c.Name(), err)
 		}
 
-		for _, register := range c.registers {
+		for _, register := range registers {
 			value := 0
-			if state[register.Address()] {
-				value = 1
+			if address, err := registerAddress(register); err == nil {
+				if state[address] {
+					value = 1
+				}
 			}
 
 			c.StateStorage().Fill(dataflow.NewEnumRegisterValue(
@@ -44,8 +50,6 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 				value,
 			))
 		}
-
-		c.SetLastUpdatedNow()
 
 		if c.Config().LogDebug() {
 			log.Printf(
@@ -68,13 +72,13 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 		c.SetAvailable(false)
 	}()
 
-	// setup subscription to listen for updates of controllable registers
-	commandSubscription := c.commandStorage.Subscribe(ctx, dataflow.DeviceNonNullFilter(c.Config().Name()))
+	// setup subscription to listen for updates of commandable registers
+	_, commandSubscription := c.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullValueFilter(c.Config().Name()))
 
 	execCommand := func(value dataflow.Value) {
 		if c.Config().LogDebug() {
 			log.Printf(
-				"waveshareDevice[%s]: controllable command: %s",
+				"waveshareDevice[%s]: value command: %s",
 				c.Config().Name(), value.String(),
 			)
 		}
@@ -95,24 +99,30 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 			return
 		}
 
-		if c.Config().LogDebug() {
-			log.Printf(
-				"waveshareDevice[%s]: controllable command: %v",
-				c.Config().Name(), command,
-			)
-		}
-
 		var relayNr uint16
-		if modbusRegister, ok := value.Register().(ModbusRegisterStruct); !ok {
+		if address, err := registerAddress(value.Register()); err != nil {
+			if c.Config().LogDebug() {
+				log.Printf("waveshareDevice[%s]: cannot get register address, register=%v, err: %s",
+					c.Config().Name(),
+					value.Register(), err,
+				)
+			}
 			// unknown register
 			return
 		} else {
-			relayNr = modbusRegister.Address()
+			relayNr = uint16(address)
+		}
+
+		if c.Config().LogDebug() {
+			log.Printf(
+				"waveshareDevice[%s]: write relayNr=%v, command: %v",
+				c.Config().Name(), relayNr, command,
+			)
 		}
 
 		if err := WriteRelay(c.modbus.WriteRead, c.modbusConfig.Address(), relayNr, command); err != nil {
 			log.Printf(
-				"waveshareDevice[%s]: control request genration failed: %s",
+				"waveshareDevice[%s]: command request genration failed: %s",
 				c.Config().Name(), err,
 			)
 		} else {
@@ -124,7 +134,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 			))
 
 			if c.Config().LogDebug() {
-				log.Printf("waveshareDevice[%s]: control request successful", c.Config().Name())
+				log.Printf("waveshareDevice[%s]: command request successful", c.Config().Name())
 			}
 		}
 
@@ -148,15 +158,11 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	}
 }
 
-func (c *DeviceStruct) getModbusRegisters() (registers ModbusRegisters) {
+func (c *DeviceStruct) getModbusRegisters() (registers []dataflow.RegisterStruct) {
 	category := "Relays"
-	registers = make(ModbusRegisters, 0, 8)
+	registers = make([]dataflow.RegisterStruct, 0, 8)
 	for i := uint16(0); i < 8; i += 1 {
 		name := fmt.Sprintf("CH%d", i+1)
-
-		if device.IsExcluded(name, category, c.Config()) {
-			continue
-		}
 
 		description := c.modbusConfig.RelayDescription(name)
 		enum := map[int]string{
@@ -164,16 +170,28 @@ func (c *DeviceStruct) getModbusRegisters() (registers ModbusRegisters) {
 			1: c.modbusConfig.RelayClosedLabel(name),
 		}
 
-		r := NewModbusRegisterStruct(
-			category,
-			name,
-			description,
-			i,
+		r := dataflow.NewRegisterStruct(
+			category, name, description,
+			dataflow.EnumRegister,
 			enum,
+			"",
 			int(i),
+			true,
 		)
 		registers = append(registers, r)
 	}
 
 	return
+}
+
+var addrMatcher = regexp.MustCompile("^CH([0-9])$")
+
+func registerAddress(r dataflow.Register) (address int, err error) {
+	matches := addrMatcher.FindStringSubmatch(r.Name())
+	if matches == nil {
+		return 0, errors.New("invalid registerName")
+	}
+	i, err := strconv.Atoi(matches[1])
+	i -= 1 // CH1 has address 0
+	return i, err
 }

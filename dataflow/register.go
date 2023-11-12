@@ -1,6 +1,11 @@
 package dataflow
 
-import "sort"
+import (
+	"reflect"
+	"sort"
+)
+
+//go:generate mockgen -source register.go -destination mock/register_mock.go
 
 type Register interface {
 	Category() string
@@ -10,7 +15,7 @@ type Register interface {
 	Enum() map[int]string
 	Unit() string
 	Sort() int
-	Controllable() bool
+	Commandable() bool
 }
 
 type RegisterStruct struct {
@@ -21,7 +26,7 @@ type RegisterStruct struct {
 	enum         map[int]string
 	unit         string
 	sort         int
-	controllable bool
+	commandable  bool
 }
 
 func NewRegisterStruct(
@@ -30,7 +35,7 @@ func NewRegisterStruct(
 	enum map[int]string,
 	unit string,
 	sort int,
-	controllable bool,
+	commandable bool,
 ) RegisterStruct {
 	return RegisterStruct{
 		category:     category,
@@ -40,7 +45,7 @@ func NewRegisterStruct(
 		enum:         enum,
 		unit:         unit,
 		sort:         sort,
-		controllable: controllable,
+		commandable:  commandable,
 	}
 }
 
@@ -53,7 +58,7 @@ func NewRegisterStructByInterface(reg Register) RegisterStruct {
 		enum:         reg.Enum(),
 		unit:         reg.Unit(),
 		sort:         reg.Sort(),
-		controllable: reg.Controllable(),
+		commandable:  reg.Commandable(),
 	}
 }
 
@@ -85,43 +90,41 @@ func (r RegisterStruct) Sort() int {
 	return r.sort
 }
 
-func (r RegisterStruct) Controllable() bool {
-	return r.controllable
+func (r RegisterStruct) Commandable() bool {
+	return r.commandable
 }
 
-func FilterRegisters(input []Register, excludeFields []string, excludeCategories []string) (output []Register) {
-	output = make([]Register, 0, len(input))
+func FilterRegisters[R Register](input []R, filterConf RegisterFilterConf) (output []R) {
+	output = make([]R, 0, len(input))
+	f := RegisterFilter(filterConf)
+
 	for _, r := range input {
-		if RegisterNameExcluded(excludeFields, r) {
-			continue
+		if f(r) {
+			output = append(output, r)
 		}
-		if RegisterCategoryExcluded(excludeCategories, r) {
-			continue
-		}
-		output = append(output, r)
 	}
 	return
 }
 
-func SortRegisters(input []Register) []Register {
+func SortRegisterStructs(input []RegisterStruct) {
 	sort.SliceStable(input, func(i, j int) bool { return input[i].Sort() < input[j].Sort() })
-	return input
 }
 
-func RegisterNameExcluded(exclude []string, r Register) bool {
-	for _, e := range exclude {
-		if e == r.Name() {
-			return true
-		}
-	}
-	return false
-}
+func (r RegisterStruct) Equals(b RegisterStruct) bool {
+	if r.category == b.category &&
+		r.name == b.name &&
+		r.description == b.description &&
+		r.registerType == b.registerType &&
+		r.unit == b.unit &&
+		r.sort == b.sort &&
+		r.commandable == b.commandable {
 
-func RegisterCategoryExcluded(exclude []string, r Register) bool {
-	for _, e := range exclude {
-		if e == r.Category() {
-			return true
+		if r.registerType == EnumRegister {
+			return reflect.DeepEqual(r.enum, b.enum)
 		}
+
+		return true
 	}
+
 	return false
 }

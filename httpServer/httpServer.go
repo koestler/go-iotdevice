@@ -3,9 +3,7 @@ package httpServer
 import (
 	"context"
 	"errors"
-	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/koestler/go-iotdevice/device"
 	"github.com/koestler/go-iotdevice/pool"
@@ -25,8 +23,8 @@ type HttpServer struct {
 type Environment struct {
 	Config         Config
 	ProjectTitle   string
-	Views          []config.ViewConfig
-	Authentication config.AuthenticationConfig
+	Views          []ViewConfig
+	Authentication AuthenticationConfig
 	DevicePool     *pool.Pool[*restarter.Restarter[device.Device]]
 	StateStorage   *dataflow.ValueStorage
 	CommandStorage *dataflow.ValueStorage
@@ -41,9 +39,31 @@ type Config interface {
 	LogConfig() bool
 	FrontendProxy() *url.URL
 	FrontendPath() string
-	GetViewNames() []string
 	FrontendExpires() time.Duration
 	ConfigExpires() time.Duration
+}
+
+type ViewConfig interface {
+	Name() string
+	Title() string
+	Devices() []ViewDeviceConfig
+	Autoplay() bool
+	IsAllowed(user string) bool
+	IsPublic() bool
+	Hidden() bool
+}
+
+type ViewDeviceConfig interface {
+	Name() string
+	Title() string
+	Filter() dataflow.RegisterFilterConf
+}
+
+type AuthenticationConfig interface {
+	Enabled() bool
+	JwtSecret() []byte
+	JwtValidityPeriod() time.Duration
+	HtaccessFile() string
 }
 
 func Run(env *Environment) (httpServer *HttpServer) {
@@ -58,7 +78,7 @@ func Run(env *Environment) (httpServer *HttpServer) {
 	engine.Use(authJwtMiddleware(env))
 
 	addApiV2Routes(engine, env)
-	setupFrontend(engine, cfg)
+	setupFrontend(engine, env)
 
 	server := &http.Server{
 		Addr:    cfg.Bind() + ":" + strconv.Itoa(cfg.Port()),
@@ -87,17 +107,4 @@ func (s *HttpServer) Shutdown() {
 	if err != nil {
 		log.Printf("httpServer: graceful shutdown failed: %s", err)
 	}
-}
-
-func addApiV2Routes(r *gin.Engine, env *Environment) {
-	v2 := r.Group("/api/v2/")
-	v2.Use(gzip.Gzip(gzip.BestCompression))
-	setupConfig(v2, env)
-	setupLogin(v2, env)
-	setupRegisters(v2, env)
-	setupValuesGetJson(v2, env)
-	setupValuesPatch(v2, env)
-
-	v2Ws := r.Group("/api/v2/")
-	setupValuesWs(v2Ws, env)
 }

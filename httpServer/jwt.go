@@ -3,7 +3,6 @@ package httpServer
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	"github.com/koestler/go-iotdevice/config"
 	"github.com/pkg/errors"
 	"net/http"
 	"time"
@@ -14,7 +13,7 @@ type jwtClaims struct {
 	jwt.StandardClaims
 }
 
-func createJwtToken(config config.AuthenticationConfig, user string) (tokenStr string, err error) {
+func createJwtToken(config AuthenticationConfig, user string) (tokenStr string, err error) {
 	claims := &jwtClaims{
 		User: user,
 		StandardClaims: jwt.StandardClaims{
@@ -61,11 +60,11 @@ func checkToken(tokenStr string, jwtSecret []byte) (user string, err error) {
 	return claims.User, nil
 }
 
-func isViewAuthenticated(view config.ViewConfig, c *gin.Context, allowAnonymous bool) bool {
+func isViewAuthenticated(view ViewConfig, c *gin.Context, allowAnonymous bool) bool {
 	return isViewAuthenticatedByUser(view, c.GetString("AuthUser"), allowAnonymous)
 }
 
-func isViewAuthenticatedByUser(view config.ViewConfig, user string, allowAnonymous bool) bool {
+func isViewAuthenticatedByUser(view ViewConfig, user string, allowAnonymous bool) bool {
 	if !allowAnonymous && len(user) < 1 {
 		return false
 	}

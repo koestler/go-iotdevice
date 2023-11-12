@@ -16,7 +16,8 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 	}()
 
 	// filter registers by skip list
-	c.registers = FilterRegisters(registers, c.Config().SkipFields(), c.Config().SkipCategories())
+	registers = FilterRegisters(registers, c.Config().Filter())
+	addToRegisterDb(c.RegisterDb(), registers)
 
 	if c.Config().LogDebug() {
 		log.Printf("device[%s]: start random source", c.Name())
@@ -30,14 +31,14 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 		case <-ctx.Done():
 			return nil, false
 		case <-ticker.C:
-			for _, r := range c.registers {
+			for _, r := range registers {
 				switch r.RegisterType() {
 				case dataflow.NumberRegister:
 					var value float64
-					if r.Signed() {
-						value = 1e2*(rand.Float64()-0.5)*2/float64(r.Factor()) + r.Offset()
+					if r.signed {
+						value = 1e2*(rand.Float64()-0.5)*2/float64(r.factor) + r.offset
 					} else {
-						value = 1e2*rand.Float64()/float64(r.Factor()) + r.Offset()
+						value = 1e2*rand.Float64()/float64(r.factor) + r.offset
 					}
 					output.Fill(dataflow.NewNumericRegisterValue(c.Name(), r, value))
 				case dataflow.TextRegister:
@@ -46,7 +47,6 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 					output.Fill(dataflow.NewEnumRegisterValue(c.Name(), r, randomEnum(r.Enum())))
 				}
 			}
-			c.SetLastUpdatedNow()
 		}
 	}
 }

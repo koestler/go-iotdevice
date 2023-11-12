@@ -15,14 +15,22 @@ type ValueStorage struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 
-	state      map[StateKey]Value
-	stateMutex sync.RWMutex
+	state         map[StateKey]Value
+	subscriptions *list.List[ValueSubscription]
+	mutex         sync.RWMutex
 
 	inputChannel   chan Value
 	inputWaitGroup sync.WaitGroup
+}
 
-	subscriptions      *list.List[ValueSubscription]
-	subscriptionsMutex sync.RWMutex
+type ValueSubscription struct {
+	ctx           context.Context
+	outputChannel chan Value
+	filter        ValueFilterFunc
+}
+
+func (s *ValueSubscription) Drain() <-chan Value {
+	return s.outputChannel
 }
 
 func NewValueStorage() (valueStorage *ValueStorage) {
@@ -52,9 +60,11 @@ func (vs *ValueStorage) mainStorageRoutine() {
 		case <-vs.ctx.Done():
 			return
 		case newValue := <-vs.inputChannel:
+			vs.mutex.Lock()
 			if vs.updateState(newValue) {
 				vs.forwardToSubscriptions(newValue)
 			}
+			vs.mutex.Unlock()
 			vs.inputWaitGroup.Done()
 		}
 	}
@@ -65,9 +75,6 @@ func (vs *ValueStorage) updateState(newValue Value) (updated bool) {
 		deviceName:   newValue.DeviceName(),
 		registerName: newValue.Register().Name(),
 	}
-
-	vs.stateMutex.Lock()
-	defer vs.stateMutex.Unlock()
 
 	currentValue, ok := vs.state[k]
 
@@ -88,9 +95,6 @@ func (vs *ValueStorage) updateState(newValue Value) (updated bool) {
 
 // copy the input value to all subscribed output channels
 func (vs *ValueStorage) forwardToSubscriptions(newValue Value) {
-	vs.subscriptionsMutex.RLock()
-	defer vs.subscriptionsMutex.RUnlock()
-
 	for e := vs.subscriptions.Front(); e != nil; e = e.Next() {
 		s := e.Value
 		if s.filter(newValue) {
@@ -100,8 +104,8 @@ func (vs *ValueStorage) forwardToSubscriptions(newValue Value) {
 }
 
 func (vs *ValueStorage) GetState() (result []Value) {
-	vs.stateMutex.RLock()
-	defer vs.stateMutex.RUnlock()
+	vs.mutex.RLock()
+	defer vs.mutex.RUnlock()
 
 	result = make([]Value, 0, len(vs.state))
 	for _, value := range vs.state {
@@ -111,10 +115,15 @@ func (vs *ValueStorage) GetState() (result []Value) {
 	return
 }
 
-func (vs *ValueStorage) GetStateFiltered(filter FilterFunc) (result []Value) {
-	vs.stateMutex.RLock()
-	defer vs.stateMutex.RUnlock()
+func (vs *ValueStorage) GetStateFiltered(filter ValueFilterFunc) (result []Value) {
+	vs.mutex.RLock()
+	defer vs.mutex.RUnlock()
 
+	result = vs.getStateFilteredUnlocked(filter)
+	return
+}
+
+func (vs *ValueStorage) getStateFilteredUnlocked(filter ValueFilterFunc) (result []Value) {
 	result = make([]Value, 0)
 	for _, value := range vs.state {
 		if filter(value) {
@@ -135,29 +144,63 @@ func (vs *ValueStorage) Wait() {
 	vs.inputWaitGroup.Wait()
 }
 
-func (vs *ValueStorage) Subscribe(ctx context.Context, filter FilterFunc) ValueSubscription {
-	s := ValueSubscription{
+const subscriptionDefaultCap = 128
+
+func (vs *ValueStorage) newSubscription(ctx context.Context, filter ValueFilterFunc) (
+	initial []Value, subscription ValueSubscription, elem *list.Element[ValueSubscription],
+) {
+	vs.mutex.Lock()
+	defer vs.mutex.Unlock()
+
+	initial = vs.getStateFilteredUnlocked(filter)
+
+	subscription = ValueSubscription{
 		ctx:           ctx,
-		outputChannel: make(chan Value, 128),
+		outputChannel: make(chan Value, subscriptionDefaultCap),
 		filter:        filter,
 	}
+	elem = vs.subscriptions.PushBack(subscription)
 
-	vs.subscriptionsMutex.Lock()
-	elem := vs.subscriptions.PushBack(s)
-	vs.subscriptionsMutex.Unlock()
+	return
+}
 
-	go func() {
-		// wait for the cancellation of the subscription context
-		<-s.ctx.Done()
+func (vs *ValueStorage) SubscribeReturnInitial(ctx context.Context, filter ValueFilterFunc) (initial []Value, subscription ValueSubscription) {
+	initial, subscription, elem := vs.newSubscription(ctx, filter)
+	go vs.sendInitialAndCleanupValueSubscription([]Value{}, subscription, elem)
+	return
+}
 
+func (vs *ValueStorage) SubscribeSendInitial(ctx context.Context, filter ValueFilterFunc) (subscription ValueSubscription) {
+	initial, subscription, elem := vs.newSubscription(ctx, filter)
+	go vs.sendInitialAndCleanupValueSubscription(initial, subscription, elem)
+	return
+}
+
+func (vs *ValueStorage) sendInitialAndCleanupValueSubscription(
+	initial []Value,
+	subscription ValueSubscription,
+	elem *list.Element[ValueSubscription],
+) {
+	// cleanup subscription
+	defer func() {
 		// remove from subscriptions list
-		vs.subscriptionsMutex.Lock()
+		vs.mutex.Lock()
 		vs.subscriptions.Remove(elem)
-		vs.subscriptionsMutex.Unlock()
+		vs.mutex.Unlock()
 
 		// close output channel
-		close(s.outputChannel)
+		close(subscription.outputChannel)
 	}()
 
-	return s
+	// this never blocks since channel is always buffered, big enough and main routine is blocked
+	for _, initialV := range initial {
+		select {
+		case subscription.outputChannel <- initialV:
+		case <-subscription.ctx.Done():
+			return
+		}
+	}
+
+	// wait for the cancellation of the subscription context
+	<-subscription.ctx.Done()
 }

@@ -4,15 +4,18 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/koestler/go-iotdevice/config"
+	"github.com/koestler/go-iotdevice/dataflow"
 	"github.com/mileusna/useragent"
 	"log"
 	"nhooyr.io/websocket"
 	"time"
 )
 
+// registers / values maps use deviceName as the first dimension and registerName as the second dimension.
 type outputMessage struct {
-	Values map[string]map[string]valueResponse `json:"values"`
+	Operation string                                 `json:"op" example:"init"`
+	Registers map[string]map[string]registerResponse `json:"registers,omitempty"`
+	Values    map[string]map[string]valueResponse    `json:"values,omitempty"`
 }
 
 type authMessage struct {
@@ -20,11 +23,11 @@ type authMessage struct {
 }
 
 // setupViewWs godoc
-// @Summary Websocket that sends all values initially and sends updates of changed values subsequently.
-// @ID viewWs
+// @Summary Realtime values websocket
+// @Description Websocket that sends all registers and values initially and sends updates of changed values subsequently.
 // @Param viewName path string true "View name as provided by the config endpoint"
 // @Produce json
-// @success 200 {array} valueResponse
+// @success 200 {array} outputMessage
 // @Failure 404 {object} ErrorResponse
 // @Router /views/{viewName}/ws [get]
 // @Security ApiKeyAuth
@@ -34,6 +37,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 		view := v
 		relativePath := "views/" + view.Name() + "/ws"
 		logPrefix := fmt.Sprintf("httpServer: %s%s", r.BasePath(), relativePath)
+		viewFilter := getViewValueFilter(view.Devices())
 
 		// the follow line uses a loop variable; it must be outside the closure
 		r.GET(relativePath, func(c *gin.Context) {
@@ -42,14 +46,17 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 			}
 
 			ua := useragent.Parse(c.GetHeader("User-Agent"))
-			if ua.IsSafari() {
+			if env.Config.LogDebug() {
+				log.Printf("%s: User-Agent: %s", logPrefix, c.GetHeader("User-Agent"))
+			}
+			if ua.IsIOS() || ua.IsSafari() {
 				// Safari is know to not work with fragmented compressed websockets
 				// disable context takeover as a work around
 				if env.Config.LogDebug() {
-					log.Printf("%s: safari detected, disable compression", logPrefix)
+					log.Printf("%s: ios/safari detected, disable compression", logPrefix)
 				}
 				websocketAcceptOptions = websocket.AcceptOptions{
-					CompressionMode: websocket.CompressionNoContextTakeover,
+					CompressionMode: websocket.CompressionDisabled,
 				}
 			}
 
@@ -75,7 +82,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 				if valueSenderStarted {
 					return
 				}
-				go wsValuesSender(env, view, conn, senderCtx, logPrefix)
+				go wsValuesSender(env, viewFilter, conn, senderCtx, logPrefix)
 				valueSenderStarted = true
 			}
 
@@ -117,7 +124,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 
 func wsValuesSender(
 	env *Environment,
-	view config.ViewConfig,
+	viewFilter dataflow.ValueFilterFunc,
 	conn *websocket.Conn,
 	ctx context.Context,
 	logPrefix string,
@@ -128,14 +135,13 @@ func wsValuesSender(
 		defer log.Printf("%s: tx routine closed", logPrefix)
 	}
 
-	filter := getFilter(view.Devices())
-	subscription := env.StateStorage.Subscribe(ctx, filter)
+	initial, subscription := env.StateStorage.SubscribeReturnInitial(ctx, viewFilter)
 
 	// send all values after initial connect
+	registers := compile2DRegisterResponse(initial)
 	{
-		values := env.StateStorage.GetStateFiltered(filter)
-		response := compile2DResponse(values)
-		if err := wsSendValuesResponse(ctx, conn, response); err != nil {
+		values := compile2DValueResponse(initial)
+		if err := wsSendResponse(ctx, conn, "init", registers, values); err != nil {
 			log.Printf("%s: error while sending initial values: %s", logPrefix, err)
 			return
 		}
@@ -150,17 +156,21 @@ func wsValuesSender(
 
 		tickerRunning := true
 		valuesC := subscription.Drain()
-		values := make(map[string]map[string]valueResponse, 1)
+
+		newRegisters := make(map[string]map[string]registerResponse)
+		newValues := make(map[string]map[string]valueResponse)
 		for {
 			select {
 			case <-ticker.C:
-				if len(values) > 0 {
+				if len(newValues) > 0 {
 					// there is data to send, send it
-					if err := wsSendValuesResponse(ctx, conn, values); err != nil {
+					if err := wsSendResponse(ctx, conn, "inc", newRegisters, newValues); err != nil {
 						log.Printf("%s: error while sending value: %s", logPrefix, err)
 						return
 					}
-					values = make(map[string]map[string]valueResponse, 1)
+
+					clear(newRegisters)
+					clear(newValues)
 				} else {
 					// no data to send; stop timer
 					ticker.Stop()
@@ -168,7 +178,11 @@ func wsValuesSender(
 				}
 			case v, ok := <-valuesC:
 				if ok {
-					append2DResponseValue(values, v)
+					if append2DRegisterResponse(registers, v) {
+						append2DRegisterResponse(newRegisters, v)
+					}
+					append2DValueResponse(newValues, v)
+
 					if !tickerRunning {
 						ticker.Reset(tickerDuration)
 						tickerRunning = true
@@ -182,14 +196,22 @@ func wsValuesSender(
 	}
 }
 
-func wsSendValuesResponse(ctx context.Context, conn *websocket.Conn, values map[string]map[string]valueResponse) error {
+func wsSendResponse(
+	ctx context.Context,
+	conn *websocket.Conn,
+	operation string,
+	registers map[string]map[string]registerResponse,
+	values map[string]map[string]valueResponse,
+) error {
 	w, err := conn.Writer(ctx, websocket.MessageText)
 	if err != nil {
 		return err
 	}
 
 	err1 := json.NewEncoder(w).Encode(outputMessage{
-		Values: values,
+		Operation: operation,
+		Registers: registers,
+		Values:    values,
 	})
 	err2 := w.Close()
 	if err1 != nil {

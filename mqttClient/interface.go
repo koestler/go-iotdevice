@@ -1,6 +1,7 @@
 package mqttClient
 
 import (
+	"context"
 	"net/url"
 	"time"
 )
@@ -8,29 +9,35 @@ import (
 type Config interface {
 	Name() string
 	Broker() *url.URL
+
 	User() string
 	Password() string
 	ClientId() string
-	Qos() byte
+
 	KeepAlive() time.Duration
 	ConnectRetryDelay() time.Duration
 	ConnectTimeout() time.Duration
-	AvailabilityTopic() string
-	TelemetryInterval() time.Duration
-	TelemetryTopic() string
-	TelemetryRetain() bool
-	RealtimeEnable() bool
-	RealtimeTopic() string
-	RealtimeRetain() bool
 	TopicPrefix() string
+	ReadOnly() bool
 	MaxBacklogSize() int
+
+	AvailabilityClient() MqttSectionConfig
+	AvailabilityClientTopic() string
+
 	LogDebug() bool
 	LogMessages() bool
 }
 
+type MqttSectionConfig interface {
+	Enabled() bool
+	Interval() time.Duration
+	Retain() bool
+	Qos() byte
+}
+
 type Client interface {
 	Name() string
-	Config() Config
+	GetCtx() context.Context
 	Run()
 	Shutdown()
 	Publish(topic string, payload []byte, qos byte, retain bool)

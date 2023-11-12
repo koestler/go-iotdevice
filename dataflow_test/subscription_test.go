@@ -3,6 +3,8 @@ package dataflow_test
 import (
 	"context"
 	"github.com/koestler/go-iotdevice/dataflow"
+	mock_dataflow "github.com/koestler/go-iotdevice/dataflow/mock"
+	"go.uber.org/mock/gomock"
 	"sync"
 	"testing"
 )
@@ -17,7 +19,7 @@ func TestValueStorageSubscribe(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(numberOfSubscriptions)
 	for i := 0; i < numberOfSubscriptions; i += 1 {
-		subscription := storage.Subscribe(ctx, dataflow.EmptyFilter)
+		subscription := storage.SubscribeSendInitial(ctx, dataflow.EmptyFilter)
 		go func() {
 			counter := 0
 			defer wg.Done()
@@ -54,10 +56,12 @@ func TestValueStorageSubscribe(t *testing.T) {
 }
 
 func TestValueStorageSubscribeWithFilter(t *testing.T) {
-	run := func(filter dataflow.FilterFunc) (values []dataflow.Value) {
+	ctrl := gomock.NewController(t)
+
+	run := func(filter dataflow.ValueFilterFunc) (values []dataflow.Value) {
 		storage := dataflow.NewValueStorage()
 		ctx, cancel := context.WithCancel(context.Background())
-		subscription := storage.Subscribe(ctx, filter)
+		subscription := storage.SubscribeSendInitial(ctx, filter)
 
 		wg := sync.WaitGroup{}
 		wg.Add(1)
@@ -81,7 +85,7 @@ func TestValueStorageSubscribeWithFilter(t *testing.T) {
 	}
 
 	t.Run("filterDevice", func(t *testing.T) {
-		values := run(dataflow.DeviceFilter("device-0"))
+		values := run(dataflow.DeviceNameValueFilter("device-0"))
 
 		// check values
 		expect := []string{
@@ -97,10 +101,14 @@ func TestValueStorageSubscribeWithFilter(t *testing.T) {
 	})
 
 	t.Run("filterSkipRegisterCategories", func(t *testing.T) {
-		values := run(dataflow.RegisterFilter(
-			[]string{"register-b"},
-			[]string{"set-c"},
-		))
+		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
+		fc.EXPECT().SkipRegisters().Return([]string{"register-b"}).AnyTimes()
+		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
+		fc.EXPECT().SkipCategories().Return([]string{"set-c"}).AnyTimes()
+		fc.EXPECT().IncludeCategories().Return([]string{}).AnyTimes()
+		fc.EXPECT().DefaultInclude().Return(true).AnyTimes()
+
+		values := run(dataflow.RegisterValueFilter(fc))
 
 		// check values
 		expect := []string{

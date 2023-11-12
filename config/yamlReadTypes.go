@@ -1,21 +1,21 @@
 package config
 
 type configRead struct {
-	Version         *int                               `yaml:"Version"`
-	ProjectTitle    string                             `yaml:"ProjectTitle"`
-	LogConfig       *bool                              `yaml:"LogConfig"`
-	LogWorkerStart  *bool                              `yaml:"LogWorkerStart"`
-	LogStorageDebug *bool                              `yaml:"LogStorageDebug"`
-	HttpServer      *httpServerConfigRead              `yaml:"HttpServer"`
-	Authentication  *authenticationConfigRead          `yaml:"Authentication"`
-	MqttClients     map[string]mqttClientConfigRead    `yaml:"MqttClients"`
-	Modbus          map[string]modbusConfigRead        `yaml:"Modbus"`
-	VictronDevices  map[string]victronDeviceConfigRead `yaml:"VictronDevices"`
-	ModbusDevices   map[string]modbusDeviceConfigRead  `yaml:"ModbusDevices"`
-	HttpDevices     map[string]httpDeviceConfigRead    `yaml:"HttpDevices"`
-	MqttDevices     map[string]mqttDeviceConfigRead    `yaml:"MqttDevices"`
-	Views           []viewConfigRead                   `yaml:"Views"`
-	HassDiscovery   []hassDiscoveryRead                `yaml:"HassDiscovery"`
+	Version                *int                               `yaml:"Version"`
+	ProjectTitle           string                             `yaml:"ProjectTitle"`
+	LogConfig              *bool                              `yaml:"LogConfig"`
+	LogWorkerStart         *bool                              `yaml:"LogWorkerStart"`
+	LogStateStorageDebug   *bool                              `yaml:"LogStateStorageDebug"`
+	LogCommandStorageDebug *bool                              `yaml:"LogCommandStorageDebug"`
+	HttpServer             *httpServerConfigRead              `yaml:"HttpServer"`
+	Authentication         *authenticationConfigRead          `yaml:"Authentication"`
+	MqttClients            map[string]mqttClientConfigRead    `yaml:"MqttClients"`
+	Modbus                 map[string]modbusConfigRead        `yaml:"Modbus"`
+	VictronDevices         map[string]victronDeviceConfigRead `yaml:"VictronDevices"`
+	ModbusDevices          map[string]modbusDeviceConfigRead  `yaml:"ModbusDevices"`
+	HttpDevices            map[string]httpDeviceConfigRead    `yaml:"HttpDevices"`
+	MqttDevices            map[string]mqttDeviceConfigRead    `yaml:"MqttDevices"`
+	Views                  []viewConfigRead                   `yaml:"Views"`
 }
 
 type httpServerConfigRead struct {
@@ -36,26 +36,49 @@ type authenticationConfigRead struct {
 }
 
 type mqttClientConfigRead struct {
-	Broker            string  `yaml:"Broker"`
-	ProtocolVersion   *int    `yaml:"ProtocolVersion"`
-	User              string  `yaml:"User"`
-	Password          string  `yaml:"Password"`
-	ClientId          *string `yaml:"ClientId"`
-	Qos               *byte   `yaml:"Qos"`
+	Broker          string `yaml:"Broker"`
+	ProtocolVersion *int   `yaml:"ProtocolVersion"`
+
+	User     string  `yaml:"User"`
+	Password string  `yaml:"Password"`
+	ClientId *string `yaml:"ClientId"`
+
 	KeepAlive         string  `yaml:"KeepAlive"`
 	ConnectRetryDelay string  `yaml:"ConnectRetryDelay"`
 	ConnectTimeout    string  `yaml:"ConnectTimeout"`
-	AvailabilityTopic *string `yaml:"AvailabilityTopic"`
-	TelemetryInterval string  `yaml:"TelemetryInterval"`
-	TelemetryTopic    *string `yaml:"TelemetryTopic"`
-	TelemetryRetain   *bool   `yaml:"TelemetryRetain"`
-	RealtimeEnable    *bool   `yaml:"RealtimeEnable"`
-	RealtimeTopic     *string `yaml:"RealtimeTopic"`
-	RealtimeRetain    *bool   `yaml:"RealtimeRetain"`
-	TopicPrefix       string  `yaml:"TopicPrefix"`
+	TopicPrefix       *string `yaml:"TopicPrefix"`
+	ReadOnly          *bool   `yaml:"ReadOnly"`
 	MaxBacklogSize    *int    `yaml:"MaxBacklogSize"`
-	LogDebug          *bool   `yaml:"LogDebug"`
-	LogMessages       *bool   `yaml:"LogMessages"`
+
+	MqttDevices map[string]mqttClientDeviceConfigRead `yaml:"MqttDevices"`
+
+	AvailabilityClient     mqttSectionConfigRead `yaml:"AvailabilityClient"`
+	AvailabilityDevice     mqttSectionConfigRead `yaml:"AvailabilityDevice"`
+	Structure              mqttSectionConfigRead `yaml:"Structure"`
+	Telemetry              mqttSectionConfigRead `yaml:"Telemetry"`
+	Realtime               mqttSectionConfigRead `yaml:"Realtime"`
+	HomeassistantDiscovery mqttSectionConfigRead `yaml:"HomeassistantDiscovery"`
+	Command                mqttSectionConfigRead `yaml:"Command"`
+
+	LogDebug    *bool `yaml:"LogDebug"`
+	LogMessages *bool `yaml:"LogMessages"`
+}
+
+type mqttClientDeviceConfigRead struct {
+	MqttTopics []string `yaml:"MqttTopics"`
+}
+
+type mqttSectionConfigRead struct {
+	Enabled       *bool                                  `yaml:"Enabled"`
+	TopicTemplate *string                                `yaml:"TopicTemplate"`
+	Interval      string                                 `yaml:"Interval"`
+	Retain        *bool                                  `yaml:"Retain"`
+	Qos           *byte                                  `yaml:"Qos"`
+	Devices       map[string]mqttDeviceSectionConfigRead `yaml:"Devices"`
+}
+
+type mqttDeviceSectionConfigRead struct {
+	Filter *filterConfigRead `yaml:"Filter"`
 }
 
 type modbusConfigRead struct {
@@ -66,29 +89,26 @@ type modbusConfigRead struct {
 }
 
 type deviceConfigRead struct {
-	SkipFields                []string `yaml:"SkipFields"`
-	SkipCategories            []string `yaml:"SkipCategories"`
-	TelemetryViaMqttClients   []string `yaml:"TelemetryViaMqttClients"`
-	RealtimeViaMqttClients    []string `yaml:"RealtimeViaMqttClients"`
-	RestartInterval           string   `yaml:"RestartInterval"`
-	RestartIntervalMaxBackoff string   `yaml:"RestartIntervalMaxBackoff"`
-	LogDebug                  *bool    `yaml:"LogDebug"`
-	LogComDebug               *bool    `yaml:"LogComDebug"`
+	Filter                    filterConfigRead `yaml:"Filter"`
+	RestartInterval           string           `yaml:"RestartInterval"`
+	RestartIntervalMaxBackoff string           `yaml:"RestartIntervalMaxBackoff"`
+	LogDebug                  *bool            `yaml:"LogDebug"`
+	LogComDebug               *bool            `yaml:"LogComDebug"`
 }
 
 type victronDeviceConfigRead struct {
-	General deviceConfigRead `yaml:"General"`
-	Device  string           `yaml:"Device"`
-	Kind    string           `yaml:"Kind"`
+	deviceConfigRead `yaml:",inline"`
+	Device           string `yaml:"Device"`
+	Kind             string `yaml:"Kind"`
 }
 
 type modbusDeviceConfigRead struct {
-	General      deviceConfigRead           `yaml:"General"`
-	Bus          string                     `yaml:"Bus"`
-	Kind         string                     `yaml:"Kind"`
-	Address      string                     `yaml:"Address"`
-	Relays       map[string]relayConfigRead `yaml:"Relays"`
-	PollInterval string                     `yaml:"PollInterval"`
+	deviceConfigRead `yaml:",inline"`
+	Bus              string                     `yaml:"Bus"`
+	Kind             string                     `yaml:"Kind"`
+	Address          string                     `yaml:"Address"`
+	Relays           map[string]relayConfigRead `yaml:"Relays"`
+	PollInterval     string                     `yaml:"PollInterval"`
 }
 
 type relayConfigRead struct {
@@ -98,18 +118,17 @@ type relayConfigRead struct {
 }
 
 type httpDeviceConfigRead struct {
-	General      deviceConfigRead `yaml:"General"`
-	Url          string           `yaml:"Url"`
-	Kind         string           `yaml:"Kind"`
-	Username     string           `yaml:"Username"`
-	Password     string           `yaml:"Password"`
-	PollInterval string           `yaml:"PollInterval"`
+	deviceConfigRead `yaml:",inline"`
+	Url              string `yaml:"Url"`
+	Kind             string `yaml:"Kind"`
+	Username         string `yaml:"Username"`
+	Password         string `yaml:"Password"`
+	PollInterval     string `yaml:"PollInterval"`
 }
 
 type mqttDeviceConfigRead struct {
-	General     deviceConfigRead `yaml:"General"`
-	MqttTopics  []string         `yaml:"MqttTopics"`
-	MqttClients []string         `yaml:"MqttClients"`
+	deviceConfigRead `yaml:",inline"`
+	Kind             string `yaml:"Kind"`
 }
 
 type viewConfigRead struct {
@@ -122,16 +141,15 @@ type viewConfigRead struct {
 }
 
 type viewDeviceConfigRead struct {
-	Name           string   `yaml:"Name"`
-	Title          string   `yaml:"Title"`
-	SkipFields     []string `yaml:"SkipFields"`
-	SkipCategories []string `yaml:"SkipCategories"`
+	Name   string           `yaml:"Name"`
+	Title  string           `yaml:"Title"`
+	Filter filterConfigRead `yaml:"Filter"`
 }
 
-type hassDiscoveryRead struct {
-	TopicPrefix    *string  `yaml:"TopicPrefix"`
-	ViaMqttClients []string `yaml:"ViaMqttClients"`
-	Devices        []string `yaml:"Devices"`
-	Categories     []string `yaml:"Categories"`
-	Registers      []string `yaml:"Registers"`
+type filterConfigRead struct {
+	IncludeRegisters  []string `yaml:"IncludeRegisters"`
+	SkipRegisters     []string `yaml:"SkipRegisters"`
+	IncludeCategories []string `yaml:"IncludeCategories"`
+	SkipCategories    []string `yaml:"SkipCategories"`
+	DefaultInclude    *bool    `yaml:"DefaultInclude"`
 }

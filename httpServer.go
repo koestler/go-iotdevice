@@ -29,11 +29,16 @@ func runHttpServer(
 		&httpServer.Environment{
 			Config: httpServerConfig{
 				cfg.HttpServer(),
-				cfg.GetViewNames(),
 				cfg.LogConfig(),
 			},
-			ProjectTitle:   cfg.ProjectTitle(),
-			Views:          cfg.Views(),
+			ProjectTitle: cfg.ProjectTitle(),
+			Views: func(inp []config.ViewConfig) (oup []httpServer.ViewConfig) {
+				oup = make([]httpServer.ViewConfig, len(inp))
+				for i, r := range inp {
+					oup[i] = viewConfig{r}
+				}
+				return oup
+			}(cfg.Views()),
 			Authentication: cfg.Authentication(),
 			DevicePool:     devicePool,
 			StateStorage:   stateStorage,
@@ -44,12 +49,7 @@ func runHttpServer(
 
 type httpServerConfig struct {
 	config.HttpServerConfig
-	viewNames []string
 	logConfig bool
-}
-
-func (c httpServerConfig) GetViewNames() []string {
-	return c.viewNames
 }
 
 func (c httpServerConfig) LogConfig() bool {
@@ -58,4 +58,25 @@ func (c httpServerConfig) LogConfig() bool {
 
 func (c httpServerConfig) BuildVersion() string {
 	return buildVersion
+}
+
+type viewConfig struct {
+	config.ViewConfig
+}
+
+func (c viewConfig) Devices() []httpServer.ViewDeviceConfig {
+	devices := c.ViewConfig.Devices()
+	ret := make([]httpServer.ViewDeviceConfig, len(devices))
+	for i, d := range devices {
+		ret[i] = viewDeviceConfig{d}
+	}
+	return ret
+}
+
+type viewDeviceConfig struct {
+	config.ViewDeviceConfig
+}
+
+func (c viewDeviceConfig) Filter() dataflow.RegisterFilterConf {
+	return c.ViewDeviceConfig.Filter()
 }

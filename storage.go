@@ -9,8 +9,8 @@ func runStorage(logPrefix string) *dataflow.ValueStorage {
 	valueStorage := dataflow.NewValueStorage()
 
 	if len(logPrefix) > 0 {
-		subscription := valueStorage.Subscribe(context.Background(), dataflow.NoFilter)
-		dataflow.SinkLog(logPrefix, subscription.Drain())
+		subscription := valueStorage.SubscribeSendInitial(context.Background(), dataflow.AllValueFilter)
+		go dataflow.SinkLog(logPrefix, subscription.Drain())
 	}
 
 	return valueStorage
