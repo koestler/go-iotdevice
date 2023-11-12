@@ -21,11 +21,9 @@ jobs:
       - name: Verify dependencies
         run: go mod verify
 
-      - name: Install staticcheck
-        run: go install honnef.co/go/tools/cmd/staticcheck@latest
-
       - name: Install dependencies
         run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
           go install go.uber.org/mock/mockgen@latest
           go install github.com/swaggo/swag/cmd/swag@latest
 
