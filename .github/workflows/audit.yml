@@ -24,8 +24,10 @@ jobs:
       - name: Install staticcheck
         run: go install honnef.co/go/tools/cmd/staticcheck@latest
 
-      - name: Install mockgen
-        run: go install go.uber.org/mock/mockgen@latest
+      - name: Install dependencies
+        run: |
+          go install go.uber.org/mock/mockgen@latest
+          go install github.com/swaggo/swag/cmd/swag@latest
 
       - name: Generate mocks
         run: go generate -v ./...
