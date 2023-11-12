@@ -80,7 +80,6 @@ func Run(env *Environment) (httpServer *HttpServer) {
 
 	addApiV2Routes(engine, env)
 	setupFrontend(engine, env)
-	setupDocs(engine, env)
 
 	server := &http.Server{
 		Addr:    cfg.Bind() + ":" + strconv.Itoa(cfg.Port()),
@@ -119,6 +118,7 @@ func addApiV2Routes(r *gin.Engine, env *Environment) {
 	setupRegisters(v2, env)
 	setupValuesGetJson(v2, env)
 	setupValuesPatch(v2, env)
+	setupDocs(v2, env)
 
 	v2Ws := r.Group("/api/v2/")
 	setupValuesWs(v2Ws, env)

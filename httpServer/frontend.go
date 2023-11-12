@@ -15,6 +15,8 @@ func setupFrontend(engine *gin.Engine, env *Environment) {
 	config := env.Config
 	frontendUrl := config.FrontendProxy()
 
+	r := engine.Group("/")
+
 	if frontendUrl != nil {
 		engine.NoRoute(func(c *gin.Context) {
 			proxy := httputil.NewSingleHostReverseProxy(frontendUrl)
@@ -40,15 +42,14 @@ func setupFrontend(engine *gin.Engine, env *Environment) {
 						return nil
 					}
 
-					route := path[len(frontendPath):]
-					serveStatic(engine, config, route, path)
+					route := path[len(frontendPath)+1:] // +1 removes the leading /
+					serveStatic(r, config, route, path)
 					return nil
 				})
 
 				// load index file single page frontend application
 				for _, route := range append(getNames(env.Views), "", "login") {
-					route = "/" + route
-					serveStatic(engine, config, route, frontendPath+"/index.html")
+					serveStatic(r, config, route, frontendPath+"/index.html")
 				}
 
 				if err != nil {
@@ -65,14 +66,14 @@ func setupFrontend(engine *gin.Engine, env *Environment) {
 	}
 }
 
-func serveStatic(engine *gin.Engine, config Config, route, filePath string) {
-	engine.GET(route, func(c *gin.Context) {
+func serveStatic(r *gin.RouterGroup, config Config, relativePath, filePath string) {
+	r.GET(relativePath, func(c *gin.Context) {
 		setCacheControlPublic(c, config.FrontendExpires())
 		// c.File calls http.serveContent which sets / checks Last-Modified / If-Modified-Since
 		c.File(filePath)
 	})
 	if config.LogConfig() {
-		log.Printf("httpServer: GET %s -> serve static %s", route, filePath)
+		log.Printf("httpServer: GET %s -> serve static %s", r.BasePath()+relativePath, filePath)
 	}
 }
 
