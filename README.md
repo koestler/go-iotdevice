@@ -442,6 +442,12 @@ go genreate ./...
 go test ./...
 ```
 
+### Generate swagger docu
+```bash
+go install github.com/swaggo/swag/cmd/swag@latest
+go generate docs.go
+```
+
 ### Update README.md
 ```bash
 npx embedme README.md

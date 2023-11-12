@@ -1,7 +1,7 @@
 # build backend
 FROM golang:1.21-alpine as go-builder
 
-RUN apk add build-base git
+RUN apk add build-base git npm
 
 WORKDIR /app
 COPY . /app
@@ -9,6 +9,8 @@ COPY . /app
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+RUN go generate docs.go
 RUN  ./build.sh
 
 # used to generate /etc/passwd /etc/group
