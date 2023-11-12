@@ -22,6 +22,7 @@ FROM ghcr.io/koestler/js-iotdevice:v3 AS js-builder
 FROM scratch
 USER app
 COPY --from=go-builder /app/go-iotdevice     /go-iotdevice
+COPY --from=go-builder /app/docs             /docs
 COPY --from=go-builder /etc/group            /etc/group
 COPY --from=go-builder /etc/passwd           /etc/passwd
 COPY --from=js-builder /usr/share/nginx/html /frontend-build

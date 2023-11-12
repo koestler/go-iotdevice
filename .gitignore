@@ -2,3 +2,4 @@ go-iotdevice
 *.passwd
 config.yaml
 *_mock.go
+docs/
