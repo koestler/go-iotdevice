@@ -394,14 +394,11 @@ certbot certonly --authenticator webroot --webroot-path /srv/www-acme-challenge/
 service nginx reload 
 ```
 
-## Mqtt Interface
-
-
 ## Http Interface
-
-The http server logs after startup of the tool what exact routes it serves given the current configuration.
-There are the following endpoints:
-
+There is a stable REST-api to fetch the views, devices, registers and values.
+Additionally, patch requests are implemented to set a controllable register (eg. output of a relay board).
+This api is used by the build-in frontend and can also be used for custom integrations.
+See /api/v2/docs and /api/v2/docs/swagger.json for a built in swagger documentation. 
 
 
 ## Development
