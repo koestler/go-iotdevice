@@ -45,14 +45,17 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 			}
 
 			ua := useragent.Parse(c.GetHeader("User-Agent"))
-			if ua.IsSafari() {
+			if env.Config.LogDebug() {
+				log.Printf("%s: User-Agent: %s", logPrefix, c.GetHeader("User-Agent"))
+			}
+			if ua.IsIOS() || ua.IsSafari() {
 				// Safari is know to not work with fragmented compressed websockets
 				// disable context takeover as a work around
 				if env.Config.LogDebug() {
-					log.Printf("%s: safari detected, disable compression", logPrefix)
+					log.Printf("%s: ios/safari detected, disable compression", logPrefix)
 				}
 				websocketAcceptOptions = websocket.AcceptOptions{
-					CompressionMode: websocket.CompressionNoContextTakeover,
+					CompressionMode: websocket.CompressionDisabled,
 				}
 			}
 
