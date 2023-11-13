@@ -1,4 +1,5 @@
- go-iotdevice
+# go-iotdevice
+[![Audit & Test](https://github.com/koestler/go-iotdevice/actions/workflows/audit.yml/badge.svg)](https://github.com/koestler/go-iotdevice/actions/workflows/audit.yml)
 [![Docker Image CI](https://github.com/koestler/js-iotsensor/actions/workflows/docker-image.yml/badge.svg?branch=main)](https://github.com/koestler/js-iotsensor/actions/workflows/docker-image.yml)
 
 This tool reads values from various IoT devices like solar charges directly connected by USB
