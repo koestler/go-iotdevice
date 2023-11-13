@@ -1,0 +1,33 @@
+# See https://github.com/koestler/go-iotdevice/blob/main/documentation/full-config.yaml for a full list of available configuration options and comments
+
+Version: 2
+ProjectTitle: Configurable Title of Project
+
+HttpServer:
+  Bind: "[::1]"
+
+Authentication:
+  HtaccessFile: ./auth.passwd
+
+MqttClients:
+  local:
+    Broker: tcp://mqtt.example.com:1883
+
+VictronDevices:
+  bmv0:
+    Device: /dev/serial/by-id/usb-VictronEnergy_BV_VE_Direct_cable_VEHTVQT-if00-port0
+    Kind: Vedirect
+
+HttpDevices:
+  tcw241:
+    Url: http://192.168.0.100/
+    Kind: Teracom
+
+Views:
+  - Name: Overview
+    Title: overview
+    Devices:
+      - Name: bmv0
+        Title: Battery Monitor
+      - Name: tcw241
+        Title: Relay Board

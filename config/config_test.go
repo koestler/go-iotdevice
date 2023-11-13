@@ -1977,6 +1977,13 @@ func TestReadConfig_DocumentationFullConfig(t *testing.T) {
 	}
 }
 
+func TestReadConfig_DocumentationConfig(t *testing.T) {
+	_, err := ReadConfigFile("", "../documentation/config.yaml", true)
+	if len(err) > 0 {
+		t.Errorf("did not expect any error, got %v", err)
+	}
+}
+
 func TestPrintConfig(t *testing.T) {
 	config, err := ReadConfig([]byte(ValidCompleteConfig), true)
 	if len(err) > 0 {

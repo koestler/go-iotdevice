@@ -7,12 +7,12 @@ or relay boards connected by ethernet and publishes those on [MQTT](http://mqtt.
 Additionally, a REST- and websocket-API and a [web frontend](https://github.com/koestler/js-iotdevice)
 is made available via an internal http server.
 
-![example frontend view](documentation/frontend.png)
+![Device overview](https://raw.githubusercontent.com/koestler/go-iotdevice-docs/main/external-overview.png)
 
 The tool does not store any historical data. Instead,
-[go-mqtt-to-influx](https://github.com/koestler/go-mqtt-to-influx) is used to write this data
-to an [Influx Database](https://github.com/influxdata/influxdb) from where it is displayed
-on a [Grafana](https://grafana.com/) dashboard.
+[go-mqtt-to-influx](https://github.com/koestler/go-mqtt-to-influx) is can be used to write
+to an [Influx Database](https://github.com/influxdata/influxdb). [Grafana](https://grafana.com/)
+can be used to easily create custom dashboards showing the data.
 
 The tool was written with the following two scenarios in mind:
 * An off-grid holiday home installation running two batteries with
@@ -54,40 +54,81 @@ The following devices are supported:
 * via Modbus
   * [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay.htm), a cheap relay board with programmable address (up to 255 on one bus)
 
-## Configuration
-The tool supports command line options to for profiling. See:
-```bash
-./go-iotdevice --help
-Usage:
-  go-iotdevice [-c <path to yaml config file>]
+## Deployment
+There are [GitHub actions](https://github.com/koestler/go-iotdevice/actions/workflows/docker-image.yml)
+to automatically cross-compile amd64, arm64 and arm/v7
+publicly available [docker images](https://github.com/koestler/go-iotdevice/pkgs/container/go-iotdevice).
+The docker-container is built on top of alpine, the binary is `/go-iotdevice` and the config is
+expected to be at `/config.yaml`. The container runs as non-root user `app`.
 
-Application Options:
-      --version     Print the build version and timestamp
-  -c, --config=     Config File in yaml format (default: ./config.yaml)
-  -d, --dry-run     Read and check the config and exit.
-      --cpuprofile= write cpu profile to <file>
-      --memprofile= write memory profile to <file>
+See [Local develpment](#Local-development) on how to compile a single binary.
 
-Help Options:
-  -h, --help        Show this help message
+The GitHub tags use semantic versioning and whenever a tag like v2.3.4 is build, it is pushed to docker tags
+v2, v2.3 and v2.3.4.
+
+For auto-restart on system reboots, configuration and networking I use `docker compose`. Here is an example file:
+```yaml
+# documentation/docker-compose.yml
+
+version: "3"
+services:
+  go-iotdevice:
+    restart: always
+    image: ghcr.io/koestler/go-iotdevice:v3
+    volumes:
+      - ${PWD}/config.yaml:/config.yaml:ro
+      #- ${PWD}/auth.passwd:/auth.passwd:ro
+      - /dev:/dev
+    group_add:
+      - dialout
+    privileged: true # used to access serial devices
+
 ```
 
-All other configuration defined in a single yaml file which is read from `./config.yaml` by default.
+### Quick setup
+[Install Docker](https://docs.docker.com/engine/install/) first.
 
-Here is a fully documented configuration file including all options:
+```bash
+# create a directory for the docker-composer project and config file
+mkdir -p /srv/dc/go-iotdevice # or wherever you want to put docker-compose files
+cd /srv/dc/go-iotdevice
+curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/docker-compose.yml -o docker-compose.yml
+curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/config.yaml -o config.yaml
+# adapt config.yaml and configure devices
+
+# start the container
+docker compose up -d
+
+# optional: check the log output to see how it's going
+docker compose logs -f
+
+# when config.yaml is changed, the container needs to be restarted
+docker compose restart
+
+# do upgrade to the newest tag
+docker compose pull
+docker compose up -d
+```
+
+## Configuration
+The configuration is stored in a single yaml file. By default, it is read from `./config.yaml`.
+This can be changed using the `--config=another-config.yaml` command line option.
+
+There are mandatory fields and there are optional fields which have reasonable default values.
+
 ```yaml
 # documentation/full-config.yaml
 
-Version: 2                                                 # configuration file format; must be set to 2 for >=v3 of this tool.
-ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice: is shown in the http frontend
-LogConfig: true                                            # optional, default true, outputs the used configuration including defaults on startup
+Version: 2                                                 # mandatory, configuration file format; must be set to 2 for >=v3 of this tool. Older formats are not supported anymore.
+ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice, title is shown in the http frontend
+LogConfig: true                                            # optional, default true, outputs the full configuration structure including used defaults on startup
 LogWorkerStart: true                                       # optional, default true, outputs what devices and mqtt clients are started
 LogStateStorageDebug: false                                # optional, default false, outputs all write to the internal state value storage
 LogCommandStorageDebug: false                              # optional, default false, outputs all write to the internal command value storage
 
 HttpServer:                                                # optional, when missing: http server is not started
   Bind: "[::1]"                                            # mandatory, use [::1] (ipv6 loopback) to enable on both ipv4 and 6 and 0.0.0.0 to only enable ipv4
-  Port: 8000                                               # optional, default 8000
+  Port: 8000                                               # optional, default 8000, what tcp port to listen on, low-ports like 80 only work when started as root
   LogRequests: true                                        # optional, default true, enables the http access log to stdout
   # configure FrontendProxy xor FrontendPath
   #FrontendProxy: "http://127.0.0.1:3000/"                 # optional, default deactivated; proxies the frontend to another server; useful for development
@@ -98,7 +139,7 @@ HttpServer:                                                # optional, when miss
 
 Authentication:                                            # optional, when missing: login is disabled
   #JwtSecret: 'insert a random string here and uncomment'  # optional, default new random string on startup, used to sign the JWT tokens
-                                                           # when configured, the users do not get logged out on restart
+                                                           # use a fixed, secure, random value (e.g. `pwgen -s 64 1`) to allow users to stay logged in on restart
   JwtValidityPeriod: 1h                                    # optional, default 1h, users are logged out after this time
   HtaccessFile: ./auth.passwd                              # mandatory, where the file generated by htpasswd can be found
 
@@ -107,9 +148,9 @@ MqttClients:                                               # optional, when empt
     Broker: tcp://mqtt.example.com:1883                    # mandatory, the URL to the server, use tcp:// or ssl://
     ProtocolVersion: 5                                     # optional, default 5, must be 5 always, only mqtt protocol version 5 is supported
 
-    User: dev                                              # optional, default empty, the user used for authentication
-    Password: zee4AhRi                                     # optional, default empty, the password used for authentication
-    #ClientId: go-iotdevice                                # optional, default go-iotdevice-UUID, mqtt client id, make sure it is unique per mqtt-server
+    User: dev                                              # optional, default empty, the username used for authentication
+    Password: zee4AhRi                                     # optional, default empty, the plain text password used for authentication
+    #ClientId: go-iotdevice                                # optional, default go-iotdevice-UUID (-> random on each startup), mqtt client id, make sure it is unique per mqtt-server
 
     KeepAlive: 1m                                          # optional, default 60s, how often a ping is sent to keep the connection alive
     ConnectRetryDelay: 10s                                 # optional, default 10s, when disconnected: after what delay shall a connection attempt is made
@@ -348,7 +389,6 @@ It's therefore best to hardcode a random secret.
 2. Per `View` you can define a list of `AllowedUsers`. When the list is present and has at lest one entry, only
 usernames on that list can access this view. If the list is empty, all users in the user database can access. 
 
-
 ### User database
 The only supported authentication backend at the moment is a simple apache htaccess file. Set it up as follows:
 
@@ -396,14 +436,13 @@ service nginx reload
 
 ## Http Interface
 There is a stable REST-api to fetch the views, devices, registers and values.
-Additionally, patch requests are implemented to set a controllable register (eg. output of a relay board).
+Additionally, patch requests are implemented to set a controllable register (e.g. an output of a relay board).
 This api is used by the build-in frontend and can also be used for custom integrations.
-See /api/v2/docs and /api/v2/docs/swagger.json for a built in swagger documentation. 
-
+See /api/v2/docs and /api/v2/docs/swagger.json for a built-in swagger documentation. 
 
 ## Development
 
-### Run locally
+### Local development
 For development this backend can be compiled and run locally.
 In addition, it's then best to also und run the [frontend](https://github.com/koestler/js-iotdevice) locally. 
 
@@ -428,21 +467,23 @@ Alternatively, if you don't have golang installed locally, you can compile and r
 ```bash
 docker build -f docker/Dockerfile -t go-iotdevice .
 docker run --rm --name go-iotdevice -p 127.0.0.1:8000:8000 \
-  -v "$(pwd)"/documentation/dev-config.yaml:/config.yaml:ro \
+  -v "$(pwd)"/documentation/config.yaml:/config.yaml:ro \
   go-iotdevice
 ```
 
-### run tests
-```bash
-go install go.uber.org/mock/mockgen@latest
-go genreate ./...
-go test ./...
-```
-
-### Generate swagger docu
+### Generate swagger documentation
 ```bash
 go install github.com/swaggo/swag/cmd/swag@latest
 go generate docs.go
+```
+
+### Run tests
+[gomock](https://github.com/uber-go/mock) is used to generate stubs and mocks for the unit tests.
+
+```bash
+go install go.uber.org/mock/mockgen@latest
+go generate ./...
+go test ./...
 ```
 
 ### Update README.md

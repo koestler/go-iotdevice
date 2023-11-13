@@ -1,0 +1,12 @@
+version: "3"
+services:
+  go-iotdevice:
+    restart: always
+    image: ghcr.io/koestler/go-iotdevice:v3
+    volumes:
+      - ${PWD}/config.yaml:/config.yaml:ro
+      #- ${PWD}/auth.passwd:/auth.passwd:ro
+      - /dev:/dev
+    group_add:
+      - dialout
+    privileged: true # used to access serial devices
