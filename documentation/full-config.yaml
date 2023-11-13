@@ -8,7 +8,7 @@ LogCommandStorageDebug: false                              # optional, default f
 HttpServer:                                                # optional, when missing: http server is not started
   Bind: "[::1]"                                            # mandatory, use [::1] (ipv6 loopback) to enable on both ipv4 and 6 and 0.0.0.0 to only enable ipv4
   Port: 8000                                               # optional, default 8000, what tcp port to listen on, low-ports like 80 only work when started as root
-  LogRequests: true                                        # optional, default true, enables the http access log to stdout
+  LogRequests: true                                        # optional, default true, enable the http access log to stdout
   # configure FrontendProxy xor FrontendPath
   #FrontendProxy: "http://127.0.0.1:3000/"                 # optional, default deactivated; proxies the frontend to another server; useful for development
   FrontendPath: ./frontend-build/                          # optional, default "./frontend-build/": path to a static frontend build
@@ -36,7 +36,7 @@ MqttClients:                                               # optional, when empt
     ConnectTimeout: 5s                                     # optional, default 5s, how long to wait for the SYN+ACK packet, increase on slow networks
     TopicPrefix: go-iotdevice/                             # optional, %Prefix% is replaced with this string
     ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overriding MaxBacklogSize, AvailabilityEnable, StructureEnable, TelemetryEnable, RealtimeEnable)
-    MaxBacklogSize: 256                                    # optional, default 256, max number of mqtt messages to store when connection is offline
+    MaxBacklogSize: 256                                    # optional, default 256, max number of mqtt messages to store when tconnection is offline
 
     MqttDevices:                                           # optional, default empty, which mqtt devices shall receive messages from this client
       bmv1:                                                # mandatory, the identifier of the MqttDevice
@@ -58,14 +58,14 @@ MqttClients:                                               # optional, when empt
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
 
     Structure:
-      Enabled: true                                        # optional, default false, whether to send messages containing the list of registers / types
+      Enabled: true                                        # optional, default false, whether to send messages containing the list of registers/types
       TopicTemplate: '%Prefix%struct/%DeviceName%'         # optional, what topic to use for structure messages
       Interval: 0s                                         # optional, default 0, 0 means disabled only send initially, otherwise the structure is repeated after this interval (useful when retain is false)
       Retain: true                                         # optional, default true, the mqtt retain flag for structure messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
-          Filter:                                          # optional, default include all, defines which registers are show in the view,
+          Filter:                                          # optional, default include all, defines which registers are shown in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
             SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
@@ -81,7 +81,7 @@ MqttClients:                                               # optional, when empt
       Retain: false                                        # optional, default false, the mqtt retain flag for telemetry messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
-        bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
+        bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices, etc. sections
           Filter:                                          # optional, default include all, defines which registers are show in the view,
             # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
@@ -91,10 +91,10 @@ MqttClients:                                               # optional, when empt
             DefaultInclude: True                           # optional, default true,  whether to return the registers that do not match any include/skip rule
 
     Realtime:
-      Enabled: true                                        # optional, default false, whether to enable sending realtime messages
-      TopicTemplate: '%Prefix%real/%DeviceName%/%RegisterName%' # optional, what topic to use for realtime messages
+      Enabled: true                                        # optional, default false, whether to enable sending real-time messages
+      TopicTemplate: '%Prefix%real/%DeviceName%/%RegisterName%' # optional, what topic to use for real-time messages
       Interval: 0s                                         # optional, default 0; 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
-      Retain: false                                        # optional, default false, the mqtt retain flag for realtime messages
+      Retain: false                                        # optional, default false, the mqtt retain flag for real-time messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # messages are only sent for this device
@@ -110,13 +110,13 @@ MqttClients:                                               # optional, when empt
             DefaultInclude: False                          # optional, default true,  whether to return the registers that do not match any include/skip rule
 
     HomeassistantDiscovery:
-      Enabled: true                                        # optional, default false, whether to enable sending realtime messages
-      TopicTemplate: 'homeassistant/%Component%/%NodeId%/%ObjectId%/config' # optional, topic to use for homeassistant deisovery messages
+      Enabled: true                                        # optional, default false, whether to enable sending homeassistant auto-disovery messages
+      TopicTemplate: 'homeassistant/%Component%/%NodeId%/%ObjectId%/config' # optional, topic to use for homeassistant discovery messages
       Interval: 0s                                         # optional, default 0, 0 means disabled only send initially, otherwise the disovery messages are repeated after this interval (useful when retain is false)
       Retain: false                                        # optional, default false, the mqtt retain flag for homeassistant disovery messages
       Devices:                                             # optional, default all, a list of devices to match
-        bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
-          Filter:                                          # optional, default include all, defines which registers are show in the view,
+        bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices, etc. sections
+          Filter:                                          # optional, default include all, defines which registers are shown in the view,
             # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
             SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
@@ -126,20 +126,20 @@ MqttClients:                                               # optional, when empt
 
     Command:
       Enabled: true                                        # optional, default false, whether to receive and execute command messages
-      TopicTemplate: '%Prefix%cmnd/%DeviceName%/%RegisterName%' # optional, what topic to use for realtime messages
+      TopicTemplate: '%Prefix%cmnd/%DeviceName%/%RegisterName%' # optional, what topic to use for real-time messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # messages are only sent for this device
           Filter:                                          # optional, default include all, defines which registers are show in the view,
             # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
-              - BatteryVoltage                             # the BatteryVoltage register is sent no matter if it's category is listed unter categories
+              - BatteryVoltage                             # the BatteryVoltage register is sent no matter if its category is listed under categories
               - Power
             SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
             IncludeCategories:                             # optional, default empty, all registers of the given category that are not explicitly skipped are returned
-              - Essential                                  # all registers of the category essential are sent; no matter if thy are listed in registers
+              - Essential                                  # all registers of the category essential are sent; no matter if they are listed in registers
             SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
-            DefaultInclude: False                          # optional, default true,  whether to return the registers that do not match any include/skip rule
+            DefaultInclude: False                          # optional, default true, whether to return the registers that do not match any include/skip rule
 
     LogDebug: false                                        # optional, default false, very verbose debug log of the mqtt connection
     LogMessages: false                                     # optional, default false, log all incoming mqtt messages
@@ -159,11 +159,11 @@ VictronDevices:                                            # optional, a list of
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
       IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
       SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
-        - Temperature                                      # for BMV devices without a temperature sensor connect
+        - Temperature                                      # for BMV devices without a temperature sensor connected
         - AuxVoltage                                       # for BMV devices without a mid- or starter-voltage reading
       IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
       SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
-        - Settings                                         # for solar devices it might make sense to not fetch / output the settings
+        - Settings                                         # for solar devices it might make sense to not fetch/output the settings
       DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
     RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
     RestartIntervalMaxBackoff: 1m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum

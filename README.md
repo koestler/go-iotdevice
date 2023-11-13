@@ -19,10 +19,10 @@ The tool was written with the following two scenarios in mind:
 * An off-grid holiday home installation running two batteries with
   Victron Energy [SmartSolar](https://www.victronenergy.com/solar-charge-controllers/bluesolar-mppt-150-35) / 
   [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt) for solar and battery monitoring, 
- a [Shelly 3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) for generator power monitoring.
+ and a [Shelly 3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) for generator power monitoring.
  The tool runs on a single [Raspberry Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/).
 * Remote control of a generator set using a [Teracom TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/)
-  for start / stop and temperature monitoring. Control is integrated into [Homea Assistant](https://www.home-assistant.io/)
+  for start/stop and temperature monitoring. Control is integrated into [Homea Assistant](https://www.home-assistant.io/)
   via MQTT.
 
 ## Supported protocols and devices
@@ -47,27 +47,27 @@ The following devices are supported:
   * Victron Energy [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt)
   * Victron Energy [Phoenix Inverter](https://www.victronenergy.com/inverters)
 * via HTTP:
-  * [Shelly 3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) 3 phase energy power monitor
-  * [Teracom TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/) industrial relay / sensor board
+  * [Shelly 3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) 3-phase energy power monitor
+  * [Teracom TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/) industrial relay/sensor board
 * via MQTT:
   * Another go-iotdevice instance connected to the same MQTT broker. This allows to connect devices
-    to different linux machines at different location but still having one single frontend showing all devices.
+    to different Linux machines at different locations but still having one single frontend showing all devices.
 * via Modbus
   * [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay.htm), a cheap relay board with programmable address (up to 255 on one bus)
 
 ## Deployment
 There are [GitHub actions](https://github.com/koestler/go-iotdevice/actions/workflows/docker-image.yml)
-to automatically cross-compile amd64, arm64 and arm/v7
+to automatically cross-compile amd64, arm64, and arm/v7
 publicly available [docker images](https://github.com/koestler/go-iotdevice/pkgs/container/go-iotdevice).
-The docker-container is built on top of alpine, the binary is `/go-iotdevice` and the config is
-expected to be at `/config.yaml`. The container runs as non-root user `app`.
+The docker-container is built on top of Alpine, the binary is `/go-iotdevice` and the config is
+expected to be at `/config.yaml`. The container runs as the non-root user `app`.
 
-See [Local develpment](#Local-development) on how to compile a single binary.
+See [Local development](#Local-development) on how to compile a single binary.
 
-The GitHub tags use semantic versioning and whenever a tag like v2.3.4 is build, it is pushed to docker tags
-v2, v2.3 and v2.3.4.
+The GitHub tags use semantic versioning and whenever a tag like v2.3.4 is built, it is pushed to docker tags
+v2, v2.3, and v2.3.4.
 
-For auto-restart on system reboots, configuration and networking I use `docker compose`. Here is an example file:
+For auto-restart on system reboots, configuration, and networking I use `docker compose`. Here is an example file:
 ```yaml
 # documentation/docker-compose.yml
 
@@ -106,7 +106,7 @@ docker compose logs -f
 # when config.yaml is changed, the container needs to be restarted
 docker compose restart
 
-# do upgrade to the newest tag
+# upgrade to the newest tag
 docker compose pull
 docker compose up -d
 ```
@@ -130,7 +130,7 @@ LogCommandStorageDebug: false                              # optional, default f
 HttpServer:                                                # optional, when missing: http server is not started
   Bind: "[::1]"                                            # mandatory, use [::1] (ipv6 loopback) to enable on both ipv4 and 6 and 0.0.0.0 to only enable ipv4
   Port: 8000                                               # optional, default 8000, what tcp port to listen on, low-ports like 80 only work when started as root
-  LogRequests: true                                        # optional, default true, enables the http access log to stdout
+  LogRequests: true                                        # optional, default true, enable the http access log to stdout
   # configure FrontendProxy xor FrontendPath
   #FrontendProxy: "http://127.0.0.1:3000/"                 # optional, default deactivated; proxies the frontend to another server; useful for development
   FrontendPath: ./frontend-build/                          # optional, default "./frontend-build/": path to a static frontend build
@@ -158,7 +158,7 @@ MqttClients:                                               # optional, when empt
     ConnectTimeout: 5s                                     # optional, default 5s, how long to wait for the SYN+ACK packet, increase on slow networks
     TopicPrefix: go-iotdevice/                             # optional, %Prefix% is replaced with this string
     ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overriding MaxBacklogSize, AvailabilityEnable, StructureEnable, TelemetryEnable, RealtimeEnable)
-    MaxBacklogSize: 256                                    # optional, default 256, max number of mqtt messages to store when connection is offline
+    MaxBacklogSize: 256                                    # optional, default 256, max number of mqtt messages to store when tconnection is offline
 
     MqttDevices:                                           # optional, default empty, which mqtt devices shall receive messages from this client
       bmv1:                                                # mandatory, the identifier of the MqttDevice
@@ -180,14 +180,14 @@ MqttClients:                                               # optional, when empt
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
 
     Structure:
-      Enabled: true                                        # optional, default false, whether to send messages containing the list of registers / types
+      Enabled: true                                        # optional, default false, whether to send messages containing the list of registers/types
       TopicTemplate: '%Prefix%struct/%DeviceName%'         # optional, what topic to use for structure messages
       Interval: 0s                                         # optional, default 0, 0 means disabled only send initially, otherwise the structure is repeated after this interval (useful when retain is false)
       Retain: true                                         # optional, default true, the mqtt retain flag for structure messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
-          Filter:                                          # optional, default include all, defines which registers are show in the view,
+          Filter:                                          # optional, default include all, defines which registers are shown in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
             SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
@@ -203,7 +203,7 @@ MqttClients:                                               # optional, when empt
       Retain: false                                        # optional, default false, the mqtt retain flag for telemetry messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
-        bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
+        bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices, etc. sections
           Filter:                                          # optional, default include all, defines which registers are show in the view,
             # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
@@ -213,10 +213,10 @@ MqttClients:                                               # optional, when empt
             DefaultInclude: True                           # optional, default true,  whether to return the registers that do not match any include/skip rule
 
     Realtime:
-      Enabled: true                                        # optional, default false, whether to enable sending realtime messages
-      TopicTemplate: '%Prefix%real/%DeviceName%/%RegisterName%' # optional, what topic to use for realtime messages
+      Enabled: true                                        # optional, default false, whether to enable sending real-time messages
+      TopicTemplate: '%Prefix%real/%DeviceName%/%RegisterName%' # optional, what topic to use for real-time messages
       Interval: 0s                                         # optional, default 0; 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
-      Retain: false                                        # optional, default false, the mqtt retain flag for realtime messages
+      Retain: false                                        # optional, default false, the mqtt retain flag for real-time messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # messages are only sent for this device
@@ -232,13 +232,13 @@ MqttClients:                                               # optional, when empt
             DefaultInclude: False                          # optional, default true,  whether to return the registers that do not match any include/skip rule
 
     HomeassistantDiscovery:
-      Enabled: true                                        # optional, default false, whether to enable sending realtime messages
-      TopicTemplate: 'homeassistant/%Component%/%NodeId%/%ObjectId%/config' # optional, topic to use for homeassistant deisovery messages
+      Enabled: true                                        # optional, default false, whether to enable sending homeassistant auto-disovery messages
+      TopicTemplate: 'homeassistant/%Component%/%NodeId%/%ObjectId%/config' # optional, topic to use for homeassistant discovery messages
       Interval: 0s                                         # optional, default 0, 0 means disabled only send initially, otherwise the disovery messages are repeated after this interval (useful when retain is false)
       Retain: false                                        # optional, default false, the mqtt retain flag for homeassistant disovery messages
       Devices:                                             # optional, default all, a list of devices to match
-        bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
-          Filter:                                          # optional, default include all, defines which registers are show in the view,
+        bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices, etc. sections
+          Filter:                                          # optional, default include all, defines which registers are shown in the view,
             # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
             SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
@@ -248,20 +248,20 @@ MqttClients:                                               # optional, when empt
 
     Command:
       Enabled: true                                        # optional, default false, whether to receive and execute command messages
-      TopicTemplate: '%Prefix%cmnd/%DeviceName%/%RegisterName%' # optional, what topic to use for realtime messages
+      TopicTemplate: '%Prefix%cmnd/%DeviceName%/%RegisterName%' # optional, what topic to use for real-time messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # messages are only sent for this device
           Filter:                                          # optional, default include all, defines which registers are show in the view,
             # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
-              - BatteryVoltage                             # the BatteryVoltage register is sent no matter if it's category is listed unter categories
+              - BatteryVoltage                             # the BatteryVoltage register is sent no matter if its category is listed under categories
               - Power
             SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
             IncludeCategories:                             # optional, default empty, all registers of the given category that are not explicitly skipped are returned
-              - Essential                                  # all registers of the category essential are sent; no matter if thy are listed in registers
+              - Essential                                  # all registers of the category essential are sent; no matter if they are listed in registers
             SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
-            DefaultInclude: False                          # optional, default true,  whether to return the registers that do not match any include/skip rule
+            DefaultInclude: False                          # optional, default true, whether to return the registers that do not match any include/skip rule
 
     LogDebug: false                                        # optional, default false, very verbose debug log of the mqtt connection
     LogMessages: false                                     # optional, default false, log all incoming mqtt messages
@@ -281,11 +281,11 @@ VictronDevices:                                            # optional, a list of
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
       IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
       SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
-        - Temperature                                      # for BMV devices without a temperature sensor connect
+        - Temperature                                      # for BMV devices without a temperature sensor connected
         - AuxVoltage                                       # for BMV devices without a mid- or starter-voltage reading
       IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
       SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
-        - Settings                                         # for solar devices it might make sense to not fetch / output the settings
+        - Settings                                         # for solar devices it might make sense to not fetch/output the settings
       DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
     RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
     RestartIntervalMaxBackoff: 1m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
@@ -376,22 +376,22 @@ Views:                                                     # optional, a list of
 
 ## Authentication
 The tool can use [JWT](https://jwt.io/) to make certain views only available after a login. The user database
-is stored in an apache htaccess file which can be changed without restarting the server. 
+is stored in an Apache htaccess file which can be changed without restarting the server. 
 
 ### Configuration
 
-There are two relevant section in the configuration file:
+There are two relevant sections in the configuration file:
 
-1. Adding the `Authentication:` section enables the login / authentication mechanism.
+1. Adding the `Authentication:` section enables the login/authentication mechanism.
 The `JwtSecret` is used to sign the tokens. When left unconfigured, a new random secret is generated on each
 startup of the backend. This results in all users being logged out after each restart of the server.
 It's therefore best to hardcode a random secret.
 
-2. Per `View` you can define a list of `AllowedUsers`. When the list is present and has at lest one entry, only
-usernames on that list can access this view. If the list is empty, all users in the user database can access. 
+2. Per `View`, you can define a list of `AllowedUsers`. When the list is present and has at least one entry, only
+usernames on that list can access this view. If the list is empty, all users in the user database can access it. 
 
 ### User database
-The only supported authentication backend at the moment is a simple apache htaccess file. Set it up as follows:
+The only supported authentication backend at the moment is a simple Apache htaccess file. Set it up as follows:
 
 ```bash
 htpasswd -c auth.passwd lorenz
@@ -401,13 +401,13 @@ htpasswd auth.passwd daniela
 ```
 
 ## Nginx reverse proxy
-I normally run this service behind one or even two nginx server configured as a reverse proxy. It can take care of:
+I normally run this service behind a [Nginx](https://nginx.org/en/) server configured as a reverse proxy. It can take care of:
  * Serving multiple different applications on the same address using [SNI](https://en.wikipedia.org/wiki/Server_Name_Indication).
  * Caching on a fast cloud server in front of a device connected via a slow mobile connection.
  * https termination
 
 ### Setup
-It's assumed that you understand each of the following steps in details. It's just to make the setup steps as quick as possible. 
+It's assumed that you understand each of the following steps in detail. It's just to make the setup steps as quick as possible. 
 
 ```bash
 # install nginx / curl
@@ -436,18 +436,18 @@ service nginx reload
 ```
 
 ## Http Interface
-There is a stable REST-api to fetch the views, devices, registers and values.
+There is a stable REST-API to fetch the views, devices, registers, and values.
 Additionally, patch requests are implemented to set a controllable register (e.g. an output of a relay board).
-This api is used by the build-in frontend and can also be used for custom integrations.
-See /api/v2/docs and /api/v2/docs/swagger.json for a built-in swagger documentation. 
+This API is used by the build-in front-end and can also be used for custom integrations.
+See /api/v2/docs and /api/v2/docs/swagger.json for built-in swagger documentation. 
 
 ## Development
 
 ### Local development
-For development this backend can be compiled and run locally.
-In addition, it's then best to also und run the [frontend](https://github.com/koestler/js-iotdevice) locally. 
+For development, this backend can be compiled and run locally.
+In addition, it's then best to also run the [front-end](https://github.com/koestler/js-iotdevice) locally. 
 
-This tool can proxy requests to a local server serving the frontend. Use eg.:
+This tool can proxy requests to a local server serving the front-end. Use e.g.:
 
 ```yaml
 HttpServer:                                                # optional, when missing: http server is not started
@@ -463,7 +463,7 @@ go build && ./go-iotdevice
 ```
 
 ### Compile and run inside docker
-Alternatively, if you don't have golang installed locally, you can compile and run 
+Alternatively, if you don't have Golang installed locally, you can compile and run 
 
 ```bash
 docker build -f docker/Dockerfile -t go-iotdevice .
