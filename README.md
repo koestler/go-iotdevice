@@ -73,8 +73,10 @@ This project uses the following terminology:
 
 ## Deployment
 
-### Non docker
-
+<details>
+<summary>
+Deployment without docker
+</summary>
 I use docker to deploy this tool.
 Alternatively, you can always simply clone this repo and build the go-iotdevice binary by yourself.
 It is statically linked and has no external dependency (except the config and auth.passwd file).
@@ -86,6 +88,7 @@ git clone https://github.com/koestler/go-iotdevice.git
 cd go-iotdevice
 go build
 ```
+</details>
 
 ### Docker
 
