@@ -59,27 +59,27 @@ The following devices are supported:
 
 This project uses the following terminology:
 
-* **Device** revers to a physical unit like a solar charger, a relay board
+* **Device** refers to a physical unit like a solar charger, a relay board
 * A **Register** is a measurement or output that a device can have.
   E.g. "Battery Voltage" or "Relay 0". Each device can have multiple registers. For some devices the list
-  of registers is simply defined by the type of device (e.g. Victron Enegery MPPT 100 | 50) and for others it is configurable
+  of registers is simply defined by the type of device (e.g. Victron Energy MPPT 100 | 50) and for others it is configurable
   on the device (e.g. the TCW241).
-  A Register has a technical name (alphanumeric, no spaces, used as key is various json objects, e.g. "BatteryVoltage"),
-  a description (shown in the frontend, e.g. "Battery Voltage") and a Unit (e.g. "mV") and a type (string, float, enum).
-* A **value** is a reference to a register plus a number / string / enum-index depending on the type of register.
-  E.g. a value can be 13.80 and reference to the register "BatteryVoltage".
-* A **view** is used in the http server and in the frontend.
-  The frontend allows to show different subsets of devices / registers on different routes. A view defines such a subset.
+  A Register has a technical name (alphanumeric, no spaces, used as the key is various JSON objects, e.g. "BatteryVoltage"),
+  a description (shown in the frontend, e.g. "Battery Voltage"), a Unit (e.g. "mV"), and a type (string, float, enum).
+* A **value** is a reference to a register plus a number/string/enum-index depending on the type of register.
+  E.g.: A value can be 13.80 and reference to the register "BatteryVoltage".
+* A **view** is used in the HTTP server and the front-end.
+  The front-end shows different subsets of devices/registers on different routes. A view defines such a subset.
 
 ## Deployment
 
 ### Non docker
 
 I use docker to deploy this tool.
-Alternatively you can always simply clone this repo and build the go-iotdevice binary by your self.
+Alternatively, you can always simply clone this repo and build the go-iotdevice binary by yourself.
 It is statically linked and has no external dependency (except the config and auth.passwd file).
 The following snippets build the tool without the swagger documentation.
-See [Local development](#Local-development) for more details.
+See [Local Development](#Local-development) for more details.
 
 ```bash
 git clone https://github.com/koestler/go-iotdevice.git
@@ -93,7 +93,7 @@ There are [GitHub actions](https://github.com/koestler/go-iotdevice/actions/work
 to automatically cross-compile amd64, arm64, and arm/v7
 publicly available [docker images](https://github.com/koestler/go-iotdevice/pkgs/container/go-iotdevice).
 The docker-container is built on top of Alpine, the binary is `/go-iotdevice` and the config is
-expected to be at `/config.yaml`. The container runs as the non-root user `app`.
+expected to be at `/config.yaml`. The container runs as a non-root user `app`.
 
 The GitHub tags use semantic versioning and whenever a tag like v2.3.4 is built, it is pushed to docker tags
 v2, v2.3, and v2.3.4.
@@ -123,7 +123,7 @@ This can be changed using the `--config=another-config.yaml` command line option
 
 There are mandatory fields and there are optional fields which have reasonable default values.
 
-See [Explained full configuration](#full-configuration) for a complete list of all available configuration options.
+See [Explained Full Configuration](#explained-full-configuration) for a complete list of all available configuration options.
 
 ### Quick setup
 [Install Docker](https://docs.docker.com/engine/install/) first.
@@ -224,10 +224,10 @@ service nginx reload
 
 ## MQTT Interface
 This tool can connect to one or multiple MQTT servers and provide publish messages regarding the availability
-(whether a device is online), available registers and the current values.
-There are 5 different kind of outgoing messages
+(whether a device is online), available registers, and current values.
+There are 5 different kinds of outgoing messages
 (**Availability**, **Structure**, **Telemetry**, **Realtime**, **HomeassistantDiscovery**)
-and one kind of incoming messages (**Command**).
+and one kind of incoming message (**Command**).
 
 For each kind of message, you can configure the MQTT retain flag (server stores messages) 
 and what devices/registers shall be transmitted.
@@ -245,8 +245,8 @@ go-iotdevice/avail/go-iotdevice offline
 
 ### Availability of a device
 Whenever a device becomes connected/disconnected (serial connection established/lost) an `online`/`offline`
-message per device can be sent. However, MQTT only allows for one last will message. Therefor to reliably check if
-a device is available, both, the availability message of the client and of the device, must be checked.
+message per device can be sent. However, MQTT only allows for one last will message. Therefore to reliably check if
+a device is available, both, the availability message of the client and the device must be checked.
 
 Examples:
 ```
@@ -255,14 +255,14 @@ go-iotdevice/avail/my-device offline
 ```
 
 ### Structure
-In order for other instances of go-iotdevice or also for third-party software to know when devices are available and
+For other instances of go-iotdevice or also for third-party software to know when devices are available and
 what registers they have, a message containing the current structure of the device is published. It contains a list
-of registers as well as the topics for the availability, telemetry and realtime and command message such that the receiver
-knows where to subscribe to get current values / control the outputs.
+of registers as well as the topics for the availability, telemetry, real-time, and command message such that the receiver
+knows where to subscribe to get current values/control the outputs.
 
 Structure messages are sent when the device comes online for the first time by default (Interval=0s) with the retain
 flags set (the broker stores those messages for new clients).
-Alternatively it can also be sent repeatedly (Interval>0).
+Alternatively, it can also be sent repeatedly (Interval>0).
 
 Example:
 ```
@@ -282,7 +282,7 @@ go-iotdevice/struct/my-device {
 }
 ```
 
-Since mqtt payloads are sent uncompressed, size matters and fields are abbreviated:
+Since MQTT payloads are sent uncompressed, size matters and fields are abbreviated:
 Avail=AvailabilityTopics, Tele=TelemetryTopic, Real=RealtimeTopic, Cmnd=CommandTopic/Commandable, Regs=Registers, Cat=Category, Desc=Description
 
 ### Telemetry
@@ -314,7 +314,7 @@ For easy parsing, values are separated by type. To make the telemetry without th
 includes Cat=Category, Desc=Description, and Unit fields.
 
 ### Realtime
-Realtime messages are sent per device and register only when a value changes. They can either be sent
+Real-time messages are sent per device and register only when a value changes. They can either be sent
 immediately (Interval=0) or debounced (Interval>0). This is useful for some devices that change some values very often.
 
 Examples:
@@ -324,12 +324,12 @@ go-iotdevice/real/my-device/DI1 {"EnumIdx":0}
 go-iotdevice/real/my-device/Time {"TextVal":"19:00:24"}
 ```
 
-Realtime messages are small and only contain the value. The unit and nice names must be retrieved separately (e.g. via the structure messages).
+Real-time messages are small and only contain the value. The unit and nice names must be retrieved separately (e.g. via the structure messages).
 
 ### Command
-This tool can subscribe to command topics in order to receive commands to set an output to a specific state (e.g. switch a relay).
-The topic encodes the device and the register name of the output that shall be changed. The payload has  the same format
-as realtime messages and encode the desired value.
+This tool can subscribe to command topics to receive commands to set an output to a specific state (e.g. switch a relay).
+The topic encodes the device and the register name of the output that shall be changed. The payload has the same format
+as real-time messages and encodes the desired value.
 
 Examples:
 ```
@@ -347,10 +347,10 @@ mosquitto_pub -h 172.19.0.4 -t dev1/cmnd/dev0/R1 -m "{\"EnumIdx\": 1}"
 These messages are such that Homeassistant automatically shows read-only registers as sensors and commandable registers
 as switches. See [Home Assistant MQTT](https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery).
 
-Discovery messages for sensors are only sent for devices/registers for which realtime message are active because
+Discovery messages for sensors are only sent for devices/registers for which real-time messages are active because
 they are used to transmit the actual values. Switches are only advertised for registers for which the command topic is active. 
 Use filters in the Realtime and Command configuration section to restrict what devices/registers are shown in Homeassistant.
-Also consider setting `Realtime->Interval=500ms`. Homeassistant can easily be overloaded by hundreds of registers.
+Also, consider setting `Realtime->Interval=500ms`. Homeassistant can easily be overloaded by hundreds of registers.
 
 Examples:
 ```
@@ -429,7 +429,7 @@ go test ./...
 npx embedme README.md
 ```
 
-## Full Configuration
+## Explained Full Configuration
 ```yaml
 # documentation/full-config.yaml
 
