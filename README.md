@@ -55,14 +55,45 @@ The following devices are supported:
 * via Modbus
   * [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay.htm), a cheap relay board with programmable address (up to 255 on one bus)
 
+## Terminology
+
+This project uses the following terminology:
+
+* **Device** revers to a physical unit like a solar charger, a relay board
+* A **Register** is a measurement or output that a device can have.
+  E.g. "Battery Voltage" or "Relay 0". Each device can have multiple registers. For some devices the list
+  of registers is simply defined by the type of device (e.g. Victron Enegery MPPT 100 | 50) and for others it is configurable
+  on the device (e.g. the TCW241).
+  A Register has a technical name (alphanumeric, no spaces, used as key is various json objects, e.g. "BatteryVoltage"),
+  a description (shown in the frontend, e.g. "Battery Voltage") and a Unit (e.g. "mV") and a type (string, float, enum).
+* A **value** is a reference to a register plus a number / string / enum-index depending on the type of register.
+  E.g. a value can be 13.80 and reference to the register "BatteryVoltage".
+* A **view** is used in the http server and in the frontend.
+  The frontend allows to show different subsets of devices / registers on different routes. A view defines such a subset.
+
 ## Deployment
+
+### Non docker
+
+I use docker to deploy this tool.
+Alternatively you can always simply clone this repo and build the go-iotdevice binary by your self.
+It is statically linked and has no external dependency (except the config and auth.passwd file).
+The following snippets build the tool without the swagger documentation.
+See [Local development](#Local-development) for more details.
+
+```bash
+git clone https://github.com/koestler/go-iotdevice.git
+cd go-iotdevice
+go build
+```
+
+### Docker
+
 There are [GitHub actions](https://github.com/koestler/go-iotdevice/actions/workflows/docker-image.yml)
 to automatically cross-compile amd64, arm64, and arm/v7
 publicly available [docker images](https://github.com/koestler/go-iotdevice/pkgs/container/go-iotdevice).
 The docker-container is built on top of Alpine, the binary is `/go-iotdevice` and the config is
 expected to be at `/config.yaml`. The container runs as the non-root user `app`.
-
-See [Local development](#Local-development) on how to compile a single binary.
 
 The GitHub tags use semantic versioning and whenever a tag like v2.3.4 is built, it is pushed to docker tags
 v2, v2.3, and v2.3.4.
@@ -86,6 +117,14 @@ services:
 
 ```
 
+### Configuration
+The configuration is stored in a single yaml file. By default, it is read from `./config.yaml`.
+This can be changed using the `--config=another-config.yaml` command line option.
+
+There are mandatory fields and there are optional fields which have reasonable default values.
+
+See [Explained full configuration](#full-configuration) for a complete list of all available configuration options.
+
 ### Quick setup
 [Install Docker](https://docs.docker.com/engine/install/) first.
 
@@ -95,6 +134,9 @@ mkdir -p /srv/dc/go-iotdevice # or wherever you want to put docker-compose files
 cd /srv/dc/go-iotdevice
 curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/docker-compose.yml -o docker-compose.yml
 curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/config.yaml -o config.yaml
+
+# optional download the full and commented configuration file for reference 
+curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/full-config.yaml -o full-config.yaml
 # adapt config.yaml and configure devices
 
 # start the container
@@ -111,12 +153,283 @@ docker compose pull
 docker compose up -d
 ```
 
-## Configuration
-The configuration is stored in a single yaml file. By default, it is read from `./config.yaml`.
-This can be changed using the `--config=another-config.yaml` command line option.
 
-There are mandatory fields and there are optional fields which have reasonable default values.
 
+## Http Interface
+There is a stable REST-API to fetch the views, devices, registers, and values.
+Additionally, patch requests are implemented to set a controllable register (e.g. an output of a relay board).
+This API is used by the build-in front-end and can also be used for custom integrations.
+See /api/v2/docs and /api/v2/docs/swagger.json for built-in swagger documentation.
+
+## Authentication
+The tool can use [JWT](https://jwt.io/) to make certain views only available after a login. The user database
+is stored in an Apache htaccess file which can be changed without restarting the server. 
+
+### Configuration
+
+There are two relevant sections in the configuration file:
+
+1. Adding the `Authentication:` section enables the login/authentication mechanism.
+The `JwtSecret` is used to sign the tokens. When left unconfigured, a new random secret is generated on each
+startup of the backend. This results in all users being logged out after each restart of the server.
+It's therefore best to hardcode a random secret.
+
+2. Per `View`, you can define a list of `AllowedUsers`. When the list is present and has at least one entry, only
+usernames on that list can access this view. If the list is empty, all users in the user database can access it. 
+
+### User database
+The only supported authentication backend at the moment is a simple Apache htaccess file. Set it up as follows:
+
+```bash
+htpasswd -c auth.passwd lorenz
+# enter password twice
+htpasswd auth.passwd daniela
+# enter another password twice
+```
+
+### Nginx reverse proxy
+I normally run this service behind a [Nginx](https://nginx.org/en/) server configured as a reverse proxy. It can take care of:
+ * Serving multiple different applications on the same address using [SNI](https://en.wikipedia.org/wiki/Server_Name_Indication).
+ * Caching on a fast cloud server in front of a device connected via a slow mobile connection.
+ * https termination
+
+#### Setup
+It's assumed that you understand each of the following steps in detail. It's just to make the setup steps as quick as possible. 
+
+```bash
+# install nginx / curl
+apt update && apt install -y nginx curl
+
+# define on what URL the tool shall be reachable
+SITE=foo.example.com
+CONFFILE=$SITE".conf"
+
+# create nginx configuration
+cd /etc/nginx/sites-available/
+curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/nginx-example.conf -o $CONFFILE
+sed -i "s/example.com/$SITE/g" $CONFFILE
+cd ../sites-enabled
+ln -s "../sites-available/"$CONFFILE
+
+# edit the proxy_pass directive to the correct address for the service
+emacs $CONFFILE 
+
+# setup certbot. use something like this:
+mkdir -p /srv/www-acme-challenge/$SITE
+certbot certonly --authenticator webroot --webroot-path /srv/www-acme-challenge/$SITE -d $SITE
+
+# reload the nginx config
+service nginx reload 
+```
+
+## MQTT Interface
+This tool can connect to one or multiple MQTT servers and provide publish messages regarding the availability
+(whether a device is online), available registers and the current values.
+There are 5 different kind of outgoing messages
+(**Availability**, **Structure**, **Telemetry**, **Realtime**, **HomeassistantDiscovery**)
+and one kind of incoming messages (**Command**).
+
+For each kind of message, you can configure the MQTT retain flag (server stores messages) 
+and what devices/registers shall be transmitted.
+
+### Availability of go-iotdevice
+go-iotdevice sends the message `online` whenever it connects to an MQTT broker and sends `offline` when it properly shuts down.
+Additionally, the `offline` message is registered as the last will message and the broker will distribute it automatically
+when the connection breaks.
+
+Examples:
+```
+go-iotdevice/avail/go-iotdevice online
+go-iotdevice/avail/go-iotdevice offline
+```
+
+### Availability of a device
+Whenever a device becomes connected/disconnected (serial connection established/lost) an `online`/`offline`
+message per device can be sent. However, MQTT only allows for one last will message. Therefor to reliably check if
+a device is available, both, the availability message of the client and of the device, must be checked.
+
+Examples:
+```
+go-iotdevice/avail/my-device online
+go-iotdevice/avail/my-device offline
+```
+
+### Structure
+In order for other instances of go-iotdevice or also for third-party software to know when devices are available and
+what registers they have, a message containing the current structure of the device is published. It contains a list
+of registers as well as the topics for the availability, telemetry and realtime and command message such that the receiver
+knows where to subscribe to get current values / control the outputs.
+
+Structure messages are sent when the device comes online for the first time by default (Interval=0s) with the retain
+flags set (the broker stores those messages for new clients).
+Alternatively it can also be sent repeatedly (Interval>0).
+
+Example:
+```
+go-iotdevice/struct/my-device {
+  "Avail":["go-iotdevice/avail/go-iotdevice","go-iotdevice/avail/my-device"],
+  "Tele":"go-iotdevice/tele/my-device",
+  "Real":"go-iotdevice/real/my-device/%RegisterName%",
+  "Cmnd":"go-iotdevice/cmnd/my-device/%RegisterName%",
+  "Regs":[
+    {"Cat":"Analog Inputs","Name":"AI1","Desc":"inputA","Type":"number","Unit":"V","Sort":100,"Cmnd":false},
+    {"Cat":"Digital Inputs","Name":"DI1","Desc":"Digital Input 1","Type":"enum","Enum":{"0":"OPEN","1":"CLOSED"},"Sort":300,"Cmnd":false},
+    {"Cat":"Relays","Name":"R1","Desc":"Relay 1","Type":"enum","Enum":{"0":"OFF","1":"ON","2":"in pulse"},"Sort":400,"Cmnd":true},
+    {"Cat":"Alarms","Name":"AI2Alarm","Desc":"Analog Input 2","Type":"enum","Enum":{"0":"OK","1":"ALARMED"},"Sort":501,"Cmnd":false},
+    {"Cat":"General","Name":"Time","Desc":"Time","Type":"string","Sort":602,"Cmnd":false},
+    {"Cat":"Device Info","Name":"DeviceName","Desc":"Device Name","Type":"string","Sort":700,"Cmnd":false},
+  ]
+}
+```
+
+Since mqtt payloads are sent uncompressed, size matters and fields are abbreviated:
+Avail=AvailabilityTopics, Tele=TelemetryTopic, Real=RealtimeTopic, Cmnd=CommandTopic/Commandable, Regs=Registers, Cat=Category, Desc=Description
+
+### Telemetry
+There are two ways to receive values. Telemetry messages are sent periodically (1s by default) per device and contain
+all the current values.
+
+Example:
+```
+dev0/tele/teracom {
+  "Time":"2023-11-15T16:55:42+01:00",
+  "NextTelemetry":"2023-11-15T16:55:52+01:00",
+  "Model":"Teracom",
+  "NumericValues":{
+    "AI1":{"Cat":"Analog Inputs","Desc":"inputA","Val":0.02,"Unit":"V"},
+  },
+  "TextValues":{
+    "DeviceName":{"Cat":"Device Info","Desc":"Device Name","Val":"TCW241"},
+    "Time":{"Cat":"General","Desc":"Time","Val":"18:58:19"}
+  },
+  "EnumValues":{
+    "AI2Alarm":{"Cat":"Alarms","Desc":"Analog Input 2","Idx":1,"Val":"ALARMED"},
+    "DI1":{"Cat":"Digital Inputs","Desc":"Digital Input 1","Idx":0,"Val":"OPEN"},
+    "R1":{"Cat":"Relays","Desc":"Relay 1","Idx":1,"Val":"ON"},
+  }
+}
+```
+
+For easy parsing, values are separated by type. To make the telemetry without the struct message, it also
+includes Cat=Category, Desc=Description, and Unit fields.
+
+### Realtime
+Realtime messages are sent per device and register only when a value changes. They can either be sent
+immediately (Interval=0) or debounced (Interval>0). This is useful for some devices that change some values very often.
+
+Examples:
+```
+go-iotdevice/real/my-device/AI1 {"NumVal":0.02}
+go-iotdevice/real/my-device/DI1 {"EnumIdx":0}
+go-iotdevice/real/my-device/Time {"TextVal":"19:00:24"}
+```
+
+Realtime messages are small and only contain the value. The unit and nice names must be retrieved separately (e.g. via the structure messages).
+
+### Command
+This tool can subscribe to command topics in order to receive commands to set an output to a specific state (e.g. switch a relay).
+The topic encodes the device and the register name of the output that shall be changed. The payload has  the same format
+as realtime messages and encode the desired value.
+
+Examples:
+```
+go-iotdevice/cmnd/my-device/R1 {"EnumIdx": 0}
+go-iotdevice/cmnd/my-device/R1 {"EnumIdx": 1}
+```
+
+Example of howto switch Relay 1 of a device called dev0 into the on position via mosquitto:
+
+```bash
+mosquitto_pub -h 172.19.0.4 -t dev1/cmnd/dev0/R1 -m "{\"EnumIdx\": 1}"
+```
+
+### HomeassistantDiscovery
+These messages are such that Homeassistant automatically shows read-only registers as sensors and commandable registers
+as switches. See [Home Assistant MQTT](https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery).
+
+Discovery messages for sensors are only sent for devices/registers for which realtime message are active because
+they are used to transmit the actual values. Switches are only advertised for registers for which the command topic is active. 
+Use filters in the Realtime and Command configuration section to restrict what devices/registers are shown in Homeassistant.
+Also consider setting `Realtime->Interval=500ms`. Homeassistant can easily be overloaded by hundreds of registers.
+
+Examples:
+```
+homeassistant/sensor/go-iotdevice/my-device-ai1/config {
+  "uniq_id":"my-device-ai1",
+  "name":"my-device inputA",
+  "avty":[{"t":"go-iotdevice/avail/go-iotdevice"},{"t":"go-iotdevice/avail/my-device"}],
+  "avty_mode":"all",
+  "stat_t":"go-iotdevice/real/my-device/AI1",
+  "val_tpl":"{{ value_json.NumVal }}",
+  "unit_of_meas":"V"
+}
+homeassistant/switch/go-iotdevice/my-device-r1/config {
+  "uniq_id":"my-device-r1",
+  "name":"my-device Relay 1",
+  "avty":[{"t":"go-iotdevice/avail/go-iotdevice"},{"t":"go-iotdevice/avail/my-device"}],
+  "avty_mode":"all",
+  "cmd_t":"go-iotdevice/cmnd/my-device/R1",
+  "stat_t":"go-iotdevice/real/my-device/R1",
+  "val_tpl":"{{ value_json.EnumIdx }}",
+  "pl_off":"{\"EnumIdx\":0}",
+  "pl_on":"{\"EnumIdx\":1}",
+  "stat_off":"0",
+  "stat_on":"1"
+}
+```
+
+## Development
+
+### Local development
+For development, this backend can be compiled and run locally.
+In addition, it's then best to also run the [front-end](https://github.com/koestler/js-iotdevice) locally. 
+
+This tool can proxy requests to a local server serving the front-end. Use e.g.:
+
+```yaml
+HttpServer:                                                # optional, when missing: http server is not started
+  Bind: "[::1]"                                            # mandatory, use [::1] (ipv6 loopback) to enable on both ipv4 and 6 and 0.0.0.0 to only enable ipv4
+  Port: 8000                                               # optional, default 8000
+  FrontendProxy: "http://127.0.0.1:3000/"
+ ```  
+ 
+Build and run: 
+  
+```bash
+go build && ./go-iotdevice
+```
+
+### Compile and run inside docker
+Alternatively, if you don't have Golang installed locally, you can compile and run 
+
+```bash
+docker build -f docker/Dockerfile -t go-iotdevice .
+docker run --rm --name go-iotdevice -p 127.0.0.1:8000:8000 \
+  -v "$(pwd)"/documentation/config.yaml:/config.yaml:ro \
+  go-iotdevice
+```
+
+### Generate swagger documentation
+```bash
+go install github.com/swaggo/swag/cmd/swag@latest
+go generate docs.go
+```
+
+### Run tests
+[gomock](https://github.com/uber-go/mock) is used to generate stubs and mocks for the unit tests.
+
+```bash
+go install go.uber.org/mock/mockgen@latest
+go generate ./...
+go test ./...
+```
+
+### Update README.md
+```bash
+npx embedme README.md
+```
+
+## Full Configuration
 ```yaml
 # documentation/full-config.yaml
 
@@ -372,122 +685,4 @@ Views:                                                     # optional, a list of
       - test0                                              # username which is allowed to access this view
     Hidden: false                                          # optional, default false, if true, this view is not shown in the menu unless the user is logged in
 
-```
-
-## Authentication
-The tool can use [JWT](https://jwt.io/) to make certain views only available after a login. The user database
-is stored in an Apache htaccess file which can be changed without restarting the server. 
-
-### Configuration
-
-There are two relevant sections in the configuration file:
-
-1. Adding the `Authentication:` section enables the login/authentication mechanism.
-The `JwtSecret` is used to sign the tokens. When left unconfigured, a new random secret is generated on each
-startup of the backend. This results in all users being logged out after each restart of the server.
-It's therefore best to hardcode a random secret.
-
-2. Per `View`, you can define a list of `AllowedUsers`. When the list is present and has at least one entry, only
-usernames on that list can access this view. If the list is empty, all users in the user database can access it. 
-
-### User database
-The only supported authentication backend at the moment is a simple Apache htaccess file. Set it up as follows:
-
-```bash
-htpasswd -c auth.passwd lorenz
-# enter password twice
-htpasswd auth.passwd daniela
-# enter another password twice
-```
-
-## Nginx reverse proxy
-I normally run this service behind a [Nginx](https://nginx.org/en/) server configured as a reverse proxy. It can take care of:
- * Serving multiple different applications on the same address using [SNI](https://en.wikipedia.org/wiki/Server_Name_Indication).
- * Caching on a fast cloud server in front of a device connected via a slow mobile connection.
- * https termination
-
-### Setup
-It's assumed that you understand each of the following steps in detail. It's just to make the setup steps as quick as possible. 
-
-```bash
-# install nginx / curl
-apt update && apt install -y nginx curl
-
-# define on what URL the tool shall be reachable
-SITE=foo.example.com
-CONFFILE=$SITE".conf"
-
-# create nginx configuration
-cd /etc/nginx/sites-available/
-curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/nginx-example.conf -o $CONFFILE
-sed -i "s/example.com/$SITE/g" $CONFFILE
-cd ../sites-enabled
-ln -s "../sites-available/"$CONFFILE
-
-# edit the proxy_pass directive to the correct address for the service
-emacs $CONFFILE 
-
-# setup certbot. use something like this:
-mkdir -p /srv/www-acme-challenge/$SITE
-certbot certonly --authenticator webroot --webroot-path /srv/www-acme-challenge/$SITE -d $SITE
-
-# reload the nginx config
-service nginx reload 
-```
-
-## Http Interface
-There is a stable REST-API to fetch the views, devices, registers, and values.
-Additionally, patch requests are implemented to set a controllable register (e.g. an output of a relay board).
-This API is used by the build-in front-end and can also be used for custom integrations.
-See /api/v2/docs and /api/v2/docs/swagger.json for built-in swagger documentation. 
-
-## Development
-
-### Local development
-For development, this backend can be compiled and run locally.
-In addition, it's then best to also run the [front-end](https://github.com/koestler/js-iotdevice) locally. 
-
-This tool can proxy requests to a local server serving the front-end. Use e.g.:
-
-```yaml
-HttpServer:                                                # optional, when missing: http server is not started
-  Bind: "[::1]"                                            # mandatory, use [::1] (ipv6 loopback) to enable on both ipv4 and 6 and 0.0.0.0 to only enable ipv4
-  Port: 8000                                               # optional, default 8000
-  FrontendProxy: "http://127.0.0.1:3000/"
- ```  
- 
-Build and run: 
-  
-```bash
-go build && ./go-iotdevice
-```
-
-### Compile and run inside docker
-Alternatively, if you don't have Golang installed locally, you can compile and run 
-
-```bash
-docker build -f docker/Dockerfile -t go-iotdevice .
-docker run --rm --name go-iotdevice -p 127.0.0.1:8000:8000 \
-  -v "$(pwd)"/documentation/config.yaml:/config.yaml:ro \
-  go-iotdevice
-```
-
-### Generate swagger documentation
-```bash
-go install github.com/swaggo/swag/cmd/swag@latest
-go generate docs.go
-```
-
-### Run tests
-[gomock](https://github.com/uber-go/mock) is used to generate stubs and mocks for the unit tests.
-
-```bash
-go install go.uber.org/mock/mockgen@latest
-go generate ./...
-go test ./...
-```
-
-### Update README.md
-```bash
-npx embedme README.md
 ```
