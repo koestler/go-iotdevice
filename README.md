@@ -111,10 +111,7 @@ services:
       - ${PWD}/config.yaml:/config.yaml:ro
       #- ${PWD}/auth.passwd:/auth.passwd:ro
       - /dev:/dev
-    group_add:
-      - dialout
     privileged: true # used to access serial devices
-
 ```
 
 ### Configuration
