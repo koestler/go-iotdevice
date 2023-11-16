@@ -27,33 +27,26 @@ The tool was written with the following two scenarios in mind:
 
 ## Supported protocols and devices
 
-The tool currently implements the following devices which are all used in an active project of mine.
+The tool currently implements the following devices, which are all used in an active project of mine.
 However, it is made to be extended. Feel free to send pull requests or 
 [create an issue](https://github.com/koestler/go-iotdevice/issues).
 
-The following protocols are supported:
-* [Victron Energy](https://www.victronenergy.com/) [VE.Direct](https://www.victronenergy.com/live/vedirect_protocol:faq)
-* HTTP GET json / xml files
-* MQTT
-* Modbus
+| Configuration section              | Kind=              | Name                                                                                                                            | State                              | 
+|------------------------------------|--------------------|---------------------------------------------------------------------------------------------------------------------------------|------------------------------------|
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [BlueSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/mppt7510) (different versions)           | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [SmartSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/smartsolar-150-35) (different versions) | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 700](https://www.victronenergy.com/battery-monitors/bmv-700)                                | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 702](https://www.victronenergy.com/battery-monitors/bmv-702)                                | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV-712 Smart](https://www.victronenergy.com/battery-monitors/bmv-712-smart)                    | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt)                                 | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [Phoenix Inverter](https://www.victronenergy.com/inverters)                                                      | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vebus              | Victron Energy [Multiplus](https://www.victronenergy.com/inverters-chargers/multiplus-12v-24v-48v-800va-3kva)                   | in development, see v3vebus branch |
+| [ModbusDevices](#Modbus-devices)   | WaveshareRtuRelay8 | [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay.htm)                             | production ready                   |
+| [HttpDevcies](#http-devices)       | Teracom            | Teracom [TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/) industrial relay/sensor board              | production ready                   | 
+| [HttpDevcies](#http-devices)       | ShellyEm3          | Shelly [3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) 3-phase energy power monitor                 | production ready                   |
+| [MqttDevcies](#mqtt-devices)       | GoIotdeviceV3      | Another go-iotdevice instance connected to the same MQTT server                                                                 | production ready                   |
 
-The following devices are supported:
-* via a VE.Direct:
-  * Victron Energy [BlueSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/mppt7510)
-  * Victron Energy [SmartSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/smartsolar-150-35)
-  * Victron Energy Battery Monitor [BMV 700](https://www.victronenergy.com/battery-monitors/bmv-700),
-      [BMV 702](https://www.victronenergy.com/battery-monitors/bmv-702),
-      [BMV-712 Smart](https://www.victronenergy.com/battery-monitors/bmv-712-smart)
-  * Victron Energy [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt)
-  * Victron Energy [Phoenix Inverter](https://www.victronenergy.com/inverters)
-* via HTTP:
-  * [Shelly 3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) 3-phase energy power monitor
-  * [Teracom TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/) industrial relay/sensor board
-* via MQTT:
-  * Another go-iotdevice instance connected to the same MQTT broker. This allows to connect devices
-    to different Linux machines at different locations but still having one single frontend showing all devices.
-* via Modbus
-  * [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay.htm), a cheap relay board with programmable address (up to 255 on one bus)
+See [Devices](#devices) section on how to configure each.
 
 ## Terminology
 
@@ -153,7 +146,137 @@ docker compose pull
 docker compose up -d
 ```
 
+## Devices
+All devices have in common that this software extracts a relatively static set of registers
+(list of available measurements/outputs) and repetitively polls those registers and extracts current values (readings).
 
+How the list of registers and the values are gathered depends on the type of device / connection.
+
+### Victron devices
+All Victron Energy solar chargers, some inverters and the BMV devices share the same VE.Direct protocol.
+It is a binary protocol and requires the user to know the addresses of registers and how to decode enums.
+
+The easiest way of connection is to use a [VE.Direct to USB interface](https://www.victronenergy.com/accessories/ve-direct-to-usb-interface).
+
+This tool reads the deviceId, which is present in all devices, and then uses this id to determine if it is a
+solar charger, an inverter or a battery monitor. A hardcoded list of known registers for this device is than used.
+
+Configuration:
+
+```yaml
+VictronDevices:
+  main-bmv: # used for reference in the view section
+    Kind: Vedirect # tells the tool that we use the VE.Direct protocol
+    Device: /dev/serial/by-id/usb-VictronEnergy_BV_VE_Direct_cable_VEXXXXX-if00-port0
+    # Device: Could also be /dev/ttyUSB0, make sure the device is present / accessible
+    # connect the interface and use ls -la /dev/serial/by-id/ to see what devices are available
+    # Using directly a /dev/ttyUSB0 device can result in chaos after a reboot when multiple interfaces are connected 
+    Filter:
+      # The tool does not know if you have an auxiliary battery connected. You might want to skip some unused registers.
+      SkipRegisters:
+        - AuxVoltage
+        - BatteryTemperature
+        - MidPointVoltage
+        - MidPointVoltageDeviation
+        - AuxVoltageMinimum
+        - AuxVoltageMaximum
+```
+
+### Modbus devices
+[Modbus](https://en.wikipedia.org/wiki/Modbus) [RS485](https://en.wikipedia.org/wiki/RS-485) is an old industry bus
+used in various devices like power meters. It has the advantage of connecting multiple devices via one serial device.
+There are some relatively cheap relay boards
+(e.g. [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay-b.htm))
+available, which have a much lower power consumption when compared to ethernet-connected devices.
+
+First, you need to configure the serial device connected to the bus.
+Secondly, you need to configure each device on the bus individually.
+Make sure that all devices on the bus have a unique address (use external tools like the Python scripts provided by some vendors).
+Alternatively, you can add multiple Modbus serial services.
+
+Configuration:
+
+```yaml
+Modbus:
+  bus0:
+    Device: /dev/ttyACM0 # the serial device
+    BaudRate: 9600 # Choose a BaudRate supported by all connected devices, Often the BaudRate can be changed.
+
+ModbusDevices:
+  relay-board: # used for reference in the view section
+    Bus: bus0 # the name of the bus as chosen above
+    Kind: WaveshareRtuRelay8 # the type of board used
+    Address: 0x01 # the address of the device on the Modbus
+    Relays:
+      # The tool does not know what you have connected to the relays. It simply gives them names like CH1, CH2, ...
+      # use this section to add nice descriptions and labels for the open and closed state
+      # This is shown in the HTTP frontend and also exposed via MQTT.
+      CH1:
+        Description: Main Inverter
+        OpenLabel: Off
+        ClosedLabel: On
+      CH2:
+        Description: Main To Aux Transfer
+        OpenLabel: On
+        ClosedLabel: Off
+    Filter: # You can skip unused outputs
+      SkipRegisters: [CH3, CH4, CH5, CH6, CH7, CH8]
+```
+
+### Http devices
+HTTP devices do not have a direct serial connection to go-iotdevice.
+Instead, they must be reachable via a network connection which makes them very versatile.
+
+Configuration:
+
+```yaml
+HttpDevices:
+  control0:
+    Url: http://control0/ # howto reach the device; can also be http://192.168.0.42/
+    Kind: Teracom
+    Username: admin # optionally, if you have a login configured, add the cleartext user/password here
+    Password: letMeIn
+    Filter:
+      # Some devices have quite an extensive list of registers
+      SkipCategories:
+        # use this list to skip certain unused sections (all digital inputs)
+        - Analog Inputs
+        - Virtual Inputs
+        - Digital Inputs
+        - Alarms
+      # or skip certain registers
+      SkipRegisters: [R2, R3, R4]
+```
+
+### MQTT devices
+MQTT devices receive values from an MQTT broker. E.g. if you have multiple computers running go-iotdevice,
+and you want to have all the devices in the same front-end.
+
+For this to work, you need to define a MqttDevice and then configure a MqttClient to connect to a broker and send data
+to this MQTT device. To allow for redundant setups, you can have multiple MqttClients sending data to the same
+MqttDevice.
+
+For the `GoIotdeviceV3` kind, you need to give it the Topic of the structure (see [Mqtt Interface Structure](#structure))
+message. This structure is then used to generate the list of registers and subscribe to the
+[Realtime](#realtime) and [Telemetry](#telemetry) messages. They work both at the same time.
+Additionally, if the [Command](#command) topic is available, it is used to control outputs.
+
+```yaml
+MqttClients:
+  local:
+    Broker: tcp://127.0.0.1:1833
+    User: user
+    Password: 424242
+
+    MqttDevices:
+      main-bmv:
+        MqttTopics:
+          - go-iotdevice/struct/main-bmv
+
+MqttDevices:
+  main-bmv:
+    Kind: GoIotdeviceV3
+```
 
 ## Http Interface
 There is a stable REST-API to fetch the views, devices, registers, and values.
