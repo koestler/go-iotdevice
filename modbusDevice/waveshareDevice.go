@@ -22,7 +22,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	}
 
 	// assign registers
-	registers := c.getModbusRegisters()
+	registers := c.getWaveshareRtuRelay8Registers()
 	registers = dataflow.FilterRegisters(registers, c.Config().Filter())
 	c.RegisterDb().AddStruct(registers...)
 
@@ -38,7 +38,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 
 		for _, register := range registers {
 			value := 0
-			if address, err := registerAddress(register); err == nil {
+			if address, err := waveshareRtuRelay8RegisterAddress(register); err == nil {
 				if state[address] {
 					value = 1
 				}
@@ -100,7 +100,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 		}
 
 		var relayNr uint16
-		if address, err := registerAddress(value.Register()); err != nil {
+		if address, err := waveshareRtuRelay8RegisterAddress(value.Register()); err != nil {
 			if c.Config().LogDebug() {
 				log.Printf("waveshareDevice[%s]: cannot get register address, register=%v, err: %s",
 					c.Config().Name(),
@@ -158,7 +158,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	}
 }
 
-func (c *DeviceStruct) getModbusRegisters() (registers []dataflow.RegisterStruct) {
+func (c *DeviceStruct) getWaveshareRtuRelay8Registers() (registers []dataflow.RegisterStruct) {
 	category := "Relays"
 	registers = make([]dataflow.RegisterStruct, 0, 8)
 	for i := uint16(0); i < 8; i += 1 {
@@ -184,10 +184,10 @@ func (c *DeviceStruct) getModbusRegisters() (registers []dataflow.RegisterStruct
 	return
 }
 
-var addrMatcher = regexp.MustCompile("^CH([0-9])$")
+var waveshareRtuRelay8AddrMatcher = regexp.MustCompile("^CH([0-9])$")
 
-func registerAddress(r dataflow.Register) (address int, err error) {
-	matches := addrMatcher.FindStringSubmatch(r.Name())
+func waveshareRtuRelay8RegisterAddress(r dataflow.Register) (address int, err error) {
+	matches := waveshareRtuRelay8AddrMatcher.FindStringSubmatch(r.Name())
 	if matches == nil {
 		return 0, errors.New("invalid registerName")
 	}
