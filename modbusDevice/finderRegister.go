@@ -41,7 +41,11 @@ func NewFinderRegister(
 
 	switch registerType {
 	case FinderT1:
-		rt = dataflow.NumberRegister
+		if enum != nil {
+			rt = dataflow.EnumRegister
+		} else {
+			rt = dataflow.NumberRegister
+		}
 		expectF(2)
 	case FinderTStr2:
 		rt = dataflow.TextRegister
@@ -78,4 +82,13 @@ func addToRegisterDb(rdb *dataflow.RegisterDb, registers []FinderRegister) {
 		dataflowRegisters[i] = r.RegisterStruct
 	}
 	rdb.AddStruct(dataflowRegisters...)
+}
+
+func (r FinderRegister) CountRegisters() int {
+	return int(r.addressEnd) - int(r.addressBegin) + 1
+}
+
+func (r FinderRegister) CountBytes() int {
+	// finder registers are 16 bit wide
+	return r.CountRegisters() * 2
 }

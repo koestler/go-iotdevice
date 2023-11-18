@@ -78,8 +78,9 @@ func (md *ModbusStruct) Read(b []byte) (n int, err error) {
 	n, err = md.ioPort.Read(b)
 	if err != nil {
 		md.debugPrintf("Read error: %v\n", err)
+	} else {
+		md.debugPrintf("Read b=%x len=%v", b, len(b))
 	}
-	md.debugPrintf("Read b=%x len=%v", b, len(b))
 	return
 }
 

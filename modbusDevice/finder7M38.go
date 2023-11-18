@@ -219,7 +219,7 @@ var RegisterList7M38 = func() []FinderRegister {
 	}
 
 	ret := make([]FinderRegister, 0, len(productRegisters)+len(RegisterList7M38FloatRegisters))
-	//ret = append(ret, productRegisters...)
+	ret = append(ret, productRegisters...)
 
 	for idx, fr := range RegisterList7M38FloatRegisters {
 		ret = append(ret,
@@ -258,9 +258,12 @@ func FinderReadRegister(c *DeviceStruct, reg FinderRegister) (v dataflow.Value, 
 
 func FinderReadStringRegister(c *DeviceStruct, register FinderRegister) (v dataflow.Value, err error) {
 	response, err := FinderReadInputRegisters(c, register)
-	log.Printf("FinderReadStringRegister: got response=%s, err=%s", response, err)
 	if err != nil {
 		return nil, err
+	}
+
+	if c.Config().LogDebug() {
+		log.Printf("FinderReadFloatRegister: registerName=%s, stringValue=%s", register.Name(), response)
 	}
 
 	v = dataflow.NewTextRegisterValue(
@@ -274,7 +277,6 @@ func FinderReadStringRegister(c *DeviceStruct, register FinderRegister) (v dataf
 
 func FinderReadFloatRegister(c *DeviceStruct, register FinderRegister) (v dataflow.Value, err error) {
 	response, err := FinderReadInputRegisters(c, register)
-	log.Printf("FinderReadFloatRegister: got response=%s, err=%s", response, err)
 	if err != nil {
 		return nil, err
 	}
@@ -282,6 +284,10 @@ func FinderReadFloatRegister(c *DeviceStruct, register FinderRegister) (v datafl
 	floatValue, err := bytesToFloat32(response)
 	if err != nil {
 		return nil, err
+	}
+
+	if c.Config().LogDebug() {
+		log.Printf("FinderReadFloatRegister: registerName=%s, floatValue=%f", register.Name(), floatValue)
 	}
 
 	v = dataflow.NewNumericRegisterValue(
@@ -302,31 +308,48 @@ func FinderReadInputRegisters(c *DeviceStruct, register FinderRegister) (respons
 		return
 	}
 	// write register count
-	countRegisters := register.addressEnd - register.addressBegin + 1
-	err = binary.Write(&requestPayload, byteOrder, countRegisters)
+	err = binary.Write(&requestPayload, byteOrder, uint16(register.CountRegisters()))
 	if err != nil {
 		return
 	}
 
 	// finder registers are 16 bit wide
-	responsePayloadLength := int(2 * countRegisters)
+	responsePayloadLength := register.CountBytes()
 
-	log.Printf("FinderReadInputRegisters: callFunction: responsePayloadLength=%d", responsePayloadLength)
-
-	return callFunction(
+	begin := time.Now()
+	response, err = callFunction(
 		c.modbus.WriteRead,
 		c.modbusConfig.Address(),
 		FinderFunctionReadInputRegisters,
 		requestPayload.Bytes(),
-		responsePayloadLength,
+		1+responsePayloadLength, // 1 byte for byte count + payload
 	)
+	if c.Config().LogDebug() {
+		log.Printf("FinderReadInputRegisters: callFunction: took=%s", time.Since(begin))
+	}
+
+	if err != nil {
+		return
+	}
+
+	byteCount := response[0]
+
+	if int(byteCount) != responsePayloadLength {
+		err = fmt.Errorf("FinderReadInputRegisters: expected byte count to be %d but got %d", responsePayloadLength, byteCount)
+		return
+	}
+
+	// first byte should be payload length
+	response = response[1:]
+
+	return
 }
 
 func bytesToFloat32(inp []byte) (float32, error) {
 	var f float32
 
 	buf := bytes.NewReader(inp)
-	if err := binary.Read(buf, binary.LittleEndian, &f); err != nil {
+	if err := binary.Read(buf, binary.BigEndian, &f); err != nil {
 		return 0, fmt.Errorf("bytesToFloat32 failed: %s", err)
 	}
 
