@@ -108,6 +108,8 @@ services:
       #- ${PWD}/auth.passwd:/auth.passwd:ro
       - /dev:/dev
     privileged: true # used to access serial devices
+    group_add: # add app user running to software to the dialout group
+      - dialout
 ```
 
 ### Configuration
