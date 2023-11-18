@@ -803,8 +803,14 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 		err = append(err, fmt.Errorf("ModbusDevices->%s: Bus='%s' is not defidnedd", name, c.Bus))
 	}
 
-	if n, e := fmt.Sscanf(c.Address, "0x%x", &ret.address); n != 1 || e != nil {
-		err = append(err, fmt.Errorf("ModbusDevices->%s: Adress=%s is invalid: %s", name, c.Address, e))
+	if strings.Contains(c.Address, "0x") {
+		if n, e := fmt.Sscanf(c.Address, "0x%x", &ret.address); n != 1 || e != nil {
+			err = append(err, fmt.Errorf("ModbusDevices->%s: hex Adress=%s is invalid: %s", name, c.Address, e))
+		}
+	} else {
+		if n, e := fmt.Sscanf(c.Address, "%d", &ret.address); n != 1 || e != nil {
+			err = append(err, fmt.Errorf("ModbusDevices->%s: decimal Adress=%s is invalid: %s", name, c.Address, e))
+		}
 	}
 
 	ret.relays, e = TransformAndValidateMap(
