@@ -1,6 +1,8 @@
 package modbusDevice
 
-// protocol documentation: https://cdn.findernet.com/app/uploads/Benutzerhandbuch_Typ_7M38_DE.pdf
+// protocol documentations:
+// - https://cdn.findernet.com/app/uploads/Benutzerhandbuch_Typ_7M38_DE.pdf
+// - https://cdn.findernet.com/app/uploads/2021/09/20090052/Modbus-7M24-7M38_v2_30062021.pdf
 
 import (
 	"bytes"
@@ -84,10 +86,10 @@ var RegisterList7M38FloatRegisters = []struct {
 	{32480, "RunTime", "Run time", "s"},
 	{32484, "UAvgPN", "Uavg (phase to neutral)", "V"},
 	{32486, "UAvgPP", "Uavg (phase to phase)", "V"},
-	{32488, "SI", "S I", ""},
+	{32488, "SI", "S I", "A"},
 	{32490, "Pt", "Active Power Total", "W"},
-	{32492, "Qt", "Reactive Power Total", "W"},
-	{32494, "St", "Apparent Power Total", "W"},
+	{32492, "Qt", "Reactive Power Total", "var"},
+	{32494, "St", "Apparent Power Total", "VA"},
 	{32496, "PFt", "Power Factor Total", ""},
 	{32498, "F", "Frequency", "Hz"},
 	{32500, "U1", "U1", "V"},
@@ -109,14 +111,14 @@ var RegisterList7M38FloatRegisters = []struct {
 	{32532, "P2", "Active Power Phase L2", "W"},
 	{32534, "P3", "Active Power Phase L3", "W"},
 	{32536, "Pt", "Active Power Total", "W"},
-	{32538, "Q1", "Reactive Power Phase L1", "W"},
-	{32540, "Q2", "Reactive Power Phase L2", "W"},
-	{32542, "Q3", "Reactive Power Phase L3", "W"},
-	{32544, "Qt", "Reactive Power Total", "W"},
-	{32546, "S1", "Apparent Power Phase L1 ", "W"},
-	{32548, "S2", "Apparent Power Phase L2 ", "W"},
-	{32550, "S3", "Apparent Power Phase L3 ", "W"},
-	{32552, "St", "Apparent Power Total", "W"},
+	{32538, "Q1", "Reactive Power Phase L1", "var"},
+	{32540, "Q2", "Reactive Power Phase L2", "var"},
+	{32542, "Q3", "Reactive Power Phase L3", "var"},
+	{32544, "Qt", "Reactive Power Total", "var"},
+	{32546, "S1", "Apparent Power Phase L1 ", "VA"},
+	{32548, "S2", "Apparent Power Phase L2 ", "VA"},
+	{32550, "S3", "Apparent Power Phase L3 ", "VA"},
+	{32552, "St", "Apparent Power Total", "VA"},
 	{32554, "PF1", "Power Factor Phase 1", ""},
 	{32556, "PF2", "Power Factor Phase 2", ""},
 	{32558, "PF3", "Power Factor Phase 3", ""},
@@ -125,33 +127,36 @@ var RegisterList7M38FloatRegisters = []struct {
 	{32564, "PF2", "CAP/IND P. F. Phase 2", ""},
 	{32566, "PF3", "CAP/IND P. F. Phase 3", ""},
 	{32568, "PFt", "CAP/IND P. F. Total", ""},
-	{32570, "J1", "j1 (angle between U1 and I1)", ""},
-	{32572, "J2", "j2 (angle between U2 and I2)", ""},
-	{32574, "J3", "j3 (angle between U3 and I3) ", ""},
-	{32576, "Jt", "Power Angle Total (atan2(Pt,Qt))", ""},
-	{32578, "J12", "j12 (angle between U1 and U2)", ""},
-	{32580, "J23", "j23 (angle between U2 and U3)", ""},
-	{32582, "J31", "j31 (angle between U3 and U1)", ""},
-	{32584, "F2", "Frequency (?)", ""},
-	{32588, "I1Thd", "I1 THD%", ""},
-	{32590, "I2Thd", "I2 THD%", ""},
-	{32592, "I3Thd", "I3 THD%", ""},
-	{32638, "EnergyCounterN1", "Energy Counter n1", ""},
-	{32640, "EnergyCounterN2", "Energy Counter n2", ""},
-	{32642, "EnergyCounterN3", "Energy Counter n3", ""},
-	{32644, "EnergyCounterN4", "Energy Counter n4", ""},
-	{32658, "InternalTemp", "Internal Temperature", ""},
-	{32985, "Unom", "nominal phase voltage", ""},
-	{32987, "Inom", "nominal phase current", ""},
-	{32989, "Pnom", "nominal phase power", ""},
-	{32991, "Ptot", "nominal total power", ""},
-	{32993, "Itot", "nominal total current", ""},
-	{32995, "Fnom", "nominal frequency", ""},
+	{32570, "J1", "j1 (angle between U1 and I1)", "°"},
+	{32572, "J2", "j2 (angle between U2 and I2)", "°"},
+	{32574, "J3", "j3 (angle between U3 and I3) ", "°"},
+	{32576, "Jt", "Power Angle Total (atan2(Pt,Qt))", "°"},
+	{32578, "J12", "j12 (angle between U1 and U2)", "°"},
+	{32580, "J23", "j23 (angle between U2 and U3)", "°"},
+	{32582, "J31", "j31 (angle between U3 and U1)", "°"},
+	{32584, "F2", "Frequency (?)", "Hz"},
+	{32588, "I1Thd", "I1 THD", "%"},
+	{32590, "I2Thd", "I2 THD", "%"},
+	{32592, "I3Thd", "I3 THD", "%"},
+	{32594, "U1Thd", "U1 THD", "%"},
+	{32596, "U2Thd", "U2 THD", "%"},
+	{32598, "U3Thd", "U3 THD", "%"},
+	{32638, "EcN1", "Energy Counter n1", "Wh"},
+	{32640, "EcN2", "Energy Counter n2", "varh"},
+	{32642, "EcN3", "Energy Counter n3", "Wh"},
+	{32644, "EcN4", "Energy Counter n4", "varh"},
+	{32658, "InternalTemp", "Internal Temperature", "°C"},
+	{32985, "Unom", "nominal phase voltage", "V"},
+	{32987, "Inom", "nominal phase current", "A"},
+	{32989, "Pnom", "nominal phase power", "W"},
+	{32991, "Ptot", "nominal total power", "W"},
+	{32993, "Itot", "nominal total current", "A"},
+	{32995, "Fnom", "nominal frequency", "Hz"},
 	{34999, "RunTime2", "Run time", "s"},
 }
 
 var RegisterList7M38 = func() []FinderRegister {
-	productResgisters := []FinderRegister{
+	productRegisters := []FinderRegister{
 		NewFinderRegister(
 			"Product",
 			"ModelNumber",
@@ -213,8 +218,8 @@ var RegisterList7M38 = func() []FinderRegister {
 		),
 	}
 
-	ret := make([]FinderRegister, 0, len(productResgisters)+len(RegisterList7M38FloatRegisters))
-	ret = append(ret, productResgisters...)
+	ret := make([]FinderRegister, 0, len(productRegisters)+len(RegisterList7M38FloatRegisters))
+	//ret = append(ret, productRegisters...)
 
 	for idx, fr := range RegisterList7M38FloatRegisters {
 		ret = append(ret,
@@ -234,14 +239,20 @@ var RegisterList7M38 = func() []FinderRegister {
 	return ret
 }
 
-func FinderReadRegister(c *DeviceStruct, register FinderRegister) (v dataflow.Value, err error) {
-	switch register.RegisterType() {
+func FinderReadRegister(c *DeviceStruct, reg FinderRegister) (v dataflow.Value, err error) {
+	if c.Config().LogComDebug() {
+		log.Printf("finder7N38Device[%s]: FinderReadRegister, registerName=%s, addressBegin=%d, addressEnd=%d",
+			c.Name(), reg.Name(), reg.addressBegin, reg.addressEnd,
+		)
+	}
+
+	switch reg.RegisterType() {
 	case dataflow.NumberRegister:
-		return FinderReadFloatRegister(c, register)
+		return FinderReadFloatRegister(c, reg)
 	case dataflow.TextRegister:
-		return FinderReadStringRegister(c, register)
+		return FinderReadStringRegister(c, reg)
 	default:
-		return nil, fmt.Errorf("FinderReadRegister does not implement registerType=%s", register.RegisterType())
+		return nil, fmt.Errorf("FinderReadRegister does not implement registerType=%s", reg.RegisterType())
 	}
 }
 
@@ -297,12 +308,17 @@ func FinderReadInputRegisters(c *DeviceStruct, register FinderRegister) (respons
 		return
 	}
 
+	// finder registers are 16 bit wide
+	responsePayloadLength := int(2 * countRegisters)
+
+	log.Printf("FinderReadInputRegisters: callFunction: responsePayloadLength=%d", responsePayloadLength)
+
 	return callFunction(
 		c.modbus.WriteRead,
 		c.modbusConfig.Address(),
 		FinderFunctionReadInputRegisters,
 		requestPayload.Bytes(),
-		int(2*countRegisters), // finder registers are 16 bit wide
+		responsePayloadLength,
 	)
 }
 
