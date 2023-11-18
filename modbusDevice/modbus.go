@@ -70,7 +70,7 @@ func callFunction(
 	}
 
 	// check function code
-	if received := response[2]; received != byte(functionCode) {
+	if received := response[1]; received != byte(functionCode) {
 		return nil, fmt.Errorf("function code in response != function code in request: %x != %x", received, functionCode)
 	}
 
