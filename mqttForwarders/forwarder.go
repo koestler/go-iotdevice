@@ -6,6 +6,7 @@ import (
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/pool"
 	"github.com/koestler/go-iotdevice/restarter"
+	"log"
 	"time"
 )
 
@@ -58,8 +59,11 @@ func RunMqttForwarders(
 ) {
 	if sCfg := cfg.HomeassistantDiscovery(); sCfg.Enabled() {
 		for _, deviceConfig := range cfg.HomeassistantDiscovery().Devices() {
-			dev := devicePool.GetByName(deviceConfig.Name())
-			runHomeassistantDiscoveryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.Filter())
+			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
+				runHomeassistantDiscoveryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.Filter())
+			} else {
+				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
+			}
 		}
 	}
 
@@ -69,36 +73,51 @@ func RunMqttForwarders(
 
 	if sCfg := cfg.AvailabilityDevice(); sCfg.Enabled() {
 		for _, deviceConfig := range sCfg.Devices() {
-			dev := devicePool.GetByName(deviceConfig.Name())
-			runAvailabilityForwarder(mc.GetCtx(), cfg, dev.Service(), mc)
+			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
+				runAvailabilityForwarder(mc.GetCtx(), cfg, dev.Service(), mc)
+			} else {
+				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
+			}
 		}
 	}
 
 	if sCfg := cfg.Structure(); sCfg.Enabled() {
 		for _, deviceConfig := range sCfg.Devices() {
-			dev := devicePool.GetByName(deviceConfig.Name())
-			runStructureForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.Filter())
+			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
+				runStructureForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.Filter())
+			} else {
+				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
+			}
 		}
 	}
 
 	if sCfg := cfg.Telemetry(); sCfg.Enabled() {
 		for _, deviceConfig := range sCfg.Devices() {
-			dev := devicePool.GetByName(deviceConfig.Name())
-			runTelemetryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, stateStorage, deviceConfig.Filter())
+			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
+				runTelemetryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, stateStorage, deviceConfig.Filter())
+			} else {
+				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
+			}
 		}
 	}
 
 	if sCfg := cfg.Realtime(); sCfg.Enabled() {
 		for _, deviceConfig := range sCfg.Devices() {
-			dev := devicePool.GetByName(deviceConfig.Name())
-			runRealtimeForwarder(mc.GetCtx(), cfg, dev.Service(), mc, stateStorage, deviceConfig.Filter())
+			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
+				runRealtimeForwarder(mc.GetCtx(), cfg, dev.Service(), mc, stateStorage, deviceConfig.Filter())
+			} else {
+				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
+			}
 		}
 	}
 
 	if sCfg := cfg.Command(); sCfg.Enabled() {
 		for _, deviceConfig := range cfg.Command().Devices() {
-			dev := devicePool.GetByName(deviceConfig.Name())
-			runCommandForwarder(mc.GetCtx(), cfg, dev.Service(), mc, commandStorage, deviceConfig.Filter())
+			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
+				runCommandForwarder(mc.GetCtx(), cfg, dev.Service(), mc, commandStorage, deviceConfig.Filter())
+			} else {
+				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
+			}
 		}
 	}
 }

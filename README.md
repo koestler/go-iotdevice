@@ -27,42 +27,69 @@ The tool was written with the following two scenarios in mind:
 
 ## Supported protocols and devices
 
-The tool currently implements the following devices which are all used in an active project of mine.
+The tool currently implements the following devices, which are all used in an active project of mine.
 However, it is made to be extended. Feel free to send pull requests or 
 [create an issue](https://github.com/koestler/go-iotdevice/issues).
 
-The following protocols are supported:
-* [Victron Energy](https://www.victronenergy.com/) [VE.Direct](https://www.victronenergy.com/live/vedirect_protocol:faq)
-* HTTP GET json / xml files
-* MQTT
-* Modbus
+| Configuration section              | Kind=              | Name                                                                                                                            | State                              | 
+|------------------------------------|--------------------|---------------------------------------------------------------------------------------------------------------------------------|------------------------------------|
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [BlueSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/mppt7510) (different versions)           | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [SmartSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/smartsolar-150-35) (different versions) | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 700](https://www.victronenergy.com/battery-monitors/bmv-700)                                | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 702](https://www.victronenergy.com/battery-monitors/bmv-702)                                | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV-712 Smart](https://www.victronenergy.com/battery-monitors/bmv-712-smart)                    | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt)                                 | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [Phoenix Inverter](https://www.victronenergy.com/inverters)                                                      | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vebus              | Victron Energy [Multiplus](https://www.victronenergy.com/inverters-chargers/multiplus-12v-24v-48v-800va-3kva)                   | in development, see v3vebus branch |
+| [ModbusDevices](#Modbus-devices)   | WaveshareRtuRelay8 | [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay.htm)                             | production ready                   |
+| [HttpDevcies](#http-devices)       | Teracom            | Teracom [TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/) industrial relay/sensor board              | production ready                   | 
+| [HttpDevcies](#http-devices)       | ShellyEm3          | Shelly [3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) 3-phase energy power monitor                 | production ready                   |
+| [MqttDevcies](#mqtt-devices)       | GoIotdeviceV3      | Another go-iotdevice instance connected to the same MQTT server                                                                 | production ready                   |
 
-The following devices are supported:
-* via a VE.Direct:
-  * Victron Energy [BlueSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/mppt7510)
-  * Victron Energy [SmartSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/smartsolar-150-35)
-  * Victron Energy Battery Monitor [BMV 700](https://www.victronenergy.com/battery-monitors/bmv-700),
-      [BMV 702](https://www.victronenergy.com/battery-monitors/bmv-702),
-      [BMV-712 Smart](https://www.victronenergy.com/battery-monitors/bmv-712-smart)
-  * Victron Energy [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt)
-  * Victron Energy [Phoenix Inverter](https://www.victronenergy.com/inverters)
-* via HTTP:
-  * [Shelly 3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) 3-phase energy power monitor
-  * [Teracom TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/) industrial relay/sensor board
-* via MQTT:
-  * Another go-iotdevice instance connected to the same MQTT broker. This allows to connect devices
-    to different Linux machines at different locations but still having one single frontend showing all devices.
-* via Modbus
-  * [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay.htm), a cheap relay board with programmable address (up to 255 on one bus)
+See [Devices](#devices) section on how to configure each.
+
+## Terminology
+
+This project uses the following terminology:
+
+* **Device** refers to a physical unit like a solar charger, a relay board
+* A **Register** is a measurement or output that a device can have.
+  E.g. "Battery Voltage" or "Relay 0". Each device can have multiple registers. For some devices the list
+  of registers is simply defined by the type of device (e.g. Victron Energy MPPT 100 | 50) and for others it is configurable
+  on the device (e.g. the TCW241).
+  A Register has a technical name (alphanumeric, no spaces, used as the key is various JSON objects, e.g. "BatteryVoltage"),
+  a description (shown in the frontend, e.g. "Battery Voltage"), a Unit (e.g. "mV"), and a type (string, float, enum).
+* A **value** is a reference to a register plus a number/string/enum-index depending on the type of register.
+  E.g.: A value can be 13.80 and reference to the register "BatteryVoltage".
+* A **view** is used in the HTTP server and the front-end.
+  The front-end shows different subsets of devices/registers on different routes. A view defines such a subset.
 
 ## Deployment
+
+<details>
+<summary>
+Deployment without docker
+</summary>
+I use docker to deploy this tool.
+Alternatively, you can always simply clone this repo and build the go-iotdevice binary by yourself.
+It is statically linked and has no external dependency (except the config and auth.passwd file).
+The following snippets build the tool without the swagger documentation.
+See [Local Development](#Local-development) for more details.
+
+```bash
+git clone https://github.com/koestler/go-iotdevice.git
+cd go-iotdevice
+go build
+```
+</details>
+
+### Docker
+
 There are [GitHub actions](https://github.com/koestler/go-iotdevice/actions/workflows/docker-image.yml)
 to automatically cross-compile amd64, arm64, and arm/v7
 publicly available [docker images](https://github.com/koestler/go-iotdevice/pkgs/container/go-iotdevice).
 The docker-container is built on top of Alpine, the binary is `/go-iotdevice` and the config is
-expected to be at `/config.yaml`. The container runs as the non-root user `app`.
-
-See [Local development](#Local-development) on how to compile a single binary.
+expected to be at `/config.yaml`. The container runs as a non-root user `app`.
 
 The GitHub tags use semantic versioning and whenever a tag like v2.3.4 is built, it is pushed to docker tags
 v2, v2.3, and v2.3.4.
@@ -80,11 +107,18 @@ services:
       - ${PWD}/config.yaml:/config.yaml:ro
       #- ${PWD}/auth.passwd:/auth.passwd:ro
       - /dev:/dev
-    group_add:
-      - dialout
     privileged: true # used to access serial devices
-
+    group_add: # add app user running to software to the dialout group
+      - dialout
 ```
+
+### Configuration
+The configuration is stored in a single yaml file. By default, it is read from `./config.yaml`.
+This can be changed using the `--config=another-config.yaml` command line option.
+
+There are mandatory fields and there are optional fields which have reasonable default values.
+
+See [Explained Full Configuration](#explained-full-configuration) for a complete list of all available configuration options.
 
 ### Quick setup
 [Install Docker](https://docs.docker.com/engine/install/) first.
@@ -95,6 +129,9 @@ mkdir -p /srv/dc/go-iotdevice # or wherever you want to put docker-compose files
 cd /srv/dc/go-iotdevice
 curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/docker-compose.yml -o docker-compose.yml
 curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/config.yaml -o config.yaml
+
+# optional download the full and commented configuration file for reference 
+curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/full-config.yaml -o full-config.yaml
 # adapt config.yaml and configure devices
 
 # start the container
@@ -111,12 +148,413 @@ docker compose pull
 docker compose up -d
 ```
 
-## Configuration
-The configuration is stored in a single yaml file. By default, it is read from `./config.yaml`.
-This can be changed using the `--config=another-config.yaml` command line option.
+## Devices
+All devices have in common that this software extracts a relatively static set of registers
+(list of available measurements/outputs) and repetitively polls those registers and extracts current values (readings).
 
-There are mandatory fields and there are optional fields which have reasonable default values.
+How the list of registers and the values are gathered depends on the type of device / connection.
 
+### Victron devices
+All Victron Energy solar chargers, some inverters and the BMV devices share the same VE.Direct protocol.
+It is a binary protocol and requires the user to know the addresses of registers and how to decode enums.
+
+The easiest way of connection is to use a [VE.Direct to USB interface](https://www.victronenergy.com/accessories/ve-direct-to-usb-interface).
+
+This tool reads the deviceId, which is present in all devices, and then uses this id to determine if it is a
+solar charger, an inverter or a battery monitor. A hardcoded list of known registers for this device is than used.
+
+Configuration:
+
+```yaml
+VictronDevices:
+  main-bmv: # used for reference in the view section
+    Kind: Vedirect # tells the tool that we use the VE.Direct protocol
+    Device: /dev/serial/by-id/usb-VictronEnergy_BV_VE_Direct_cable_VEXXXXX-if00-port0
+    # Device: Could also be /dev/ttyUSB0, make sure the device is present / accessible
+    # connect the interface and use ls -la /dev/serial/by-id/ to see what devices are available
+    # Using directly a /dev/ttyUSB0 device can result in chaos after a reboot when multiple interfaces are connected 
+    Filter:
+      # The tool does not know if you have an auxiliary battery connected. You might want to skip some unused registers.
+      SkipRegisters:
+        - AuxVoltage
+        - BatteryTemperature
+        - MidPointVoltage
+        - MidPointVoltageDeviation
+        - AuxVoltageMinimum
+        - AuxVoltageMaximum
+```
+
+### Modbus devices
+[Modbus](https://en.wikipedia.org/wiki/Modbus) [RS485](https://en.wikipedia.org/wiki/RS-485) is an old industry bus
+used in various devices like power meters. It has the advantage of connecting multiple devices via one serial device.
+There are some relatively cheap relay boards
+(e.g. [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay-b.htm))
+available, which have a much lower power consumption when compared to ethernet-connected devices.
+
+First, you need to configure the serial device connected to the bus.
+Secondly, you need to configure each device on the bus individually.
+Make sure that all devices on the bus have a unique address (use external tools like the Python scripts provided by some vendors).
+Alternatively, you can add multiple Modbus serial services.
+
+Configuration:
+
+```yaml
+Modbus:
+  bus0:
+    Device: /dev/ttyACM0 # the serial device
+    BaudRate: 9600 # Choose a BaudRate supported by all connected devices, Often the BaudRate can be changed.
+
+ModbusDevices:
+  relay-board: # used for reference in the view section
+    Bus: bus0 # the name of the bus as chosen above
+    Kind: WaveshareRtuRelay8 # the type of board used
+    Address: 0x01 # the address of the device on the Modbus
+    Relays:
+      # The tool does not know what you have connected to the relays. It simply gives them names like CH1, CH2, ...
+      # use this section to add nice descriptions and labels for the open and closed state
+      # This is shown in the HTTP frontend and also exposed via MQTT.
+      CH1:
+        Description: Main Inverter
+        OpenLabel: Off
+        ClosedLabel: On
+      CH2:
+        Description: Main To Aux Transfer
+        OpenLabel: On
+        ClosedLabel: Off
+    Filter: # You can skip unused outputs
+      SkipRegisters: [CH3, CH4, CH5, CH6, CH7, CH8]
+```
+
+### Http devices
+HTTP devices do not have a direct serial connection to go-iotdevice.
+Instead, they must be reachable via a network connection which makes them very versatile.
+
+Configuration:
+
+```yaml
+HttpDevices:
+  control0:
+    Url: http://control0/ # howto reach the device; can also be http://192.168.0.42/
+    Kind: Teracom
+    Username: admin # optionally, if you have a login configured, add the cleartext user/password here
+    Password: letMeIn
+    Filter:
+      # Some devices have quite an extensive list of registers
+      SkipCategories:
+        # use this list to skip certain unused sections (all digital inputs)
+        - Analog Inputs
+        - Virtual Inputs
+        - Digital Inputs
+        - Alarms
+      # or skip certain registers
+      SkipRegisters: [R2, R3, R4]
+```
+
+### MQTT devices
+MQTT devices receive values from an MQTT broker. E.g. if you have multiple computers running go-iotdevice,
+and you want to have all the devices in the same front-end.
+
+For this to work, you need to define a MqttDevice and then configure a MqttClient to connect to a broker and send data
+to this MQTT device. To allow for redundant setups, you can have multiple MqttClients sending data to the same
+MqttDevice.
+
+For the `GoIotdeviceV3` kind, you need to give it the Topic of the structure (see [Mqtt Interface Structure](#structure))
+message. This structure is then used to generate the list of registers and subscribe to the
+[Realtime](#realtime) and [Telemetry](#telemetry) messages. They work both at the same time.
+Additionally, if the [Command](#command) topic is available, it is used to control outputs.
+
+```yaml
+MqttClients:
+  local:
+    Broker: tcp://127.0.0.1:1833
+    User: user
+    Password: 424242
+
+    MqttDevices:
+      main-bmv:
+        MqttTopics:
+          - go-iotdevice/struct/main-bmv
+
+MqttDevices:
+  main-bmv:
+    Kind: GoIotdeviceV3
+```
+
+## Http Interface
+There is a stable REST-API to fetch the views, devices, registers, and values.
+Additionally, patch requests are implemented to set a controllable register (e.g. an output of a relay board).
+This API is used by the build-in front-end and can also be used for custom integrations.
+See /api/v2/docs and /api/v2/docs/swagger.json for built-in swagger documentation.
+
+## Authentication
+The tool can use [JWT](https://jwt.io/) to make certain views only available after a login. The user database
+is stored in an Apache htaccess file which can be changed without restarting the server. 
+
+### Configuration
+
+There are two relevant sections in the configuration file:
+
+1. Adding the `Authentication:` section enables the login/authentication mechanism.
+The `JwtSecret` is used to sign the tokens. When left unconfigured, a new random secret is generated on each
+startup of the backend. This results in all users being logged out after each restart of the server.
+It's therefore best to hardcode a random secret.
+
+2. Per `View`, you can define a list of `AllowedUsers`. When the list is present and has at least one entry, only
+usernames on that list can access this view. If the list is empty, all users in the user database can access it. 
+
+### User database
+The only supported authentication backend at the moment is a simple Apache htaccess file. Set it up as follows:
+
+```bash
+htpasswd -c auth.passwd lorenz
+# enter password twice
+htpasswd auth.passwd daniela
+# enter another password twice
+```
+
+### Nginx reverse proxy
+I normally run this service behind a [Nginx](https://nginx.org/en/) server configured as a reverse proxy. It can take care of:
+ * Serving multiple different applications on the same address using [SNI](https://en.wikipedia.org/wiki/Server_Name_Indication).
+ * Caching on a fast cloud server in front of a device connected via a slow mobile connection.
+ * https termination
+
+#### Setup
+It's assumed that you understand each of the following steps in detail. It's just to make the setup steps as quick as possible. 
+
+```bash
+# install nginx / curl
+apt update && apt install -y nginx curl
+
+# define on what URL the tool shall be reachable
+SITE=foo.example.com
+CONFFILE=$SITE".conf"
+
+# create nginx configuration
+cd /etc/nginx/sites-available/
+curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/nginx-example.conf -o $CONFFILE
+sed -i "s/example.com/$SITE/g" $CONFFILE
+cd ../sites-enabled
+ln -s "../sites-available/"$CONFFILE
+
+# edit the proxy_pass directive to the correct address for the service
+emacs $CONFFILE 
+
+# setup certbot. use something like this:
+mkdir -p /srv/www-acme-challenge/$SITE
+certbot certonly --authenticator webroot --webroot-path /srv/www-acme-challenge/$SITE -d $SITE
+
+# reload the nginx config
+service nginx reload 
+```
+
+## MQTT Interface
+This tool can connect to one or multiple MQTT servers and provide publish messages regarding the availability
+(whether a device is online), available registers, and current values.
+There are 5 different kinds of outgoing messages
+(**Availability**, **Structure**, **Telemetry**, **Realtime**, **HomeassistantDiscovery**)
+and one kind of incoming message (**Command**).
+
+For each kind of message, you can configure the MQTT retain flag (server stores messages) 
+and what devices/registers shall be transmitted.
+
+### Availability of go-iotdevice
+go-iotdevice sends the message `online` whenever it connects to an MQTT broker and sends `offline` when it properly shuts down.
+Additionally, the `offline` message is registered as the last will message and the broker will distribute it automatically
+when the connection breaks.
+
+Examples:
+```
+go-iotdevice/avail/go-iotdevice online
+go-iotdevice/avail/go-iotdevice offline
+```
+
+### Availability of a device
+Whenever a device becomes connected/disconnected (serial connection established/lost) an `online`/`offline`
+message per device can be sent. However, MQTT only allows for one last will message. Therefore to reliably check if
+a device is available, both, the availability message of the client and the device must be checked.
+
+Examples:
+```
+go-iotdevice/avail/my-device online
+go-iotdevice/avail/my-device offline
+```
+
+### Structure
+For other instances of go-iotdevice or also for third-party software to know when devices are available and
+what registers they have, a message containing the current structure of the device is published. It contains a list
+of registers as well as the topics for the availability, telemetry, real-time, and command message such that the receiver
+knows where to subscribe to get current values/control the outputs.
+
+Structure messages are sent when the device comes online for the first time by default (Interval=0s) with the retain
+flags set (the broker stores those messages for new clients).
+Alternatively, it can also be sent repeatedly (Interval>0).
+
+Example:
+```
+go-iotdevice/struct/my-device {
+  "Avail":["go-iotdevice/avail/go-iotdevice","go-iotdevice/avail/my-device"],
+  "Tele":"go-iotdevice/tele/my-device",
+  "Real":"go-iotdevice/real/my-device/%RegisterName%",
+  "Cmnd":"go-iotdevice/cmnd/my-device/%RegisterName%",
+  "Regs":[
+    {"Cat":"Analog Inputs","Name":"AI1","Desc":"inputA","Type":"number","Unit":"V","Sort":100,"Cmnd":false},
+    {"Cat":"Digital Inputs","Name":"DI1","Desc":"Digital Input 1","Type":"enum","Enum":{"0":"OPEN","1":"CLOSED"},"Sort":300,"Cmnd":false},
+    {"Cat":"Relays","Name":"R1","Desc":"Relay 1","Type":"enum","Enum":{"0":"OFF","1":"ON","2":"in pulse"},"Sort":400,"Cmnd":true},
+    {"Cat":"Alarms","Name":"AI2Alarm","Desc":"Analog Input 2","Type":"enum","Enum":{"0":"OK","1":"ALARMED"},"Sort":501,"Cmnd":false},
+    {"Cat":"General","Name":"Time","Desc":"Time","Type":"string","Sort":602,"Cmnd":false},
+    {"Cat":"Device Info","Name":"DeviceName","Desc":"Device Name","Type":"string","Sort":700,"Cmnd":false},
+  ]
+}
+```
+
+Since MQTT payloads are sent uncompressed, size matters and fields are abbreviated:
+Avail=AvailabilityTopics, Tele=TelemetryTopic, Real=RealtimeTopic, Cmnd=CommandTopic/Commandable, Regs=Registers, Cat=Category, Desc=Description
+
+### Telemetry
+There are two ways to receive values. Telemetry messages are sent periodically (1s by default) per device and contain
+all the current values.
+
+Example:
+```
+dev0/tele/teracom {
+  "Time":"2023-11-15T16:55:42+01:00",
+  "NextTelemetry":"2023-11-15T16:55:52+01:00",
+  "Model":"Teracom",
+  "NumericValues":{
+    "AI1":{"Cat":"Analog Inputs","Desc":"inputA","Val":0.02,"Unit":"V"},
+  },
+  "TextValues":{
+    "DeviceName":{"Cat":"Device Info","Desc":"Device Name","Val":"TCW241"},
+    "Time":{"Cat":"General","Desc":"Time","Val":"18:58:19"}
+  },
+  "EnumValues":{
+    "AI2Alarm":{"Cat":"Alarms","Desc":"Analog Input 2","Idx":1,"Val":"ALARMED"},
+    "DI1":{"Cat":"Digital Inputs","Desc":"Digital Input 1","Idx":0,"Val":"OPEN"},
+    "R1":{"Cat":"Relays","Desc":"Relay 1","Idx":1,"Val":"ON"},
+  }
+}
+```
+
+For easy parsing, values are separated by type. To make the telemetry without the struct message, it also
+includes Cat=Category, Desc=Description, and Unit fields.
+
+### Realtime
+Real-time messages are sent per device and register only when a value changes. They can either be sent
+immediately (Interval=0) or debounced (Interval>0). This is useful for some devices that change some values very often.
+
+Examples:
+```
+go-iotdevice/real/my-device/AI1 {"NumVal":0.02}
+go-iotdevice/real/my-device/DI1 {"EnumIdx":0}
+go-iotdevice/real/my-device/Time {"TextVal":"19:00:24"}
+```
+
+Real-time messages are small and only contain the value. The unit and nice names must be retrieved separately (e.g. via the structure messages).
+
+### Command
+This tool can subscribe to command topics to receive commands to set an output to a specific state (e.g. switch a relay).
+The topic encodes the device and the register name of the output that shall be changed. The payload has the same format
+as real-time messages and encodes the desired value.
+
+Examples:
+```
+go-iotdevice/cmnd/my-device/R1 {"EnumIdx": 0}
+go-iotdevice/cmnd/my-device/R1 {"EnumIdx": 1}
+```
+
+Example of howto switch Relay 1 of a device called dev0 into the on position via mosquitto:
+
+```bash
+mosquitto_pub -h 172.19.0.4 -t dev1/cmnd/dev0/R1 -m "{\"EnumIdx\": 1}"
+```
+
+### HomeassistantDiscovery
+These messages are such that Homeassistant automatically shows read-only registers as sensors and commandable registers
+as switches. See [Home Assistant MQTT](https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery).
+
+Discovery messages for sensors are only sent for devices/registers for which real-time messages are active because
+they are used to transmit the actual values. Switches are only advertised for registers for which the command topic is active. 
+Use filters in the Realtime and Command configuration section to restrict what devices/registers are shown in Homeassistant.
+Also, consider setting `Realtime->Interval=500ms`. Homeassistant can easily be overloaded by hundreds of registers.
+
+Examples:
+```
+homeassistant/sensor/go-iotdevice/my-device-ai1/config {
+  "uniq_id":"my-device-ai1",
+  "name":"my-device inputA",
+  "avty":[{"t":"go-iotdevice/avail/go-iotdevice"},{"t":"go-iotdevice/avail/my-device"}],
+  "avty_mode":"all",
+  "stat_t":"go-iotdevice/real/my-device/AI1",
+  "val_tpl":"{{ value_json.NumVal }}",
+  "unit_of_meas":"V"
+}
+homeassistant/switch/go-iotdevice/my-device-r1/config {
+  "uniq_id":"my-device-r1",
+  "name":"my-device Relay 1",
+  "avty":[{"t":"go-iotdevice/avail/go-iotdevice"},{"t":"go-iotdevice/avail/my-device"}],
+  "avty_mode":"all",
+  "cmd_t":"go-iotdevice/cmnd/my-device/R1",
+  "stat_t":"go-iotdevice/real/my-device/R1",
+  "val_tpl":"{{ value_json.EnumIdx }}",
+  "pl_off":"{\"EnumIdx\":0}",
+  "pl_on":"{\"EnumIdx\":1}",
+  "stat_off":"0",
+  "stat_on":"1"
+}
+```
+
+## Development
+
+### Local development
+For development, this backend can be compiled and run locally.
+In addition, it's then best to also run the [front-end](https://github.com/koestler/js-iotdevice) locally. 
+
+This tool can proxy requests to a local server serving the front-end. Use e.g.:
+
+```yaml
+HttpServer:                                                # optional, when missing: http server is not started
+  Bind: "[::1]"                                            # mandatory, use [::1] (ipv6 loopback) to enable on both ipv4 and 6 and 0.0.0.0 to only enable ipv4
+  Port: 8000                                               # optional, default 8000
+  FrontendProxy: "http://127.0.0.1:3000/"
+ ```  
+ 
+Build and run: 
+  
+```bash
+go build && ./go-iotdevice
+```
+
+### Compile and run inside docker
+Alternatively, if you don't have Golang installed locally, you can compile and run 
+
+```bash
+docker build -f docker/Dockerfile -t go-iotdevice .
+docker run --rm --name go-iotdevice -p 127.0.0.1:8000:8000 \
+  -v "$(pwd)"/documentation/config.yaml:/config.yaml:ro \
+  go-iotdevice
+```
+
+### Generate swagger documentation
+```bash
+go install github.com/swaggo/swag/cmd/swag@latest
+go generate docs.go
+```
+
+### Run tests
+[gomock](https://github.com/uber-go/mock) is used to generate stubs and mocks for the unit tests.
+
+```bash
+go install go.uber.org/mock/mockgen@latest
+go generate ./...
+go test ./...
+```
+
+### Update README.md
+```bash
+npx embedme README.md
+```
+
+## Explained Full Configuration
 ```yaml
 # documentation/full-config.yaml
 
@@ -372,122 +810,4 @@ Views:                                                     # optional, a list of
       - test0                                              # username which is allowed to access this view
     Hidden: false                                          # optional, default false, if true, this view is not shown in the menu unless the user is logged in
 
-```
-
-## Authentication
-The tool can use [JWT](https://jwt.io/) to make certain views only available after a login. The user database
-is stored in an Apache htaccess file which can be changed without restarting the server. 
-
-### Configuration
-
-There are two relevant sections in the configuration file:
-
-1. Adding the `Authentication:` section enables the login/authentication mechanism.
-The `JwtSecret` is used to sign the tokens. When left unconfigured, a new random secret is generated on each
-startup of the backend. This results in all users being logged out after each restart of the server.
-It's therefore best to hardcode a random secret.
-
-2. Per `View`, you can define a list of `AllowedUsers`. When the list is present and has at least one entry, only
-usernames on that list can access this view. If the list is empty, all users in the user database can access it. 
-
-### User database
-The only supported authentication backend at the moment is a simple Apache htaccess file. Set it up as follows:
-
-```bash
-htpasswd -c auth.passwd lorenz
-# enter password twice
-htpasswd auth.passwd daniela
-# enter another password twice
-```
-
-## Nginx reverse proxy
-I normally run this service behind a [Nginx](https://nginx.org/en/) server configured as a reverse proxy. It can take care of:
- * Serving multiple different applications on the same address using [SNI](https://en.wikipedia.org/wiki/Server_Name_Indication).
- * Caching on a fast cloud server in front of a device connected via a slow mobile connection.
- * https termination
-
-### Setup
-It's assumed that you understand each of the following steps in detail. It's just to make the setup steps as quick as possible. 
-
-```bash
-# install nginx / curl
-apt update && apt install -y nginx curl
-
-# define on what URL the tool shall be reachable
-SITE=foo.example.com
-CONFFILE=$SITE".conf"
-
-# create nginx configuration
-cd /etc/nginx/sites-available/
-curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/nginx-example.conf -o $CONFFILE
-sed -i "s/example.com/$SITE/g" $CONFFILE
-cd ../sites-enabled
-ln -s "../sites-available/"$CONFFILE
-
-# edit the proxy_pass directive to the correct address for the service
-emacs $CONFFILE 
-
-# setup certbot. use something like this:
-mkdir -p /srv/www-acme-challenge/$SITE
-certbot certonly --authenticator webroot --webroot-path /srv/www-acme-challenge/$SITE -d $SITE
-
-# reload the nginx config
-service nginx reload 
-```
-
-## Http Interface
-There is a stable REST-API to fetch the views, devices, registers, and values.
-Additionally, patch requests are implemented to set a controllable register (e.g. an output of a relay board).
-This API is used by the build-in front-end and can also be used for custom integrations.
-See /api/v2/docs and /api/v2/docs/swagger.json for built-in swagger documentation. 
-
-## Development
-
-### Local development
-For development, this backend can be compiled and run locally.
-In addition, it's then best to also run the [front-end](https://github.com/koestler/js-iotdevice) locally. 
-
-This tool can proxy requests to a local server serving the front-end. Use e.g.:
-
-```yaml
-HttpServer:                                                # optional, when missing: http server is not started
-  Bind: "[::1]"                                            # mandatory, use [::1] (ipv6 loopback) to enable on both ipv4 and 6 and 0.0.0.0 to only enable ipv4
-  Port: 8000                                               # optional, default 8000
-  FrontendProxy: "http://127.0.0.1:3000/"
- ```  
- 
-Build and run: 
-  
-```bash
-go build && ./go-iotdevice
-```
-
-### Compile and run inside docker
-Alternatively, if you don't have Golang installed locally, you can compile and run 
-
-```bash
-docker build -f docker/Dockerfile -t go-iotdevice .
-docker run --rm --name go-iotdevice -p 127.0.0.1:8000:8000 \
-  -v "$(pwd)"/documentation/config.yaml:/config.yaml:ro \
-  go-iotdevice
-```
-
-### Generate swagger documentation
-```bash
-go install github.com/swaggo/swag/cmd/swag@latest
-go generate docs.go
-```
-
-### Run tests
-[gomock](https://github.com/uber-go/mock) is used to generate stubs and mocks for the unit tests.
-
-```bash
-go install go.uber.org/mock/mockgen@latest
-go generate ./...
-go test ./...
-```
-
-### Update README.md
-```bash
-npx embedme README.md
 ```
