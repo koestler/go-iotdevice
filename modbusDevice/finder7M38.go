@@ -30,11 +30,19 @@ func runFinder7M38(ctx context.Context, c *DeviceStruct) (err error, immediateEr
 	addToRegisterDb(c.RegisterDb(), registers)
 
 	// setup polling
-	execPoll := func(ctx context.Context) error {
+	execPoll := func(ctx context.Context, reducedSet bool) error {
 		start := time.Now()
 
 		// fetch registers
 		for _, register := range registers {
+
+			if reducedSet {
+				// skip registers that are static
+				if c := register.Category(); c == "Device Info" || c == "Energy Counter" {
+					continue
+				}
+			}
+
 			v, err := FinderReadRegister(c, register)
 
 			if err != nil {
@@ -63,7 +71,7 @@ func runFinder7M38(ctx context.Context, c *DeviceStruct) (err error, immediateEr
 		return nil
 	}
 
-	if err := execPoll(ctx); err != nil {
+	if err := execPoll(ctx, false); err != nil {
 		return err, true
 	}
 
@@ -74,13 +82,17 @@ func runFinder7M38(ctx context.Context, c *DeviceStruct) (err error, immediateEr
 	}()
 
 	ticker := time.NewTicker(c.modbusConfig.PollInterval())
+	pollCounter := 0
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, false
 		case <-ticker.C:
-			if err := execPoll(ctx); err != nil {
+			reducedSet := pollCounter%60 != 0
+			pollCounter++
+
+			if err := execPoll(ctx, reducedSet); err != nil {
 				return err, false
 			}
 		}
