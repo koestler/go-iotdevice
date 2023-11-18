@@ -6,6 +6,7 @@ import (
 	"github.com/koestler/go-iotdevice/mqttClient"
 	"github.com/koestler/go-iotdevice/pool"
 	"github.com/koestler/go-iotdevice/restarter"
+	"log"
 	"time"
 )
 
@@ -60,6 +61,8 @@ func RunMqttForwarders(
 		for _, deviceConfig := range cfg.HomeassistantDiscovery().Devices() {
 			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
 				runHomeassistantDiscoveryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.Filter())
+			} else {
+				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
 			}
 		}
 	}
@@ -72,6 +75,8 @@ func RunMqttForwarders(
 		for _, deviceConfig := range sCfg.Devices() {
 			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
 				runAvailabilityForwarder(mc.GetCtx(), cfg, dev.Service(), mc)
+			} else {
+				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
 			}
 		}
 	}
@@ -80,6 +85,8 @@ func RunMqttForwarders(
 		for _, deviceConfig := range sCfg.Devices() {
 			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
 				runStructureForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.Filter())
+			} else {
+				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
 			}
 		}
 	}
@@ -88,6 +95,8 @@ func RunMqttForwarders(
 		for _, deviceConfig := range sCfg.Devices() {
 			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
 				runTelemetryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, stateStorage, deviceConfig.Filter())
+			} else {
+				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
 			}
 		}
 	}
@@ -96,6 +105,8 @@ func RunMqttForwarders(
 		for _, deviceConfig := range sCfg.Devices() {
 			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
 				runRealtimeForwarder(mc.GetCtx(), cfg, dev.Service(), mc, stateStorage, deviceConfig.Filter())
+			} else {
+				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
 			}
 		}
 	}
@@ -104,6 +115,8 @@ func RunMqttForwarders(
 		for _, deviceConfig := range cfg.Command().Devices() {
 			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
 				runCommandForwarder(mc.GetCtx(), cfg, dev.Service(), mc, commandStorage, deviceConfig.Filter())
+			} else {
+				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
 			}
 		}
 	}

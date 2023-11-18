@@ -119,6 +119,9 @@ func main() {
 		// start mqtt clients
 		runMqttDevices(cfg, devicePool, mqttClientPool, stateStorage, commandStorage)
 
+		// start mqtt forwarders
+		runMqttForwarders(cfg, devicePool, mqttClientPool, stateStorage, commandStorage)
+
 		// start http server
 		httpServer := runHttpServer(cfg, devicePool, stateStorage, commandStorage)
 		if httpServer != nil {
