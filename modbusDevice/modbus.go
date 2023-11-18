@@ -74,7 +74,7 @@ func callFunction(
 		return nil, fmt.Errorf("function code in response != function code in request: %x != %x", received, functionCode)
 	}
 
-	return response[2 : len(response)-4], nil
+	return response[2 : len(response)-2], nil
 }
 
 var crcTable = crc16.MakeTable(crc16.CRC16_MODBUS)
