@@ -10,6 +10,7 @@ type FinderRegister struct {
 	registerType FinderRegisterType
 	addressBegin uint16
 	addressEnd   uint16
+	bit          int // only used for enums, when positive, only the given bit is used as 0/1
 }
 
 type FinderRegisterType int
@@ -27,6 +28,7 @@ func NewFinderRegister(
 	registerType FinderRegisterType,
 	addressBegin, addressEnd uint16,
 	enum map[int]string,
+	bit int,
 	unit string,
 	sort int,
 ) FinderRegister {
@@ -73,6 +75,7 @@ func NewFinderRegister(
 		registerType,
 		addressBegin,
 		addressEnd,
+		bit,
 	}
 }
 
