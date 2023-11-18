@@ -50,7 +50,7 @@ func callFunction(
 
 	// slave address, function code, payload, 16bit crc
 	responseLength := 1 + 1 + responsePayloadLength + 2
-	response := make([]byte, responseLength+2)
+	response := make([]byte, responseLength)
 
 	err = writeRead(request.Bytes(), response)
 	if err != nil {
