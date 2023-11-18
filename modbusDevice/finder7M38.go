@@ -246,33 +246,23 @@ func FinderReadRegister(c *DeviceStruct, reg FinderRegister) (v dataflow.Value, 
 		)
 	}
 
-	switch reg.RegisterType() {
+	switch rt := reg.RegisterType(); rt {
 	case dataflow.NumberRegister:
-		return FinderReadFloatRegister(c, reg)
+		switch frt := reg.registerType; frt {
+		case FinderTFloat:
+			return FinderReadFloatRegister(c, reg)
+		case FinderT1:
+			return FinderReadUInt16Register(c, reg)
+		default:
+			return nil, fmt.Errorf("FinderReadRegister does not implement finderRegisterType=%d", frt)
+		}
+	case dataflow.EnumRegister:
+		return FinderReadEnumRegister(c, reg)
 	case dataflow.TextRegister:
 		return FinderReadStringRegister(c, reg)
 	default:
-		return nil, fmt.Errorf("FinderReadRegister does not implement registerType=%s", reg.RegisterType())
+		return nil, fmt.Errorf("FinderReadRegister does not implement registerType=%s", rt)
 	}
-}
-
-func FinderReadStringRegister(c *DeviceStruct, register FinderRegister) (v dataflow.Value, err error) {
-	response, err := FinderReadInputRegisters(c, register)
-	if err != nil {
-		return nil, err
-	}
-
-	if c.Config().LogDebug() {
-		log.Printf("FinderReadFloatRegister: registerName=%s, stringValue=%s", register.Name(), response)
-	}
-
-	v = dataflow.NewTextRegisterValue(
-		c.Name(),
-		register,
-		string(response),
-	)
-
-	return
 }
 
 func FinderReadFloatRegister(c *DeviceStruct, register FinderRegister) (v dataflow.Value, err error) {
@@ -281,9 +271,10 @@ func FinderReadFloatRegister(c *DeviceStruct, register FinderRegister) (v datafl
 		return nil, err
 	}
 
-	floatValue, err := bytesToFloat32(response)
-	if err != nil {
-		return nil, err
+	var floatValue float32
+	buf := bytes.NewReader(response)
+	if err := binary.Read(buf, binary.BigEndian, &floatValue); err != nil {
+		return nil, fmt.Errorf("conversion to float32 failed: %s", err)
 	}
 
 	if c.Config().LogDebug() {
@@ -294,6 +285,80 @@ func FinderReadFloatRegister(c *DeviceStruct, register FinderRegister) (v datafl
 		c.Name(),
 		register,
 		float64(floatValue),
+	)
+
+	return
+}
+
+func FinderReadUInt16Register(c *DeviceStruct, register FinderRegister) (v dataflow.Value, err error) {
+	response, err := FinderReadInputRegisters(c, register)
+	if err != nil {
+		return nil, err
+	}
+
+	var uint16Value uint16
+	buf := bytes.NewReader(response)
+	if err := binary.Read(buf, binary.BigEndian, &uint16Value); err != nil {
+		return nil, fmt.Errorf("conversion to uint16 failed: %s", err)
+	}
+
+	if c.Config().LogDebug() {
+		log.Printf("FinderReadUInt16Register: registerName=%s, uint16Value=%d", register.Name(), uint16Value)
+	}
+
+	v = dataflow.NewNumericRegisterValue(
+		c.Name(),
+		register,
+		float64(uint16Value),
+	)
+
+	return
+}
+
+func FinderReadEnumRegister(c *DeviceStruct, register FinderRegister) (v dataflow.Value, err error) {
+	response, err := FinderReadInputRegisters(c, register)
+	if err != nil {
+		return nil, err
+	}
+
+	var uint16Value uint16
+	buf := bytes.NewReader(response)
+	if err := binary.Read(buf, binary.BigEndian, &uint16Value); err != nil {
+		return nil, fmt.Errorf("conversion to uint16 failed: %s", err)
+	}
+
+	if c.Config().LogDebug() {
+		log.Printf("FinderReadEnumRegister: registerName=%s, uint16Value=%d", register.Name(), uint16Value)
+	}
+
+	enumIdx := int(uint16Value)
+	if _, ok := register.Enum()[enumIdx]; !ok {
+		return nil, fmt.Errorf("invalid enumIdx=%d", enumIdx)
+	}
+
+	v = dataflow.NewEnumRegisterValue(
+		c.Name(),
+		register,
+		enumIdx,
+	)
+
+	return
+}
+
+func FinderReadStringRegister(c *DeviceStruct, register FinderRegister) (v dataflow.Value, err error) {
+	response, err := FinderReadInputRegisters(c, register)
+	if err != nil {
+		return nil, err
+	}
+
+	if c.Config().LogDebug() {
+		log.Printf("FinderReadStringRegister: registerName=%s, stringValue=%s", register.Name(), response)
+	}
+
+	v = dataflow.NewTextRegisterValue(
+		c.Name(),
+		register,
+		string(response),
 	)
 
 	return
@@ -343,15 +408,4 @@ func FinderReadInputRegisters(c *DeviceStruct, register FinderRegister) (respons
 	response = response[1:]
 
 	return
-}
-
-func bytesToFloat32(inp []byte) (float32, error) {
-	var f float32
-
-	buf := bytes.NewReader(inp)
-	if err := binary.Read(buf, binary.BigEndian, &f); err != nil {
-		return 0, fmt.Errorf("bytesToFloat32 failed: %s", err)
-	}
-
-	return f, nil
 }
