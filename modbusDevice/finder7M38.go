@@ -30,7 +30,7 @@ func runFinder7M38(ctx context.Context, c *DeviceStruct) (err error, immediateEr
 	addToRegisterDb(c.RegisterDb(), registers)
 
 	// setup polling
-	execPoll := func() error {
+	execPoll := func(ctx context.Context) error {
 		start := time.Now()
 
 		// fetch registers
@@ -42,6 +42,14 @@ func runFinder7M38(ctx context.Context, c *DeviceStruct) (err error, immediateEr
 			}
 
 			c.StateStorage().Fill(v)
+
+			// abort loop when context expires
+			select {
+			case <-ctx.Done():
+				return nil
+			default:
+				// continue the loop
+			}
 		}
 
 		if c.Config().LogDebug() {
@@ -55,7 +63,7 @@ func runFinder7M38(ctx context.Context, c *DeviceStruct) (err error, immediateEr
 		return nil
 	}
 
-	if err := execPoll(); err != nil {
+	if err := execPoll(ctx); err != nil {
 		return err, true
 	}
 
@@ -72,7 +80,7 @@ func runFinder7M38(ctx context.Context, c *DeviceStruct) (err error, immediateEr
 		case <-ctx.Done():
 			return nil, false
 		case <-ticker.C:
-			if err := execPoll(); err != nil {
+			if err := execPoll(ctx); err != nil {
 				return err, false
 			}
 		}
