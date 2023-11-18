@@ -6,12 +6,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"github.com/sigurn/crc16"
 )
-
-type WriteReadBusFunc func(request []byte, responseBuf []byte) error
-
-type FunctionCode byte
 
 const (
 	WaveshareFunctionReadRelay             FunctionCode = 0x01
@@ -28,10 +23,7 @@ const (
 	RelayClose Command = 0xFF00
 )
 
-var byteOrder = binary.BigEndian
-var checksumByteOrder = binary.LittleEndian
-
-func WriteRelay(writeRead WriteReadBusFunc, deviceAddress byte, relayNr uint16, command Command) (err error) {
+func WaveshareWriteRelay(writeRead WriteReadBusFunc, deviceAddress byte, relayNr uint16, command Command) (err error) {
 	if relayNr > 7 {
 		return fmt.Errorf("invalid relayNr: %d, it must be between 0 and 7", relayNr)
 	}
@@ -56,13 +48,13 @@ func WriteRelay(writeRead WriteReadBusFunc, deviceAddress byte, relayNr uint16, 
 		deviceAddress,
 		WaveshareFunctionWriteRelay,
 		payload.Bytes(),
-		6,
+		4,
 	)
 
 	return err
 }
 
-func ReadSoftwareRevision(writeRead WriteReadBusFunc, deviceAddress byte) (version string, err error) {
+func WaveshareReadSoftwareRevision(writeRead WriteReadBusFunc, deviceAddress byte) (version string, err error) {
 	response, err := callFunction(
 		writeRead,
 		deviceAddress,
@@ -71,7 +63,7 @@ func ReadSoftwareRevision(writeRead WriteReadBusFunc, deviceAddress byte) (versi
 			0x20, 0x00, // 0x0200 read software revision
 			0x00, 0x01, // number of bytes, Fixed 0x0001
 		},
-		4, // device address, command, number, revision of software
+		2, // number, revision of software
 	)
 
 	if err != nil {
@@ -80,12 +72,12 @@ func ReadSoftwareRevision(writeRead WriteReadBusFunc, deviceAddress byte) (versi
 
 	// extract version
 	// Convert it to DEX and multiply by 0.01 is the value of software revision.
-	version = fmt.Sprintf("V%d.%02d", response[3]/100, response[3]%100)
+	version = fmt.Sprintf("V%d.%02d", response[1]/100, response[1]%100)
 
 	return
 }
 
-func ReadRelays(writeRead WriteReadBusFunc, deviceAddress byte) (state [8]bool, err error) {
+func WaveshareReadRelays(writeRead WriteReadBusFunc, deviceAddress byte) (state [8]bool, err error) {
 	response, err := callFunction(
 		writeRead,
 		deviceAddress,
@@ -94,7 +86,7 @@ func ReadRelays(writeRead WriteReadBusFunc, deviceAddress byte) (state [8]bool, 
 			0x00, 0xFF, // fixed
 			0x00, 0x01, // fixed
 		},
-		4, // device address, command, number, state
+		2, // number, state
 	)
 
 	if err != nil {
@@ -103,68 +95,8 @@ func ReadRelays(writeRead WriteReadBusFunc, deviceAddress byte) (state [8]bool, 
 
 	// extract bits of response into boolean state
 	for i := 0; i < 8; i += 1 {
-		state[i] = (response[3] & (1 << i)) != 0
+		state[i] = (response[1] & (1 << i)) != 0
 	}
 
 	return
-}
-
-func callFunction(
-	writeRead WriteReadBusFunc,
-	deviceAddress byte,
-	functionCode FunctionCode,
-	payload []byte,
-	responseLength int,
-) (response []byte, err error) {
-	// send request
-	// frame structure:
-	// 1 byte Device Address
-	// 1 byte Function Code
-	// n bytes payload
-	// 2 bytes crc16 computeChecksum
-	var request bytes.Buffer
-
-	err = binary.Write(&request, byteOrder, deviceAddress)
-	if err != nil {
-		return
-	}
-
-	err = binary.Write(&request, byteOrder, functionCode)
-	if err != nil {
-		return
-	}
-
-	err = binary.Write(&request, byteOrder, payload)
-	if err != nil {
-		return
-	}
-
-	checksum := computeChecksum(request.Bytes())
-	err = binary.Write(&request, checksumByteOrder, checksum)
-	if err != nil {
-		return
-	}
-
-	// length: read response + computeChecksum
-	response = make([]byte, responseLength+2)
-
-	err = writeRead(request.Bytes(), response)
-	if err != nil {
-		return
-	}
-
-	// check computeChecksum
-	received := checksumByteOrder.Uint16(response[len(response)-2:])
-	computed := computeChecksum(response[:len(response)-2])
-	if received != computed {
-		return nil, fmt.Errorf("computeChecksum missmatch received != computed : %x != %x", received, computed)
-	}
-
-	return
-}
-
-var crcTable = crc16.MakeTable(crc16.CRC16_MODBUS)
-
-func computeChecksum(data []byte) uint16 {
-	return crc16.Checksum(data, crcTable)
 }

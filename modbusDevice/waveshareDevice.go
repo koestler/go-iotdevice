@@ -15,8 +15,8 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	log.Printf("device[%s]: start waveshare RTU Relay 8 source", c.Name())
 
 	// get software version
-	if version, err := ReadSoftwareRevision(c.modbus.WriteRead, c.modbusConfig.Address()); err != nil {
-		return fmt.Errorf("waveshareDevice[%s]: ReadSoftwareRevision failed: %s", c.Name(), err), true
+	if version, err := WaveshareReadSoftwareRevision(c.modbus.WriteRead, c.modbusConfig.Address()); err != nil {
+		return fmt.Errorf("waveshareDevice[%s]: WaveshareReadSoftwareRevision failed: %s", c.Name(), err), true
 	} else {
 		log.Printf("waveshareDevice[%s]: source: version=%s", c.Name(), version)
 	}
@@ -31,7 +31,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 		start := time.Now()
 
 		// fetch registers
-		state, err := ReadRelays(c.modbus.WriteRead, c.modbusConfig.Address())
+		state, err := WaveshareReadRelays(c.modbus.WriteRead, c.modbusConfig.Address())
 		if err != nil {
 			return fmt.Errorf("waveshareDevice[%s]: read failed: %s", c.Name(), err)
 		}
@@ -120,7 +120,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 			)
 		}
 
-		if err := WriteRelay(c.modbus.WriteRead, c.modbusConfig.Address(), relayNr, command); err != nil {
+		if err := WaveshareWriteRelay(c.modbus.WriteRead, c.modbusConfig.Address(), relayNr, command); err != nil {
 			log.Printf(
 				"waveshareDevice[%s]: command request genration failed: %s",
 				c.Config().Name(), err,
