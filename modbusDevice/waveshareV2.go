@@ -36,7 +36,7 @@ func WriteRelay(writeRead WriteReadBusFunc, deviceAddress byte, relayNr uint16, 
 		return fmt.Errorf("invalid relayNr: %d, it must be between 0 and 7", relayNr)
 	}
 
-	// payload strucutre:
+	// payload structure:
 	// 2 bytes for register address of controlled relay, 0x0000 - 0x0007
 	// 2 bytes for command: 0xFF00 open relay, 0x0000 close relay, 0x5500 flip relay
 	var payload bytes.Buffer
