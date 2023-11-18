@@ -1,51 +1,45 @@
 package modbusDevice
 
+// protocol documentation: https://cdn.findernet.com/app/uploads/Benutzerhandbuch_Typ_7M38_DE.pdf
+
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"fmt"
 	"github.com/koestler/go-iotdevice/dataflow"
 	"log"
 	"time"
 )
 
+const (
+	FinderFunctionReadHoldingResgisters FunctionCode = 0x03
+	FinderFunctionReadInputRegisters    FunctionCode = 0x04
+)
+
+const InputRegisterAddressOffset = 30000
+
 func runFinder7M38(ctx context.Context, c *DeviceStruct) (err error, immediateError bool) {
 	log.Printf("device[%s]: start Finder 7M.38 source", c.Name())
 
-	// get software version
-	if version, err := ReadSoftwareRevision(c.modbus.WriteRead, c.modbusConfig.Address()); err != nil {
-		return fmt.Errorf("finder7N38Device[%s]: ReadSoftwareRevision failed: %s", c.Name(), err), true
-	} else {
-		log.Printf("finder7N38Device[%s]: source: version=%s", c.Name(), version)
-	}
-
 	// assign registers
-	registers := c.getWaveshareRtuRelay8Registers()
+	registers := RegisterList7M38()
 	registers = dataflow.FilterRegisters(registers, c.Config().Filter())
-	c.RegisterDb().AddStruct(registers...)
+	addToRegisterDb(c.RegisterDb(), registers)
 
 	// setup polling
 	execPoll := func() error {
 		start := time.Now()
 
 		// fetch registers
-		state, err := ReadRelays(c.modbus.WriteRead, c.modbusConfig.Address())
-		if err != nil {
-			return fmt.Errorf("finder7N38Device[%s]: read failed: %s", c.Name(), err)
-		}
-
 		for _, register := range registers {
-			value := 0
-			if address, err := waveshareRtuRelay8RegisterAddress(register); err == nil {
-				if state[address] {
-					value = 1
-				}
+			v, err := FinderReadRegister(c, register)
+
+			if err != nil {
+				return err
 			}
 
-			c.StateStorage().Fill(dataflow.NewEnumRegisterValue(
-				c.Name(),
-				register,
-				value,
-			))
+			c.StateStorage().Fill(v)
 		}
 
 		if c.Config().LogDebug() {
@@ -81,68 +75,6 @@ func runFinder7M38(ctx context.Context, c *DeviceStruct) (err error, immediateEr
 			}
 		}
 	}
-}
-
-var RegisterList7M38 = []FinderRegister{
-	NewFinderRegister(
-		"Product",
-		"ModelNumber",
-		"Model Number",
-		FinderT_Str16,
-		30001, 30008,
-		nil,
-		"",
-		100,
-	),
-	NewFinderRegister(
-		"Product",
-		"SerialNumber",
-		"Serial Number",
-		FinderT_Str8,
-		30009, 30012,
-		nil,
-		"",
-		101,
-	),
-	NewFinderRegister(
-		"Product",
-		"SoftwareReference",
-		"Software Reference",
-		FinderT1,
-		30013, 30013,
-		nil,
-		"",
-		102,
-	),
-	NewFinderRegister(
-		"Product",
-		"HardwareReference",
-		"Hardware Reference",
-		FinderT_Str2,
-		30014, 30014,
-		nil,
-		"",
-		103,
-	),
-	NewFinderRegister(
-		"Actual Measurements",
-		"PhaseValid",
-		"Phase valid measurement",
-		FinderT1,
-		30101, 30101,
-		map[int]string{
-			0x00: "phase 1 valid  , phase 2 valid  , phase 3 valid",
-			0x01: "phase 1 invalid, phase 2 valid  , phase 3 valid",
-			0x02: "phase 1 valid  , phase 2 invalid, phase 3 valid",
-			0x03: "phase 1 invalid, phase 2 invalid, phase 3 valid",
-			0x04: "phase 1 valid  , phase 2 valid  , phase 3 invalid",
-			0x05: "phase 1 invalid, phase 2 valid  , phase 3 invalid",
-			0x06: "phase 1 valid  , phase 2 invalid, phase 3 invalid",
-			0x07: "phase 1 invalid, phase 2 invalid, phase 3 invalid",
-		},
-		"",
-		104,
-	),
 }
 
 var RegisterList7M38FloatRegisters = []struct {
@@ -218,14 +150,79 @@ var RegisterList7M38FloatRegisters = []struct {
 	{34999, "RunTime2", "Run time", "s"},
 }
 
-func init() {
+var RegisterList7M38 = func() []FinderRegister {
+	productResgisters := []FinderRegister{
+		NewFinderRegister(
+			"Product",
+			"ModelNumber",
+			"Model Number",
+			FinderTStr16,
+			30001, 30008,
+			nil,
+			"",
+			100,
+		),
+		NewFinderRegister(
+			"Product",
+			"SerialNumber",
+			"Serial Number",
+			FinderTStr8,
+			30009, 30012,
+			nil,
+			"",
+			101,
+		),
+		NewFinderRegister(
+			"Product",
+			"SoftwareReference",
+			"Software Reference",
+			FinderT1,
+			30013, 30013,
+			nil,
+			"",
+			102,
+		),
+		NewFinderRegister(
+			"Product",
+			"HardwareReference",
+			"Hardware Reference",
+			FinderTStr2,
+			30014, 30014,
+			nil,
+			"",
+			103,
+		),
+		NewFinderRegister(
+			"Actual Measurements",
+			"PhaseValid",
+			"Phase valid measurement",
+			FinderT1,
+			30101, 30101,
+			map[int]string{
+				0x00: "phase 1 valid  , phase 2 valid  , phase 3 valid",
+				0x01: "phase 1 invalid, phase 2 valid  , phase 3 valid",
+				0x02: "phase 1 valid  , phase 2 invalid, phase 3 valid",
+				0x03: "phase 1 invalid, phase 2 invalid, phase 3 valid",
+				0x04: "phase 1 valid  , phase 2 valid  , phase 3 invalid",
+				0x05: "phase 1 invalid, phase 2 valid  , phase 3 invalid",
+				0x06: "phase 1 valid  , phase 2 invalid, phase 3 invalid",
+				0x07: "phase 1 invalid, phase 2 invalid, phase 3 invalid",
+			},
+			"",
+			104,
+		),
+	}
+
+	ret := make([]FinderRegister, 0, len(productResgisters)+len(RegisterList7M38FloatRegisters))
+	ret = append(ret, productResgisters...)
+
 	for idx, fr := range RegisterList7M38FloatRegisters {
-		RegisterList7M38 = append(RegisterList7M38,
+		ret = append(ret,
 			NewFinderRegister(
 				"Measurements",
 				fr.name,
 				fr.desc,
-				FinderT_float,
+				FinderTFloat,
 				fr.addr, fr.addr+1,
 				nil,
 				fr.unit,
@@ -233,4 +230,89 @@ func init() {
 			),
 		)
 	}
+
+	return ret
+}
+
+func FinderReadRegister(c *DeviceStruct, register FinderRegister) (v dataflow.Value, err error) {
+	switch register.RegisterType() {
+	case dataflow.NumberRegister:
+		return FinderReadFloatRegister(c, register)
+	case dataflow.TextRegister:
+		return FinderReadStringRegister(c, register)
+	default:
+		return nil, fmt.Errorf("FinderReadRegister does not implement registerType=%s", register.RegisterType())
+	}
+}
+
+func FinderReadStringRegister(c *DeviceStruct, register FinderRegister) (v dataflow.Value, err error) {
+	response, err := FinderReadInputRegisters(c, register)
+	log.Printf("FinderReadStringRegister: got response=%s, err=%s", response, err)
+	if err != nil {
+		return nil, err
+	}
+
+	v = dataflow.NewTextRegisterValue(
+		c.Name(),
+		register,
+		string(response),
+	)
+
+	return
+}
+
+func FinderReadFloatRegister(c *DeviceStruct, register FinderRegister) (v dataflow.Value, err error) {
+	response, err := FinderReadInputRegisters(c, register)
+	log.Printf("FinderReadFloatRegister: got response=%s, err=%s", response, err)
+	if err != nil {
+		return nil, err
+	}
+
+	floatValue, err := bytesToFloat32(response)
+	if err != nil {
+		return nil, err
+	}
+
+	v = dataflow.NewNumericRegisterValue(
+		c.Name(),
+		register,
+		float64(floatValue),
+	)
+
+	return
+}
+
+func FinderReadInputRegisters(c *DeviceStruct, register FinderRegister) (response []byte, err error) {
+	var requestPayload bytes.Buffer
+
+	// write starting register
+	err = binary.Write(&requestPayload, byteOrder, register.addressBegin-InputRegisterAddressOffset)
+	if err != nil {
+		return
+	}
+	// write register count
+	countRegisters := register.addressEnd - register.addressBegin + 1
+	err = binary.Write(&requestPayload, byteOrder, countRegisters)
+	if err != nil {
+		return
+	}
+
+	return callFunction(
+		c.modbus.WriteRead,
+		c.modbusConfig.Address(),
+		FinderFunctionReadInputRegisters,
+		requestPayload.Bytes(),
+		int(2*countRegisters), // finder registers are 16 bit wide
+	)
+}
+
+func bytesToFloat32(inp []byte) (float32, error) {
+	var f float32
+
+	buf := bytes.NewReader(inp)
+	if err := binary.Read(buf, binary.LittleEndian, &f); err != nil {
+		return 0, fmt.Errorf("bytesToFloat32 failed: %s", err)
+	}
+
+	return f, nil
 }

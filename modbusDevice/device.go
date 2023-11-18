@@ -55,6 +55,8 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	switch c.modbusConfig.Kind() {
 	case types.ModbusWaveshareRtuRelay8Kind:
 		return runWaveshareRtuRelay8(ctx, c)
+	case types.ModbusFinder7M38Kind:
+		return runFinder7M38(ctx, c)
 	default:
 		return fmt.Errorf("unknown device kind: %s", c.modbusConfig.Kind().String()), true
 	}
