@@ -16,7 +16,7 @@ func runModbus(
 	for _, mbCfg := range cfg.Modbus() {
 		if cfg.LogWorkerStart() {
 			log.Printf(
-				"modbus[%s]: start: device='%s', baudRate=%d, readTimeout='%s'",
+				"modbus[%s]: start: device='%s', baudRate=%d, readTimeout=%s",
 				mbCfg.Name(), mbCfg.Device(), mbCfg.BaudRate(), mbCfg.ReadTimeout(),
 			)
 		}
