@@ -18,7 +18,7 @@ RUN addgroup -S app && adduser -S app -G app
 RUN chown app:app /app/go-iotdevice
 
 # use already compiled frontend
-FROM ghcr.io/koestler/js-iotdevice:v3 AS js-builder
+FROM ghcr.io/koestler/js-iotdevice:v2.1.0 AS js-builder
 
 # build final image
 FROM scratch
