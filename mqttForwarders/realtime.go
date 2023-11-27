@@ -91,8 +91,13 @@ func realtimeDelayedUpdateModeRoutine(
 		case <-ctx.Done():
 			return
 		case value := <-subscription.Drain():
-			// new value received, save newest version per register name
-			updates[value.Register().Name()] = value
+			if value.Register().RegisterType() == dataflow.NumberRegister {
+				// new numeric value received, save the newest version per register name
+				updates[value.Register().Name()] = value
+			} else {
+				// send immediately
+				publishRealtimeMessage(cfg, mc, dev.Name(), value)
+			}
 		case <-ticker.C:
 			if cfg.LogDebug() {
 				log.Printf(
