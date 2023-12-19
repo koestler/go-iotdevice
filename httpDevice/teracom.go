@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"net/http"
 	"net/url"
 	"strconv"

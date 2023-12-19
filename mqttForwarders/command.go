@@ -2,9 +2,9 @@ package mqttForwarders
 
 import (
 	"context"
-	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/device"
-	"github.com/koestler/go-iotdevice/mqttClient"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/device"
+	"github.com/koestler/go-iotdevice/v3/mqttClient"
 	"log"
 )
 

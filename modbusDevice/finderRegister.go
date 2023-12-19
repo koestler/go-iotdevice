@@ -1,7 +1,7 @@
 package modbusDevice
 
 import (
-	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"log"
 )
 

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/koestler/go-iotdevice/config"
-	"github.com/koestler/go-iotdevice/modbus"
-	"github.com/koestler/go-iotdevice/pool"
+	"github.com/koestler/go-iotdevice/v3/config"
+	"github.com/koestler/go-iotdevice/v3/modbus"
+	"github.com/koestler/go-iotdevice/v3/pool"
 	"log"
 )
 

@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/koestler/go-iotdevice/config"
-	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/device"
-	"github.com/koestler/go-iotdevice/httpServer"
-	"github.com/koestler/go-iotdevice/pool"
-	"github.com/koestler/go-iotdevice/restarter"
+	"github.com/koestler/go-iotdevice/v3/config"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/device"
+	"github.com/koestler/go-iotdevice/v3/httpServer"
+	"github.com/koestler/go-iotdevice/v3/pool"
+	"github.com/koestler/go-iotdevice/v3/restarter"
 	"log"
 )
 

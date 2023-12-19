@@ -1,8 +1,8 @@
 package mqttDevice
 
 import (
-	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/mqttForwarders"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/mqttForwarders"
 )
 
 type StructRegister struct {

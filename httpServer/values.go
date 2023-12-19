@@ -3,7 +3,7 @@ package httpServer
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/pkg/errors"
 	"log"
 	"net/http"

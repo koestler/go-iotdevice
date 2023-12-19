@@ -1,4 +1,4 @@
-module github.com/koestler/go-iotdevice
+module github.com/koestler/go-iotdevice/v3
 
 go 1.21
 

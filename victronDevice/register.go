@@ -1,7 +1,7 @@
 package victronDevice
 
 import (
-	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
 )
 
 type VictronRegister struct {

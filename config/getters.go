@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/koestler/go-iotdevice/types"
+	"github.com/koestler/go-iotdevice/v3/types"
 	"net/url"
 	"strings"
 	"time"

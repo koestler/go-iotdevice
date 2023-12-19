@@ -1,8 +1,8 @@
 package httpDevice
 
 import (
-	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/types"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/types"
 	"net/http"
 )
 

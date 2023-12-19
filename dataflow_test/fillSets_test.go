@@ -2,7 +2,7 @@ package dataflow_test
 
 import (
 	"fmt"
-	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
 )
 
 func getSimpleTestRegister(category, name string) dataflow.RegisterStruct {

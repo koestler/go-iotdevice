@@ -1,6 +1,6 @@
 package mqttForwarders
 
-import "github.com/koestler/go-iotdevice/dataflow"
+import "github.com/koestler/go-iotdevice/v3/dataflow"
 
 func getCommandFilter(cfg Config, devName string) dataflow.RegisterFilterFunc {
 	// by default, nothing is commandable

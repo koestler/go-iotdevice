@@ -3,7 +3,7 @@ package modbusDevice
 import (
 	"context"
 	"fmt"
-	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/pkg/errors"
 	"log"
 	"regexp"

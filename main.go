@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/jessevdk/go-flags"
-	"github.com/koestler/go-iotdevice/config"
+	"github.com/koestler/go-iotdevice/v3/config"
 	"log"
 	"os"
 	"os/signal"

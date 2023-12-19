@@ -2,7 +2,7 @@ package config
 
 import (
 	"bytes"
-	"github.com/koestler/go-iotdevice/types"
+	"github.com/koestler/go-iotdevice/v3/types"
 	"log"
 	"os"
 	"reflect"

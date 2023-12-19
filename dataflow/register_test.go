@@ -1,8 +1,8 @@
 package dataflow_test
 
 import (
-	"github.com/koestler/go-iotdevice/dataflow"
-	mock_dataflow "github.com/koestler/go-iotdevice/dataflow/mock"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
+	mock_dataflow "github.com/koestler/go-iotdevice/v3/dataflow/mock"
 	"go.uber.org/mock/gomock"
 	"reflect"
 	"testing"

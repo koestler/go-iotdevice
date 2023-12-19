@@ -1,17 +1,17 @@
 package main
 
 import (
-	"github.com/koestler/go-iotdevice/config"
-	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/device"
-	"github.com/koestler/go-iotdevice/httpDevice"
-	"github.com/koestler/go-iotdevice/modbus"
-	"github.com/koestler/go-iotdevice/modbusDevice"
-	"github.com/koestler/go-iotdevice/mqttClient"
-	"github.com/koestler/go-iotdevice/mqttDevice"
-	"github.com/koestler/go-iotdevice/pool"
-	"github.com/koestler/go-iotdevice/restarter"
-	"github.com/koestler/go-iotdevice/victronDevice"
+	"github.com/koestler/go-iotdevice/v3/config"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/device"
+	"github.com/koestler/go-iotdevice/v3/httpDevice"
+	"github.com/koestler/go-iotdevice/v3/modbus"
+	"github.com/koestler/go-iotdevice/v3/modbusDevice"
+	"github.com/koestler/go-iotdevice/v3/mqttClient"
+	"github.com/koestler/go-iotdevice/v3/mqttDevice"
+	"github.com/koestler/go-iotdevice/v3/pool"
+	"github.com/koestler/go-iotdevice/v3/restarter"
+	"github.com/koestler/go-iotdevice/v3/victronDevice"
 	"log"
 )
 

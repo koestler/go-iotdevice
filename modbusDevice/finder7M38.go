@@ -9,7 +9,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"github.com/koestler/go-iotdevice/dataflow"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"log"
 	"time"
 )

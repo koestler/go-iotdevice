@@ -2,7 +2,7 @@ package dataflow
 
 import (
 	"context"
-	"github.com/koestler/go-iotdevice/list"
+	"github.com/koestler/go-iotdevice/v3/list"
 	"sync"
 )
 

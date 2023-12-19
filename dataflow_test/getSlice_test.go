@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/koestler/go-iotdevice/dataflow"
-	mock_dataflow "github.com/koestler/go-iotdevice/dataflow/mock"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
+	mock_dataflow "github.com/koestler/go-iotdevice/v3/dataflow/mock"
 	"go.uber.org/mock/gomock"
 	"testing"
 )

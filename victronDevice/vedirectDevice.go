@@ -3,8 +3,8 @@ package victronDevice
 import (
 	"context"
 	"fmt"
-	"github.com/koestler/go-iotdevice/dataflow"
-	"github.com/koestler/go-iotdevice/vedirect"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/vedirect"
 	"log"
 	"strings"
 	"time"
