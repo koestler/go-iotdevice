@@ -1,6 +1,7 @@
 # go-iotdevice
 [![Audit & Test](https://github.com/koestler/go-iotdevice/actions/workflows/audit.yml/badge.svg)](https://github.com/koestler/go-iotdevice/actions/workflows/audit.yml)
 [![Docker Image CI](https://github.com/koestler/js-iotsensor/actions/workflows/docker-image.yml/badge.svg?branch=main)](https://github.com/koestler/js-iotsensor/actions/workflows/docker-image.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/koestler/go-iotdevice/v3.svg)](https://pkg.go.dev/github.com/koestler/go-iotdevice/v3)
 
 This tool reads values from various IoT devices like solar charges directly connected by USB
 or relay boards connected by ethernet and publishes those on [MQTT](http://mqtt.org/) servers.
