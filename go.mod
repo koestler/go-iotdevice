@@ -1,5 +1,7 @@
 module github.com/koestler/go-iotdevice
 
+// Deprecated: use github.com/koestler/go-iotdevice/v3 instead.
+
 go 1.17
 
 require (
