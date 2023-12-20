@@ -3,3 +3,4 @@ go-iotdevice
 config.yaml
 *_mock.go
 docs/
+frontend-build/
