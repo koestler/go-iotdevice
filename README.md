@@ -72,15 +72,20 @@ This project uses the following terminology:
 Deployment without docker
 </summary>
 I use docker to deploy this tool.
-Alternatively, you can always simply clone this repo and build the go-iotdevice binary by yourself.
-It is statically linked and has no external dependency (except the config and auth.passwd file).
-The following snippets build the tool without the swagger documentation.
-See [Local Development](#Local-development) for more details.
+Alternatively, you can use `go install` to build binary locally.
+If you need the [front-end](https://github.com/koestler/js-iotdevice), you have to manually `npm run build` it and copy the files to the correct location.
+Also, the swagger documentation will be missing. See [Local Development](#Local-development) for more details.
 
 ```bash
-git clone https://github.com/koestler/go-iotdevice.git
-cd go-iotdevice
-go build
+go install github.com/koestler/go-iotdevice/v3@latest
+curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/config.yaml -o config.yaml
+
+# optional download the full and commented configuration file for reference 
+curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/full-config.yaml -o full-config.yaml
+# adapt config.yaml and configure devices
+
+# start the tool
+go-iotdevice --config=config.yaml
 ```
 </details>
 
