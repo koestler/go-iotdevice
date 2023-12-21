@@ -56,7 +56,7 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 
 // setupValuesPatch godoc
 // @Summary Set value
-// @Description Sets a commandable register to a certain value.
+// @Description Sets a writable register to a certain value.
 // @Param viewName path string true "View name as provided by the config endpoint"
 // @Param deviceName path string true "Device name as provided in devices array of the config endpoint"
 // @Produce json

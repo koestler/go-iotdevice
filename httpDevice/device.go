@@ -95,7 +95,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 		ds.SetAvailable(false)
 	}()
 
-	// setup subscription to listen for updates of commandable registers
+	// setup subscription to listen for updates of writable registers
 	_, commandSubscription := ds.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullValueFilter(ds.Config().Name()))
 
 	execCommand := func(value dataflow.Value) {
@@ -207,7 +207,7 @@ func (ds *DeviceStruct) addIgnoreRegister(
 	category, registerName, description, unit string,
 	registerType dataflow.RegisterType,
 	enum map[int]string,
-	commandable bool,
+	writable bool,
 ) dataflow.Register {
 	// check if this register exists already and the properties are still the same
 	if r, ok := ds.RegisterDb().GetByName(registerName); ok {
@@ -229,7 +229,7 @@ func (ds *DeviceStruct) addIgnoreRegister(
 		enum,
 		unit,
 		sort,
-		commandable,
+		writable,
 	)
 
 	// check if register is on ignore list

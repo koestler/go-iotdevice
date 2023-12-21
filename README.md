@@ -415,7 +415,7 @@ go-iotdevice/struct/my-device {
 ```
 
 Since MQTT payloads are sent uncompressed, size matters and fields are abbreviated:
-Avail=AvailabilityTopics, Tele=TelemetryTopic, Real=RealtimeTopic, Cmnd=CommandTopic/Commandable, Regs=Registers, Cat=Category, Desc=Description
+Avail=AvailabilityTopics, Tele=TelemetryTopic, Real=RealtimeTopic, Cmnd=CommandTopic/Writable, Regs=Registers, Cat=Category, Desc=Description
 
 ### Telemetry
 There are two ways to receive values. Telemetry messages are sent periodically (1s by default) per device and contain
@@ -476,7 +476,7 @@ mosquitto_pub -h 172.19.0.4 -t dev1/cmnd/dev0/R1 -m "{\"EnumIdx\": 1}"
 ```
 
 ### HomeassistantDiscovery
-These messages are such that Homeassistant automatically shows read-only registers as sensors and commandable registers
+These messages are such that Homeassistant automatically shows read-only registers as sensors and writable registers
 as switches. See [Home Assistant MQTT](https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery).
 
 Discovery messages for sensors are only sent for devices/registers for which real-time messages are active because

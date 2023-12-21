@@ -334,7 +334,7 @@ func (c *DeviceStruct) runCommandForwarder(
 func filterCommandRegisters(inp []mqttForwarders.StructRegister) (oup map[string]struct{}) {
 	oup = make(map[string]struct{})
 	for _, r := range inp {
-		if r.Commandable {
+		if r.Writable {
 			oup[r.Name] = struct{}{}
 		}
 	}

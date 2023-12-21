@@ -19,7 +19,7 @@ type StructRegister struct {
 	Enum        map[int]string `json:"Enum,omitempty"`
 	Unit        string         `json:"Unit,omitempty" example:"W"`
 	Sort        int            `json:"Sort" example:"100"`
-	Commandable bool           `json:"Cmnd" example:"false"`
+	Writable    bool           `json:"Cmnd" example:"false"`
 }
 
 type StructureMessage struct {
@@ -160,7 +160,7 @@ func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic strin
 
 	dataflow.SortRegisterStructs(registers)
 
-	structRegisters, countCommandable := applyCommandFiltersToRegisters(cfg, devName, registers)
+	structRegisters, countWritable := applyWritableFiltersToRegisters(cfg, devName, registers)
 
 	msg := StructureMessage{
 		AvailabilityTopics: getAvailabilityTopics(cfg, devName),
@@ -177,7 +177,7 @@ func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic strin
 			return ""
 		}(),
 		CommandTopic: func() string {
-			if countCommandable < 1 {
+			if countWritable < 1 {
 				return ""
 			}
 			return cfg.CommandTopic(devName, "%RegisterName%")
@@ -207,16 +207,16 @@ func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic strin
 	}
 }
 
-func applyCommandFiltersToRegisters(cfg Config, devName string, inp []dataflow.RegisterStruct) (oup []StructRegister, countCommandable int) {
+func applyWritableFiltersToRegisters(cfg Config, devName string, inp []dataflow.RegisterStruct) (oup []StructRegister, countWritable int) {
 	oup = make([]StructRegister, len(inp))
 
 	filter := getCommandFilter(cfg, devName)
 
 	for i, r := range inp {
 		sr := NewStructRegister(r)
-		sr.Commandable = filter(r)
-		if sr.Commandable {
-			countCommandable++
+		sr.Writable = filter(r)
+		if sr.Writable {
+			countWritable++
 		}
 		oup[i] = sr
 	}
@@ -233,6 +233,6 @@ func NewStructRegister(reg dataflow.Register) StructRegister {
 		Enum:        reg.Enum(),
 		Unit:        reg.Unit(),
 		Sort:        reg.Sort(),
-		Commandable: reg.Commandable(),
+		Writable:    reg.Writable(),
 	}
 }

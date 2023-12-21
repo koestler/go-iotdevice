@@ -26,9 +26,9 @@ func createDeviceAndRegisterValueFilter(dev device.Device, registerFilter datafl
 	}
 }
 
-func createCommandableAndRegisterValueFilter(registerFilter dataflow.RegisterFilterConf) dataflow.RegisterFilterFunc {
+func createWritableAndRegisterValueFilter(registerFilter dataflow.RegisterFilterConf) dataflow.RegisterFilterFunc {
 	f0 := createRegisterValueFilter(registerFilter)
 	return func(r dataflow.Register) bool {
-		return r.Commandable() && f0(r)
+		return r.Writable() && f0(r)
 	}
 }

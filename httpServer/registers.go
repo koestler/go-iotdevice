@@ -17,7 +17,8 @@ type registerResponse struct {
 	Enum        map[int]string `json:"enum,omitempty"`
 	Unit        string         `json:"unit,omitempty" example:"W"`
 	Sort        int            `json:"sort" example:"100"`
-	Commandable bool           `json:"commandable" example:"false"`
+	Writable    bool           `json:"commandable" example:"false"` // json is kept at commandable for compatibility reasons
+	// consider changing when going to majer version 4
 }
 
 // setupRegisters godoc
@@ -77,7 +78,7 @@ func createRegisterResponse(r dataflow.Register) registerResponse {
 		Enum:        r.Enum(),
 		Unit:        r.Unit(),
 		Sort:        r.Sort(),
-		Commandable: r.Commandable(),
+		Writable:    r.Writable(),
 	}
 }
 

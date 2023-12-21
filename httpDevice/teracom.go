@@ -96,7 +96,7 @@ func (c *TeracomDevice) CommandValueRequest(value dataflow.Value) (*http.Request
 	values.Set(cmd, param)
 
 	onSuccess := func() {
-		c.relay(value.Register().Name(), value.Register().Description(), enum.Value(), value.Register().Commandable())
+		c.relay(value.Register().Name(), value.Register().Description(), enum.Value(), value.Register().Writable())
 	}
 
 	req, err := http.NewRequest("POST", "/monitor/monitor.htm", strings.NewReader(values.Encode()))
@@ -242,10 +242,10 @@ func (c *TeracomDevice) number(category, registerName, description, unit string,
 }
 
 func (c *TeracomDevice) enum(
-	category, registerName, description string, enum map[int]string, strValue string, commandable bool,
+	category, registerName, description string, enum map[int]string, strValue string, writable bool,
 ) {
 	register := c.ds.addIgnoreRegister(
-		category, registerName, description, "", dataflow.EnumRegister, enum, commandable,
+		category, registerName, description, "", dataflow.EnumRegister, enum, writable,
 	)
 	if register == nil {
 		return
@@ -264,7 +264,7 @@ func (c *TeracomDevice) enum(
 }
 
 func (c *TeracomDevice) relay(
-	registerName, description string, strValue string, commandable bool,
+	registerName, description string, strValue string, writable bool,
 ) {
 	c.enum("Relays", registerName, description,
 		map[int]string{
@@ -273,7 +273,7 @@ func (c *TeracomDevice) relay(
 			2: "in pulse",
 		},
 		strValue,
-		commandable,
+		writable,
 	)
 }
 
@@ -408,9 +408,9 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 		regName := fmt.Sprintf("R%d", sIdx)
 		desc := r.Description
 
-		commandable := r.Control == "0"
-		c.relay(regName, desc, r.Value, commandable)
-		if !commandable {
+		writable := r.Control == "0"
+		c.relay(regName, desc, r.Value, writable)
+		if !writable {
 			c.text("Relays", regName+"Control", desc+" is controlled by", r.Control)
 		}
 	}

@@ -22,7 +22,7 @@ func runCommandForwarder(
 	commandStorage *dataflow.ValueStorage,
 	filterConf dataflow.RegisterFilterConf,
 ) {
-	filter := createCommandableAndRegisterValueFilter(filterConf)
+	filter := createWritableAndRegisterValueFilter(filterConf)
 	go commandRoutine(ctx, cfg, dev, mc, commandStorage, filter)
 }
 
