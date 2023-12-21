@@ -2,9 +2,9 @@ package dataflow_test
 
 import (
 	"context"
+	"github.com/golang/mock/gomock"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	mock_dataflow "github.com/koestler/go-iotdevice/v3/dataflow/mock"
-	"go.uber.org/mock/gomock"
 	"sync"
 	"testing"
 )
