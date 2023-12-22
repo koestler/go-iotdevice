@@ -91,7 +91,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	}
 
 	// start polling loop
-	fetchStaticCounter := 0
+	regs := api.Registers
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 	for {
@@ -100,11 +100,6 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 			return nil, false
 		case <-ticker.C:
 			start := time.Now()
-
-			regs := api.Registers
-			if fetchStaticCounter%60 != 0 {
-				regs = nonStaticRegisters
-			}
 
 			if err := api.StreamRegisterList(regs, valueHandler); err != nil {
 				return fmt.Errorf("device[%s]: fetching failed: %s", c.Name(), err), false
@@ -118,7 +113,8 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 				)
 			}
 
-			fetchStaticCounter++
+			// fetch static registers only once
+			regs = nonStaticRegisters
 		}
 	}
 }
