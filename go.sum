@@ -62,6 +62,14 @@ github.com/klauspost/cpuid/v2 v2.0.9/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa02
 github.com/klauspost/cpuid/v2 v2.2.6 h1:ndNyv040zDGIDh8thGkXYjnFtiN02M1PVVF+JE/48xc=
 github.com/klauspost/cpuid/v2 v2.2.6/go.mod h1:Lcz8mBdAVJIBVzewtcLocK12l3Y+JytZYpaMropDUws=
 github.com/knz/go-libedit v1.10.1/go.mod h1:MZTVkCWyz0oBc7JOWP3wNAzd002ZbM/5hgShxwh4x8M=
+github.com/koestler/go-victron v0.0.0-20231221110232-102bcb4e3ee5 h1:Wj/puOC/OiE8O0MEBx0nwvR52CjT9bt4zGcjoR8dKMg=
+github.com/koestler/go-victron v0.0.0-20231221110232-102bcb4e3ee5/go.mod h1:culbss1p7HWE22Y/eDJdD8xInDpeRaF7MlKymRtYpJY=
+github.com/koestler/go-victron v0.0.0-20231221125127-1a36ea38c437 h1:+D0Meda1wVmi00K9kmJhUQQmTp7wIMfIdfrcQPzQw5I=
+github.com/koestler/go-victron v0.0.0-20231221125127-1a36ea38c437/go.mod h1:culbss1p7HWE22Y/eDJdD8xInDpeRaF7MlKymRtYpJY=
+github.com/koestler/go-victron v0.0.0-20231221141804-668cb4b75066 h1:dPbHPabf6QAmXy79TUfnvGO35elE1t7y0r23Y5/fRig=
+github.com/koestler/go-victron v0.0.0-20231221141804-668cb4b75066/go.mod h1:culbss1p7HWE22Y/eDJdD8xInDpeRaF7MlKymRtYpJY=
+github.com/koestler/go-victron v0.0.0-20231221151851-68b149e0cad7 h1:XuL7eoQsSTMhFi7q3UWsirc7rdVB+y5RbSVJoILV1kQ=
+github.com/koestler/go-victron v0.0.0-20231221151851-68b149e0cad7/go.mod h1:culbss1p7HWE22Y/eDJdD8xInDpeRaF7MlKymRtYpJY=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
 github.com/kr/pretty v0.3.0 h1:WgNl7dwNpEZ6jJ9k1snq4pZsg7DOEN8hP9Xw0Tsjwk0=

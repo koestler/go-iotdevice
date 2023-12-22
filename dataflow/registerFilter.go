@@ -2,7 +2,13 @@ package dataflow
 
 //go:generate mockgen -source registerFilter.go -destination mock/registerFilter_mock.go
 
-type RegisterFilterFunc func(Register) bool
+type Filterable interface {
+	Name() string
+	Category() string
+	Writable() bool
+}
+
+type RegisterFilterFunc func(Filterable) bool
 
 type RegisterFilterConf interface {
 	IncludeRegisters() []string
@@ -19,7 +25,7 @@ func RegisterFilter(registerFilter RegisterFilterConf) RegisterFilterFunc {
 	skipCategoriesMap := sliceToMap(registerFilter.SkipCategories())
 	defaultInclude := registerFilter.DefaultInclude()
 
-	return func(reg Register) bool {
+	return func(reg Filterable) bool {
 		regName := reg.Name()
 		if _, ok := includeRegistersMap[regName]; ok {
 			return true
@@ -42,7 +48,7 @@ func RegisterFilter(registerFilter RegisterFilterConf) RegisterFilterFunc {
 	}
 }
 
-var AllRegisterFilter RegisterFilterFunc = func(Register) bool {
+var AllRegisterFilter RegisterFilterFunc = func(Filterable) bool {
 	return true
 }
 

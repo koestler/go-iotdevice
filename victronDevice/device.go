@@ -6,6 +6,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/koestler/go-iotdevice/v3/device"
 	"github.com/koestler/go-iotdevice/v3/types"
+	"github.com/koestler/go-victron/veregisters"
 )
 
 type Config interface {
@@ -39,9 +40,13 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	case types.VictronVedirectKind:
 		return runVedirect(ctx, c, c.StateStorage())
 	case types.VictronRandomBmvKind:
-		return runRandom(ctx, c, c.StateStorage(), RegisterListBmv712)
+		rl := veregisters.NewRegisterList()
+		veregisters.AppendBmv(&rl)
+		return runRandom(ctx, c, c.StateStorage(), rl)
 	case types.VictronRandomSolarKind:
-		return runRandom(ctx, c, c.StateStorage(), RegisterListSolar)
+		rl := veregisters.NewRegisterList()
+		veregisters.AppendSolar(&rl)
+		return runRandom(ctx, c, c.StateStorage(), rl)
 	default:
 		return fmt.Errorf("unknown device kind: %s", c.victronConfig.Kind().String()), true
 	}

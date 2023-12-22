@@ -3,12 +3,13 @@ package victronDevice
 import (
 	"context"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-victron/veregisters"
 	"log"
 	"math/rand"
 	"time"
 )
 
-func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, registers []VictronRegister) (err error, immediateError bool) {
+func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, rl veregisters.RegisterList) (err error, immediateError bool) {
 	// send connected now, disconnected when this routine stops
 	c.SetAvailable(true)
 	defer func() {
@@ -16,8 +17,13 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 	}()
 
 	// filter registers by skip list
-	registers = FilterRegisters(registers, c.Config().Filter())
-	addToRegisterDb(c.RegisterDb(), registers)
+	rl.FilterRegister(func() func(r veregisters.Register) bool {
+		rf := dataflow.RegisterFilter(c.Config().Filter())
+		return func(r veregisters.Register) bool {
+			return rf(r)
+		}
+	}())
+	addToRegisterDb(c.RegisterDb(), rl)
 
 	if c.Config().LogDebug() {
 		log.Printf("device[%s]: start random source", c.Name())
@@ -31,21 +37,20 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 		case <-ctx.Done():
 			return nil, false
 		case <-ticker.C:
-			for _, r := range registers {
-				switch r.RegisterType() {
-				case dataflow.NumberRegister:
-					var value float64
-					if r.signed {
-						value = 1e2*(rand.Float64()-0.5)*2/float64(r.factor) + r.offset
-					} else {
-						value = 1e2*rand.Float64()/float64(r.factor) + r.offset
-					}
-					output.Fill(dataflow.NewNumericRegisterValue(c.Name(), r, value))
-				case dataflow.TextRegister:
-					output.Fill(dataflow.NewTextRegisterValue(c.Name(), r, randomString(8)))
-				case dataflow.EnumRegister:
-					output.Fill(dataflow.NewEnumRegisterValue(c.Name(), r, randomEnum(r.Enum())))
+			for _, r := range rl.NumberRegisters {
+				var value float64
+				if r.Signed() {
+					value = 1e2*(rand.Float64()-0.5)*2/float64(r.Factor()) + r.Offset()
+				} else {
+					value = 1e2*rand.Float64()/float64(r.Factor()) + r.Offset()
 				}
+				output.Fill(dataflow.NewNumericRegisterValue(c.Name(), Register{r}, value))
+			}
+			for _, r := range rl.TextRegisters {
+				output.Fill(dataflow.NewTextRegisterValue(c.Name(), Register{r}, randomString(8)))
+			}
+			for _, r := range rl.EnumRegisters {
+				output.Fill(dataflow.NewEnumRegisterValue(c.Name(), Register{r}, randomEnum(r.Enum())))
 			}
 		}
 	}

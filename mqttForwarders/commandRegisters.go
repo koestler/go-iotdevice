@@ -4,7 +4,7 @@ import "github.com/koestler/go-iotdevice/v3/dataflow"
 
 func getCommandFilter(cfg Config, devName string) dataflow.RegisterFilterFunc {
 	// by default, nothing is writable
-	filter := func(dataflow.Register) bool {
+	filter := func(filterable dataflow.Filterable) bool {
 		return false
 	}
 
@@ -15,7 +15,7 @@ func getCommandFilter(cfg Config, devName string) dataflow.RegisterFilterFunc {
 	}
 	if dev != nil {
 		commandEnabledFilter := dataflow.RegisterFilter(dev.Filter())
-		filter = func(r dataflow.Register) bool {
+		filter = func(r dataflow.Filterable) bool {
 			return r.Writable() && commandEnabledFilter(r)
 		}
 	}

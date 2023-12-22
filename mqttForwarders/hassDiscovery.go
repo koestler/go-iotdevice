@@ -66,7 +66,7 @@ func runHomeassistantDiscoveryForwarder(
 
 	hassFilter := createRegisterValueFilter(filterConf)
 	realtimeFilter := createRegisterValueFilter(realtimeCfg.Filter())
-	var filter dataflow.RegisterFilterFunc = func(r dataflow.Register) bool {
+	var filter dataflow.RegisterFilterFunc = func(r dataflow.Filterable) bool {
 		return hassFilter(r) && realtimeFilter(r)
 	}
 	commandFilter := getCommandFilter(cfg, dev.Name())
