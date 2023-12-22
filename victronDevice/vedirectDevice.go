@@ -16,6 +16,22 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 
 	vedirectConfig := vedirect.Config{}
 
+	if c.Config().LogDebug() {
+		vedirectConfig.DebugLogger = log.New(
+			log.Writer(),
+			fmt.Sprintf("device[%s]: vedirect: ", c.Name()),
+			log.Flags(),
+		)
+	}
+
+	if c.Config().LogComDebug() {
+		vedirectConfig.IoLogger = log.New(
+			log.Writer(),
+			fmt.Sprintf("device[%s]: io: ", c.Name()),
+			log.Flags(),
+		)
+	}
+
 	api, err := vedirectapi.NewRegistertApi(c.victronConfig.Device(), vedirectConfig)
 	if err != nil {
 		return err, true
@@ -90,7 +106,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 			}
 
 			if err := api.StreamRegisterList(regs, valueHandler); err != nil {
-				return fmt.Errorf("device[%s]: source: StreamRegisterList failed: %s", c.Name(), err), false
+				return fmt.Errorf("device[%s]: fetching failed: %s", c.Name(), err), false
 			}
 
 			if c.Config().LogDebug() {
