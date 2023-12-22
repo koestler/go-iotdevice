@@ -24,12 +24,13 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 		)
 	}
 
-	if c.Config().LogComDebug() {
-		vedirectConfig.IoLogger = log.New(
-			log.Writer(),
-			fmt.Sprintf("device[%s]: io: ", c.Name()),
-			log.LstdFlags|log.Lmsgprefix,
-		)
+	if ioLog := c.victronConfig.IoLog(); ioLog != "" {
+		if logger, errv := vedirectapi.NewFileLogger(ioLog); errv != nil {
+			log.Printf("device[%s]: cannot log io: %s", c.Name(), err)
+		} else {
+			defer logger.Close()
+			vedirectConfig.IoLogger = logger
+		}
 	}
 
 	api, err := vedirectapi.NewRegistertApi(c.victronConfig.Device(), vedirectConfig)

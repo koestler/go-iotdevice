@@ -98,8 +98,9 @@ type deviceConfigRead struct {
 
 type victronDeviceConfigRead struct {
 	deviceConfigRead `yaml:",inline"`
-	Device           string `yaml:"Device"`
-	Kind             string `yaml:"Kind"`
+	Device           string  `yaml:"Device"`
+	Kind             string  `yaml:"Kind"`
+	IoLog            *string `yaml:"IoLog"`
 }
 
 type modbusDeviceConfigRead struct {

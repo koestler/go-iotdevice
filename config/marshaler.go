@@ -180,6 +180,7 @@ func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 		deviceConfigRead: c.DeviceConfig.convertToRead(),
 		Device:           c.device,
 		Kind:             c.kind.String(),
+		IoLog:            &c.ioLog,
 	}
 }
 

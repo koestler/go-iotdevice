@@ -118,6 +118,7 @@ type VictronDeviceConfig struct {
 	DeviceConfig
 	device string
 	kind   types.VictronDeviceKind
+	ioLog  string
 }
 
 type ModbusDeviceConfig struct {

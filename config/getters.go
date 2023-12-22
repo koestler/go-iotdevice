@@ -373,6 +373,10 @@ func (c VictronDeviceConfig) Kind() types.VictronDeviceKind {
 	return c.kind
 }
 
+func (c VictronDeviceConfig) IoLog() string {
+	return c.ioLog
+}
+
 // Getters for ModbusDeviceConfig struct
 
 func (c ModbusDeviceConfig) Bus() string {

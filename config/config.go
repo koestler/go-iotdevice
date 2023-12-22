@@ -780,6 +780,10 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string) (ret VictronD
 		err = append(err, fmt.Errorf("VictronDevices->%s->Device must not be empty", name))
 	}
 
+	if c.IoLog != nil {
+		ret.ioLog = *c.IoLog
+	}
+
 	return
 }
 

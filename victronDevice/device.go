@@ -12,6 +12,7 @@ import (
 type Config interface {
 	Device() string
 	Kind() types.VictronDeviceKind
+	IoLog() string
 }
 
 type DeviceStruct struct {
