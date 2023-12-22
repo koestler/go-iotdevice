@@ -117,7 +117,7 @@ func main() {
 		defer devicePool.Shutdown()
 
 		// start mqtt clients
-		mqttClientPool := runMqttClient(cfg, devicePool, stateStorage, commandStorage)
+		mqttClientPool := runMqttClient(cfg)
 		defer mqttClientPool.Shutdown()
 
 		// start mqtt clients
