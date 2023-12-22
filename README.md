@@ -551,7 +551,7 @@ go generate docs.go
 [gomock](https://github.com/uber-go/mock) is used to generate stubs and mocks for the unit tests.
 
 ```bash
-go install github.com/uber/mock/mockgen@latest
+go install go.uber.org/mock/mockgen@latest
 go generate ./...
 go test ./...
 ```
