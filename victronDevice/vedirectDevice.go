@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const minPollInterval = 100 * time.Millisecond
+
 func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable) (err error, immediateError bool) {
 	log.Printf("device[%s]: start vedirect source", c.Name())
 
@@ -92,29 +94,35 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 
 	// start polling loop
 	regs := api.Registers
-	ticker := time.NewTicker(100 * time.Millisecond)
-	defer ticker.Stop()
+	last := time.Now()
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, false
-		case <-ticker.C:
-			start := time.Now()
+		default:
+		}
 
-			if err := api.StreamRegisterList(regs, valueHandler); err != nil {
-				return fmt.Errorf("device[%s]: fetching failed: %s", c.Name(), err), false
-			}
+		start := time.Now()
+		if err := api.StreamRegisterList(regs, valueHandler); err != nil {
+			return fmt.Errorf("device[%s]: fetching failed: %s", c.Name(), err), false
+		}
+		took := time.Since(start)
 
-			if c.Config().LogDebug() {
-				log.Printf(
-					"device[%s]: %d registers fetched, took=%.3fs",
-					c.Name(),
-					regs.Len(), time.Since(start).Seconds(),
-				)
-			}
+		if c.Config().LogDebug() {
+			log.Printf(
+				"device[%s]: %d registers fetched, took=%.3fs, pollInterval=%.3fs",
+				c.Name(),
+				regs.Len(), took.Seconds(), time.Since(last).Seconds(),
+			)
+		}
+		last = time.Now()
 
-			// fetch static registers only once
-			regs = nonStaticRegisters
+		// fetch static registers only once
+		regs = nonStaticRegisters
+
+		// limit to one fetch per 100 ms
+		if took < minPollInterval {
+			time.Sleep(minPollInterval - took)
 		}
 	}
 }
