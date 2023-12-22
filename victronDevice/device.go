@@ -7,12 +7,14 @@ import (
 	"github.com/koestler/go-iotdevice/v3/device"
 	"github.com/koestler/go-iotdevice/v3/types"
 	"github.com/koestler/go-victron/veregisters"
+	"time"
 )
 
 type Config interface {
 	Device() string
 	Kind() types.VictronDeviceKind
 	IoLog() string
+	PollInterval() time.Duration
 }
 
 type DeviceStruct struct {

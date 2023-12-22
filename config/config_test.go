@@ -171,6 +171,7 @@ VictronDevices:                                            # optional, a list of
     LogComDebug: true                                    # optional, default false, enable a verbose log of the communication with the device
     Device: /dev/serial/by-id/usb-VictronEnergy_BV_VE_Direct_cable_VEHTVQT-if00-port0 # mandatory except if Kind: Random*, the path to the usb-to-serial converter
     Kind: Vedirect                                         # mandatory, possibilities: Vedirect, RandomBmv, RandomSolar, always set to Vedirect expect for development
+    PollInterval: 700ms                                   # optional, default 0.1s, how often to fetch the registers
     IoLog: /tmp/bmv0.log                                  # optional, default empty, path to a file where the raw io is logged
 
 ModbusDevices:                                             # optional, a list of devices connected via ModBus
@@ -1026,6 +1027,10 @@ func TestReadConfig_Complete(t *testing.T) {
 		if expect, got := "/tmp/bmv0.log", vd.IoLog(); expect != got {
 			t.Errorf("expect VictronDevices->bmv0->IoLog to be '%s' but got '%s'", expect, got)
 		}
+
+		if expect, got := 700*time.Millisecond, vd.PollInterval(); expect != got {
+			t.Errorf("expect VictronDevices->bmv0->PollInterval to be %s but got %s", expect, got)
+		}
 	}
 
 	if expect, got := 1, len(config.ModbusDevices()); expect != got {
@@ -1832,6 +1837,10 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if expect, got := "", vd.IoLog(); expect != got {
 			t.Errorf("expect VictronDevices->bmv0->IoLog to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := 500*time.Millisecond, vd.PollInterval(); expect != got {
+			t.Errorf("expect VictronDevices->bmv0->PollInterval to be %s but got %s", expect, got)
 		}
 	}
 

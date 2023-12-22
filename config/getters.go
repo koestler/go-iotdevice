@@ -373,6 +373,10 @@ func (c VictronDeviceConfig) Kind() types.VictronDeviceKind {
 	return c.kind
 }
 
+func (c VictronDeviceConfig) PollInterval() time.Duration {
+	return c.pollInterval
+}
+
 func (c VictronDeviceConfig) IoLog() string {
 	return c.ioLog
 }

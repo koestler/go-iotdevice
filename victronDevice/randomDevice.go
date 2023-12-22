@@ -30,7 +30,7 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 	}
 
 	// start source loop
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(c.victronConfig.PollInterval())
 	defer ticker.Stop()
 	for {
 		select {

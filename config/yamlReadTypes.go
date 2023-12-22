@@ -100,6 +100,7 @@ type victronDeviceConfigRead struct {
 	deviceConfigRead `yaml:",inline"`
 	Device           string  `yaml:"Device"`
 	Kind             string  `yaml:"Kind"`
+	PollInterval     string  `yaml:"PollInterval"`
 	IoLog            *string `yaml:"IoLog"`
 }
 

@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-const minPollInterval = 100 * time.Millisecond
-
 func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable) (err error, immediateError bool) {
 	log.Printf("device[%s]: start vedirect source", c.Name())
 
@@ -95,6 +93,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	// start polling loop
 	regs := api.Registers
 	last := time.Now()
+	minPollInterval := c.victronConfig.PollInterval()
 	for {
 		select {
 		case <-ctx.Done():
@@ -120,7 +119,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 		// fetch static registers only once
 		regs = nonStaticRegisters
 
-		// limit to one fetch per 100 ms
+		// limit to one fetch per poll interval
 		if took < minPollInterval {
 			time.Sleep(minPollInterval - took)
 		}
