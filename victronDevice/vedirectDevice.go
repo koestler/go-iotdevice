@@ -16,11 +16,11 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 
 	vedirectConfig := vedirect.Config{}
 
-	if c.Config().LogDebug() {
+	if c.Config().LogComDebug() {
 		vedirectConfig.DebugLogger = log.New(
 			log.Writer(),
 			fmt.Sprintf("device[%s]: vedirect: ", c.Name()),
-			log.Flags(),
+			log.LstdFlags|log.Lmsgprefix,
 		)
 	}
 
@@ -28,7 +28,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 		vedirectConfig.IoLogger = log.New(
 			log.Writer(),
 			fmt.Sprintf("device[%s]: io: ", c.Name()),
-			log.Flags(),
+			log.LstdFlags|log.Lmsgprefix,
 		)
 	}
 
