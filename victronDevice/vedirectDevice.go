@@ -25,7 +25,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	}
 
 	if ioLog := c.victronConfig.IoLog(); ioLog != "" {
-		if logger, errv := vedirectapi.NewFileLogger(ioLog); errv != nil {
+		if logger, err := vedirectapi.NewFileLogger(ioLog); err != nil {
 			log.Printf("device[%s]: cannot log io: %s", c.Name(), err)
 		} else {
 			defer logger.Close()
