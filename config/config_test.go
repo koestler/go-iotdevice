@@ -1839,7 +1839,7 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Errorf("expect VictronDevices->bmv0->IoLog to be '%s' but got '%s'", expect, got)
 		}
 
-		if expect, got := 500*time.Millisecond, vd.PollInterval(); expect != got {
+		if expect, got := time.Second, vd.PollInterval(); expect != got {
 			t.Errorf("expect VictronDevices->bmv0->PollInterval to be %s but got %s", expect, got)
 		}
 	}
