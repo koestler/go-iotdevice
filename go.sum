@@ -74,6 +74,8 @@ github.com/koestler/go-victron v0.0.0-20231222222735-4fe711d93309 h1:nWw6hhILPCo
 github.com/koestler/go-victron v0.0.0-20231222222735-4fe711d93309/go.mod h1:culbss1p7HWE22Y/eDJdD8xInDpeRaF7MlKymRtYpJY=
 github.com/koestler/go-victron v0.0.0 h1:1on84M75LLYpIvrXmk8ff7rEz+wMmV701Ibr8fyf1oA=
 github.com/koestler/go-victron v0.0.0/go.mod h1:culbss1p7HWE22Y/eDJdD8xInDpeRaF7MlKymRtYpJY=
+github.com/koestler/go-victron v0.0.1 h1:SjYLKyKvaxoMTe0UBsRJh6nOIfwl+s0fUf10PxN65gU=
+github.com/koestler/go-victron v0.0.1/go.mod h1:culbss1p7HWE22Y/eDJdD8xInDpeRaF7MlKymRtYpJY=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
 github.com/kr/pretty v0.3.0 h1:WgNl7dwNpEZ6jJ9k1snq4pZsg7DOEN8hP9Xw0Tsjwk0=

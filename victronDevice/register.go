@@ -11,27 +11,35 @@ type Register struct {
 }
 
 func (r Register) RegisterType() dataflow.RegisterType {
-	if _, ok := r.Register.(veregisters.NumberRegister); ok {
+	switch r.Type() {
+	case veregisters.Number:
 		return dataflow.NumberRegister
-	}
-	if _, ok := r.Register.(veregisters.TextRegister); ok {
+	case veregisters.Text:
 		return dataflow.TextRegister
-	}
-	if _, ok := r.Register.(veregisters.EnumRegister); ok {
+	case veregisters.Enum:
 		return dataflow.EnumRegister
+	default:
+		return dataflow.UndefinedRegister
 	}
-	return dataflow.UndefinedRegister
+}
+
+type enumer interface {
+	Enum() map[int]string
 }
 
 func (r Register) Enum() map[int]string {
-	if er, ok := r.Register.(veregisters.EnumRegister); ok {
+	if er, ok := r.Register.(enumer); ok {
 		return er.Enum()
 	}
 	return nil
 }
 
+type uniter interface {
+	Unit() string
+}
+
 func (r Register) Unit() string {
-	if nr, ok := r.Register.(veregisters.NumberRegister); ok {
+	if nr, ok := r.Register.(uniter); ok {
 		return nr.Unit()
 	}
 	return ""
