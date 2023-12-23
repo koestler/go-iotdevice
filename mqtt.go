@@ -3,19 +3,14 @@ package main
 import (
 	"github.com/koestler/go-iotdevice/v3/config"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-iotdevice/v3/device"
 	"github.com/koestler/go-iotdevice/v3/mqttClient"
 	"github.com/koestler/go-iotdevice/v3/mqttForwarders"
 	"github.com/koestler/go-iotdevice/v3/pool"
-	"github.com/koestler/go-iotdevice/v3/restarter"
 	"log"
 )
 
 func runMqttClient(
 	cfg *config.Config,
-	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
-	stateStorage *dataflow.ValueStorage,
-	commandStorage *dataflow.ValueStorage,
 ) (mqttClientPool *pool.Pool[mqttClient.Client]) {
 	// run pool
 	mqttClientPool = pool.RunPool[mqttClient.Client]()
