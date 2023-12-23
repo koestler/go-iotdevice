@@ -102,8 +102,12 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 		}
 
 		start := time.Now()
+		if err := api.Vd.Ping(); err != nil {
+			return fmt.Errorf("ping failed: %s", err), false
+		}
+
 		if err := api.StreamRegisterList(regs, valueHandler); err != nil {
-			return fmt.Errorf("device[%s]: fetching failed: %s", c.Name(), err), false
+			return fmt.Errorf("fetching failed: %s", err), false
 		}
 		took := time.Since(start)
 
