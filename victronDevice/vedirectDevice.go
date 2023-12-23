@@ -7,6 +7,7 @@ import (
 	"github.com/koestler/go-victron/vedirect"
 	"github.com/koestler/go-victron/vedirectapi"
 	"github.com/koestler/go-victron/veregisters"
+	"github.com/pkg/errors"
 	"log"
 	"time"
 )
@@ -66,66 +67,96 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 		return !r.Static()
 	})
 
+	deviceName := c.Name()
 	valueHandler := vedirectapi.ValueHandler{
 		Number: func(v vedirectapi.NumberRegisterValue) {
 			output.Fill(dataflow.NewNumericRegisterValue(
-				c.Name(),
+				deviceName,
 				Register{v.RegisterStruct},
 				v.Value(),
 			))
 		},
 		Text: func(v vedirectapi.TextRegisterValue) {
 			output.Fill(dataflow.NewTextRegisterValue(
-				c.Name(),
+				deviceName,
 				Register{v.RegisterStruct},
 				v.Value(),
 			))
 		},
 		Enum: func(v vedirectapi.EnumRegisterValue) {
 			output.Fill(dataflow.NewEnumRegisterValue(
-				c.Name(),
+				deviceName,
 				Register{v.RegisterStruct},
 				v.Idx(),
 			))
 		},
 	}
 
-	// start polling loop
-	regs := api.Registers
-	last := time.Now()
-	minPollInterval := c.victronConfig.PollInterval()
+	var lastFetch time.Time
+	fetch := func(regs veregisters.RegisterList) (took time.Duration, err error) {
+		// log fetching intervals
+		if c.Config().LogDebug() {
+			log.Printf("device[%s]: start fetching, since(lastFetch)=%.3fs", deviceName, time.Since(lastFetch).Seconds())
+			lastFetch = time.Now()
+		}
+
+		start := time.Now()
+
+		// execute a ping before fetching to make sure the device is reachable
+		// also this makes orientation in the io log easier
+		if e := api.Vd.Ping(); e != nil {
+			err = fmt.Errorf("ping failed: %w", e)
+			return
+		}
+
+		if e := api.StreamRegisterList(ctx, regs, valueHandler); e != nil {
+			err = fmt.Errorf("fetching failed: %w", e)
+			return
+		}
+
+		took = time.Since(start)
+
+		if c.Config().LogDebug() {
+			log.Printf("device[%s]: %d registers fetched, took=%.3fs", deviceName, regs.Len(), took.Seconds())
+		}
+		return
+	}
+
+	// fetch all registers
+	if _, err := fetch(api.Registers); err != nil {
+		return err, true
+	}
+
+	pollInterval := c.victronConfig.PollInterval()
+	ticker := time.NewTicker(pollInterval)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, false
-		default:
-		}
+		case <-ticker.C:
+			// run fetch whenever the ticker ticks
+			// but when fetching took longer than pollInterval, fetch again immediately
+			for {
+				if took, err := fetch(nonStaticRegisters); err != nil {
+					if errors.Is(err, vedirectapi.ErrCtxDone) {
+						// do not return an error when the context is done
+						err = nil
+					}
+					return err, false
+				} else if took < pollInterval {
+					break
+				} else {
+					// if there is an unused tick, consume it
+					select {
+					case <-ticker.C:
+					default:
+					}
 
-		start := time.Now()
-		if err := api.Vd.Ping(); err != nil {
-			return fmt.Errorf("ping failed: %s", err), false
-		}
-
-		if err := api.StreamRegisterList(regs, valueHandler); err != nil {
-			return fmt.Errorf("fetching failed: %s", err), false
-		}
-		took := time.Since(start)
-
-		if c.Config().LogDebug() {
-			log.Printf(
-				"device[%s]: %d registers fetched, took=%.3fs, pollInterval=%.3fs",
-				c.Name(),
-				regs.Len(), took.Seconds(), time.Since(last).Seconds(),
-			)
-		}
-		last = time.Now()
-
-		// fetch static registers only once
-		regs = nonStaticRegisters
-
-		// limit to one fetch per poll interval
-		if took < minPollInterval {
-			time.Sleep(minPollInterval - took)
+					// reset ticker to pollInterval in case the next run is fast enough
+					ticker.Reset(pollInterval)
+				}
+			}
 		}
 	}
 }
