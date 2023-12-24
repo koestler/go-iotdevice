@@ -72,21 +72,21 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 		Number: func(v vedirectapi.NumberRegisterValue) {
 			output.Fill(dataflow.NewNumericRegisterValue(
 				deviceName,
-				Register{v.RegisterStruct},
+				Register{v},
 				v.Value(),
 			))
 		},
 		Text: func(v vedirectapi.TextRegisterValue) {
 			output.Fill(dataflow.NewTextRegisterValue(
 				deviceName,
-				Register{v.RegisterStruct},
+				Register{v},
 				v.Value(),
 			))
 		},
 		Enum: func(v vedirectapi.EnumRegisterValue) {
 			output.Fill(dataflow.NewEnumRegisterValue(
 				deviceName,
-				Register{v.RegisterStruct},
+				Register{v},
 				v.Idx(),
 			))
 		},
