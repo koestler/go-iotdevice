@@ -785,7 +785,8 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string) (ret VictronD
 	}
 
 	if len(c.PollInterval) < 1 {
-		ret.pollInterval = time.Second
+		// use default 100ms
+		ret.pollInterval = 500 * time.Millisecond
 	} else if pollInterval, e := time.ParseDuration(c.PollInterval); e != nil {
 		err = append(err, fmt.Errorf("VictronDevices->%s->PollInterval='%s' parse error: %s",
 			name, c.PollInterval, e,
