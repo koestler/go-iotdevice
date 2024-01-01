@@ -3,13 +3,13 @@ package victronDevice
 import (
 	"context"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-victron/veregisters"
+	"github.com/koestler/go-victron/veregister"
 	"log"
 	"math/rand"
 	"time"
 )
 
-func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, rl veregisters.RegisterList) (err error, immediateError bool) {
+func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, rl veregister.RegisterList) (err error, immediateError bool) {
 	// send connected now, disconnected when this routine stops
 	c.SetAvailable(true)
 	defer func() {
@@ -17,9 +17,9 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 	}()
 
 	// filter registers by skip list
-	rl.FilterRegister(func() func(r veregisters.Register) bool {
+	rl.FilterRegister(func() func(r veregister.Register) bool {
 		rf := dataflow.RegisterFilter(c.Config().Filter())
-		return func(r veregisters.Register) bool {
+		return func(r veregister.Register) bool {
 			return rf(r)
 		}
 	}())
@@ -50,7 +50,7 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 				output.Fill(dataflow.NewTextRegisterValue(c.Name(), Register{r}, randomString(8)))
 			}
 			for _, r := range rl.EnumRegisters {
-				output.Fill(dataflow.NewEnumRegisterValue(c.Name(), Register{r}, randomEnum(r.Enum())))
+				output.Fill(dataflow.NewEnumRegisterValue(c.Name(), Register{r}, randomEnum(r.Factory().IntToStringMap())))
 			}
 		}
 	}

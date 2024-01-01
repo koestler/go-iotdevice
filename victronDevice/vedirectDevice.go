@@ -6,7 +6,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/koestler/go-victron/vedirect"
 	"github.com/koestler/go-victron/vedirectapi"
-	"github.com/koestler/go-victron/veregisters"
+	"github.com/koestler/go-victron/veregister"
 	"github.com/pkg/errors"
 	"log"
 	"time"
@@ -54,16 +54,16 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	log.Printf("device[%s]: source: connect to %s", c.Name(), c.model)
 
 	// filter registers by skip list
-	api.Registers.FilterRegister(func() func(r veregisters.Register) bool {
+	api.Registers.FilterRegister(func() func(r veregister.Register) bool {
 		rf := dataflow.RegisterFilter(c.Config().Filter())
-		return func(r veregisters.Register) bool {
+		return func(r veregister.Register) bool {
 			return rf(r)
 		}
 	}())
 	addToRegisterDb(c.RegisterDb(), api.Registers)
 
 	nonStaticRegisters := api.Registers
-	nonStaticRegisters.FilterRegister(func(r veregisters.Register) bool {
+	nonStaticRegisters.FilterRegister(func(r veregister.Register) bool {
 		return !r.Static()
 	})
 
@@ -93,7 +93,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	}
 
 	var lastFetch time.Time
-	fetch := func(regs veregisters.RegisterList) (took time.Duration, err error) {
+	fetch := func(regs veregister.RegisterList) (took time.Duration, err error) {
 		// log fetching intervals
 		if c.Config().LogDebug() {
 			log.Printf("device[%s]: start fetching, since(lastFetch)=%.3fs", deviceName, time.Since(lastFetch).Seconds())

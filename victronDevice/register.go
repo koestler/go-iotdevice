@@ -2,34 +2,35 @@ package victronDevice
 
 import (
 	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-victron/veregisters"
+	"github.com/koestler/go-victron/veconst"
+	"github.com/koestler/go-victron/veregister"
 )
 
-// Register is used as a wrapper for veregisters.Register to implement dataflow.Register
+// Register is used as a wrapper for veregister.Register to implement dataflow.Register
 type Register struct {
-	veregisters.Register
+	veregister.Register
 }
 
 func (r Register) RegisterType() dataflow.RegisterType {
 	switch r.Type() {
-	case veregisters.Number:
+	case veregister.Number:
 		return dataflow.NumberRegister
-	case veregisters.Text:
+	case veregister.Text:
 		return dataflow.TextRegister
-	case veregisters.Enum:
+	case veregister.Enum:
 		return dataflow.EnumRegister
 	default:
 		return dataflow.UndefinedRegister
 	}
 }
 
-type enumer interface {
-	Enum() map[int]string
+type enumFactory interface {
+	Factory() veconst.EnumFactory
 }
 
 func (r Register) Enum() map[int]string {
-	if er, ok := r.Register.(enumer); ok {
-		return er.Enum()
+	if ef, ok := r.Register.(enumFactory); ok {
+		return ef.Factory().IntToStringMap()
 	}
 	return nil
 }
@@ -45,7 +46,7 @@ func (r Register) Unit() string {
 	return ""
 }
 
-func addToRegisterDb(rdb *dataflow.RegisterDb, rl veregisters.RegisterList) {
+func addToRegisterDb(rdb *dataflow.RegisterDb, rl veregister.RegisterList) {
 	registers := rl.GetRegisters()
 	dataflowRegisters := make([]dataflow.RegisterStruct, len(registers))
 	for i, r := range registers {
