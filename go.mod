@@ -7,12 +7,11 @@ require (
 	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.5.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/json-iterator/go v1.1.12
-	github.com/koestler/go-victron v0.0.3
+	github.com/koestler/go-victron v0.0.5
 	github.com/mileusna/useragent v1.3.4
 	github.com/pkg/errors v0.9.1
 	github.com/sigurn/crc16 v0.0.0-20211026045750-20ab5afb07e3

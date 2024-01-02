@@ -87,7 +87,14 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 			output.Fill(dataflow.NewEnumRegisterValue(
 				deviceName,
 				Register{v},
-				v.Idx(),
+				v.Value().Idx(),
+			))
+		},
+		FieldList: func(v vedirectapi.FieldListValue) {
+			output.Fill(dataflow.NewTextRegisterValue(
+				deviceName,
+				Register{v},
+				v.CommaString(),
 			))
 		},
 	}

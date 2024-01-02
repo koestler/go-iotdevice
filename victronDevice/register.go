@@ -19,6 +19,8 @@ func (r Register) RegisterType() dataflow.RegisterType {
 		return dataflow.TextRegister
 	case veregister.Enum:
 		return dataflow.EnumRegister
+	case veregister.FieldList:
+		return dataflow.TextRegister
 	default:
 		return dataflow.UndefinedRegister
 	}
