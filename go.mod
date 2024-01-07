@@ -11,7 +11,7 @@ require (
 	github.com/google/uuid v1.5.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/json-iterator/go v1.1.12
-	github.com/koestler/go-victron v0.0.6
+	github.com/koestler/go-victron v0.0.9
 	github.com/mileusna/useragent v1.3.4
 	github.com/pkg/errors v0.9.1
 	github.com/sigurn/crc16 v0.0.0-20211026045750-20ab5afb07e3
