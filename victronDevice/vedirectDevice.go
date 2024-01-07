@@ -34,7 +34,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 		}
 	}
 
-	api, err := vedirectapi.NewRegistertApi(c.victronConfig.Device(), vedirectConfig)
+	api, err := vedirectapi.NewSerialRegisterApi(c.victronConfig.Device(), vedirectConfig)
 	if err != nil {
 		return err, true
 	}
