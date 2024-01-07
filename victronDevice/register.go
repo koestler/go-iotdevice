@@ -2,145 +2,57 @@ package victronDevice
 
 import (
 	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-victron/veconst"
+	"github.com/koestler/go-victron/veregister"
 )
 
-type VictronRegister struct {
-	dataflow.RegisterStruct
-	address uint16
-	bit     int // only used for enums, when positive, only the given bit is used as 0/1
-	static  bool
-
-	// only relevant for number registers
-	signed bool
-	factor int
-	offset float64
+// Register is used as a wrapper for veregister.Register to implement dataflow.Register
+type Register struct {
+	veregister.Register
 }
 
-func MergeRegisters(maps ...[]VictronRegister) (output []VictronRegister) {
-	if len(maps) == 0 {
-		return
-	}
-	output = maps[0]
-	for i := 1; i < len(maps); i++ {
-		output = append(output, maps[i]...)
-	}
-
-	return
-}
-
-func FilterRegisters(input []VictronRegister, registerFilter dataflow.RegisterFilterConf) (output []VictronRegister) {
-	output = make([]VictronRegister, 0, len(input))
-	f := dataflow.RegisterFilter(registerFilter)
-	for _, r := range input {
-		if f(r) {
-			output = append(output, r)
-		}
-	}
-	return
-}
-
-func FilterRegistersByName(input []VictronRegister, names ...string) (output []VictronRegister) {
-	output = make([]VictronRegister, 0, len(input))
-	for _, r := range input {
-		if registerNameExcluded(names, r) {
-			continue
-		}
-		output = append(output, r)
-	}
-	return
-}
-
-func registerNameExcluded(exclude []string, r dataflow.Register) bool {
-	for _, e := range exclude {
-		if e == r.Name() {
-			return true
-		}
-	}
-	return false
-}
-
-func NewTextRegisterStruct(
-	category, name, description string,
-	address uint16,
-	static bool,
-	sort int,
-) VictronRegister {
-	return VictronRegister{
-		dataflow.NewRegisterStruct(
-			category, name, description,
-			dataflow.TextRegister,
-			nil,
-			"",
-			sort,
-			false,
-		),
-		address,
-		-1,
-		static,
-		false, // unused
-		1,     // unused
-		0,     // unused
+func (r Register) RegisterType() dataflow.RegisterType {
+	switch r.Type() {
+	case veregister.Number:
+		return dataflow.NumberRegister
+	case veregister.Text:
+		return dataflow.TextRegister
+	case veregister.Enum:
+		return dataflow.EnumRegister
+	case veregister.FieldList:
+		return dataflow.TextRegister
+	default:
+		return dataflow.UndefinedRegister
 	}
 }
 
-func NewNumberRegisterStruct(
-	category, name, description string,
-	address uint16,
-	static bool,
-	signed bool,
-	factor int,
-	offset float64,
-	unit string,
-	sort int,
-) VictronRegister {
-	return VictronRegister{
-		dataflow.NewRegisterStruct(
-			category, name, description,
-			dataflow.NumberRegister,
-			nil,
-			unit,
-			sort,
-			false,
-		),
-		address,
-		-1,
-		static,
-		signed,
-		factor,
-		offset,
-	}
+type enumFactory interface {
+	Factory() veconst.EnumFactory
 }
 
-func NewEnumRegisterStruct(
-	category, name, description string,
-	address uint16,
-	bit int,
-	static bool,
-	enum map[int]string,
-	sort int,
-) VictronRegister {
-	return VictronRegister{
-		dataflow.NewRegisterStruct(
-			category, name, description,
-			dataflow.EnumRegister,
-			enum,
-			"",
-			sort,
-			false,
-		),
-		address,
-		bit,
-		static,
-		false, // unused
-		1,     // unused
-		0,     // unused
+func (r Register) Enum() map[int]string {
+	if ef, ok := r.Register.(enumFactory); ok {
+		return ef.Factory().IntToStringMap()
 	}
+	return nil
 }
 
-func addToRegisterDb(rdb *dataflow.RegisterDb, registers []VictronRegister) {
+type uniter interface {
+	Unit() string
+}
+
+func (r Register) Unit() string {
+	if nr, ok := r.Register.(uniter); ok {
+		return nr.Unit()
+	}
+	return ""
+}
+
+func addToRegisterDb(rdb *dataflow.RegisterDb, rl veregister.RegisterList) {
+	registers := rl.GetRegisters()
 	dataflowRegisters := make([]dataflow.RegisterStruct, len(registers))
 	for i, r := range registers {
-		dataflowRegisters[i] = r.RegisterStruct
+		dataflowRegisters[i] = dataflow.NewRegisterStructByInterface(Register{r})
 	}
 	rdb.AddStruct(dataflowRegisters...)
 }

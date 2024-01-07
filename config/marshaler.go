@@ -180,6 +180,8 @@ func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 		deviceConfigRead: c.DeviceConfig.convertToRead(),
 		Device:           c.device,
 		Kind:             c.kind.String(),
+		PollInterval:     c.pollInterval.String(),
+		IoLog:            &c.ioLog,
 	}
 }
 

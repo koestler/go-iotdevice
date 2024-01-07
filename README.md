@@ -722,6 +722,8 @@ VictronDevices:                                            # optional, a list of
   bmv0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Device: /dev/serial/by-id/usb-VictronEnergy_BV_VE_Direct_cable_VEHTVQT-if00-port0 # mandatory except if Kind: Random*, the path to the usb-to-serial converter
     Kind: Vedirect                                         # mandatory, possibilities: Vedirect, RandomBmv, RandomSolar, always set to Vedirect expect for development
+    PollInterval: 500ms                                    # optional, default 0.5s, how often to fetch the registers
+    IoLog:                                                 # optional, default empty, path to a file where the raw io is logged
     Filter:                                                # optional, default include all, defines which registers are show in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
       IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
@@ -816,5 +818,4 @@ Views:                                                     # optional, a list of
     AllowedUsers:                                          # optional, if empty, all users of the HtaccessFile are considered valid, otherwise only those listed here
       - test0                                              # username which is allowed to access this view
     Hidden: false                                          # optional, default false, if true, this view is not shown in the menu unless the user is logged in
-
 ```

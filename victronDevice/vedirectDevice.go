@@ -4,30 +4,45 @@ import (
 	"context"
 	"fmt"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-iotdevice/v3/vedirect"
+	"github.com/koestler/go-victron/vedirect"
+	"github.com/koestler/go-victron/vedirectapi"
+	"github.com/koestler/go-victron/veregister"
+	"github.com/pkg/errors"
 	"log"
-	"strings"
 	"time"
 )
 
 func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable) (err error, immediateError bool) {
 	log.Printf("device[%s]: start vedirect source", c.Name())
 
-	// open vedirect device
-	vd, err := vedirect.Open(c.victronConfig.Device(), c.Config().LogComDebug())
+	vedirectConfig := vedirect.Config{}
+
+	if c.Config().LogComDebug() {
+		vedirectConfig.DebugLogger = log.New(
+			log.Writer(),
+			fmt.Sprintf("device[%s]: vedirect: ", c.Name()),
+			log.LstdFlags|log.Lmsgprefix,
+		)
+	}
+
+	if ioLog := c.victronConfig.IoLog(); ioLog != "" {
+		if logger, err := vedirectapi.NewFileLogger(ioLog); err != nil {
+			log.Printf("device[%s]: cannot log io: %s", c.Name(), err)
+		} else {
+			defer logger.Close()
+			vedirectConfig.IoLogger = logger
+		}
+	}
+
+	api, err := vedirectapi.NewSerialRegisterApi(c.victronConfig.Device(), vedirectConfig)
 	if err != nil {
 		return err, true
 	}
 	defer func() {
-		if err := vd.Close(); err != nil {
-			log.Printf("device[%s]: vd.Close failed: %s", c.Name(), err)
+		if err := api.Close(); err != nil {
+			log.Printf("device[%s]: Close failed: %s", c.Name(), err)
 		}
 	}()
-
-	// send ping
-	if err := vd.VeCommandPing(); err != nil {
-		return fmt.Errorf("ping failed: %s", err), true
-	}
 
 	// send connected now, disconnected when this routine stops
 	c.SetAvailable(true)
@@ -35,132 +50,119 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 		c.SetAvailable(false)
 	}()
 
-	// get deviceId
-	deviceId, err := vd.VeCommandDeviceId()
-	if err != nil {
-		return fmt.Errorf("cannot get DeviceId: %s", err), true
+	c.model = api.Product.String()
+	log.Printf("device[%s]: source: connect to %s", c.Name(), c.model)
+
+	// filter registers by skip list
+	api.Registers.FilterRegister(func() func(r veregister.Register) bool {
+		rf := dataflow.RegisterFilter(c.Config().Filter())
+		return func(r veregister.Register) bool {
+			return rf(r)
+		}
+	}())
+	addToRegisterDb(c.RegisterDb(), api.Registers)
+
+	nonStaticRegisters := api.Registers
+	nonStaticRegisters.FilterRegister(func(r veregister.Register) bool {
+		return !r.Static()
+	})
+
+	deviceName := c.Name()
+	valueHandler := vedirectapi.ValueHandler{
+		Number: func(v vedirectapi.NumberRegisterValue) {
+			output.Fill(dataflow.NewNumericRegisterValue(
+				deviceName,
+				Register{v},
+				v.Value(),
+			))
+		},
+		Text: func(v vedirectapi.TextRegisterValue) {
+			output.Fill(dataflow.NewTextRegisterValue(
+				deviceName,
+				Register{v},
+				v.Value(),
+			))
+		},
+		Enum: func(v vedirectapi.EnumRegisterValue) {
+			output.Fill(dataflow.NewEnumRegisterValue(
+				deviceName,
+				Register{v},
+				v.Value().Idx(),
+			))
+		},
+		FieldList: func(v vedirectapi.FieldListValue) {
+			output.Fill(dataflow.NewTextRegisterValue(
+				deviceName,
+				Register{v},
+				v.CommaString(),
+			))
+		},
 	}
 
-	deviceString := deviceId.String()
-	if len(deviceString) < 1 {
-		return fmt.Errorf("unknown deviceId=%x", err), true
+	var lastFetch time.Time
+	fetch := func(regs veregister.RegisterList) (took time.Duration, err error) {
+		// log fetching intervals
+		if c.Config().LogDebug() {
+			log.Printf("device[%s]: start fetching, since(lastFetch)=%.3fs", deviceName, time.Since(lastFetch).Seconds())
+			lastFetch = time.Now()
+		}
+
+		start := time.Now()
+
+		// execute a ping before fetching to make sure the device is reachable
+		// also this makes orientation in the io log easier
+		if e := api.Vd.Ping(); e != nil {
+			err = fmt.Errorf("ping failed: %w", e)
+			return
+		}
+
+		if e := api.StreamRegisterList(ctx, regs, valueHandler); e != nil {
+			err = fmt.Errorf("fetching failed: %w", e)
+			return
+		}
+
+		took = time.Since(start)
+
+		if c.Config().LogDebug() {
+			log.Printf("device[%s]: %d registers fetched, took=%.3fs", deviceName, regs.Len(), took.Seconds())
+		}
+		return
 	}
 
-	log.Printf("device[%s]: source: connect to %s", c.Name(), deviceString)
-	c.model = deviceString
-
-	// get relevant registers
-	registers := RegisterFactoryByProduct(deviceId)
-	if registers == nil {
-		return fmt.Errorf("no registers found for deviceId=%x", deviceId), true
+	// fetch all registers
+	if _, err := fetch(api.Registers); err != nil {
+		return err, true
 	}
-	// filter registers by skip list and add to db for outside use
-	registers = FilterRegisters(registers, c.Config().Filter())
-	addToRegisterDb(c.RegisterDb(), registers)
 
-	// start polling loop
-	fetchStaticCounter := 0
-	ticker := time.NewTicker(100 * time.Millisecond)
+	pollInterval := c.victronConfig.PollInterval()
+	ticker := time.NewTicker(pollInterval)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, false
 		case <-ticker.C:
-			start := time.Now()
-
-			// flush async data
-			vd.RecvFlush()
-
-			// execute a Ping at the beginning and after each error
-			pingNeeded := true
-
-			var enumCacheAddr uint16
-			var enumCacheValue uint64
-			for _, register := range registers {
-				// only fetch static registers seldomly
-				if register.static && (fetchStaticCounter%60 != 0) {
-					continue
-				}
-
-				if pingNeeded {
-					if err := vd.VeCommandPing(); err != nil {
-						return fmt.Errorf("device[%s]: source: VeCommandPing failed: %s", c.Name(), err), false
-					}
-				}
-
-				switch register.RegisterType() {
-				case dataflow.NumberRegister:
-					var value float64
-					if register.signed {
-						var intValue int64
-						intValue, err = vd.VeCommandGetInt(register.address)
-						value = float64(intValue)
-					} else {
-						var intValue uint64
-						intValue, err = vd.VeCommandGetUint(register.address)
-						value = float64(intValue)
-					}
-
-					if err != nil {
-						log.Printf("device[%s]: fetching number register failed: %v", c.Name(), err)
-					} else {
-						output.Fill(dataflow.NewNumericRegisterValue(
-							c.Name(),
-							register,
-							value/float64(register.factor)+register.offset,
-						))
-					}
-				case dataflow.TextRegister:
-					if value, err := vd.VeCommandGetString(register.address); err != nil {
-						log.Printf("device[%s]: fetching text register failed: %v", c.Name(), err)
-					} else {
-						output.Fill(dataflow.NewTextRegisterValue(
-							c.Name(),
-							register,
-							strings.TrimSpace(value),
-						))
-					}
-				case dataflow.EnumRegister:
-					var intValue uint64
-
-					if addr := register.address; enumCacheAddr != 0 && enumCacheAddr == addr {
-						intValue = enumCacheValue
+			// run fetch whenever the ticker ticks
+			// but when fetching took longer than pollInterval, fetch again immediately
+			for {
+				if took, err := fetch(nonStaticRegisters); err != nil {
+					if errors.Is(err, vedirectapi.ErrCtxDone) {
+						// do not return an error when the context is done
 						err = nil
-					} else {
-						intValue, err = vd.VeCommandGetUint(addr)
-						if err == nil {
-							enumCacheAddr = addr
-							enumCacheValue = intValue
-						}
+					}
+					return err, false
+				} else if took < pollInterval {
+					break
+				} else {
+					// if there is an unused tick, consume it
+					select {
+					case <-ticker.C:
+					default:
 					}
 
-					if err != nil {
-						log.Printf("device[%s]: fetching enum register failed: %v", c.Name(), err)
-					} else {
-						if bit := register.bit; bit >= 0 {
-							intValue = (intValue >> bit) & 1
-						}
-
-						output.Fill(dataflow.NewEnumRegisterValue(
-							c.Name(),
-							register,
-							int(intValue),
-						))
-					}
+					// reset ticker to pollInterval in case the next run is fast enough
+					ticker.Reset(pollInterval)
 				}
-
-				pingNeeded = err != nil
-			}
-
-			fetchStaticCounter++
-
-			if c.Config().LogDebug() {
-				log.Printf(
-					"device[%s]: registers fetched, took=%.3fs",
-					c.Name(),
-					time.Since(start).Seconds(),
-				)
 			}
 		}
 	}

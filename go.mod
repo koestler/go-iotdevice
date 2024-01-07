@@ -1,24 +1,24 @@
 module github.com/koestler/go-iotdevice/v3
 
-go 1.21
+go 1.21.5
 
 require (
 	github.com/eclipse/paho.golang v0.12.0
 	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/golang/mock v1.6.0
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.5.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/json-iterator/go v1.1.12
+	github.com/koestler/go-victron v0.0.9
 	github.com/mileusna/useragent v1.3.4
 	github.com/pkg/errors v0.9.1
 	github.com/sigurn/crc16 v0.0.0-20211026045750-20ab5afb07e3
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07
 	github.com/tg123/go-htpasswd v1.2.2
 	go.uber.org/mock v0.4.0
-	golang.org/x/exp v0.0.0-20231219180239-dc181d75b848
+	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b
 	golang.org/x/sync v0.5.0
 	gopkg.in/yaml.v3 v3.0.1
 	nhooyr.io/websocket v1.8.10

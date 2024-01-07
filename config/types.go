@@ -116,8 +116,10 @@ type DeviceConfig struct {
 
 type VictronDeviceConfig struct {
 	DeviceConfig
-	device string
-	kind   types.VictronDeviceKind
+	device       string
+	kind         types.VictronDeviceKind
+	pollInterval time.Duration
+	ioLog        string
 }
 
 type ModbusDeviceConfig struct {
