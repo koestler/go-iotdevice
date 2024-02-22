@@ -52,16 +52,18 @@ func NewV5(
 
 	// configure login
 	if user := cfg.User(); len(user) > 0 {
-		client.cliCfg.SetUsernamePassword(user, []byte(cfg.Password()))
+		client.cliCfg.ConnectUsername = user
+		client.cliCfg.ConnectPassword = []byte(cfg.Password())
 	}
 
 	// setup client availability topic using will
 	if mCfg := cfg.AvailabilityClient(); mCfg.Enabled() {
-		client.cliCfg.SetWillMessage(
-			cfg.AvailabilityClientTopic(),
-			[]byte(availabilityOffline),
-			mCfg.Qos(),
-			mCfg.Retain())
+		client.cliCfg.WillMessage = &paho.WillMessage{
+			Retain:  mCfg.Retain(),
+			QoS:     mCfg.Qos(),
+			Topic:   cfg.AvailabilityClientTopic(),
+			Payload: []byte(availabilityOffline),
+		}
 	}
 
 	return
