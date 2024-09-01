@@ -36,7 +36,7 @@ There are the following states:
   * *Frequency*: Frequency measurement of the generator.
 
 ## Outputs
- * *Ignition*: Turns on the ignition or the generator or the command input of the generators own engine management.
+ * *Ignition*: Turns on the ignition of the generator or the command input of the generators own engine management.
  * *Starter*: Turns on the starter motor.
  * *Fan*: Turns on the enclosure fan.
  * *Output relay*: Connects the load to the generator.
