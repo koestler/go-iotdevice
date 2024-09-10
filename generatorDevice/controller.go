@@ -21,6 +21,32 @@ const (
 	EnclosureCoolDown
 )
 
+func (s State) String() string {
+	switch s {
+	case Error:
+		return "Error"
+	case Reset:
+		return "Reset"
+	case Off:
+		return "Off"
+	case Ready:
+		return "Ready"
+	case Priming:
+		return "Priming"
+	case Cranking:
+		return "Cranking"
+	case WarmUp:
+		return "WarmUp"
+	case Producing:
+		return "Producing"
+	case EngineCoolDown:
+		return "EngineCoolDown"
+	case EnclosureCoolDown:
+		return "EnclosureCoolDown"
+	}
+	return "Unknown"
+}
+
 type Configuration struct {
 	PrimingTimeout           time.Duration
 	CrankingTmeout           time.Duration
@@ -112,6 +138,11 @@ func (c *Controller) Run() {
 		defer close(c.StateChanged)
 		defer close(c.InputsChanged)
 		defer close(c.OutputsChanged)
+
+		c.StateChanged <- c.state
+		c.InputsChanged <- c.inputs
+		c.outputs = computeOutputs(c.state)
+		c.OutputsChanged <- c.outputs
 
 		for f := range c.ChangeInput {
 			c.updateInputs(f)
