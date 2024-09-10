@@ -1,7 +1,6 @@
-package generatorDevice
+package generator
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -73,12 +72,6 @@ type Outputs struct {
 	Load     bool
 }
 
-type Combined struct {
-	DerivedInputs DerivedInputs
-	State         State
-	Outputs       Outputs
-}
-
 type Controller struct {
 	config        Configuration
 	inputs        Inputs
@@ -89,11 +82,16 @@ type Controller struct {
 	lastStateChange time.Time
 	ticker          *time.Ticker
 
-	ChangeInput chan func(Inputs) Inputs
-	Update      chan Combined
+	changeInput         chan func(Inputs) Inputs
+	derivedInputsUpdate chan DerivedInputs
+	stateUpdate         chan State
+	outputUpdate        chan Outputs
 }
 
 func NewController(config Configuration) *Controller {
+	if config.InStateResolution < 1*time.Millisecond {
+		panic("InStateResolution is too low")
+	}
 	if config.IOCheck == nil {
 		panic("IOCheck is nil")
 	}
@@ -103,24 +101,61 @@ func NewController(config Configuration) *Controller {
 	return &Controller{
 		config:      config,
 		state:       Off,
-		ChangeInput: make(chan func(Inputs) Inputs),
-		Update:      make(chan Combined),
+		changeInput: make(chan func(Inputs) Inputs),
 	}
+}
+
+func (c *Controller) UpdateInputs(f func(Inputs) Inputs) {
+	c.changeInput <- f
+}
+
+func (c *Controller) DerivedInputs() <-chan DerivedInputs {
+	if c.derivedInputsUpdate == nil {
+		c.derivedInputsUpdate = make(chan DerivedInputs)
+		return c.derivedInputsUpdate
+	}
+	panic("DerivedInputs channel already in use")
+}
+
+func (c *Controller) State() <-chan State {
+	if c.stateUpdate == nil {
+		c.stateUpdate = make(chan State)
+		return c.stateUpdate
+	}
+	panic("State channel already in use")
+}
+
+func (c *Controller) Outputs() <-chan Outputs {
+	if c.outputUpdate == nil {
+		c.outputUpdate = make(chan Outputs)
+		return c.outputUpdate
+	}
+	panic("Outputs channel already in use")
 }
 
 func (c *Controller) Run() {
 	go func() {
-		defer close(c.Update)
+		defer func() {
+			if c.derivedInputsUpdate != nil {
+				close(c.derivedInputsUpdate)
+			}
+			if c.stateUpdate != nil {
+				close(c.stateUpdate)
+			}
+			if c.outputUpdate != nil {
+				close(c.outputUpdate)
+			}
+		}()
 
 		c.ticker = time.NewTicker(c.config.InStateResolution)
 		defer c.ticker.Stop()
 
-		// send initial state
-		c.sendUpdate()
+		// initial compute and update
+		c.compute()
 
 		for {
 			select {
-			case f, ok := <-c.ChangeInput:
+			case f, ok := <-c.changeInput:
 				if !ok {
 					// channel closed, terminate the controller
 					return
@@ -128,47 +163,46 @@ func (c *Controller) Run() {
 				// whenever an input is changed, recompute the derived inputs and the state
 				if nextI := f(c.inputs); nextI != c.inputs {
 					c.inputs = nextI
-					if c.compute() {
-						c.sendUpdate()
-					}
+					c.compute()
 				}
 			case <-c.ticker.C:
 				// whenever the ticker fires, recompute the derived inputs and the state
-				if c.compute() {
-					c.sendUpdate()
-				}
+				c.compute()
 			}
 		}
 	}()
 }
 
-func (c *Controller) compute() bool {
-	fmt.Println("compute")
-	var change bool
+func (c *Controller) End() {
+	if c.changeInput != nil {
+		close(c.changeInput)
+	}
+}
+
+func (c *Controller) compute() {
 	if nextDI := computeDerivedInputs(c.config, c.inputs, c.lastStateChange); nextDI != c.derivedInputs {
+		c.derivedInputs = nextDI
 		if nextState := computeState(c.state, c.config, c.inputs, c.derivedInputs); nextState != c.state {
 			c.state = nextState
 			c.lastStateChange = time.Now()
 			c.ticker.Reset(c.config.InStateResolution)
-
-			c.outputs = computeOutputs(c.state)
+			if nextOutputs := computeOutputs(c.state); nextOutputs != c.outputs {
+				c.outputs = nextOutputs
+				if c.outputUpdate != nil {
+					c.outputUpdate <- c.outputs
+				}
+			}
+			if c.stateUpdate != nil {
+				c.stateUpdate <- c.state
+			}
 		}
-		change = true
-	}
-	return change
-}
-
-func (c *Controller) sendUpdate() {
-	fmt.Printf("sendUpdate: %v\n", c)
-	c.Update <- Combined{
-		DerivedInputs: c.derivedInputs,
-		State:         c.state,
-		Outputs:       c.outputs,
+		if c.derivedInputsUpdate != nil {
+			c.derivedInputsUpdate <- nextDI
+		}
 	}
 }
 
 func computeDerivedInputs(c Configuration, i Inputs, lastStateChange time.Time) DerivedInputs {
-	fmt.Println("computeDerivedInputs")
 	return DerivedInputs{
 		MasterSwitch: i.ArmSwitch && i.CommandSwitch,
 		IOCheck:      c.IOCheck(i),
@@ -178,8 +212,6 @@ func computeDerivedInputs(c Configuration, i Inputs, lastStateChange time.Time) 
 }
 
 func computeState(prev State, c Configuration, i Inputs, di DerivedInputs) (next State) {
-	fmt.Println("computeState")
-
 	// Mutli state transitions
 	// in every case: reset switch triggers the reset state
 	if i.ResetSwitch {
@@ -258,8 +290,6 @@ func computeState(prev State, c Configuration, i Inputs, di DerivedInputs) (next
 }
 
 func computeOutputs(s State) Outputs {
-	fmt.Println("computeOutputs")
-
 	return Outputs{
 		Ignition: s == Cranking ||
 			s == WarmUp ||
