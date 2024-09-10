@@ -20,32 +20,6 @@ const (
 	EnclosureCoolDown
 )
 
-func (s State) String() string {
-	switch s {
-	case Error:
-		return "Error"
-	case Reset:
-		return "Reset"
-	case Off:
-		return "Off"
-	case Ready:
-		return "Ready"
-	case Priming:
-		return "Priming"
-	case Cranking:
-		return "Cranking"
-	case WarmUp:
-		return "WarmUp"
-	case Producing:
-		return "Producing"
-	case EngineCoolDown:
-		return "EngineCoolDown"
-	case EnclosureCoolDown:
-		return "EnclosureCoolDown"
-	}
-	return "Unknown"
-}
-
 type Configuration struct {
 	InStateResolution        time.Duration
 	PrimingTimeout           time.Duration
@@ -86,7 +60,7 @@ type Inputs struct {
 
 type DerivedInputs struct {
 	MasterSwitch bool
-	GeneralCheck bool
+	IOCheck      bool
 	OutputCheck  bool
 	TimeInState  time.Duration
 }
@@ -147,12 +121,11 @@ func (c *Controller) Run() {
 		for {
 			select {
 			case f, ok := <-c.ChangeInput:
-				// whenever an input is changed, recompute the derived inputs and the state
-
 				if !ok {
+					// channel closed, terminate the controller
 					return
 				}
-
+				// whenever an input is changed, recompute the derived inputs and the state
 				if nextI := f(c.inputs); nextI != c.inputs {
 					c.inputs = nextI
 					if c.compute() {
@@ -198,7 +171,7 @@ func computeDerivedInputs(c Configuration, i Inputs, lastStateChange time.Time) 
 	fmt.Println("computeDerivedInputs")
 	return DerivedInputs{
 		MasterSwitch: i.ArmSwitch && i.CommandSwitch,
-		GeneralCheck: c.IOCheck(i),
+		IOCheck:      c.IOCheck(i),
 		OutputCheck:  c.OutputCheck(i),
 		TimeInState:  time.Since(lastStateChange).Truncate(c.InStateResolution),
 	}
@@ -214,7 +187,7 @@ func computeState(prev State, c Configuration, i Inputs, di DerivedInputs) (next
 	}
 
 	// in every state except reset, off and failed: a temperature or fire detection triggers the failed state
-	if !(prev == Reset || prev == Off || prev == Error) && !di.GeneralCheck {
+	if !(prev == Reset || prev == Off || prev == Error) && !di.IOCheck {
 		return Error
 	}
 

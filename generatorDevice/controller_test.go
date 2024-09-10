@@ -37,6 +37,7 @@ func TestController(t *testing.T) {
 		}
 
 		expectNewState(t, c, Ready)
+		expectNoUpdate(t, c)
 
 		c.ChangeInput <- func(i Inputs) Inputs {
 			i.ArmSwitch = true
