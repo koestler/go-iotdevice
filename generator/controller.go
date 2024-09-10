@@ -4,21 +4,6 @@ import (
 	"time"
 )
 
-type State int
-
-const (
-	Error State = iota
-	Reset
-	Off
-	Ready
-	Priming
-	Cranking
-	WarmUp
-	Producing
-	EngineCoolDown
-	EnclosureCoolDown
-)
-
 type Configuration struct {
 	InStateResolution        time.Duration
 	PrimingTimeout           time.Duration
@@ -32,6 +17,23 @@ type Configuration struct {
 	IOCheck                  func(Inputs) bool
 	OutputCheck              func(Inputs) bool
 }
+
+type State int
+
+const InitialState = Off
+
+const (
+	Error State = iota
+	Reset
+	Off
+	Ready
+	Priming
+	Cranking
+	WarmUp
+	Producing
+	EngineCoolDown
+	EnclosureCoolDown
+)
 
 type Inputs struct {
 	// Switches
@@ -100,7 +102,7 @@ func NewController(config Configuration) *Controller {
 	}
 	return &Controller{
 		config:      config,
-		state:       Off,
+		state:       InitialState,
 		changeInput: make(chan func(Inputs) Inputs),
 	}
 }
