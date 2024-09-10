@@ -4,8 +4,6 @@ import (
 	"time"
 )
 
-const inStateUpdateInterval = 100 * time.Millisecond
-
 type State int
 
 const (
@@ -48,6 +46,7 @@ func (s State) String() string {
 }
 
 type Configuration struct {
+	InStateUpdateInterval    time.Duration
 	PrimingTimeout           time.Duration
 	CrankingTmeout           time.Duration
 	WarmUpTimeout            time.Duration
@@ -151,7 +150,7 @@ func (c *Controller) Run() {
 
 	// auto update TimeInState
 	go func() {
-		ticker := time.NewTicker(inStateUpdateInterval)
+		ticker := time.NewTicker(c.config.InStateUpdateInterval)
 		defer ticker.Stop()
 
 		var lastChange time.Time

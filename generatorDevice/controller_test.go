@@ -7,6 +7,7 @@ import (
 
 func TestController(t *testing.T) {
 	config := Configuration{
+		InStateUpdateInterval:    1 * time.Millisecond,
 		PrimingTimeout:           10 * time.Millisecond,
 		CrankingTmeout:           20 * time.Millisecond,
 		WarmUpTimeout:            30 * time.Millisecond,
@@ -29,17 +30,39 @@ func TestController(t *testing.T) {
 		PTotMax:                  10000,
 	}
 
-	t.Run("slowSuccessfulRun", func(t *testing.T) {
+	t.Run("simpleSuccessfulRun", func(t *testing.T) {
 		c := NewController(config)
 		c.Run()
 		defer close(c.ChangeInput)
 
-		expectState(t, c, Off)
+		expectNewState(t, c, Off)
+		<-c.InputsChanged
+
+		c.ChangeInput <- func(i Inputs) Inputs {
+			i.IOAvailable = true
+			return i
+		}
+
+		expectSameState(t, c)
 
 	})
 }
 
-func expectState(t *testing.T, c *Controller, expected State) {
+func expectSameState(t *testing.T, c *Controller) {
+	t.Helper()
+
+	// we expect the controller to update the state within 1ms
+	time.Sleep(1 * time.Millisecond)
+
+	select {
+	case s := <-c.StateChanged:
+		t.Errorf("expected no state change but got %v", s)
+	default:
+		return
+	}
+}
+
+func expectNewState(t *testing.T, c *Controller, expected State) {
 	t.Helper()
 
 	// we expect the controller to update the state within 1ms
