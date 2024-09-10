@@ -34,3 +34,18 @@ func (tr *tracker[T]) AssertLatest(t *testing.T, expect T) {
 		t.Errorf("got %v, want %v", got, expect)
 	}
 }
+
+func (tr *tracker[T]) Assert(t *testing.T, expect []T) {
+	t.Helper()
+	tr.Lock()
+	defer tr.Unlock()
+	if len(tr.track) != len(expect) {
+		t.Errorf("got %v, want %v", tr.track, expect)
+		return
+	}
+	for i, got := range tr.track {
+		if got != expect[i] {
+			t.Errorf("got %v, want %v", got, expect[i])
+		}
+	}
+}
