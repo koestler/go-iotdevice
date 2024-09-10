@@ -32,7 +32,7 @@ func addToRegisterDb(rdb *dataflow.RegisterDb, registers []Register) {
 	rdb.AddStruct(dataflowRegisters...)
 }
 
-var Inputs = []Register{
+var InputRegisters = []Register{
 	NewOnOffRegister(
 		"Switches",
 		"MasterSwitch",
@@ -56,7 +56,7 @@ var Inputs = []Register{
 	),
 }
 
-var Outputs = []Register{
+var OutputRegisters = []Register{
 	NewOnOffRegister(
 		"Outputs",
 		"Ignition",

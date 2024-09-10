@@ -39,7 +39,7 @@ There are the following states:
  * *Ignition*: Turns on the ignition of the generator or the command input of the generators own engine management.
  * *Starter*: Turns on the starter motor.
  * *Fan*: Turns on the enclosure fan.
- * *Output relay*: Connects the load to the generator.
+ * *Load*: Connects the load to the generator output.
 
  ## Configuration Variables
  * *Warm up*
