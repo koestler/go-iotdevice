@@ -28,7 +28,7 @@ func TestController(t *testing.T) {
 	t.Run("simpleSuccessfulRun", func(t *testing.T) {
 		c := generator.NewController(config)
 
-		stateTracker := tracker[generator.State]{}
+		stateTracker := newTracker[generator.State](t)
 		go stateTracker.Drain(c.State())
 
 		c.Run()
@@ -36,7 +36,7 @@ func TestController(t *testing.T) {
 
 		stateTracker.AssertLatest(t, generator.Off)
 
-		c.UpdateInputs(func(i generator.Inputs) generator.Inputs {
+		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
 			i.IOAvailable = true
 			return i
 		})

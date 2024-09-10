@@ -74,6 +74,11 @@ type Outputs struct {
 	Load     bool
 }
 
+type Change struct {
+	f    func(Inputs) Inputs
+	done chan struct{}
+}
+
 type Controller struct {
 	config        Configuration
 	inputs        Inputs
@@ -84,7 +89,7 @@ type Controller struct {
 	lastStateChange time.Time
 	ticker          *time.Ticker
 
-	changeInput         chan func(Inputs) Inputs
+	changeInputs        chan Change
 	derivedInputsUpdate chan DerivedInputs
 	stateUpdate         chan State
 	outputUpdate        chan Outputs
@@ -101,14 +106,20 @@ func NewController(config Configuration) *Controller {
 		panic("OutputCheck is nil")
 	}
 	return &Controller{
-		config:      config,
-		state:       InitialState,
-		changeInput: make(chan func(Inputs) Inputs),
+		config:       config,
+		state:        InitialState,
+		changeInputs: make(chan Change),
 	}
 }
 
 func (c *Controller) UpdateInputs(f func(Inputs) Inputs) {
-	c.changeInput <- f
+	c.changeInputs <- Change{f: f}
+}
+
+func (c *Controller) UpdateInputsSync(f func(Inputs) Inputs) {
+	done := make(chan struct{})
+	c.changeInputs <- Change{f: f, done: done}
+	<-done
 }
 
 func (c *Controller) DerivedInputs() <-chan DerivedInputs {
@@ -136,6 +147,8 @@ func (c *Controller) Outputs() <-chan Outputs {
 }
 
 func (c *Controller) Run() {
+	initDone := make(chan struct{})
+
 	go func() {
 		defer func() {
 			if c.derivedInputsUpdate != nil {
@@ -152,20 +165,24 @@ func (c *Controller) Run() {
 		c.ticker = time.NewTicker(c.config.InStateResolution)
 		defer c.ticker.Stop()
 
-		// initial compute and update
-		c.compute()
+		c.computeInitial()
+
+		close(initDone)
 
 		for {
 			select {
-			case f, ok := <-c.changeInput:
+			case change, ok := <-c.changeInputs:
 				if !ok {
 					// channel closed, terminate the controller
 					return
 				}
 				// whenever an input is changed, recompute the derived inputs and the state
-				if nextI := f(c.inputs); nextI != c.inputs {
+				if nextI := change.f(c.inputs); nextI != c.inputs {
 					c.inputs = nextI
 					c.compute()
+				}
+				if change.done != nil {
+					close(change.done)
 				}
 			case <-c.ticker.C:
 				// whenever the ticker fires, recompute the derived inputs and the state
@@ -173,11 +190,30 @@ func (c *Controller) Run() {
 			}
 		}
 	}()
+
+	<-initDone
 }
 
 func (c *Controller) End() {
-	if c.changeInput != nil {
-		close(c.changeInput)
+	if c.changeInputs != nil {
+		close(c.changeInputs)
+	}
+}
+
+func (c *Controller) computeInitial() {
+	c.derivedInputs = computeDerivedInputs(c.config, c.inputs, c.lastStateChange)
+	c.state = computeState(c.state, c.config, c.inputs, c.derivedInputs)
+	c.outputs = computeOutputs(c.state)
+	c.lastStateChange = time.Now()
+
+	if c.derivedInputsUpdate != nil {
+		c.derivedInputsUpdate <- c.derivedInputs
+	}
+	if c.stateUpdate != nil {
+		c.stateUpdate <- c.state
+	}
+	if c.outputUpdate != nil {
+		c.outputUpdate <- c.outputs
 	}
 }
 
@@ -214,7 +250,7 @@ func computeDerivedInputs(c Configuration, i Inputs, lastStateChange time.Time) 
 }
 
 func computeState(prev State, c Configuration, i Inputs, di DerivedInputs) (next State) {
-	// Mutli state transitions
+	// Multi state transitions
 	// in every case: reset switch triggers the reset state
 	if i.ResetSwitch {
 		return Reset
