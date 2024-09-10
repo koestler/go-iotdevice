@@ -7,7 +7,7 @@ import (
 
 func TestController(t *testing.T) {
 	config := Configuration{
-		InStateUpdateInterval:    1 * time.Millisecond,
+		InStateResolution:        1 * time.Millisecond,
 		PrimingTimeout:           10 * time.Millisecond,
 		CrankingTmeout:           20 * time.Millisecond,
 		WarmUpTimeout:            30 * time.Millisecond,
@@ -16,18 +16,12 @@ func TestController(t *testing.T) {
 		EngineCoolDownTemp:       50,
 		EnclosureCoolDownTimeout: 50 * time.Millisecond,
 		EnclosureCoolDownTemp:    60,
-		EngineTempMin:            0,
-		EngineTempMax:            100,
-		AirIntakeTempMin:         -10,
-		AirIntakeTempMax:         40,
-		AirExhaustTempMin:        -10,
-		AirExhaustTempMax:        90,
-		UMin:                     210,
-		UMax:                     240,
-		FMin:                     47,
-		FMax:                     53,
-		PMax:                     6000,
-		PTotMax:                  10000,
+		IOCheck: func(i Inputs) bool {
+			return i.IOAvailable
+		},
+		OutputCheck: func(i Inputs) bool {
+			return i.OutputAvailable
+		},
 	}
 
 	t.Run("simpleSuccessfulRun", func(t *testing.T) {
@@ -36,33 +30,39 @@ func TestController(t *testing.T) {
 		defer close(c.ChangeInput)
 
 		expectNewState(t, c, Off)
-		<-c.InputsChanged
 
 		c.ChangeInput <- func(i Inputs) Inputs {
 			i.IOAvailable = true
 			return i
 		}
 
-		expectSameState(t, c)
+		expectNewState(t, c, Ready)
+
+		c.ChangeInput <- func(i Inputs) Inputs {
+			i.ArmSwitch = true
+			return i
+		}
+
+		expectNoUpdate(t, c)
 
 	})
 }
 
-func expectSameState(t *testing.T, c *Controller) {
+func expectNoUpdate(t *testing.T, c *Controller) {
 	t.Helper()
 
 	// we expect the controller to update the state within 1ms
 	time.Sleep(1 * time.Millisecond)
 
 	select {
-	case s := <-c.StateChanged:
-		t.Errorf("expected no state change but got %v", s)
+	case u := <-c.Update:
+		t.Errorf("expected no update but got %v", u)
 	default:
 		return
 	}
 }
 
-func expectNewState(t *testing.T, c *Controller, expected State) {
+func expectUpdate(t *testing.T, c *Controller) Combined {
 	t.Helper()
 
 	// we expect the controller to update the state within 1ms
@@ -70,14 +70,21 @@ func expectNewState(t *testing.T, c *Controller, expected State) {
 	defer timeout.Stop()
 
 	select {
-	case s, ok := <-c.StateChanged:
+	case u, ok := <-c.Update:
 		if !ok {
-			t.Errorf("state channel closed")
+			t.Errorf("update channel closed")
 		}
-		if s != expected {
-			t.Errorf("expected state %v but got %v", expected, s)
-		}
+		return u
 	case <-timeout.C:
-		t.Errorf("expected state update to %v but got nothing", expected)
+		t.Errorf("expected update but got nothing")
+	}
+	return Combined{}
+}
+
+func expectNewState(t *testing.T, c *Controller, s State) {
+	t.Helper()
+	u := expectUpdate(t, c)
+	if u.State != s {
+		t.Errorf("expected state %v but got %v", s, u.State)
 	}
 }
