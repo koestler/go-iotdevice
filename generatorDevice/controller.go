@@ -1,8 +1,6 @@
 package generatorDevice
 
 import (
-	"context"
-	"sync"
 	"time"
 )
 
@@ -81,76 +79,96 @@ type Outputs struct {
 	Load     bool
 }
 
-type ChangeCallback func(State, Inputs, Outputs)
-
 type Controller struct {
-	lock            sync.RWMutex
-	config          Configuration
-	state           State
-	inputs          Inputs
-	outputs         Outputs
-	lastStateChange time.Time
-	onChange        ChangeCallback
+	config  Configuration
+	state   State
+	inputs  Inputs
+	outputs Outputs
+
+	lastStateChange chan time.Time
+
+	ChangeInput    chan func(Inputs) Inputs
+	StateChanged   chan State
+	InputsChanged  chan Inputs
+	OutputsChanged chan Outputs
 }
 
-func NewController(config Configuration, onChange ChangeCallback) *Controller {
-	if onChange == nil {
-		panic("onChange must be provided")
-	}
+func NewController(config Configuration) *Controller {
 	return &Controller{
-		config:   config,
-		state:    Off,
-		onChange: onChange,
+		config:          config,
+		state:           Off,
+		lastStateChange: make(chan time.Time),
+		ChangeInput:     make(chan func(Inputs) Inputs),
+		StateChanged:    make(chan State),
+		InputsChanged:   make(chan Inputs),
+		OutputsChanged:  make(chan Outputs),
 	}
 }
 
-func (c *Controller) Run(ctx context.Context) {
-	go c.updateInState(ctx)
-}
+func (c *Controller) Run() {
+	// handle input updates
+	go func() {
+		defer close(c.lastStateChange)
+		defer close(c.StateChanged)
+		defer close(c.InputsChanged)
+		defer close(c.OutputsChanged)
 
-func (c *Controller) updateInState(ctx context.Context) {
-	ticker := time.NewTicker(inStateUpdateInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			c.UpdateInputs(func(i Inputs) Inputs {
-				i.TimeInState = time.Since(c.lastStateChange)
-				return i
-			})
+		for f := range c.ChangeInput {
+			c.updateInputs(f)
 		}
-	}
+	}()
+
+	// auto update TimeInState
+	go func() {
+		ticker := time.NewTicker(inStateUpdateInterval)
+		defer ticker.Stop()
+
+		var lastChange time.Time
+
+		for {
+			select {
+			case t, ok := <-c.lastStateChange:
+				if !ok {
+					return
+				}
+				lastChange = t
+			case <-ticker.C:
+				c.ChangeInput <- func(i Inputs) Inputs {
+					i.TimeInState = time.Since(lastChange)
+					return i
+				}
+			}
+		}
+	}()
 }
 
-func (c *Controller) UpdateInputs(f func(Inputs) Inputs) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
+func (c *Controller) updateInputs(f func(Inputs) Inputs) {
 	now := time.Now()
 
 	// 1. update inputs
 	newInputs := f(c.inputs)
 	if newInputs == c.inputs {
+		// no change: nothing to do
 		return
 	}
 	c.inputs = newInputs
+	c.InputsChanged <- newInputs
 
 	// 2. compute new state
 	newState := computeState(c.state, c.config, c.inputs)
 	if newState != c.state {
 		c.state = newState
-		c.lastStateChange = now
+		c.StateChanged <- newState
+		c.lastStateChange <- now
 		c.inputs.TimeInState = 0
 	}
 
 	// 3. compute new outputs
-	c.outputs = computeOutputs(c.state)
-
-	// 4. notify change
-	c.onChange(c.state, c.inputs, c.outputs)
+	newOutputs := computeOutputs(c.state)
+	if newOutputs != c.outputs {
+		c.outputs = newOutputs
+		c.OutputsChanged <- newOutputs
+	}
 }
 
 func computeState(prev State, c Configuration, i Inputs) (next State) {
