@@ -11,7 +11,7 @@ const inStateUpdateInterval = 100 * time.Millisecond
 type State int
 
 const (
-	Failed State = iota
+	Error State = iota
 	Reset
 	Off
 	Ready
@@ -24,23 +24,32 @@ const (
 )
 
 type Configuration struct {
+	PrimingTimeout           time.Duration
+	CrankingTmeout           time.Duration
 	WarmUpTimeout            time.Duration
 	WarmUpTemp               float64
 	EngineCoolDownTimeout    time.Duration
 	EngineCoolDownTemp       float64
 	EnclosureCoolDownTimeout time.Duration
 	EnclosureCoolDownTemp    float64
+	EngineTempMin            float64
+	EngineTempMax            float64
+	AirIntakeTempMin         float64
+	AirIntakeTempMax         float64
+	AirExhaustTempMin        float64
+	AirExhaustTempMax        float64
 	UMin                     float64
 	UMax                     float64
 	FMin                     float64
 	FMax                     float64
 	PMax                     float64
+	PTotMax                  float64
 }
 
 type Inputs struct {
 	// Switches
-	MasterSwitch bool
-	ResetSwitch  bool
+	CommandSwitch bool
+	ResetSwitch   bool
 
 	// I/O controller inputs
 	IOAvailable    bool
@@ -130,7 +139,7 @@ func (c *Controller) UpdateInputs(f func(Inputs) Inputs) {
 	c.inputs = newInputs
 
 	// 2. compute new state
-	newState := computeState(c.state, c.inputs)
+	newState := computeState(c.state, c.config, c.inputs)
 	if newState != c.state {
 		c.state = newState
 		c.lastStateChange = now
@@ -144,26 +153,83 @@ func (c *Controller) UpdateInputs(f func(Inputs) Inputs) {
 	c.onChange(c.state, c.inputs, c.outputs)
 }
 
-func computeState(prev State, inp Inputs) (next State) {
-	if inp.ResetSwitch {
+func computeState(prev State, c Configuration, i Inputs) (next State) {
+	MasterSwitch := i.ArmSwitch && i.CommandSwitch
+
+	// Mutli state transitions
+	// in every case: reset switch triggers the reset state
+	if i.ResetSwitch {
 		return Reset
 	}
 
+	// in every state except reset, off and failed: a temperature or fire detection triggers the failed state
+	if !(prev == Reset || prev == Off || prev == Error) &&
+		!temperaturAndFireCheck(c, i) {
+		return Error
+	}
+
+	// in warm up, producing and engine cool down: a negative output check triggers the failed state
+	if (prev == WarmUp || prev == Producing || prev == EngineCoolDown) &&
+		!generatorOutputCheck(c, i) {
+		return Error
+	}
+
+	// Single state transitions
 	switch prev {
 	case Reset:
-		if !inp.ResetSwitch {
+		if !i.ResetSwitch {
 			return Off
 		}
 	case Off:
-		if inp.IOAvailable {
+		if i.IOAvailable {
 			return Ready
 		}
 	case Ready:
+		if MasterSwitch {
+			return Priming
+		}
+	case Priming:
+		if !MasterSwitch {
+			return Ready
+		}
+		if i.TimeInState >= c.PrimingTimeout {
+			return Cranking
+		}
 	case Cranking:
+		if !MasterSwitch {
+			return Ready
+		}
+		if i.TimeInState >= c.CrankingTmeout {
+			return Error
+		}
+		if generatorOutputCheck(c, i) {
+			return WarmUp
+		}
 	case WarmUp:
+		if !MasterSwitch {
+			return EnclosureCoolDown
+		}
+		if i.TimeInState >= c.WarmUpTimeout || i.EngineTemp >= c.WarmUpTemp {
+			return Producing
+		}
 	case Producing:
+		if !MasterSwitch {
+			return EngineCoolDown
+		}
 	case EngineCoolDown:
+		if MasterSwitch {
+			return Producing
+		}
+		if i.TimeInState >= c.EngineCoolDownTimeout || i.EngineTemp <= c.EngineCoolDownTemp {
+			return EnclosureCoolDown
+		}
 	case EnclosureCoolDown:
+		if MasterSwitch {
+			return Priming
+		}
+		if i.TimeInState >= c.EnclosureCoolDownTimeout || i.EngineTemp <= c.EnclosureCoolDownTemp {
+			return Ready
+		}
 	}
 
 	return prev
@@ -172,27 +238,46 @@ func computeState(prev State, inp Inputs) (next State) {
 func computeOutputs(s State) Outputs {
 	o := Outputs{}
 
-	o.Ignition = (s == Cranking ||
+	o.Ignition = s == Cranking ||
 		s == WarmUp ||
 		s == Producing ||
-		s == EngineCoolDown)
+		s == EngineCoolDown
 
-	o.Starter = (s == Cranking)
+	o.Starter = s == Cranking
 
-	o.Fan = (s == Cranking ||
-		s == WarmUp ||
-		s == Producing ||
-		s == EngineCoolDown ||
-		s == EnclosureCoolDown)
-
-	o.Pump = (s == Priming ||
+	o.Fan = s == Priming ||
 		s == Cranking ||
 		s == WarmUp ||
 		s == Producing ||
 		s == EngineCoolDown ||
-		s == EnclosureCoolDown)
+		s == EnclosureCoolDown
 
-	o.Load = (s == Producing)
+	o.Pump = s == Priming ||
+		s == Cranking ||
+		s == WarmUp ||
+		s == Producing ||
+		s == EngineCoolDown
+
+	o.Load = s == Producing
 
 	return o
+}
+
+func temperaturAndFireCheck(c Configuration, i Inputs) bool {
+	return !i.FireDetected && i.IOAvailable &&
+		i.EngineTemp >= c.EngineTempMin && i.EngineTemp <= c.EngineTempMax &&
+		i.AirIntakeTemp >= c.AirIntakeTempMin && i.AirIntakeTemp <= c.AirIntakeTempMax &&
+		i.AirExhaustTemp >= c.AirExhaustTempMin && i.AirExhaustTemp <= c.AirExhaustTempMax
+}
+
+func generatorOutputCheck(c Configuration, i Inputs) bool {
+	return i.MessurementAvailable &&
+		i.F >= c.FMin && i.F <= c.FMax &&
+		i.U0 >= c.UMin && i.U0 <= c.UMax &&
+		i.U1 >= c.UMin && i.U1 <= c.UMax &&
+		i.U2 >= c.UMin && i.U2 <= c.UMax &&
+		i.L0 <= c.PMax &&
+		i.L1 <= c.PMax &&
+		i.L2 <= c.PMax &&
+		i.L0+i.L1+i.L2 <= c.PTotMax
 }
