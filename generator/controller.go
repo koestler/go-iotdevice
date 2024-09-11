@@ -14,8 +14,22 @@ type Configuration struct {
 	EngineCoolDownTemp       float64
 	EnclosureCoolDownTimeout time.Duration
 	EnclosureCoolDownTemp    float64
-	IOCheck                  func(Inputs) bool
-	OutputCheck              func(Inputs) bool
+
+	// IO Check
+	EngineTempMin     float64
+	EngineTempMax     float64
+	AirIntakeTempMin  float64
+	AirIntakeTempMax  float64
+	AirExhaustTempMin float64
+	AirExhaustTempMax float64
+
+	// Output Check
+	UMin    float64
+	UMax    float64
+	FMin    float64
+	FMax    float64
+	PMax    float64
+	PTotMax float64
 }
 
 type State int
@@ -98,12 +112,6 @@ type Controller struct {
 func NewController(config Configuration) *Controller {
 	if config.InStateResolution < 1*time.Millisecond {
 		panic("InStateResolution is too low")
-	}
-	if config.IOCheck == nil {
-		panic("IOCheck is nil")
-	}
-	if config.OutputCheck == nil {
-		panic("OutputCheck is nil")
 	}
 	return &Controller{
 		config:       config,
@@ -243,8 +251,8 @@ func (c *Controller) compute() {
 func computeDerivedInputs(c Configuration, i Inputs, lastStateChange time.Time) DerivedInputs {
 	return DerivedInputs{
 		MasterSwitch: i.ArmSwitch && i.CommandSwitch,
-		IOCheck:      c.IOCheck(i),
-		OutputCheck:  c.OutputCheck(i),
+		IOCheck:      ioCheck(c, i),
+		OutputCheck:  outputCheck(c, i),
 		TimeInState:  time.Since(lastStateChange).Truncate(c.InStateResolution),
 	}
 }
@@ -347,4 +355,23 @@ func computeOutputs(s State) Outputs {
 			s == EngineCoolDown,
 		Load: s == Producing,
 	}
+}
+
+func ioCheck(c Configuration, i Inputs) bool {
+	return !i.FireDetected && i.IOAvailable &&
+		i.EngineTemp >= c.EngineTempMin && i.EngineTemp <= c.EngineTempMax &&
+		i.AirIntakeTemp >= c.AirIntakeTempMin && i.AirIntakeTemp <= c.AirIntakeTempMax &&
+		i.AirExhaustTemp >= c.AirExhaustTempMin && i.AirExhaustTemp <= c.AirExhaustTempMax
+}
+
+func outputCheck(c Configuration, i Inputs) bool {
+	return i.OutputAvailable &&
+		i.F >= c.FMin && i.F <= c.FMax &&
+		i.U0 >= c.UMin && i.U0 <= c.UMax &&
+		i.U1 >= c.UMin && i.U1 <= c.UMax &&
+		i.U2 >= c.UMin && i.U2 <= c.UMax &&
+		i.L0 <= c.PMax &&
+		i.L1 <= c.PMax &&
+		i.L2 <= c.PMax &&
+		i.L0+i.L1+i.L2 <= c.PTotMax
 }
