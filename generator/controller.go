@@ -4,10 +4,11 @@ import (
 	"time"
 )
 
-type Configuration struct {
-	InStateResolution        time.Duration
+// Params contains the parameters for the generator controller.
+type Params struct {
+	// Transition params
 	PrimingTimeout           time.Duration
-	CrankingTmeout           time.Duration
+	CrankingTimeout          time.Duration
 	WarmUpTimeout            time.Duration
 	WarmUpTemp               float64
 	EngineCoolDownTimeout    time.Duration
@@ -32,12 +33,10 @@ type Configuration struct {
 	PTotMax float64
 }
 
-type State int
-
-const InitialState = Off
+type StateNode int
 
 const (
-	Error State = iota
+	Error StateNode = iota
 	Reset
 	Off
 	Ready
@@ -50,6 +49,9 @@ const (
 )
 
 type Inputs struct {
+	// Time is an input to the controller to allow for time-based state transitions
+	Time time.Time
+
 	// Switches
 	CommandSwitch bool
 	ResetSwitch   bool
@@ -73,11 +75,9 @@ type Inputs struct {
 	F               float64
 }
 
-type DerivedInputs struct {
-	MasterSwitch bool
-	IOCheck      bool
-	OutputCheck  bool
-	TimeInState  time.Duration
+type State struct {
+	Node    StateNode
+	Changed time.Time
 }
 
 type Outputs struct {
@@ -86,6 +86,10 @@ type Outputs struct {
 	Fan      bool
 	Pump     bool
 	Load     bool
+
+	TimeInState time.Duration
+	IoCheck     bool
+	OutputCheck bool
 }
 
 type Change struct {
@@ -94,58 +98,66 @@ type Change struct {
 }
 
 type Controller struct {
-	config        Configuration
-	inputs        Inputs
-	derivedInputs DerivedInputs
-	state         State
-	outputs       Outputs
+	Params  Params
+	inputs  Inputs
+	state   State
+	outputs Outputs
 
-	lastStateChange time.Time
-	ticker          *time.Ticker
-
-	changeInputs        chan Change
-	derivedInputsUpdate chan DerivedInputs
-	stateUpdate         chan State
-	outputUpdate        chan Outputs
+	changeInputs chan Change
+	stateUpdate  chan State
+	outputUpdate chan Outputs
 }
 
-func NewController(config Configuration) *Controller {
-	if config.InStateResolution < 1*time.Millisecond {
-		panic("InStateResolution is too low")
+// NewController creates a new controller with the given configuration, initial state and inputs.
+// It runs a goroutine that listens for input changes and recomputes the state and outputs.
+// To terminate the controller, call the End method.
+func NewController(params Params, initialNode StateNode, initialInputs Inputs) *Controller {
+	initialState := State{
+		Node:    initialNode,
+		Changed: initialInputs.Time,
 	}
-	return &Controller{
-		config:       config,
-		state:        InitialState,
+
+	c := &Controller{
+		Params:       params,
+		inputs:       initialInputs,
+		state:        initialState,
+		outputs:      computeOutputs(params, initialInputs, initialState),
 		changeInputs: make(chan Change),
+		stateUpdate:  nil, // initially nil, will be set by the first call to StateNode
+		outputUpdate: nil, // initially nil, will be set by the first call to Outputs
 	}
+	return c
 }
 
+// UpdateInputs sends a change to the controller inputs.
 func (c *Controller) UpdateInputs(f func(Inputs) Inputs) {
 	c.changeInputs <- Change{f: f}
 }
 
+// UpdateInputsSync sends a change to the controller inputs and waits for both the state and outputs to be recomputed
+// and the update channels to be consumed.
+// This is useful for testing.
 func (c *Controller) UpdateInputsSync(f func(Inputs) Inputs) {
 	done := make(chan struct{})
 	c.changeInputs <- Change{f: f, done: done}
 	<-done
 }
 
-func (c *Controller) DerivedInputs() <-chan DerivedInputs {
-	if c.derivedInputsUpdate == nil {
-		c.derivedInputsUpdate = make(chan DerivedInputs)
-		return c.derivedInputsUpdate
-	}
-	panic("DerivedInputs channel already in use")
-}
-
+// State returns a channel that will receive the state of the controller whenever it changes.
+// The channel will be closed when End is called.
+// This method must be called zero or one times.
 func (c *Controller) State() <-chan State {
 	if c.stateUpdate == nil {
 		c.stateUpdate = make(chan State)
 		return c.stateUpdate
 	}
-	panic("State channel already in use")
+	panic("StateNode channel already in use")
 }
 
+// Outputs returns a channel that will receive the outputs of the controller whenever they change.
+// The channel will be closed when End is called.
+// This method must be called zero or one times.
+// When both outputs and the state changes, the state change will be sent first.
 func (c *Controller) Outputs() <-chan Outputs {
 	if c.outputUpdate == nil {
 		c.outputUpdate = make(chan Outputs)
@@ -154,48 +166,39 @@ func (c *Controller) Outputs() <-chan Outputs {
 	panic("Outputs channel already in use")
 }
 
+// Run is the main loop of the controller. It will send the initial state and outputs to the respective channels
 func (c *Controller) Run() {
 	initDone := make(chan struct{})
 
 	go func() {
-		defer func() {
-			if c.derivedInputsUpdate != nil {
-				close(c.derivedInputsUpdate)
-			}
-			if c.stateUpdate != nil {
-				close(c.stateUpdate)
-			}
-			if c.outputUpdate != nil {
-				close(c.outputUpdate)
-			}
-		}()
-
-		c.ticker = time.NewTicker(c.config.InStateResolution)
-		defer c.ticker.Stop()
-
-		c.computeInitial()
-
+		// send the initial state and outputs
+		if c.stateUpdate != nil {
+			c.stateUpdate <- c.state
+		}
+		if c.outputUpdate != nil {
+			c.outputUpdate <- c.outputs
+		}
 		close(initDone)
 
-		for {
-			select {
-			case change, ok := <-c.changeInputs:
-				if !ok {
-					// channel closed, terminate the controller
-					return
-				}
-				// whenever an input is changed, recompute the derived inputs and the state
-				if nextI := change.f(c.inputs); nextI != c.inputs {
-					c.inputs = nextI
-					c.compute()
-				}
-				if change.done != nil {
-					close(change.done)
-				}
-			case <-c.ticker.C:
-				// whenever the ticker fires, recompute the derived inputs and the state
+		// listen for input changes until the channel is closed (End is called)
+		for change := range c.changeInputs {
+			// whenever an input is changed, recompute the derived inputs and the state
+			if nextI := change.f(c.inputs); nextI != c.inputs {
+				c.inputs = nextI
 				c.compute()
 			}
+
+			// signal that the change is done to the UpdateInputsSync function
+			if change.done != nil {
+				close(change.done)
+			}
+		}
+
+		if c.stateUpdate != nil {
+			close(c.stateUpdate)
+		}
+		if c.outputUpdate != nil {
+			close(c.outputUpdate)
 		}
 	}()
 
@@ -208,56 +211,34 @@ func (c *Controller) End() {
 	}
 }
 
-func (c *Controller) computeInitial() {
-	c.derivedInputs = computeDerivedInputs(c.config, c.inputs, c.lastStateChange)
-	c.state = computeState(c.state, c.config, c.inputs, c.derivedInputs)
-	c.outputs = computeOutputs(c.state)
-	c.lastStateChange = time.Now()
-
-	if c.derivedInputsUpdate != nil {
-		c.derivedInputsUpdate <- c.derivedInputs
-	}
-	if c.stateUpdate != nil {
-		c.stateUpdate <- c.state
-	}
-	if c.outputUpdate != nil {
-		c.outputUpdate <- c.outputs
-	}
-}
-
 func (c *Controller) compute() {
-	if nextDI := computeDerivedInputs(c.config, c.inputs, c.lastStateChange); nextDI != c.derivedInputs {
-		c.derivedInputs = nextDI
-		if nextState := computeState(c.state, c.config, c.inputs, c.derivedInputs); nextState != c.state {
-			c.state = nextState
-			c.lastStateChange = time.Now()
-			c.ticker.Reset(c.config.InStateResolution)
-			if nextOutputs := computeOutputs(c.state); nextOutputs != c.outputs {
-				c.outputs = nextOutputs
-				if c.outputUpdate != nil {
-					c.outputUpdate <- c.outputs
-				}
-			}
-			if c.stateUpdate != nil {
-				c.stateUpdate <- c.state
-			}
+	if nextState := computeState(c.Params, c.inputs, c.state); nextState != c.state {
+		c.state = nextState
+		if c.stateUpdate != nil {
+			c.stateUpdate <- c.state
 		}
-		if c.derivedInputsUpdate != nil {
-			c.derivedInputsUpdate <- nextDI
+		if nextOutput := computeOutputs(c.Params, c.inputs, c.state); nextOutput != c.outputs {
+			c.outputs = nextOutput
+			if c.outputUpdate != nil {
+				c.outputUpdate <- c.outputs
+			}
 		}
 	}
 }
 
-func computeDerivedInputs(c Configuration, i Inputs, lastStateChange time.Time) DerivedInputs {
-	return DerivedInputs{
-		MasterSwitch: i.ArmSwitch && i.CommandSwitch,
-		IOCheck:      ioCheck(c, i),
-		OutputCheck:  outputCheck(c, i),
-		TimeInState:  time.Since(lastStateChange).Truncate(c.InStateResolution),
+func computeState(p Params, i Inputs, prev State) (next State) {
+	nextNode := computeStateNode(p, i, prev)
+	nextChanged := prev.Changed
+	if nextNode != prev.Node {
+		nextChanged = i.Time
+	}
+	return State{
+		Node:    nextNode,
+		Changed: nextChanged,
 	}
 }
 
-func computeState(prev State, c Configuration, i Inputs, di DerivedInputs) (next State) {
+func computeStateNode(p Params, i Inputs, prev State) (next StateNode) {
 	// Multi state transitions
 	// in every case: reset switch triggers the reset state
 	if i.ResetSwitch {
@@ -265,17 +246,22 @@ func computeState(prev State, c Configuration, i Inputs, di DerivedInputs) (next
 	}
 
 	// in every state except reset, off and failed: a temperature or fire detection triggers the failed state
-	if !(prev == Reset || prev == Off || prev == Error) && !di.IOCheck {
+	if !(prev.Node == Reset || prev.Node == Off || prev.Node == Error) && !ioCheck(p, i) {
 		return Error
 	}
 
 	// in warm up, producing and engine cool down: a negative output check triggers the failed state
-	if (prev == WarmUp || prev == Producing || prev == EngineCoolDown) && !di.OutputCheck {
+	outCheck := outputCheck(p, i)
+	if (prev.Node == WarmUp || prev.Node == Producing || prev.Node == EngineCoolDown) && !outCheck {
 		return Error
 	}
 
+	masterSwitch := i.ArmSwitch && i.CommandSwitch
+	timeInState := i.Time.Sub(prev.Changed)
+
 	// Single state transitions
-	switch prev {
+	switch prev.Node {
+	case Error:
 	case Reset:
 		if !i.ResetSwitch {
 			return Off
@@ -285,93 +271,98 @@ func computeState(prev State, c Configuration, i Inputs, di DerivedInputs) (next
 			return Ready
 		}
 	case Ready:
-		if di.MasterSwitch {
+		if masterSwitch {
 			return Priming
 		}
 	case Priming:
-		if !di.MasterSwitch {
+		if masterSwitch {
 			return Ready
 		}
-		if di.TimeInState >= c.PrimingTimeout {
+		if timeInState >= p.PrimingTimeout {
 			return Cranking
 		}
 	case Cranking:
-		if !di.MasterSwitch {
+		if !masterSwitch {
 			return Ready
 		}
-		if di.TimeInState >= c.CrankingTmeout {
+		if timeInState >= p.CrankingTimeout {
 			return Error
 		}
-		if di.OutputCheck {
+		if outCheck {
 			return WarmUp
 		}
 	case WarmUp:
-		if !di.MasterSwitch {
+		if !masterSwitch {
 			return EnclosureCoolDown
 		}
-		if di.TimeInState >= c.WarmUpTimeout || i.EngineTemp >= c.WarmUpTemp {
+		if timeInState >= p.WarmUpTimeout || i.EngineTemp >= p.WarmUpTemp {
 			return Producing
 		}
 	case Producing:
-		if !di.MasterSwitch {
+		if !masterSwitch {
 			return EngineCoolDown
 		}
 	case EngineCoolDown:
-		if di.MasterSwitch {
+		if masterSwitch {
 			return Producing
 		}
-		if di.TimeInState >= c.EngineCoolDownTimeout || i.EngineTemp <= c.EngineCoolDownTemp {
+		if timeInState >= p.EngineCoolDownTimeout || i.EngineTemp <= p.EngineCoolDownTemp {
 			return EnclosureCoolDown
 		}
 	case EnclosureCoolDown:
-		if di.MasterSwitch {
+		if masterSwitch {
 			return Priming
 		}
-		if di.TimeInState >= c.EnclosureCoolDownTimeout || i.EngineTemp <= c.EnclosureCoolDownTemp {
+		if timeInState >= p.EnclosureCoolDownTimeout || i.EngineTemp <= p.EnclosureCoolDownTemp {
 			return Ready
 		}
 	}
 
-	return prev
+	return prev.Node
 }
 
-func computeOutputs(s State) Outputs {
+func computeOutputs(p Params, i Inputs, s State) Outputs {
+	sN := s.Node
 	return Outputs{
-		Ignition: s == Cranking ||
-			s == WarmUp ||
-			s == Producing ||
-			s == EngineCoolDown,
-		Starter: s == Cranking,
-		Fan: s == Priming ||
-			s == Cranking ||
-			s == WarmUp ||
-			s == Producing ||
-			s == EngineCoolDown ||
-			s == EnclosureCoolDown,
-		Pump: s == Priming ||
-			s == Cranking ||
-			s == WarmUp ||
-			s == Producing ||
-			s == EngineCoolDown,
-		Load: s == Producing,
+		Ignition: sN == Cranking ||
+			sN == WarmUp ||
+			sN == Producing ||
+			sN == EngineCoolDown,
+		Starter: sN == Cranking,
+		Fan: sN == Priming ||
+			sN == Cranking ||
+			sN == WarmUp ||
+			sN == Producing ||
+			sN == EngineCoolDown ||
+			sN == EnclosureCoolDown,
+		Pump: sN == Priming ||
+			sN == Cranking ||
+			sN == WarmUp ||
+			sN == Producing ||
+			sN == EngineCoolDown,
+		Load: sN == Producing,
+
+		TimeInState: i.Time.Sub(s.Changed),
+		IoCheck:     ioCheck(p, i),
+		OutputCheck: outputCheck(p, i),
 	}
 }
 
-func ioCheck(c Configuration, i Inputs) bool {
+func ioCheck(p Params, i Inputs) bool {
 	return !i.FireDetected && i.IOAvailable &&
-		i.EngineTemp >= c.EngineTempMin && i.EngineTemp <= c.EngineTempMax &&
-		i.AirIntakeTemp >= c.AirIntakeTempMin && i.AirIntakeTemp <= c.AirIntakeTempMax &&
-		i.AirExhaustTemp >= c.AirExhaustTempMin && i.AirExhaustTemp <= c.AirExhaustTempMax
+		i.EngineTemp >= p.EngineTempMin && i.EngineTemp <= p.EngineTempMax &&
+		i.AirIntakeTemp >= p.AirIntakeTempMin && i.AirIntakeTemp <= p.AirIntakeTempMax &&
+		i.AirExhaustTemp >= p.AirExhaustTempMin && i.AirExhaustTemp <= p.AirExhaustTempMax
 }
 
-func outputCheck(c Configuration, i Inputs) bool {
+func outputCheck(p Params, i Inputs) bool {
 	return i.OutputAvailable &&
-		i.F >= c.FMin && i.F <= c.FMax &&
-		i.U0 >= c.UMin && i.U0 <= c.UMax &&
-		i.U1 >= c.UMin && i.U1 <= c.UMax &&
-		i.U2 >= c.UMin && i.U2 <= c.UMax &&
-		i.L0 <= c.PMax &&
-		i.L1 <= c.PMax &&
-		i.L2 <= c.PMax &&
-		i.L0+i.L1+i.L2 <= c.PTotMax
+		i.F >= p.FMin && i.F <= p.FMax &&
+		i.U0 >= p.UMin && i.U0 <= p.UMax &&
+		i.U1 >= p.UMin && i.U1 <= p.UMax &&
+		i.U2 >= p.UMin && i.U2 <= p.UMax &&
+		i.L0 <= p.PMax &&
+		i.L1 <= p.PMax &&
+		i.L2 <= p.PMax &&
+		i.L0+i.L1+i.L2 <= p.PTotMax
 }

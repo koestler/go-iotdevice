@@ -55,9 +55,9 @@ func (tr *tracker[T]) Latest() (ok bool, r T) {
 func (tr *tracker[T]) AssertLatest(t *testing.T, expect T) {
 	t.Helper()
 	if ok, got := tr.Latest(); !ok {
-		t.Errorf("track empty, expected %v", expect)
+		t.Errorf("track empty, expect %v", expect)
 	} else if got != expect {
-		t.Errorf("got %v, expected %v", got, expect)
+		t.Errorf("AssertLatest failed\ngot\t\t%v,\nexpect\t%v", got, expect)
 	}
 }
 
@@ -67,12 +67,13 @@ func (tr *tracker[T]) Assert(t *testing.T, expect []T) {
 	track := tr.Track()
 
 	if len(track) != len(expect) {
-		t.Errorf("got %v, want %v", tr.track, expect)
+		t.Errorf("Assert failed\ngot\t\t%v,\nexpect\t%v", tr.track, expect)
 		return
 	}
 	for i, got := range track {
 		if got != expect[i] {
-			t.Errorf("got %v, want %v", got, expect[i])
+			t.Errorf("Assert failed\ngot\t\t%v,\nexpect\t%v", tr.track, expect)
+			return
 		}
 	}
 }
