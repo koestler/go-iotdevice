@@ -90,7 +90,6 @@ func TestController(t *testing.T) {
 			i.F = 50
 			return i
 		})
-		time.Sleep(time.Millisecond)
 		stateTracker.AssertLatest(t, generator.WarmUp)
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true})
 
@@ -99,7 +98,6 @@ func TestController(t *testing.T) {
 			i.EngineTemp = 45
 			return i
 		})
-		time.Sleep(time.Millisecond)
 		stateTracker.AssertLatest(t, generator.Producing)
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, Load: true})
 
@@ -122,7 +120,6 @@ func TestController(t *testing.T) {
 			i.EngineTemp = 55
 			return i
 		})
-		time.Sleep(time.Millisecond)
 		stateTracker.AssertLatest(t, generator.EnclosureCoolDown)
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true})
 
@@ -131,7 +128,6 @@ func TestController(t *testing.T) {
 			i.EngineTemp = 45
 			return i
 		})
-		time.Sleep(time.Millisecond)
 		stateTracker.AssertLatest(t, generator.Ready)
 		outputTracker.AssertLatest(t, generator.Outputs{})
 	})
