@@ -17,12 +17,22 @@ func TestController(t *testing.T) {
 		EngineCoolDownTemp:       60,
 		EnclosureCoolDownTimeout: 50 * time.Millisecond,
 		EnclosureCoolDownTemp:    50,
-		IOCheck: func(i generator.Inputs) bool {
-			return i.IOAvailable
-		},
-		OutputCheck: func(i generator.Inputs) bool {
-			return i.OutputAvailable
-		},
+
+		// IO Check
+		EngineTempMin:     0,
+		EngineTempMax:     100,
+		AirIntakeTempMin:  0,
+		AirIntakeTempMax:  100,
+		AirExhaustTempMin: 0,
+		AirExhaustTempMax: 100,
+
+		// Output Check
+		UMin:    210,
+		UMax:    250,
+		FMin:    45,
+		FMax:    55,
+		PMax:    1000,
+		PTotMax: 2000,
 	}
 
 	t.Run("simpleSuccessfulRun", func(t *testing.T) {
@@ -43,6 +53,9 @@ func TestController(t *testing.T) {
 		// go to ready
 		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
 			i.IOAvailable = true
+			i.EngineTemp = 20
+			i.AirIntakeTemp = 20
+			i.AirExhaustTemp = 20
 			return i
 		})
 		stateTracker.AssertLatest(t, generator.Ready)
@@ -71,8 +84,13 @@ func TestController(t *testing.T) {
 		// go to warm up
 		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
 			i.OutputAvailable = true
+			i.U0 = 220
+			i.U1 = 220
+			i.U2 = 220
+			i.F = 50
 			return i
 		})
+		time.Sleep(time.Millisecond)
 		stateTracker.AssertLatest(t, generator.WarmUp)
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true})
 
