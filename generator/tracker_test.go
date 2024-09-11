@@ -33,7 +33,7 @@ func (tr *tracker[T]) Drain(c <-chan T) {
 			}
 			tr.track = append(tr.track, u)
 		case r := <-tr.req:
-			r <- tr.track
+			r <- append([]T{}, tr.track...)
 		}
 	}
 }
