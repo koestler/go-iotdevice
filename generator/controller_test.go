@@ -7,10 +7,9 @@ import (
 )
 
 func TestController(t *testing.T) {
-	config := generator.Configuration{
-		InStateResolution:        1 * time.Millisecond,
+	params := generator.Params{
 		PrimingTimeout:           10 * time.Millisecond,
-		CrankingTmeout:           20 * time.Millisecond,
+		CrankingTimeout:          20 * time.Millisecond,
 		WarmUpTimeout:            30 * time.Millisecond,
 		WarmUpTemp:               40,
 		EngineCoolDownTimeout:    40 * time.Millisecond,
@@ -35,8 +34,13 @@ func TestController(t *testing.T) {
 		PTotMax: 2000,
 	}
 
+	t0 := time.Unix(0, 0).UTC()
+	initialInputs := generator.Inputs{
+		Time: t0,
+	}
+
 	t.Run("simpleSuccessfulRun", func(t *testing.T) {
-		c := generator.NewController(config)
+		c := generator.NewController(params, generator.Off, initialInputs)
 
 		stateTracker := newTracker[generator.State](t)
 		go stateTracker.Drain(c.State())
@@ -47,7 +51,7 @@ func TestController(t *testing.T) {
 		defer c.End()
 
 		// initial state
-		stateTracker.AssertLatest(t, generator.Off)
+		stateTracker.AssertLatest(t, generator.State{Node: generator.Off, Changed: t0})
 		outputTracker.AssertLatest(t, generator.Outputs{})
 
 		// go to ready
@@ -58,28 +62,32 @@ func TestController(t *testing.T) {
 			i.AirExhaustTemp = 20
 			return i
 		})
-		stateTracker.AssertLatest(t, generator.Ready)
-		outputTracker.AssertLatest(t, generator.Outputs{})
+		stateTracker.AssertLatest(t, generator.State{Node: generator.Ready, Changed: t0})
+		outputTracker.AssertLatest(t, generator.Outputs{IoCheck: true})
 
 		// go to priming
 		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
 			i.ArmSwitch = true
 			return i
 		})
-		stateTracker.AssertLatest(t, generator.Ready)
-		outputTracker.AssertLatest(t, generator.Outputs{})
+		stateTracker.AssertLatest(t, generator.State{Node: generator.Ready, Changed: t0})
+		outputTracker.AssertLatest(t, generator.Outputs{IoCheck: true})
 
 		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
 			i.CommandSwitch = true
 			return i
 		})
-		stateTracker.AssertLatest(t, generator.Priming)
-		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true})
+		stateTracker.AssertLatest(t, generator.State{Node: generator.Priming, Changed: t0})
+		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, IoCheck: true})
 
 		// go to cranking
-		time.Sleep(config.PrimingTimeout + config.InStateResolution)
-		stateTracker.AssertLatest(t, generator.Cranking)
-		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, Starter: true})
+		t1 := t0.Add(params.PrimingTimeout)
+		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
+			i.Time = t1
+			return i
+		})
+		stateTracker.AssertLatest(t, generator.State{Node: generator.Cranking, Changed: t1})
+		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, Starter: true, IoCheck: true})
 
 		// go to warm up
 		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
@@ -90,16 +98,16 @@ func TestController(t *testing.T) {
 			i.F = 50
 			return i
 		})
-		stateTracker.AssertLatest(t, generator.WarmUp)
-		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true})
+		stateTracker.AssertLatest(t, generator.State{Node: generator.WarmUp, Changed: t0})
+		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, IoCheck: true})
 
 		// go to producing
 		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
 			i.EngineTemp = 45
 			return i
 		})
-		stateTracker.AssertLatest(t, generator.Producing)
-		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, Load: true})
+		stateTracker.AssertLatest(t, generator.State{Node: generator.Producing, Changed: t0})
+		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, Load: true, IoCheck: true})
 
 		// running, engine getting warm
 		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
@@ -112,23 +120,23 @@ func TestController(t *testing.T) {
 			i.CommandSwitch = false
 			return i
 		})
-		stateTracker.AssertLatest(t, generator.EngineCoolDown)
-		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true})
+		stateTracker.AssertLatest(t, generator.State{Node: generator.EngineCoolDown, Changed: t0})
+		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, IoCheck: true})
 
 		// go to enclosure cool down
 		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
 			i.EngineTemp = 55
 			return i
 		})
-		stateTracker.AssertLatest(t, generator.EnclosureCoolDown)
-		outputTracker.AssertLatest(t, generator.Outputs{Fan: true})
+		stateTracker.AssertLatest(t, generator.State{Node: generator.EnclosureCoolDown, Changed: t0})
+		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, IoCheck: true})
 
 		// go to ready
 		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
 			i.EngineTemp = 45
 			return i
 		})
-		stateTracker.AssertLatest(t, generator.Ready)
+		stateTracker.AssertLatest(t, generator.State{Node: generator.Ready, Changed: t0})
 		outputTracker.AssertLatest(t, generator.Outputs{})
 	})
 }
