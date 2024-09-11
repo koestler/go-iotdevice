@@ -29,7 +29,7 @@ func (tr *tracker[T]) Drain(c <-chan T) {
 				return
 			}
 			if tr.logger != nil {
-				tr.logger.Logf("got %v", u)
+				tr.logger.Logf("update: %v", u)
 			}
 			tr.track = append(tr.track, u)
 		case r := <-tr.req:
