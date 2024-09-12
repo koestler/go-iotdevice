@@ -1,20 +1,25 @@
 package generator_test
 
 import (
+	"fmt"
 	"github.com/koestler/go-iotdevice/v3/generator"
+	"reflect"
+	"sort"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 )
 
 func TestController(t *testing.T) {
 	params := generator.Params{
-		PrimingTimeout:           10 * time.Millisecond,
-		CrankingTimeout:          20 * time.Millisecond,
-		WarmUpTimeout:            30 * time.Millisecond,
+		PrimingTimeout:           10 * time.Second,
+		CrankingTimeout:          20 * time.Second,
+		WarmUpTimeout:            10 * time.Minute,
 		WarmUpTemp:               40,
-		EngineCoolDownTimeout:    40 * time.Millisecond,
+		EngineCoolDownTimeout:    5 * time.Minute,
 		EngineCoolDownTemp:       60,
-		EnclosureCoolDownTimeout: 50 * time.Millisecond,
+		EnclosureCoolDownTimeout: 15 * time.Minute,
 		EnclosureCoolDownTemp:    50,
 
 		// IO Check
@@ -34,10 +39,8 @@ func TestController(t *testing.T) {
 		PTotMax: 2000,
 	}
 
-	t0 := time.Unix(0, 0).UTC()
-	initialInputs := generator.Inputs{
-		Time: t0,
-	}
+	t0, _ := time.Parse(time.RFC3339, "2000-01-01T00:00:00Z")
+	initialInputs := generator.Inputs{Time: t0}
 
 	t.Run("simpleSuccessfulRun", func(t *testing.T) {
 		c := generator.NewController(params, generator.Off, initialInputs)
@@ -50,12 +53,20 @@ func TestController(t *testing.T) {
 		c.Run()
 		defer c.End()
 
+		setInp := func(f func(i generator.Inputs) generator.Inputs) {
+			c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
+				i = f(i)
+				t.Logf("inputs: %v", i)
+				return i
+			})
+		}
+
 		// initial state
 		stateTracker.AssertLatest(t, generator.State{Node: generator.Off, Changed: t0})
 		outputTracker.AssertLatest(t, generator.Outputs{})
 
 		// go to ready
-		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
+		setInp(func(i generator.Inputs) generator.Inputs {
 			i.IOAvailable = true
 			i.EngineTemp = 20
 			i.AirIntakeTemp = 20
@@ -66,31 +77,42 @@ func TestController(t *testing.T) {
 		outputTracker.AssertLatest(t, generator.Outputs{IoCheck: true})
 
 		// go to priming
-		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
+		setInp(func(i generator.Inputs) generator.Inputs {
 			i.ArmSwitch = true
 			return i
 		})
 		stateTracker.AssertLatest(t, generator.State{Node: generator.Ready, Changed: t0})
 		outputTracker.AssertLatest(t, generator.Outputs{IoCheck: true})
 
-		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
+		setInp(func(i generator.Inputs) generator.Inputs {
 			i.CommandSwitch = true
 			return i
 		})
 		stateTracker.AssertLatest(t, generator.State{Node: generator.Priming, Changed: t0})
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, IoCheck: true})
 
-		// go to cranking
-		t1 := t0.Add(params.PrimingTimeout)
-		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
+		// stay in priming
+		t1 := t0.Add(params.PrimingTimeout / 2)
+		setInp(func(i generator.Inputs) generator.Inputs {
 			i.Time = t1
 			return i
 		})
+
+		time.Sleep(1 * time.Second)
+
+		// go to cranking
+		t2 := t0.Add(params.PrimingTimeout)
+		setInp(func(i generator.Inputs) generator.Inputs {
+			i.Time = t2
+			return i
+		})
+
+		time.Sleep(1 * time.Second)
 		stateTracker.AssertLatest(t, generator.State{Node: generator.Cranking, Changed: t1})
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, Starter: true, IoCheck: true})
 
 		// go to warm up
-		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
+		setInp(func(i generator.Inputs) generator.Inputs {
 			i.OutputAvailable = true
 			i.U0 = 220
 			i.U1 = 220
@@ -102,7 +124,7 @@ func TestController(t *testing.T) {
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, IoCheck: true})
 
 		// go to producing
-		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
+		setInp(func(i generator.Inputs) generator.Inputs {
 			i.EngineTemp = 45
 			return i
 		})
@@ -110,13 +132,13 @@ func TestController(t *testing.T) {
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, Load: true, IoCheck: true})
 
 		// running, engine getting warm
-		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
+		setInp(func(i generator.Inputs) generator.Inputs {
 			i.EngineTemp = 70
 			return i
 		})
 
 		// go to engine cool down
-		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
+		setInp(func(i generator.Inputs) generator.Inputs {
 			i.CommandSwitch = false
 			return i
 		})
@@ -124,7 +146,7 @@ func TestController(t *testing.T) {
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, IoCheck: true})
 
 		// go to enclosure cool down
-		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
+		setInp(func(i generator.Inputs) generator.Inputs {
 			i.EngineTemp = 55
 			return i
 		})
@@ -132,11 +154,74 @@ func TestController(t *testing.T) {
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, IoCheck: true})
 
 		// go to ready
-		c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
+		setInp(func(i generator.Inputs) generator.Inputs {
 			i.EngineTemp = 45
 			return i
 		})
 		stateTracker.AssertLatest(t, generator.State{Node: generator.Ready, Changed: t0})
 		outputTracker.AssertLatest(t, generator.Outputs{})
 	})
+}
+
+func TestSyncWg(t *testing.T) {
+	events := make([]string, 0, 20)
+	eventsLock := sync.Mutex{}
+	addEvent := func(pos string, v int) {
+		eventsLock.Lock()
+		defer eventsLock.Unlock()
+		events = append(events, fmt.Sprintf("%02d: %v", v, pos))
+	}
+
+	type Change struct {
+		v  int
+		wg *sync.WaitGroup
+	}
+
+	inpChan := make(chan Change)
+	oupChan := make(chan Change)
+
+	go func() {
+		for o := range oupChan {
+			addEvent("C", o.v)
+			o.wg.Done()
+		}
+	}()
+
+	syncFunc := func(v int) {
+		addEvent("A", v)
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+		inpChan <- Change{
+			v:  v,
+			wg: wg,
+		}
+		wg.Wait()
+		addEvent("D", v)
+	}
+
+	go func() {
+		for c := range inpChan {
+			addEvent("B", c.v)
+			oupChan <- Change{
+				v:  c.v,
+				wg: c.wg,
+			}
+		}
+	}()
+
+	for i := 0; i < 20; i++ {
+		syncFunc(i)
+	}
+
+	eventsLock.Lock()
+	defer eventsLock.Unlock()
+
+	sortedEvents := append([]string{}, events...)
+	sort.Strings(sortedEvents)
+
+	if !reflect.DeepEqual(events, sortedEvents) {
+		t.Error("events not sorted")
+		t.Logf("events: %s", strings.Join(events, "\n"))
+		t.Logf("sortedEvents: %s", strings.Join(sortedEvents, "\n"))
+	}
 }
