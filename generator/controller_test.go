@@ -160,6 +160,36 @@ func TestController(t *testing.T) {
 	})
 }
 
+func BenchmarkUpdateInputs(b *testing.B) {
+	b.Run("inputChanges", func(b *testing.B) {
+		c := generator.NewController(generator.Params{}, generator.Off, generator.Inputs{})
+		c.Run()
+		defer c.End()
+
+		for i := 0; i < b.N; i++ {
+			c.UpdateInputs(func(i generator.Inputs) generator.Inputs {
+				i.Time = time.Now()
+				return i
+			})
+		}
+	})
+}
+
+func BenchmarkUpdateInputsSync(b *testing.B) {
+	b.Run("inputChanges", func(b *testing.B) {
+		c := generator.NewController(generator.Params{}, generator.Off, generator.Inputs{})
+		c.Run()
+		defer c.End()
+
+		for i := 0; i < b.N; i++ {
+			c.UpdateInputsSync(func(i generator.Inputs) generator.Inputs {
+				i.Time = time.Now()
+				return i
+			})
+		}
+	})
+}
+
 func TestSyncWg(t *testing.T) {
 	events := make([]string, 0, 20)
 	eventsLock := sync.Mutex{}
