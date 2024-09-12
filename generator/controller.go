@@ -103,9 +103,9 @@ type Controller struct {
 	state   State
 	outputs Outputs
 
-	changeInputs chan Change
-	stateUpdate  chan State
-	outputUpdate chan Outputs
+	changeInputs   chan Change
+	OnStateUpdate  func(State)
+	OnOutputUpdate func(Outputs)
 }
 
 // NewController creates a new controller with the given configuration, initial state and inputs.
@@ -123,8 +123,6 @@ func NewController(params Params, initialNode StateNode, initialInputs Inputs) *
 		state:        initialState,
 		outputs:      computeOutputs(params, initialInputs, initialState),
 		changeInputs: make(chan Change),
-		stateUpdate:  nil, // initially nil, will be set by the first call to StateNode
-		outputUpdate: nil, // initially nil, will be set by the first call to Outputs
 	}
 	return c
 }
@@ -134,36 +132,13 @@ func (c *Controller) UpdateInputs(f func(Inputs) Inputs) {
 	c.changeInputs <- Change{f: f}
 }
 
-// UpdateInputsSync sends a change to the controller inputs and waits for both the state and outputs to be recomputed
-// and the update channels to be consumed.
+// UpdateInputsSync sends a change to the controller inputs and waits for both the state and outputs
+// to be recomputed and the OnUpdate functions to return.
 // This is useful for testing.
 func (c *Controller) UpdateInputsSync(f func(Inputs) Inputs) {
 	done := make(chan struct{})
 	c.changeInputs <- Change{f: f, done: done}
 	<-done
-}
-
-// State returns a channel that will receive the state of the controller whenever it changes.
-// The channel will be closed when End is called.
-// This method must be called zero or one times.
-func (c *Controller) State() <-chan State {
-	if c.stateUpdate == nil {
-		c.stateUpdate = make(chan State)
-		return c.stateUpdate
-	}
-	panic("StateNode channel already in use")
-}
-
-// Outputs returns a channel that will receive the outputs of the controller whenever they change.
-// The channel will be closed when End is called.
-// This method must be called zero or one times.
-// When both outputs and the state changes, the state change will be sent first.
-func (c *Controller) Outputs() <-chan Outputs {
-	if c.outputUpdate == nil {
-		c.outputUpdate = make(chan Outputs)
-		return c.outputUpdate
-	}
-	panic("Outputs channel already in use")
 }
 
 // Run is the main loop of the controller. It will send the initial state and outputs to the respective channels
@@ -172,11 +147,11 @@ func (c *Controller) Run() {
 
 	go func() {
 		// send the initial state and outputs
-		if c.stateUpdate != nil {
-			c.stateUpdate <- c.state
+		if c.OnStateUpdate != nil {
+			c.OnStateUpdate(c.state)
 		}
-		if c.outputUpdate != nil {
-			c.outputUpdate <- c.outputs
+		if c.OnOutputUpdate != nil {
+			c.OnOutputUpdate(c.outputs)
 		}
 		close(initDone)
 
@@ -193,13 +168,6 @@ func (c *Controller) Run() {
 				close(change.done)
 			}
 		}
-
-		if c.stateUpdate != nil {
-			close(c.stateUpdate)
-		}
-		if c.outputUpdate != nil {
-			close(c.outputUpdate)
-		}
 	}()
 
 	<-initDone
@@ -214,13 +182,13 @@ func (c *Controller) End() {
 func (c *Controller) compute() {
 	if nextState := computeState(c.Params, c.inputs, c.state); nextState != c.state {
 		c.state = nextState
-		if c.stateUpdate != nil {
-			c.stateUpdate <- c.state
+		if c.OnStateUpdate != nil {
+			c.OnStateUpdate(c.state)
 		}
 		if nextOutput := computeOutputs(c.Params, c.inputs, c.state); nextOutput != c.outputs {
 			c.outputs = nextOutput
-			if c.outputUpdate != nil {
-				c.outputUpdate <- c.outputs
+			if c.OnOutputUpdate != nil {
+				c.OnOutputUpdate(c.outputs)
 			}
 		}
 	}
