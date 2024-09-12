@@ -117,7 +117,7 @@ func TestController(t *testing.T) {
 			i.F = 50
 			return i
 		})
-		stateTracker.AssertLatest(t, generator.State{Node: generator.WarmUp, Changed: t0})
+		stateTracker.AssertLatest(t, generator.State{Node: generator.WarmUp, Changed: t2})
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, IoCheck: true})
 
 		// go to producing
@@ -125,7 +125,7 @@ func TestController(t *testing.T) {
 			i.EngineTemp = 45
 			return i
 		})
-		stateTracker.AssertLatest(t, generator.State{Node: generator.Producing, Changed: t0})
+		stateTracker.AssertLatest(t, generator.State{Node: generator.Producing, Changed: t2})
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, Load: true, IoCheck: true})
 
 		// running, engine getting warm
@@ -139,7 +139,7 @@ func TestController(t *testing.T) {
 			i.CommandSwitch = false
 			return i
 		})
-		stateTracker.AssertLatest(t, generator.State{Node: generator.EngineCoolDown, Changed: t0})
+		stateTracker.AssertLatest(t, generator.State{Node: generator.EngineCoolDown, Changed: t2})
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, IoCheck: true})
 
 		// go to enclosure cool down
@@ -147,7 +147,7 @@ func TestController(t *testing.T) {
 			i.EngineTemp = 55
 			return i
 		})
-		stateTracker.AssertLatest(t, generator.State{Node: generator.EnclosureCoolDown, Changed: t0})
+		stateTracker.AssertLatest(t, generator.State{Node: generator.EnclosureCoolDown, Changed: t2})
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, IoCheck: true})
 
 		// go to ready
@@ -155,7 +155,7 @@ func TestController(t *testing.T) {
 			i.EngineTemp = 45
 			return i
 		})
-		stateTracker.AssertLatest(t, generator.State{Node: generator.Ready, Changed: t0})
+		stateTracker.AssertLatest(t, generator.State{Node: generator.Ready, Changed: t2})
 		outputTracker.AssertLatest(t, generator.Outputs{})
 	})
 }

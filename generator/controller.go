@@ -180,17 +180,26 @@ func (c *Controller) End() {
 }
 
 func (c *Controller) compute() {
-	if nextState := computeState(c.Params, c.inputs, c.state); nextState != c.state {
+	// compute new state
+	// assume we transition at most 8 states once when inputs change
+	for i := 0; i < 8; i++ {
+		nextState := computeState(c.Params, c.inputs, c.state)
+		if nextState == c.state {
+			break
+		}
 		c.state = nextState
 		if c.OnStateUpdate != nil {
 			c.OnStateUpdate(c.state)
 		}
-		if nextOutput := computeOutputs(c.Params, c.inputs, c.state); nextOutput != c.outputs {
-			c.outputs = nextOutput
-			if c.OnOutputUpdate != nil {
-				c.OnOutputUpdate(c.outputs)
-			}
-		}
+	}
+
+	nextOutput := computeOutputs(c.Params, c.inputs, c.state)
+	if nextOutput == c.outputs {
+		return
+	}
+
+	if c.OnOutputUpdate != nil {
+		c.OnOutputUpdate(c.outputs)
 	}
 }
 
@@ -243,7 +252,7 @@ func computeStateNode(p Params, i Inputs, prev State) (next StateNode) {
 			return Priming
 		}
 	case Priming:
-		if masterSwitch {
+		if !masterSwitch {
 			return Ready
 		}
 		if timeInState >= p.PrimingTimeout {
