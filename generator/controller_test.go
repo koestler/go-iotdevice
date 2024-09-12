@@ -46,9 +46,9 @@ func TestController(t *testing.T) {
 		c := generator.NewController(params, generator.Off, initialInputs)
 
 		stateTracker := newTracker[generator.State](t)
-		go stateTracker.Drain(c.State())
+		c.OnStateUpdate = stateTracker.OnUpdateFunc()
 		outputTracker := newTracker[generator.Outputs](t)
-		go outputTracker.Drain(c.Outputs())
+		c.OnOutputUpdate = outputTracker.OnUpdateFunc()
 
 		c.Run()
 		defer c.End()
@@ -98,8 +98,6 @@ func TestController(t *testing.T) {
 			return i
 		})
 
-		time.Sleep(1 * time.Second)
-
 		// go to cranking
 		t2 := t0.Add(params.PrimingTimeout)
 		setInp(func(i generator.Inputs) generator.Inputs {
@@ -107,8 +105,7 @@ func TestController(t *testing.T) {
 			return i
 		})
 
-		time.Sleep(1 * time.Second)
-		stateTracker.AssertLatest(t, generator.State{Node: generator.Cranking, Changed: t1})
+		stateTracker.AssertLatest(t, generator.State{Node: generator.Cranking, Changed: t2})
 		outputTracker.AssertLatest(t, generator.Outputs{Fan: true, Pump: true, Ignition: true, Starter: true, IoCheck: true})
 
 		// go to warm up

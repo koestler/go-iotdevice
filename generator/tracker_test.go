@@ -1,6 +1,7 @@
 package generator_test
 
 import (
+	"sync"
 	"testing"
 )
 
@@ -9,47 +10,42 @@ type logger interface {
 }
 
 type tracker[T comparable] struct {
-	req    chan chan []T
+	lock   sync.RWMutex
 	logger logger
 	track  []T
 }
 
 func newTracker[T comparable](logger logger) *tracker[T] {
 	return &tracker[T]{
-		req:    make(chan chan []T),
 		logger: logger,
 	}
 }
 
-func (tr *tracker[T]) Drain(c <-chan T) {
-	for {
-		select {
-		case u, ok := <-c:
-			if !ok {
-				return
-			}
-			if tr.logger != nil {
-				tr.logger.Logf("update: %v", u)
-			}
-			tr.track = append(tr.track, u)
-		case r := <-tr.req:
-			r <- append([]T{}, tr.track...)
+func (tr *tracker[T]) OnUpdateFunc() func(T) {
+	return func(u T) {
+		if tr.logger != nil {
+			tr.logger.Logf("update: %v", u)
 		}
+		tr.lock.Lock()
+		defer tr.lock.Unlock()
+		tr.track = append(tr.track, u)
 	}
 }
 
 func (tr *tracker[T]) Track() []T {
-	r := make(chan []T)
-	tr.req <- r
-	return <-r
+	tr.lock.RLock()
+	defer tr.lock.RUnlock()
+	return append([]T(nil), tr.track...)
 }
 
 func (tr *tracker[T]) Latest() (ok bool, r T) {
-	track := tr.Track()
-	if len(track) == 0 {
+	tr.lock.RLock()
+	defer tr.lock.RUnlock()
+
+	if len(tr.track) == 0 {
 		return false, r
 	}
-	return true, track[len(track)-1]
+	return true, tr.track[len(tr.track)-1]
 }
 
 func (tr *tracker[T]) AssertLatest(t *testing.T, expect T) {
@@ -63,7 +59,6 @@ func (tr *tracker[T]) AssertLatest(t *testing.T, expect T) {
 
 func (tr *tracker[T]) Assert(t *testing.T, expect []T) {
 	t.Helper()
-
 	track := tr.Track()
 
 	if len(track) != len(expect) {
