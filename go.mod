@@ -3,6 +3,7 @@ module github.com/koestler/go-iotdevice/v3
 go 1.23
 
 require (
+	github.com/coder/websocket v1.8.12
 	github.com/eclipse/paho.golang v0.22.0
 	github.com/gin-contrib/gzip v1.0.1
 	github.com/gin-gonic/gin v1.10.0
@@ -21,7 +22,6 @@ require (
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f
 	golang.org/x/sync v0.9.0
 	gopkg.in/yaml.v3 v3.0.1
-	nhooyr.io/websocket v1.8.17
 )
 
 require (

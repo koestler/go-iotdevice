@@ -7,7 +7,8 @@ import (
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/mileusna/useragent"
 	"log"
-	"nhooyr.io/websocket"
+
+	"github.com/coder/websocket"
 	"time"
 )
 
