@@ -197,7 +197,7 @@ func (c *Controller) compute() {
 	if nextOutput == c.outputs {
 		return
 	}
-
+	c.outputs = nextOutput
 	if c.OnOutputUpdate != nil {
 		c.OnOutputUpdate(c.outputs)
 	}
