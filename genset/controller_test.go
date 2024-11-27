@@ -216,6 +216,74 @@ func TestController(t *testing.T) {
 		outputTracker.AssertLatest(t, genset.Outputs{IoCheck: true})
 	})
 
+	t.Run("priming", func(t *testing.T) {
+		initialState := genset.Priming
+		initialInputs := genset.Inputs{
+			Time:          t0,
+			ArmSwitch:     true,
+			CommandSwitch: true,
+			IOAvailable:   true,
+			EngineTemp:    20,
+		}
+
+		t.Run("success", func(t *testing.T) {
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			// check pump on
+			{
+				l, ok := outputTracker.Latest()
+				assert.True(t, ok)
+				assert.Equal(t, true, l.Pump)
+			}
+
+			// not enough time passed
+			t1 := t0.Add(time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				return i
+			})
+
+			// enough time passed
+			t2 := t0.Add(params.CrankingTimeout)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t2
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.Priming, Changed: t0},
+				{Node: genset.Cranking, Changed: t2},
+			})
+
+			// check pump still on
+			{
+				l, ok := outputTracker.Latest()
+				assert.True(t, ok)
+				assert.Equal(t, true, l.Pump)
+			}
+		})
+
+		t.Run("abort", func(t *testing.T) {
+			c, stateTracker, _ := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			t1 := t0.Add(time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.CommandSwitch = false
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.Priming, Changed: t0},
+				{Node: genset.Ready, Changed: t1},
+			})
+		})
+	})
+
 	t.Run("cranking", func(t *testing.T) {
 		initialState := genset.Cranking
 		initialInputs := genset.Inputs{
@@ -231,8 +299,7 @@ func TestController(t *testing.T) {
 			c.Run()
 			defer c.End()
 
-			// check started on
-			{
+			{ // check starter on
 				l, ok := outputTracker.Latest()
 				assert.True(t, ok)
 				assert.Equal(t, true, l.Starter)
@@ -255,8 +322,7 @@ func TestController(t *testing.T) {
 				{Node: genset.WarmUp, Changed: t1},
 			})
 
-			// check started off
-			{
+			{ // check starter off
 				l, ok := outputTracker.Latest()
 				assert.True(t, ok)
 				assert.Equal(t, false, l.Starter)
@@ -268,8 +334,7 @@ func TestController(t *testing.T) {
 			c.Run()
 			defer c.End()
 
-			// check started on
-			{
+			{ // check starter on
 				l, ok := outputTracker.Latest()
 				assert.True(t, ok)
 				assert.Equal(t, true, l.Starter)
@@ -288,12 +353,29 @@ func TestController(t *testing.T) {
 				{Node: genset.Error, Changed: t0.Add(params.CrankingTimeout)},
 			})
 
-			// check started off
-			{
+			{ // check starter off
 				l, ok := outputTracker.Latest()
 				assert.True(t, ok)
 				assert.Equal(t, false, l.Starter)
 			}
+		})
+
+		t.Run("abort", func(t *testing.T) {
+			c, stateTracker, _ := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			t1 := t0.Add(time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.CommandSwitch = false
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.Cranking, Changed: t0},
+				{Node: genset.Ready, Changed: t1},
+			})
 		})
 	})
 
