@@ -1,4 +1,4 @@
-package generator_test
+package genset_test
 
 import (
 	"sync"
