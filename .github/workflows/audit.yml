@@ -30,11 +30,10 @@ jobs:
       - name: Generate mocks
         run: go generate -v ./...
 
-      - name: Run staticcheck
-        run: staticcheck ./...
-
-      - name: Run go vet
-        run: go vet ./...
-
       - name: Test
         run: go test -v ./...
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.60
