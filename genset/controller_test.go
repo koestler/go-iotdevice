@@ -216,6 +216,87 @@ func TestController(t *testing.T) {
 		outputTracker.AssertLatest(t, genset.Outputs{IoCheck: true})
 	})
 
+	t.Run("cranking", func(t *testing.T) {
+		initialState := genset.Cranking
+		initialInputs := genset.Inputs{
+			Time:          t0,
+			ArmSwitch:     true,
+			CommandSwitch: true,
+			IOAvailable:   true,
+			EngineTemp:    20,
+		}
+
+		t.Run("success", func(t *testing.T) {
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			// check started on
+			{
+				l, ok := outputTracker.Latest()
+				assert.True(t, ok)
+				assert.Equal(t, true, l.Starter)
+			}
+
+			// engine started
+			t1 := t0.Add(time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.OutputAvailable = true
+				i.U0 = 221
+				i.U1 = 219
+				i.U2 = 222
+				i.F = 49
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.Cranking, Changed: t0},
+				{Node: genset.WarmUp, Changed: t1},
+			})
+
+			// check started off
+			{
+				l, ok := outputTracker.Latest()
+				assert.True(t, ok)
+				assert.Equal(t, false, l.Starter)
+			}
+		})
+
+		t.Run("timeout", func(t *testing.T) {
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			// check started on
+			{
+				l, ok := outputTracker.Latest()
+				assert.True(t, ok)
+				assert.Equal(t, true, l.Starter)
+			}
+
+			// run the clock
+			for range 30 {
+				setInp(t, c, func(i genset.Inputs) genset.Inputs {
+					i.Time = i.Time.Add(time.Second)
+					return i
+				})
+			}
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.Cranking, Changed: t0},
+				{Node: genset.Error, Changed: t0.Add(params.CrankingTimeout)},
+			})
+
+			// check started off
+			{
+				l, ok := outputTracker.Latest()
+				assert.True(t, ok)
+				assert.Equal(t, false, l.Starter)
+			}
+		})
+	})
+
 	t.Run("wamUp", func(t *testing.T) {
 		initialState := genset.WarmUp
 		initialInputs := genset.Inputs{
