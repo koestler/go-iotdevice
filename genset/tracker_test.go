@@ -38,19 +38,19 @@ func (tr *tracker[T]) Track() []T {
 	return append([]T(nil), tr.track...)
 }
 
-func (tr *tracker[T]) Latest() (ok bool, r T) {
+func (tr *tracker[T]) Latest() (r T, ok bool) {
 	tr.lock.RLock()
 	defer tr.lock.RUnlock()
 
 	if len(tr.track) == 0 {
-		return false, r
+		return r, false
 	}
-	return true, tr.track[len(tr.track)-1]
+	return tr.track[len(tr.track)-1], true
 }
 
 func (tr *tracker[T]) AssertLatest(t *testing.T, expect T) {
 	t.Helper()
-	if ok, got := tr.Latest(); !ok {
+	if got, ok := tr.Latest(); !ok {
 		t.Errorf("track empty, expect %v", expect)
 	} else if got != expect {
 		t.Errorf("AssertLatest failed\ngot\t\t%v,\nexpect\t%v", got, expect)

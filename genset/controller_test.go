@@ -3,6 +3,7 @@ package genset_test
 import (
 	"fmt"
 	"github.com/koestler/go-iotdevice/v3/genset"
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"sort"
 	"strings"
@@ -10,6 +11,35 @@ import (
 	"testing"
 	"time"
 )
+
+func controllerWithTracker(
+	t *testing.T,
+	params genset.Params,
+	initialNode genset.StateNode,
+	initialInputs genset.Inputs,
+) (
+	*genset.Controller, *tracker[genset.State], *tracker[genset.Outputs],
+) {
+	t.Helper()
+
+	c := genset.NewController(params, initialNode, initialInputs)
+
+	stateTracker := newTracker[genset.State](t)
+	c.OnStateUpdate = stateTracker.OnUpdateFunc()
+	outputTracker := newTracker[genset.Outputs](t)
+	c.OnOutputUpdate = outputTracker.OnUpdateFunc()
+
+	return c, stateTracker, outputTracker
+}
+
+func setInp(t *testing.T, c *genset.Controller, f func(i genset.Inputs) genset.Inputs) {
+	t.Helper()
+	c.UpdateInputsSync(func(i genset.Inputs) genset.Inputs {
+		i = f(i)
+		t.Logf("inputs: %v", i)
+		return i
+	})
+}
 
 func TestController(t *testing.T) {
 	params := genset.Params{
@@ -23,12 +53,12 @@ func TestController(t *testing.T) {
 		EnclosureCoolDownTemp:    50,
 
 		// IO Check
-		EngineTempMin: 0,
-		EngineTempMax: 100,
+		EngineTempMin: 10,
+		EngineTempMax: 90,
 		AuxTemp0Min:   0,
 		AuxTemp0Max:   100,
-		AuxTemp1Min:   0,
-		AuxTemp1Max:   100,
+		AuxTemp1Min:   -10,
+		AuxTemp1Max:   150,
 
 		// Output Check
 		UMin:    210,
@@ -40,51 +70,34 @@ func TestController(t *testing.T) {
 	}
 
 	t0, _ := time.Parse(time.RFC3339, "2000-01-01T00:00:00Z")
-	initialInputs := genset.Inputs{Time: t0}
-
-	t.Run("simpleSuccessfulRun", func(t *testing.T) {
-		c := genset.NewController(params, genset.Off, initialInputs)
-
-		stateTracker := newTracker[genset.State](t)
-		c.OnStateUpdate = stateTracker.OnUpdateFunc()
-		outputTracker := newTracker[genset.Outputs](t)
-		c.OnOutputUpdate = outputTracker.OnUpdateFunc()
+	t.Run("completeRun", func(t *testing.T) {
+		c, stateTracker, outputTracker := controllerWithTracker(t, params, genset.Off, genset.Inputs{Time: t0})
 
 		c.Run()
 		defer c.End()
-
-		setInp := func(f func(i genset.Inputs) genset.Inputs) {
-			c.UpdateInputsSync(func(i genset.Inputs) genset.Inputs {
-				i = f(i)
-				t.Logf("inputs: %v", i)
-				return i
-			})
-		}
 
 		// initial state
 		stateTracker.AssertLatest(t, genset.State{Node: genset.Off, Changed: t0})
 		outputTracker.AssertLatest(t, genset.Outputs{})
 
 		// go to ready
-		setInp(func(i genset.Inputs) genset.Inputs {
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.IOAvailable = true
 			i.EngineTemp = 20
-			i.AuxTemp0 = 20
-			i.AuxTemp1 = 20
 			return i
 		})
 		stateTracker.AssertLatest(t, genset.State{Node: genset.Ready, Changed: t0})
 		outputTracker.AssertLatest(t, genset.Outputs{IoCheck: true})
 
 		// go to priming
-		setInp(func(i genset.Inputs) genset.Inputs {
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.ArmSwitch = true
 			return i
 		})
 		stateTracker.AssertLatest(t, genset.State{Node: genset.Ready, Changed: t0})
 		outputTracker.AssertLatest(t, genset.Outputs{IoCheck: true})
 
-		setInp(func(i genset.Inputs) genset.Inputs {
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.CommandSwitch = true
 			return i
 		})
@@ -93,14 +106,14 @@ func TestController(t *testing.T) {
 
 		// stay in priming
 		t1 := t0.Add(params.PrimingTimeout / 2)
-		setInp(func(i genset.Inputs) genset.Inputs {
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.Time = t1
 			return i
 		})
 
 		// go to cranking
 		t2 := t0.Add(params.PrimingTimeout)
-		setInp(func(i genset.Inputs) genset.Inputs {
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.Time = t2
 			return i
 		})
@@ -109,7 +122,7 @@ func TestController(t *testing.T) {
 		outputTracker.AssertLatest(t, genset.Outputs{Fan: true, Pump: true, Ignition: true, Starter: true, IoCheck: true})
 
 		// go to warm up
-		setInp(func(i genset.Inputs) genset.Inputs {
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.OutputAvailable = true
 			i.U0 = 220
 			i.U1 = 220
@@ -121,7 +134,7 @@ func TestController(t *testing.T) {
 		outputTracker.AssertLatest(t, genset.Outputs{Fan: true, Pump: true, Ignition: true, IoCheck: true, OutputCheck: true})
 
 		// go to producing
-		setInp(func(i genset.Inputs) genset.Inputs {
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.EngineTemp = 45
 			return i
 		})
@@ -130,7 +143,7 @@ func TestController(t *testing.T) {
 
 		// running, engine getting warm, frequency fluctuating
 		t3 := t2.Add(time.Second)
-		setInp(func(i genset.Inputs) genset.Inputs {
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.Time = t3
 			i.EngineTemp = 70
 			i.F = 48
@@ -144,7 +157,7 @@ func TestController(t *testing.T) {
 		})
 
 		t4 := t3.Add(time.Second)
-		setInp(func(i genset.Inputs) genset.Inputs {
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.Time = t4
 			i.EngineTemp = 72
 			i.F = 51
@@ -158,7 +171,7 @@ func TestController(t *testing.T) {
 
 		// go to engine cool down
 		t5 := t4.Add(time.Second)
-		setInp(func(i genset.Inputs) genset.Inputs {
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.Time = t5
 			i.CommandSwitch = false
 			return i
@@ -168,7 +181,7 @@ func TestController(t *testing.T) {
 
 		// go to enclosure cool down
 		t6 := t5.Add(time.Second)
-		setInp(func(i genset.Inputs) genset.Inputs {
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.Time = t6
 			i.EngineTemp = 55
 			return i
@@ -178,7 +191,7 @@ func TestController(t *testing.T) {
 
 		// stay in enclosure cool down, engine has stopped
 		t7 := t6.Add(time.Second)
-		setInp(func(i genset.Inputs) genset.Inputs {
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.Time = t7
 			i.F = 0
 			i.U0 = 10
@@ -194,13 +207,75 @@ func TestController(t *testing.T) {
 
 		// go to ready
 		t8 := t7.Add(time.Minute)
-		setInp(func(i genset.Inputs) genset.Inputs {
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.Time = t8
 			i.EngineTemp = 45
 			return i
 		})
 		stateTracker.AssertLatest(t, genset.State{Node: genset.Ready, Changed: t8})
 		outputTracker.AssertLatest(t, genset.Outputs{IoCheck: true})
+	})
+
+	t.Run("wamUp", func(t *testing.T) {
+		initialState := genset.WarmUp
+		initialInputs := genset.Inputs{
+			Time:          t0,
+			ArmSwitch:     true,
+			CommandSwitch: true,
+
+			IOAvailable:     true,
+			EngineTemp:      20,
+			OutputAvailable: true,
+			U0:              220,
+			U1:              220,
+			U2:              220,
+			F:               50,
+		}
+
+		t.Run("byTime", func(t *testing.T) {
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			// go to producing after timeout
+			t1 := t0.Add(params.WarmUpTimeout)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.WarmUp, Changed: t0},
+				{Node: genset.Producing, Changed: t1},
+			})
+
+			l, ok := outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, true, l.Load)
+		})
+
+		t.Run("byTemp", func(t *testing.T) {
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			// go to producing after timeout
+			t1 := t0.Add(time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.EngineTemp = 41
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.WarmUp, Changed: t0},
+				{Node: genset.Producing, Changed: t1},
+			})
+
+			l, ok := outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, true, l.Load)
+		})
 	})
 }
 
