@@ -1,4 +1,4 @@
-package generatorDevice
+package gensetDevice
 
 import (
 	"context"
@@ -37,7 +37,7 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 }
 
 func (c *DeviceStruct) Model() string {
-	return "Generator Controller"
+	return "Genset Controller"
 }
 
 // func temperaturAndFireCheck(c Configuration, i Inputs) bool {

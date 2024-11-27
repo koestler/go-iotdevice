@@ -1,10 +1,10 @@
-package generator
+package genset
 
 import (
 	"time"
 )
 
-// Params contains the parameters for the generator controller.
+// Params contains the parameters for the genset controller.
 type Params struct {
 	// Transition params
 	PrimingTimeout           time.Duration

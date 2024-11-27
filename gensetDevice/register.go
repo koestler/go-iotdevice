@@ -1,4 +1,4 @@
-package generatorDevice
+package gensetDevice
 
 import "github.com/koestler/go-iotdevice/v3/dataflow"
 
