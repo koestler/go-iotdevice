@@ -121,19 +121,27 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 			} else {
 				// ready and discard response body
 				defer resp.Body.Close()
-				io.ReadAll(resp.Body)
 
 				if resp.StatusCode != http.StatusOK {
 					log.Printf(
 						"httpDevice[%s]: command request failed with code: %d",
 						ds.Config().Name(), resp.StatusCode,
 					)
-				} else {
-					if ds.Config().LogDebug() {
-						log.Printf("httpDevice[%s]: command request successful", ds.Config().Name())
-					}
-					onSuccess()
+					return
 				}
+
+				if _, err = io.ReadAll(resp.Body); err != nil {
+					log.Printf(
+						"httpDevice[%s]: command cannot read body: %s",
+						ds.Config().Name(), err,
+					)
+					return
+				}
+
+				if ds.Config().LogDebug() {
+					log.Printf("httpDevice[%s]: command request successful", ds.Config().Name())
+				}
+				onSuccess()
 			}
 		}
 
