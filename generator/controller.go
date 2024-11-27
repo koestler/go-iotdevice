@@ -17,20 +17,21 @@ type Params struct {
 	EnclosureCoolDownTemp    float64
 
 	// IO Check
-	EngineTempMin     float64
-	EngineTempMax     float64
-	AirIntakeTempMin  float64
-	AirIntakeTempMax  float64
-	AirExhaustTempMin float64
-	AirExhaustTempMax float64
+	EngineTempMin float64
+	EngineTempMax float64
+	AuxTemp0Min   float64
+	AuxTemp0Max   float64
+	AuxTemp1Min   float64
+	AuxTemp1Max   float64
 
 	// Output Check
-	UMin    float64
-	UMax    float64
-	FMin    float64
-	FMax    float64
-	PMax    float64
-	PTotMax float64
+	SinglePhase bool
+	UMin        float64
+	UMax        float64
+	FMin        float64
+	FMax        float64
+	PMax        float64
+	PTotMax     float64
 }
 
 type StateNode int
@@ -57,12 +58,12 @@ type Inputs struct {
 	ResetSwitch   bool
 
 	// I/O controller inputs
-	IOAvailable    bool
-	ArmSwitch      bool
-	FireDetected   bool
-	EngineTemp     float64
-	AirIntakeTemp  float64
-	AirExhaustTemp float64
+	IOAvailable  bool
+	ArmSwitch    bool
+	FireDetected bool
+	EngineTemp   float64
+	AuxTemp0     float64
+	AuxTemp1     float64
 
 	// Output measurement inputs
 	OutputAvailable bool
@@ -328,13 +329,25 @@ func computeOutputs(p Params, i Inputs, s State) Outputs {
 func ioCheck(p Params, i Inputs) bool {
 	return !i.FireDetected && i.IOAvailable &&
 		i.EngineTemp >= p.EngineTempMin && i.EngineTemp <= p.EngineTempMax &&
-		i.AirIntakeTemp >= p.AirIntakeTempMin && i.AirIntakeTemp <= p.AirIntakeTempMax &&
-		i.AirExhaustTemp >= p.AirExhaustTempMin && i.AirExhaustTemp <= p.AirExhaustTempMax
+		i.AuxTemp0 >= p.AuxTemp0Min && i.AuxTemp0 <= p.AuxTemp0Max &&
+		i.AuxTemp1 >= p.AuxTemp1Min && i.AuxTemp1 <= p.AuxTemp1Max
 }
 
 func outputCheck(p Params, i Inputs) bool {
-	return i.OutputAvailable &&
-		i.F >= p.FMin && i.F <= p.FMax &&
+	if !i.OutputAvailable {
+		return false
+	}
+
+	if i.F < p.FMin || i.F > p.FMax {
+		return false
+	}
+
+	if p.SinglePhase {
+		return i.U0 >= p.UMin && i.U0 <= p.UMax &&
+			i.L0 <= p.PMax &&
+			i.L0 <= p.PTotMax
+	}
+	return i.F >= p.FMin && i.F <= p.FMax &&
 		i.U0 >= p.UMin && i.U0 <= p.UMax &&
 		i.U1 >= p.UMin && i.U1 <= p.UMax &&
 		i.U2 >= p.UMin && i.U2 <= p.UMax &&

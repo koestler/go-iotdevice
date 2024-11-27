@@ -23,12 +23,12 @@ func TestController(t *testing.T) {
 		EnclosureCoolDownTemp:    50,
 
 		// IO Check
-		EngineTempMin:     0,
-		EngineTempMax:     100,
-		AirIntakeTempMin:  0,
-		AirIntakeTempMax:  100,
-		AirExhaustTempMin: 0,
-		AirExhaustTempMax: 100,
+		EngineTempMin: 0,
+		EngineTempMax: 100,
+		AuxTemp0Min:   0,
+		AuxTemp0Max:   100,
+		AuxTemp1Min:   0,
+		AuxTemp1Max:   100,
 
 		// Output Check
 		UMin:    210,
@@ -69,8 +69,8 @@ func TestController(t *testing.T) {
 		setInp(func(i generator.Inputs) generator.Inputs {
 			i.IOAvailable = true
 			i.EngineTemp = 20
-			i.AirIntakeTemp = 20
-			i.AirExhaustTemp = 20
+			i.AuxTemp0 = 20
+			i.AuxTemp1 = 20
 			return i
 		})
 		stateTracker.AssertLatest(t, generator.State{Node: generator.Ready, Changed: t0})
