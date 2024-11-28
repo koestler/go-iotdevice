@@ -641,6 +641,8 @@ func TestController3P(t *testing.T) {
 			initialState := genset.Producing
 			initialInputs := genset.Inputs{
 				Time:            t0,
+				ArmSwitch:       true,
+				CommandSwitch:   true,
 				IOAvailable:     true,
 				OutputAvailable: true,
 				U0:              220,
@@ -675,6 +677,7 @@ func TestController3P(t *testing.T) {
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = t2
 				i.ResetSwitch = false
+				i.CommandSwitch = false
 				return i
 			})
 
@@ -815,6 +818,32 @@ func TestController3P(t *testing.T) {
 				{Node: genset.EnclosureCoolDown, Changed: t0},
 				{Node: genset.Ready, Changed: t1},
 			})
+		})
+	})
+
+	t.Run("immediateStatechange", func(t *testing.T) {
+		initialState := genset.EngineCoolDown
+		initialInputs := genset.Inputs{
+			Time:            t0,
+			ArmSwitch:       true,
+			CommandSwitch:   false,
+			IOAvailable:     true,
+			EngineTemp:      params.EnclosureCoolDownTemp - 1,
+			OutputAvailable: true,
+			U0:              220,
+			U1:              220,
+			U2:              220,
+			F:               50,
+		}
+
+		c, stateTracker, _ := controllerWithTracker(t, params, initialState, initialInputs)
+		c.Run()
+		defer c.End()
+
+		stateTracker.Assert(t, []genset.State{
+			{Node: genset.EngineCoolDown, Changed: t0},
+			{Node: genset.EnclosureCoolDown, Changed: t0},
+			{Node: genset.Ready, Changed: t0},
 		})
 	})
 }
