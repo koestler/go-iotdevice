@@ -441,6 +441,166 @@ func TestController(t *testing.T) {
 		})
 	})
 
+	t.Run("producing", func(t *testing.T) {
+		initialState := genset.Producing
+		initialInputs := genset.Inputs{
+			Time:          t0,
+			ArmSwitch:     true,
+			CommandSwitch: true,
+
+			IOAvailable:     true,
+			EngineTemp:      55,
+			OutputAvailable: true,
+			U0:              220,
+			U1:              220,
+			U2:              220,
+			F:               50,
+		}
+
+		t.Run("running", func(t *testing.T) {
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			// voltage and frequency fluctuating
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = i.Time.Add(time.Second)
+				i.U0 = params.UMin + 1
+				i.U1 = params.UMin + 1
+				i.U2 = params.UMin + 1
+				i.F = params.FMin + 1
+				return i
+			})
+
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = i.Time.Add(time.Second)
+				i.U0 = params.UMax - 1
+				i.U1 = params.UMax - 1
+				i.U2 = params.UMax - 1
+				i.F = params.FMax - 1
+				return i
+			})
+
+			// temperature fluctuating
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = i.Time.Add(time.Second)
+				i.EngineTemp = params.EngineTempMin + 1
+				i.AuxTemp0 = params.AuxTemp0Min + 1
+				i.AuxTemp1 = params.AuxTemp1Min + 1
+				return i
+			})
+
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = i.Time.Add(time.Second)
+				i.EngineTemp = params.EngineTempMax - 1
+				i.AuxTemp0 = params.AuxTemp0Max - 1
+				i.AuxTemp1 = params.AuxTemp1Max - 1
+				return i
+			})
+
+			// power fluctuating
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = i.Time.Add(time.Second)
+				i.L0 = 0
+				i.L1 = 0
+				i.L2 = 0
+				return i
+			})
+
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = i.Time.Add(time.Second)
+				i.L0 = params.PMax - 1
+				i.L1 = params.PMax - 1
+				i.L2 = params.PTotMax - i.L1 - i.L0 - 1
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.Producing, Changed: t0},
+			})
+
+			l, ok := outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, true, l.Load)
+		})
+
+		t.Run("commandOff", func(t *testing.T) {
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			// warm up
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = i.Time.Add(time.Second)
+				i.EngineTemp = 75
+				return i
+			})
+
+			// switch off
+			t1 := t0.Add(20 * time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.CommandSwitch = false
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.Producing, Changed: t0},
+				{Node: genset.EngineCoolDown, Changed: t1},
+			})
+
+			l, ok := outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, false, l.Load)
+		})
+
+		t.Run("outputFailure", func(t *testing.T) {
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			t1 := t0.Add(time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.F = params.FMax + 1
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.Producing, Changed: t0},
+				{Node: genset.Error, Changed: t1},
+			})
+
+			// check ignition is off
+			l, ok := outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, false, l.Ignition)
+		})
+
+		t.Run("ioFailure", func(t *testing.T) {
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			t1 := t0.Add(time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.IOAvailable = false
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.Producing, Changed: t0},
+				{Node: genset.Error, Changed: t1},
+			})
+
+			// check ignition is off
+			l, ok := outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, false, l.Ignition)
+		})
+	})
+
 	t.Run("reset", func(t *testing.T) {
 		t.Run("fromError", func(t *testing.T) {
 			initialState := genset.Error
