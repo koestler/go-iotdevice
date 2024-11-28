@@ -41,7 +41,7 @@ func setInp(t *testing.T, c *genset.Controller, f func(i genset.Inputs) genset.I
 	})
 }
 
-func TestController(t *testing.T) {
+func TestController3P(t *testing.T) {
 	params := genset.Params{
 		PrimingTimeout:           10 * time.Second,
 		CrankingTimeout:          20 * time.Second,
@@ -61,12 +61,13 @@ func TestController(t *testing.T) {
 		AuxTemp1Max:   150,
 
 		// Output Check
-		UMin:    210,
-		UMax:    250,
-		FMin:    45,
-		FMax:    55,
-		PMax:    1000,
-		PTotMax: 2000,
+		SinglePhase: false,
+		UMin:        210,
+		UMax:        250,
+		FMin:        45,
+		FMax:        55,
+		PMax:        1000,
+		PTotMax:     2000,
 	}
 
 	t0, _ := time.Parse(time.RFC3339, "2000-01-01T00:00:00Z")
@@ -814,6 +815,121 @@ func TestController(t *testing.T) {
 				{Node: genset.EnclosureCoolDown, Changed: t0},
 				{Node: genset.Ready, Changed: t1},
 			})
+		})
+	})
+}
+
+func TestController1P(t *testing.T) {
+	params := genset.Params{
+		PrimingTimeout:           time.Second,
+		CrankingTimeout:          time.Second,
+		WarmUpTimeout:            time.Minute,
+		WarmUpTemp:               40,
+		EngineCoolDownTimeout:    time.Second,
+		EngineCoolDownTemp:       60,
+		EnclosureCoolDownTimeout: time.Second,
+		EnclosureCoolDownTemp:    50,
+
+		// IO Check
+		EngineTempMin: 10,
+		EngineTempMax: 90,
+		AuxTemp0Min:   0,
+		AuxTemp0Max:   100,
+		AuxTemp1Min:   -10,
+		AuxTemp1Max:   150,
+
+		// Output Check
+		SinglePhase: true,
+		UMin:        225,
+		UMax:        235,
+		FMin:        49,
+		FMax:        51,
+		PMax:        1000,
+		PTotMax:     900,
+	}
+
+	t0, _ := time.Parse(time.RFC3339, "2000-01-01T00:00:00Z")
+	t.Run("producing", func(t *testing.T) {
+		initialState := genset.Producing
+		initialInputs := genset.Inputs{
+			Time:          t0,
+			ArmSwitch:     true,
+			CommandSwitch: true,
+
+			IOAvailable:     true,
+			EngineTemp:      55,
+			OutputAvailable: true,
+			U0:              220,
+			U1:              220,
+			U2:              220,
+			F:               50,
+		}
+
+		t.Run("running", func(t *testing.T) {
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			// voltage and frequency fluctuating
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = i.Time.Add(time.Second)
+				i.U0 = params.UMin + 1
+				i.F = params.FMin + 1
+				return i
+			})
+
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = i.Time.Add(time.Second)
+				i.U0 = params.UMax - 1
+				i.F = params.FMax - 1
+				return i
+			})
+
+			// power fluctuating
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = i.Time.Add(time.Second)
+				i.L0 = 0
+				i.L1 = 0
+				i.L2 = 0
+				return i
+			})
+
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = i.Time.Add(time.Second)
+				i.L0 = 900
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.Producing, Changed: t0},
+			})
+
+			l, ok := outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, true, l.Load)
+		})
+
+		t.Run("outputFailure", func(t *testing.T) {
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			t1 := t0.Add(time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.U0 = params.UMax + 1
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.Producing, Changed: t0},
+				{Node: genset.Error, Changed: t1},
+			})
+
+			// check ignition is off
+			l, ok := outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, false, l.Ignition)
 		})
 	})
 }
