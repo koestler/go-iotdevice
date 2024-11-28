@@ -440,6 +440,222 @@ func TestController(t *testing.T) {
 			assert.Equal(t, true, l.Load)
 		})
 	})
+
+	t.Run("reset", func(t *testing.T) {
+		t.Run("fromError", func(t *testing.T) {
+			initialState := genset.Error
+			initialInputs := genset.Inputs{
+				Time:        t0,
+				IOAvailable: true,
+				EngineTemp:  20,
+			}
+
+			c, stateTracker, _ := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			t1 := t0.Add(time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.ResetSwitch = true
+				return i
+			})
+
+			t2 := t1.Add(time.Millisecond)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t2
+				i.ResetSwitch = false
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.Error, Changed: t0},
+				{Node: genset.Reset, Changed: t1},
+				{Node: genset.Off, Changed: t2},
+				{Node: genset.Ready, Changed: t2},
+			})
+		})
+
+		t.Run("fromProducing", func(t *testing.T) {
+			initialState := genset.Producing
+			initialInputs := genset.Inputs{
+				Time:            t0,
+				IOAvailable:     true,
+				OutputAvailable: true,
+				U0:              220,
+				U1:              220,
+				U2:              220,
+				F:               50,
+				EngineTemp:      45,
+			}
+
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			// check ignition is on in producing
+			l, ok := outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, true, l.Ignition)
+
+			t1 := t0.Add(time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.ResetSwitch = true
+				return i
+			})
+
+			// check ignition is immediately off after reset
+			l, ok = outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, false, l.Ignition)
+
+			t2 := t1.Add(time.Millisecond)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t2
+				i.ResetSwitch = false
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.Producing, Changed: t0},
+				{Node: genset.Reset, Changed: t1},
+				{Node: genset.Off, Changed: t2},
+				{Node: genset.Ready, Changed: t2},
+			})
+		})
+	})
+
+	t.Run("engineCoolDown", func(t *testing.T) {
+		initialState := genset.EngineCoolDown
+		initialInputs := genset.Inputs{
+			Time:            t0,
+			ArmSwitch:       true,
+			CommandSwitch:   false,
+			IOAvailable:     true,
+			EngineTemp:      70,
+			OutputAvailable: true,
+			U0:              220,
+			U1:              220,
+			U2:              220,
+			F:               50,
+		}
+
+		t.Run("byTime", func(t *testing.T) {
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			l, ok := outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, true, l.Ignition)
+
+			// wait for timeout
+			t1 := t0.Add(params.EngineCoolDownTimeout)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.EngineCoolDown, Changed: t0},
+				{Node: genset.EnclosureCoolDown, Changed: t1},
+			})
+
+			l, ok = outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, false, l.Ignition)
+		})
+
+		t.Run("byTemp", func(t *testing.T) {
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			l, ok := outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, true, l.Ignition)
+
+			// cool down enough
+			t1 := t0.Add(time.Minute)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.EngineTemp = params.EngineCoolDownTemp - 1
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.EngineCoolDown, Changed: t0},
+				{Node: genset.EnclosureCoolDown, Changed: t1},
+			})
+
+			l, ok = outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, false, l.Ignition)
+		})
+	})
+
+	t.Run("enclosureCoolDown", func(t *testing.T) {
+		initialState := genset.EnclosureCoolDown
+		initialInputs := genset.Inputs{
+			Time:          t0,
+			ArmSwitch:     true,
+			CommandSwitch: false,
+			IOAvailable:   true,
+			EngineTemp:    params.EngineCoolDownTemp - 1,
+		}
+
+		t.Run("byTime", func(t *testing.T) {
+			c, stateTracker, outputTracker := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			l, ok := outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, true, l.Fan)
+
+			// pass some time
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = i.Time.Add(time.Millisecond)
+				return i
+			})
+
+			// wait for timeout
+			t1 := t0.Add(params.EnclosureCoolDownTimeout)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.EnclosureCoolDown, Changed: t0},
+				{Node: genset.Ready, Changed: t1},
+			})
+
+			l, ok = outputTracker.Latest()
+			assert.True(t, ok)
+			assert.Equal(t, false, l.Fan)
+		})
+
+		t.Run("byTemp", func(t *testing.T) {
+			c, stateTracker, _ := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			// decrease temp
+			t1 := t0.Add(time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.EngineTemp = params.EnclosureCoolDownTemp - 1
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.EnclosureCoolDown, Changed: t0},
+				{Node: genset.Ready, Changed: t1},
+			})
+		})
+	})
 }
 
 func BenchmarkUpdateInputs(b *testing.B) {
