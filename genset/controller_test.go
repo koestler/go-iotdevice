@@ -449,6 +449,27 @@ func TestController3P(t *testing.T) {
 			assert.True(t, ok)
 			assert.Equal(t, true, l.Load)
 		})
+
+		t.Run("abort", func(t *testing.T) {
+			c, stateTracker, _ := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			t1 := t0.Add(time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.CommandSwitch = false
+				return i
+			})
+
+			// go to enclose cool down and directly to ready due to low temperature
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.WarmUp, Changed: t0},
+				{Node: genset.EnclosureCoolDown, Changed: t1},
+				{Node: genset.Ready, Changed: t1},
+			})
+		})
 	})
 
 	t.Run("producing", func(t *testing.T) {
@@ -766,6 +787,24 @@ func TestController3P(t *testing.T) {
 			assert.True(t, ok)
 			assert.Equal(t, false, l.Ignition)
 		})
+
+		t.Run("restart", func(t *testing.T) {
+			c, stateTracker, _ := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			t1 := t0.Add(time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.CommandSwitch = true
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.EngineCoolDown, Changed: t0},
+				{Node: genset.Producing, Changed: t1},
+			})
+		})
 	})
 
 	t.Run("enclosureCoolDown", func(t *testing.T) {
@@ -826,6 +865,24 @@ func TestController3P(t *testing.T) {
 			stateTracker.Assert(t, []genset.State{
 				{Node: genset.EnclosureCoolDown, Changed: t0},
 				{Node: genset.Ready, Changed: t1},
+			})
+		})
+
+		t.Run("restart", func(t *testing.T) {
+			c, stateTracker, _ := controllerWithTracker(t, params, initialState, initialInputs)
+			c.Run()
+			defer c.End()
+
+			t1 := t0.Add(time.Second)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t1
+				i.CommandSwitch = true
+				return i
+			})
+
+			stateTracker.Assert(t, []genset.State{
+				{Node: genset.EnclosureCoolDown, Changed: t0},
+				{Node: genset.Priming, Changed: t1},
 			})
 		})
 	})
