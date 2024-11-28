@@ -10,6 +10,7 @@ type Params struct {
 	PrimingTimeout           time.Duration
 	CrankingTimeout          time.Duration
 	WarmUpTimeout            time.Duration
+	WarmUpMinTime            time.Duration
 	WarmUpTemp               float64
 	EngineCoolDownTimeout    time.Duration
 	EngineCoolDownTemp       float64
@@ -276,8 +277,11 @@ func computeStateNode(p Params, i Inputs, prev State) (next StateNode) {
 		if !masterSwitch {
 			return EnclosureCoolDown
 		}
-		if timeInState >= p.WarmUpTimeout || i.EngineTemp >= p.WarmUpTemp {
-			return Producing
+
+		if timeInState >= p.WarmUpMinTime {
+			if timeInState >= p.WarmUpTimeout || i.EngineTemp >= p.WarmUpTemp {
+				return Producing
+			}
 		}
 	case Producing:
 		if !masterSwitch {
