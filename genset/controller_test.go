@@ -46,6 +46,7 @@ func TestController3P(t *testing.T) {
 		PrimingTimeout:           10 * time.Second,
 		CrankingTimeout:          20 * time.Second,
 		WarmUpTimeout:            10 * time.Minute,
+		WarmUpMinTime:            1 * time.Minute,
 		WarmUpTemp:               40,
 		EngineCoolDownTimeout:    5 * time.Minute,
 		EngineCoolDownTemp:       60,
@@ -135,65 +136,67 @@ func TestController3P(t *testing.T) {
 		outputTracker.AssertLatest(t, genset.Outputs{Fan: true, Pump: true, Ignition: true, IoCheck: true, OutputCheck: true})
 
 		// go to producing
+		t3 := t2.Add(params.WarmUpMinTime)
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
+			i.Time = t3
 			i.EngineTemp = 45
 			return i
 		})
-		stateTracker.AssertLatest(t, genset.State{Node: genset.Producing, Changed: t2})
+		stateTracker.AssertLatest(t, genset.State{Node: genset.Producing, Changed: t3})
 		outputTracker.AssertLatest(t, genset.Outputs{Fan: true, Pump: true, Ignition: true, Load: true, IoCheck: true, OutputCheck: true})
 
 		// running, engine getting warm, frequency fluctuating
-		t3 := t2.Add(time.Second)
+		t4 := t3.Add(time.Second)
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
-			i.Time = t3
+			i.Time = t4
 			i.EngineTemp = 70
 			i.F = 48
 			i.L0 = 1000
 			return i
 		})
-		stateTracker.AssertLatest(t, genset.State{Node: genset.Producing, Changed: t2})
+		stateTracker.AssertLatest(t, genset.State{Node: genset.Producing, Changed: t3})
 		outputTracker.AssertLatest(t, genset.Outputs{
 			Fan: true, Pump: true, Ignition: true, Load: true,
 			TimeInState: time.Second, IoCheck: true, OutputCheck: true,
 		})
 
-		t4 := t3.Add(time.Second)
+		t5 := t4.Add(time.Second)
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
-			i.Time = t4
+			i.Time = t5
 			i.EngineTemp = 72
 			i.F = 51
 			return i
 		})
-		stateTracker.AssertLatest(t, genset.State{Node: genset.Producing, Changed: t2})
+		stateTracker.AssertLatest(t, genset.State{Node: genset.Producing, Changed: t3})
 		outputTracker.AssertLatest(t, genset.Outputs{
 			Fan: true, Pump: true, Ignition: true, Load: true,
 			TimeInState: 2 * time.Second, IoCheck: true, OutputCheck: true,
 		})
 
 		// go to engine cool down
-		t5 := t4.Add(time.Second)
-		setInp(t, c, func(i genset.Inputs) genset.Inputs {
-			i.Time = t5
-			i.CommandSwitch = false
-			return i
-		})
-		stateTracker.AssertLatest(t, genset.State{Node: genset.EngineCoolDown, Changed: t5})
-		outputTracker.AssertLatest(t, genset.Outputs{Fan: true, Pump: true, Ignition: true, IoCheck: true, OutputCheck: true})
-
-		// go to enclosure cool down
 		t6 := t5.Add(time.Second)
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.Time = t6
-			i.EngineTemp = 55
+			i.CommandSwitch = false
 			return i
 		})
-		stateTracker.AssertLatest(t, genset.State{Node: genset.EnclosureCoolDown, Changed: t6})
-		outputTracker.AssertLatest(t, genset.Outputs{Fan: true, IoCheck: true, OutputCheck: true})
+		stateTracker.AssertLatest(t, genset.State{Node: genset.EngineCoolDown, Changed: t6})
+		outputTracker.AssertLatest(t, genset.Outputs{Fan: true, Pump: true, Ignition: true, IoCheck: true, OutputCheck: true})
 
-		// stay in enclosure cool down, engine has stopped
+		// go to enclosure cool down
 		t7 := t6.Add(time.Second)
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.Time = t7
+			i.EngineTemp = 55
+			return i
+		})
+		stateTracker.AssertLatest(t, genset.State{Node: genset.EnclosureCoolDown, Changed: t7})
+		outputTracker.AssertLatest(t, genset.Outputs{Fan: true, IoCheck: true, OutputCheck: true})
+
+		// stay in enclosure cool down, engine has stopped
+		t8 := t7.Add(time.Second)
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
+			i.Time = t8
 			i.F = 0
 			i.U0 = 10
 			i.U1 = 10
@@ -203,17 +206,17 @@ func TestController3P(t *testing.T) {
 			i.L2 = 2
 			return i
 		})
-		stateTracker.AssertLatest(t, genset.State{Node: genset.EnclosureCoolDown, Changed: t6})
+		stateTracker.AssertLatest(t, genset.State{Node: genset.EnclosureCoolDown, Changed: t7})
 		outputTracker.AssertLatest(t, genset.Outputs{Fan: true, IoCheck: true, TimeInState: time.Second})
 
 		// go to ready
-		t8 := t7.Add(time.Minute)
+		t9 := t8.Add(time.Minute)
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
-			i.Time = t8
+			i.Time = t9
 			i.EngineTemp = 45
 			return i
 		})
-		stateTracker.AssertLatest(t, genset.State{Node: genset.Ready, Changed: t8})
+		stateTracker.AssertLatest(t, genset.State{Node: genset.Ready, Changed: t9})
 		outputTracker.AssertLatest(t, genset.Outputs{IoCheck: true})
 	})
 
@@ -423,7 +426,7 @@ func TestController3P(t *testing.T) {
 			c.Run()
 			defer c.End()
 
-			// go to producing after timeout
+			// reach temperature but not enough time passed
 			t1 := t0.Add(time.Second)
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = t1
@@ -431,9 +434,15 @@ func TestController3P(t *testing.T) {
 				return i
 			})
 
+			t2 := t0.Add(params.WarmUpMinTime)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t2
+				return i
+			})
+
 			stateTracker.Assert(t, []genset.State{
 				{Node: genset.WarmUp, Changed: t0},
-				{Node: genset.Producing, Changed: t1},
+				{Node: genset.Producing, Changed: t2},
 			})
 
 			l, ok := outputTracker.Latest()
