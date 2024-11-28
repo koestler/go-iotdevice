@@ -156,6 +156,9 @@ func (c *Controller) Run() {
 		}
 		close(initDone)
 
+		// initial computation
+		c.compute()
+
 		// listen for input changes until the channel is closed (End is called)
 		for change := range c.changeInputs {
 			// whenever an input is changed, recompute the derived inputs and the state
@@ -182,7 +185,7 @@ func (c *Controller) End() {
 
 func (c *Controller) compute() {
 	// compute new state
-	// assume we transition at most 8 states once when inputs change
+	// assume we reach the final state in max 8 iterations
 	for i := 0; i < 8; i++ {
 		nextState := computeState(c.Params, c.inputs, c.state)
 		if nextState == c.state {
@@ -241,7 +244,7 @@ func computeStateNode(p Params, i Inputs, prev State) (next StateNode) {
 	switch prev.Node {
 	case Error:
 	case Reset:
-		if !i.ResetSwitch {
+		if !i.ResetSwitch && !masterSwitch {
 			return Off
 		}
 	case Off:
