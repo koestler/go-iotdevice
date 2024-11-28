@@ -954,9 +954,7 @@ func TestController1P(t *testing.T) {
 			IOAvailable:     true,
 			EngineTemp:      55,
 			OutputAvailable: true,
-			U0:              220,
-			U1:              220,
-			U2:              220,
+			U0:              230,
 			F:               50,
 		}
 
@@ -983,9 +981,7 @@ func TestController1P(t *testing.T) {
 			// power fluctuating
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = i.Time.Add(time.Second)
-				i.L0 = 0
-				i.L1 = 0
-				i.L2 = 0
+				i.L0 = 5
 				return i
 			})
 
