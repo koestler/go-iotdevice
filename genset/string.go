@@ -13,32 +13,6 @@ func (i Inputs) String() string {
 	)
 }
 
-func (s StateNode) String() string {
-	switch s {
-	case Error:
-		return "Error"
-	case Reset:
-		return "Reset"
-	case Off:
-		return "Off"
-	case Ready:
-		return "Ready"
-	case Priming:
-		return "Priming"
-	case Cranking:
-		return "Cranking"
-	case WarmUp:
-		return "WarmUp"
-	case Producing:
-		return "Producing"
-	case EngineCoolDown:
-		return "EngineCoolDown"
-	case EnclosureCoolDown:
-		return "EnclosureCoolDown"
-	}
-	return "Unknown"
-}
-
 func (s State) String() string {
 	return fmt.Sprintf("State{Node:\t%v,\tChanged: %v}", s.Node, s.Changed)
 }

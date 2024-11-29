@@ -35,32 +35,17 @@ type Params struct {
 	PTotMax     float64
 }
 
-type StateNode int
-
-const (
-	Error StateNode = iota
-	Reset
-	Off
-	Ready
-	Priming
-	Cranking
-	WarmUp
-	Producing
-	EngineCoolDown
-	EnclosureCoolDown
-)
-
 type Inputs struct {
 	// Time is an input to the controller to allow for time-based state transitions
 	Time time.Time
 
 	// Switches
+	ArmSwitch     bool
 	CommandSwitch bool
 	ResetSwitch   bool
 
 	// I/O controller inputs
 	IOAvailable  bool
-	ArmSwitch    bool
 	FireDetected bool
 	EngineTemp   float64
 	AuxTemp0     float64
