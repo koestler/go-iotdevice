@@ -167,6 +167,8 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		ss.Fill(dataflow.NewNumericRegisterValue(name, TimeInStateRegister, o.TimeInState.Seconds()))
 		ss.Fill(dataflow.NewEnumRegisterValue(name, IoCheckRegister, boolToOnOff(o.IoCheck)))
 		ss.Fill(dataflow.NewEnumRegisterValue(name, OutputCheckRegister, boolToOnOff(o.OutputCheck)))
+
+		// todo: handle output bindings
 	}
 
 	// start the controller
