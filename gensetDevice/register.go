@@ -5,9 +5,16 @@ import (
 	"github.com/koestler/go-iotdevice/v3/genset"
 )
 
+func boolToOnOff(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
 var OnOffEnum = map[int]string{
-	0: "Off",
-	1: "On",
+	boolToOnOff(false): "Off",
+	boolToOnOff(true):  "On",
 }
 
 func addToRegisterDb(rdb *dataflow.RegisterDb, singlePhase bool) {
