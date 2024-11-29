@@ -16,12 +16,12 @@ func (d *DeviceStruct) enumSetter(
 	f func(bool) func(genset.Inputs) genset.Inputs,
 ) func(*genset.Controller, dataflow.Value) {
 	return func(c *genset.Controller, v dataflow.Value) {
-		if v, ok := v.(dataflow.EnumRegisterValue); ok {
-			c.UpdateInputs(f(v.EnumIdx() != 0))
+		if ev, ok := v.(dataflow.EnumRegisterValue); ok {
+			c.UpdateInputs(f(ev.EnumIdx() != 0))
 			d.StateStorage().Fill(dataflow.NewEnumRegisterValue(
 				d.Config().Name(),
 				reg,
-				v.EnumIdx(),
+				ev.EnumIdx(),
 			))
 		} else {
 			log.Printf("gensetDevice: %s: expected an enum, got %s", name, v.Register().RegisterType())
@@ -35,12 +35,12 @@ func (d *DeviceStruct) numberSetter(
 	f func(float64) func(genset.Inputs) genset.Inputs,
 ) func(*genset.Controller, dataflow.Value) {
 	return func(c *genset.Controller, v dataflow.Value) {
-		if v, ok := v.(dataflow.NumericRegisterValue); ok {
-			c.UpdateInputs(f(v.Value()))
+		if nv, ok := v.(dataflow.NumericRegisterValue); ok {
+			c.UpdateInputs(f(nv.Value()))
 			d.StateStorage().Fill(dataflow.NewNumericRegisterValue(
 				d.Config().Name(),
 				reg,
-				v.Value(),
+				nv.Value(),
 			))
 		} else {
 			log.Printf("gensetDevice: %s: expected a number, got %s", name, v.Register().RegisterType())
