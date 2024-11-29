@@ -69,61 +69,61 @@ func NewDevice(
 	}
 }
 
-func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
-	addToRegisterDb(c.State.RegisterDb(), c.gensetConfig.SinglePhase())
+func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
+	addToRegisterDb(d.State.RegisterDb(), d.gensetConfig.SinglePhase())
 
-	c.controller = genset.NewController(
+	d.controller = genset.NewController(
 		genset.Params{
 			// Transition params
-			PrimingTimeout:           c.gensetConfig.PrimingTimeout(),
-			CrankingTimeout:          c.gensetConfig.CrankingTimeout(),
-			WarmUpTimeout:            c.gensetConfig.WarmUpTimeout(),
-			WarmUpMinTime:            c.gensetConfig.WarmUpMinTime(),
-			WarmUpTemp:               c.gensetConfig.WarmUpTemp(),
-			EngineCoolDownTimeout:    c.gensetConfig.EngineCoolDownTimeout(),
-			EngineCoolDownTemp:       c.gensetConfig.EngineCoolDownTemp(),
-			EnclosureCoolDownTimeout: c.gensetConfig.EnclosureCoolDownTimeout(),
-			EnclosureCoolDownTemp:    c.gensetConfig.EnclosureCoolDownTemp(),
+			PrimingTimeout:           d.gensetConfig.PrimingTimeout(),
+			CrankingTimeout:          d.gensetConfig.CrankingTimeout(),
+			WarmUpTimeout:            d.gensetConfig.WarmUpTimeout(),
+			WarmUpMinTime:            d.gensetConfig.WarmUpMinTime(),
+			WarmUpTemp:               d.gensetConfig.WarmUpTemp(),
+			EngineCoolDownTimeout:    d.gensetConfig.EngineCoolDownTimeout(),
+			EngineCoolDownTemp:       d.gensetConfig.EngineCoolDownTemp(),
+			EnclosureCoolDownTimeout: d.gensetConfig.EnclosureCoolDownTimeout(),
+			EnclosureCoolDownTemp:    d.gensetConfig.EnclosureCoolDownTemp(),
 
 			// IO Check
-			EngineTempMin: c.gensetConfig.EngineTempMin(),
-			EngineTempMax: c.gensetConfig.EngineTempMax(),
-			AuxTemp0Min:   c.gensetConfig.AuxTemp0Min(),
-			AuxTemp0Max:   c.gensetConfig.AuxTemp0Max(),
-			AuxTemp1Min:   c.gensetConfig.AuxTemp1Min(),
-			AuxTemp1Max:   c.gensetConfig.AuxTemp1Max(),
+			EngineTempMin: d.gensetConfig.EngineTempMin(),
+			EngineTempMax: d.gensetConfig.EngineTempMax(),
+			AuxTemp0Min:   d.gensetConfig.AuxTemp0Min(),
+			AuxTemp0Max:   d.gensetConfig.AuxTemp0Max(),
+			AuxTemp1Min:   d.gensetConfig.AuxTemp1Min(),
+			AuxTemp1Max:   d.gensetConfig.AuxTemp1Max(),
 
 			// Output Check
-			SinglePhase: c.gensetConfig.SinglePhase(),
-			UMin:        c.gensetConfig.UMin(),
-			UMax:        c.gensetConfig.UMax(),
-			FMin:        c.gensetConfig.FMin(),
-			FMax:        c.gensetConfig.FMax(),
-			PMax:        c.gensetConfig.PMax(),
-			PTotMax:     c.gensetConfig.PTotMax(),
+			SinglePhase: d.gensetConfig.SinglePhase(),
+			UMin:        d.gensetConfig.UMin(),
+			UMax:        d.gensetConfig.UMax(),
+			FMin:        d.gensetConfig.FMin(),
+			FMax:        d.gensetConfig.FMax(),
+			PMax:        d.gensetConfig.PMax(),
+			PTotMax:     d.gensetConfig.PTotMax(),
 		},
 		genset.Off,
 		genset.Inputs{},
 	)
 
 	// bind inputs
-	for _, b := range c.gensetConfig.InputBindings() {
+	for _, b := range d.gensetConfig.InputBindings() {
 		deviceName := b.DeviceName()
 		registerName := b.RegisterName()
 
-		sub := c.StateStorage().SubscribeSendInitial(ctx, func(v dataflow.Value) bool {
+		sub := d.StateStorage().SubscribeSendInitial(ctx, func(v dataflow.Value) bool {
 			return v.DeviceName() == deviceName && v.Register().Name() == registerName
 		})
 
-		setter, err := inpSetter(b.Name())
+		setter, err := d.inpSetter(b.Name())
 		if err != nil {
-			return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", c.Name(), err), true
+			return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", d.Name(), err), true
 		}
 
 		go func() {
 			// routine will return when ctx of the subscription is cancelled
 			for v := range sub.Drain() {
-				setter(c.controller, v)
+				setter(d.controller, v)
 			}
 		}()
 	}
@@ -137,7 +137,7 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 			case <-ctx.Done():
 				return
 			case t := <-ticker.C:
-				c.controller.UpdateInputs(func(i genset.Inputs) genset.Inputs {
+				d.controller.UpdateInputs(func(i genset.Inputs) genset.Inputs {
 					i.Time = t
 					return i
 				})
@@ -145,11 +145,33 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		}
 	}()
 
-	// start the controller
-	c.controller.Run()
-	defer c.controller.End()
+	// handle state updates
+	d.controller.OnStateUpdate = func(s genset.State) {
+		name := d.Config().Name()
+		ss := d.StateStorage()
 
-	// stream outputs
+		ss.Fill(dataflow.NewEnumRegisterValue(name, StateRegister, int(s.Node)))
+		ss.Fill(dataflow.NewTextRegisterValue(name, StateChangedRegister, s.Changed.String()))
+	}
+
+	// handle output updates
+	d.controller.OnOutputUpdate = func(o genset.Outputs) {
+		name := d.Config().Name()
+		ss := d.StateStorage()
+
+		ss.Fill(dataflow.NewEnumRegisterValue(name, IgnitionRegister, boolToOnOff(o.Ignition)))
+		ss.Fill(dataflow.NewEnumRegisterValue(name, StarterRegister, boolToOnOff(o.Starter)))
+		ss.Fill(dataflow.NewEnumRegisterValue(name, FanRegister, boolToOnOff(o.Fan)))
+		ss.Fill(dataflow.NewEnumRegisterValue(name, PumpRegister, boolToOnOff(o.Pump)))
+		ss.Fill(dataflow.NewEnumRegisterValue(name, LoadRegister, boolToOnOff(o.Load)))
+		ss.Fill(dataflow.NewNumericRegisterValue(name, TimeInStateRegister, o.TimeInState.Seconds()))
+		ss.Fill(dataflow.NewEnumRegisterValue(name, IoCheckRegister, boolToOnOff(o.IoCheck)))
+		ss.Fill(dataflow.NewEnumRegisterValue(name, OutputCheckRegister, boolToOnOff(o.OutputCheck)))
+	}
+
+	// start the controller
+	d.controller.Run()
+	defer d.controller.End()
 
 	// wait for context to be done
 	<-ctx.Done()
@@ -157,6 +179,6 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	return nil, false
 }
 
-func (c *DeviceStruct) Model() string {
+func (d *DeviceStruct) Model() string {
 	return "Genset Controller"
 }
