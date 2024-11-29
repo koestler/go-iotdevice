@@ -70,6 +70,8 @@ func NewDevice(
 }
 
 func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
+	addToRegisterDb(c.State.RegisterDb(), c.gensetConfig.SinglePhase())
+
 	c.controller = genset.NewController(
 		genset.Params{
 			// Transition params

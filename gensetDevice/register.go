@@ -10,6 +10,16 @@ var OnOffEnum = map[int]string{
 	1: "On",
 }
 
+func addToRegisterDb(rdb *dataflow.RegisterDb, singlePhase bool) {
+	if singlePhase {
+		rdb.AddStruct(InputRegisters1P...)
+	} else {
+		rdb.AddStruct(InputRegisters3P...)
+	}
+	rdb.AddStruct(StateRegisters...)
+	rdb.AddStruct(OutputRegisters...)
+}
+
 func NewOnOffRegister(
 	category, name, description string,
 	sort int,
@@ -159,7 +169,7 @@ var FRegister = NewNumberRegister(
 	27,
 )
 
-var InputRegisters = []dataflow.RegisterStruct{
+var InputRegisters3P = []dataflow.RegisterStruct{
 	ArmSwitchRegister,
 	CommandSwitchRegister,
 	ResetSwitchRegister,
@@ -170,13 +180,17 @@ var InputRegisters = []dataflow.RegisterStruct{
 	AuxTemp1Register,
 	OutputAvailableRegister,
 	U0Register,
+	L0Register,
+	FRegister,
+
+	// only for 3-phase
 	U1Register,
 	U2Register,
-	L0Register,
 	L1Register,
 	L2Register,
-	FRegister,
 }
+
+var InputRegisters1P = InputRegisters3P[:len(InputRegisters3P)-4]
 
 var StateRegister = dataflow.NewRegisterStruct(
 	"State",
