@@ -15,6 +15,7 @@ type configRead struct {
 	ModbusDevices          map[string]modbusDeviceConfigRead  `yaml:"ModbusDevices"`
 	HttpDevices            map[string]httpDeviceConfigRead    `yaml:"HttpDevices"`
 	MqttDevices            map[string]mqttDeviceConfigRead    `yaml:"MqttDevices"`
+	GensetDevices          map[string]gensetDeviceConfigRead  `yaml:"GensetDevices"`
 	Views                  []viewConfigRead                   `yaml:"Views"`
 }
 
@@ -132,6 +133,42 @@ type mqttDeviceConfigRead struct {
 	deviceConfigRead `yaml:",inline"`
 	Kind             string `yaml:"Kind"`
 }
+
+type gensetDeviceConfigRead struct {
+	deviceConfigRead `yaml:",inline"`
+
+	InputBindings  gensetDeviceBindingConfigRead `yaml:"InputBindings"`
+	OutputBindings gensetDeviceBindingConfigRead `yaml:"OutputBindings"`
+
+	PrimingTimeout           string   `yaml:"PrimingTimeout"`
+	CrankingTimeout          string   `yaml:"CrankingTimeout"`
+	WarmUpTimeout            string   `yaml:"WarmUpTimeout"`
+	WarmUpMinTime            string   `yaml:"WarmUpMinTime"`
+	WarmUpTemp               *float32 `yaml:"WarmUpTemp"`
+	EngineCoolDownTimeout    string   `yaml:"EngineCoolDownTimeout"`
+	EngineCoolDownMinTime    string   `yaml:"EngineCoolDownMinTime"`
+	EngineCoolDownTemp       *float32 `yaml:"EngineCoolDownTemp"`
+	EnclosureCoolDownTimeout string   `yaml:"EnclosureCoolDownTimeout"`
+	EnclosureCoolDownMinTime string   `yaml:"EnclosureCoolDownMinTime"`
+	EnclosureCoolDownTemp    *float32 `yaml:"EnclosureCoolDownTemp"`
+
+	EngineTempMin *float32 `yaml:"EngineTempMin"`
+	EngineTempMax *float32 `yaml:"EngineTempMax"`
+	AuxTemp0Min   *float32 `yaml:"AuxTemp0Min"`
+	AuxTemp0Max   *float32 `yaml:"AuxTemp0Max"`
+	AuxTemp1Min   *float32 `yaml:"AuxTemp1Min"`
+	AuxTemp1Max   *float32 `yaml:"AuxTemp1Max"`
+
+	SinglePhase *bool    `yaml:"SinglePhase"`
+	UMin        *float32 `yaml:"UMin"`
+	UMax        *float32 `yaml:"UMax"`
+	FMin        *float32 `yaml:"FMin"`
+	FMax        *float32 `yaml:"FMax"`
+	PMax        *float32 `yaml:"PMax"`
+	PTotMax     *float32 `yaml:"PTotMax"`
+}
+
+type gensetDeviceBindingConfigRead map[string]map[string]string
 
 type viewConfigRead struct {
 	Name         string                 `yaml:"Name"`

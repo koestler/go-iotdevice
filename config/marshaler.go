@@ -21,6 +21,7 @@ func (c Config) MarshalYAML() (interface{}, error) {
 		ModbusDevices:          convertMapToRead[ModbusDeviceConfig, modbusDeviceConfigRead](c.modbusDevices),
 		HttpDevices:            convertMapToRead[HttpDeviceConfig, httpDeviceConfigRead](c.httpDevices),
 		MqttDevices:            convertMapToRead[MqttDeviceConfig, mqttDeviceConfigRead](c.mqttDevices),
+		GensetDevices:          convertMapToRead[GensetDeviceConfig, gensetDeviceConfigRead](c.gensetDevices),
 		Views:                  convertListToRead[ViewConfig, viewConfigRead](c.views),
 	}, nil
 }
@@ -230,6 +231,52 @@ func (c MqttDeviceConfig) convertToRead() mqttDeviceConfigRead {
 		deviceConfigRead: c.DeviceConfig.convertToRead(),
 		Kind:             c.kind.String(),
 	}
+}
+
+//lint:ignore U1000 linter does not catch that this is used generic code
+func (c GensetDeviceConfig) convertToRead() gensetDeviceConfigRead {
+	return gensetDeviceConfigRead{
+		deviceConfigRead:         c.DeviceConfig.convertToRead(),
+		InputBindings:            c.inputBindings.convertToRead(),
+		OutputBindings:           c.outputBindings.convertToRead(),
+		PrimingTimeout:           c.primingTimeout.String(),
+		CrankingTimeout:          c.crankingTimeout.String(),
+		WarmUpTimeout:            c.warmUpTimeout.String(),
+		WarmUpMinTime:            c.warmUpMinTime.String(),
+		WarmUpTemp:               &c.warmUpTemp,
+		EngineCoolDownTimeout:    c.engineCoolDownTimeout.String(),
+		EngineCoolDownMinTime:    c.engineCoolDownMinTime.String(),
+		EngineCoolDownTemp:       &c.engineCoolDownTemp,
+		EnclosureCoolDownTimeout: c.enclosureCoolDownTimeout.String(),
+		EnclosureCoolDownMinTime: c.enclosureCoolDownMinTime.String(),
+		EnclosureCoolDownTemp:    &c.enclosureCoolDownTemp,
+		EngineTempMin:            &c.engineTempMin,
+		EngineTempMax:            &c.engineTempMax,
+		AuxTemp0Min:              &c.auxTemp0Min,
+		AuxTemp0Max:              &c.auxTemp0Max,
+		AuxTemp1Min:              &c.auxTemp1Min,
+		AuxTemp1Max:              &c.auxTemp1Max,
+		SinglePhase:              &c.singlePhase,
+		UMin:                     &c.uMin,
+		UMax:                     &c.uMax,
+		FMin:                     &c.fMin,
+		FMax:                     &c.fMax,
+		PMax:                     &c.pMax,
+		PTotMax:                  &c.pTotMax,
+	}
+}
+
+func (c GensetDeviceBindingsConfig) convertToRead() map[string]map[string]string {
+	oup := make(map[string]map[string]string)
+
+	for _, b := range c {
+		if _, ok := oup[b.deviceName]; !ok {
+			oup[b.deviceName] = make(map[string]string)
+		}
+		oup[b.deviceName][b.registerName] = b.name
+	}
+
+	return oup
 }
 
 //lint:ignore U1000 linter does not catch that this is used generic code
