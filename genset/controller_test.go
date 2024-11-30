@@ -49,8 +49,10 @@ func TestController3P(t *testing.T) {
 		WarmUpMinTime:            1 * time.Minute,
 		WarmUpTemp:               40,
 		EngineCoolDownTimeout:    5 * time.Minute,
+		EngineCoolDownMinTime:    30 * time.Second,
 		EngineCoolDownTemp:       60,
 		EnclosureCoolDownTimeout: 15 * time.Minute,
+		EnclosureCoolDownMinTime: 1 * time.Minute,
 		EnclosureCoolDownTemp:    50,
 
 		// IO Check
@@ -184,7 +186,7 @@ func TestController3P(t *testing.T) {
 		outputTracker.AssertLatest(t, genset.Outputs{Fan: true, Pump: true, Ignition: true, IoCheck: true, OutputCheck: true})
 
 		// go to enclosure cool down
-		t7 := t6.Add(time.Second)
+		t7 := t6.Add(params.EngineCoolDownMinTime)
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.Time = t7
 			i.EngineTemp = 55
@@ -462,12 +464,18 @@ func TestController3P(t *testing.T) {
 				return i
 			})
 
+			t2 := t1.Add(params.EnclosureCoolDownMinTime)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t2
+				return i
+			})
+
 			// go to enclose cool down and directly to ready due to low temperature
 
 			stateTracker.Assert(t, []genset.State{
 				{Node: genset.WarmUp, Changed: t0},
 				{Node: genset.EnclosureCoolDown, Changed: t1},
-				{Node: genset.Ready, Changed: t1},
+				{Node: genset.Ready, Changed: t2},
 			})
 		})
 	})
@@ -855,7 +863,7 @@ func TestController3P(t *testing.T) {
 			defer c.End()
 
 			// decrease temp
-			t1 := t0.Add(time.Second)
+			t1 := t0.Add(params.EnclosureCoolDownMinTime)
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = t1
 				i.EngineTemp = params.EnclosureCoolDownTemp - 1
@@ -886,32 +894,6 @@ func TestController3P(t *testing.T) {
 			})
 		})
 	})
-
-	t.Run("immediateStatechange", func(t *testing.T) {
-		initialState := genset.EngineCoolDown
-		initialInputs := genset.Inputs{
-			Time:            t0,
-			ArmSwitch:       true,
-			CommandSwitch:   false,
-			IOAvailable:     true,
-			EngineTemp:      params.EnclosureCoolDownTemp - 1,
-			OutputAvailable: true,
-			U0:              220,
-			U1:              220,
-			U2:              220,
-			F:               50,
-		}
-
-		c, stateTracker, _ := controllerWithTracker(t, params, initialState, initialInputs)
-		c.Run()
-		defer c.End()
-
-		stateTracker.Assert(t, []genset.State{
-			{Node: genset.EngineCoolDown, Changed: t0},
-			{Node: genset.EnclosureCoolDown, Changed: t0},
-			{Node: genset.Ready, Changed: t0},
-		})
-	})
 }
 
 func TestController1P(t *testing.T) {
@@ -921,8 +903,10 @@ func TestController1P(t *testing.T) {
 		WarmUpTimeout:            time.Minute,
 		WarmUpTemp:               40,
 		EngineCoolDownTimeout:    time.Second,
+		EngineCoolDownMinTime:    0,
 		EngineCoolDownTemp:       60,
 		EnclosureCoolDownTimeout: time.Second,
+		EnclosureCoolDownMinTime: 0,
 		EnclosureCoolDownTemp:    50,
 
 		// IO Check
@@ -1021,6 +1005,32 @@ func TestController1P(t *testing.T) {
 			l, ok := outputTracker.Latest()
 			assert.True(t, ok)
 			assert.Equal(t, false, l.Ignition)
+		})
+	})
+
+	t.Run("immediateStatechange", func(t *testing.T) {
+		initialState := genset.EngineCoolDown
+		initialInputs := genset.Inputs{
+			Time:            t0,
+			ArmSwitch:       true,
+			CommandSwitch:   false,
+			IOAvailable:     true,
+			EngineTemp:      params.EnclosureCoolDownTemp - 1,
+			OutputAvailable: true,
+			U0:              230,
+			U1:              230,
+			U2:              230,
+			F:               50,
+		}
+
+		c, stateTracker, _ := controllerWithTracker(t, params, initialState, initialInputs)
+		c.Run()
+		defer c.End()
+
+		stateTracker.Assert(t, []genset.State{
+			{Node: genset.EngineCoolDown, Changed: t0},
+			{Node: genset.EnclosureCoolDown, Changed: t0},
+			{Node: genset.Ready, Changed: t0},
 		})
 	})
 }
