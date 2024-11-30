@@ -112,11 +112,14 @@ func main() {
 		modbusPool := runModbus(cfg)
 		defer modbusPool.Shutdown()
 
-		// start devices non mqtt devices
-		devicePool := runNonMqttDevices(cfg, modbusPool, stateStorage, commandStorage)
+		// start device pool
+		devicePool := runDevicePool()
 		defer devicePool.Shutdown()
 
-		// start mqtt clients
+		// start non mqtt devices
+		runNonMqttGensetDevices(cfg, devicePool, modbusPool, stateStorage, commandStorage)
+
+		// start mqtt client pool
 		mqttClientPool := runMqttClient(cfg)
 		defer mqttClientPool.Shutdown()
 
@@ -125,6 +128,9 @@ func main() {
 
 		// start mqtt forwarders
 		runMqttForwarders(cfg, devicePool, mqttClientPool, stateStorage, commandStorage)
+
+		// start genset devices
+		runGensetDevices(cfg, devicePool, stateStorage, commandStorage)
 
 		// start http server
 		httpServer := runHttpServer(cfg, devicePool, stateStorage, commandStorage)

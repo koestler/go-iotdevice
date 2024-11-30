@@ -162,28 +162,28 @@ type GensetDeviceConfig struct {
 	crankingTimeout          time.Duration
 	warmUpTimeout            time.Duration
 	warmUpMinTime            time.Duration
-	warmUpTemp               float32
+	warmUpTemp               float64
 	engineCoolDownTimeout    time.Duration
 	engineCoolDownMinTime    time.Duration
-	engineCoolDownTemp       float32
+	engineCoolDownTemp       float64
 	enclosureCoolDownTimeout time.Duration
 	enclosureCoolDownMinTime time.Duration
-	enclosureCoolDownTemp    float32
+	enclosureCoolDownTemp    float64
 
-	engineTempMin float32
-	engineTempMax float32
-	auxTemp0Min   float32
-	auxTemp0Max   float32
-	auxTemp1Min   float32
-	auxTemp1Max   float32
+	engineTempMin float64
+	engineTempMax float64
+	auxTemp0Min   float64
+	auxTemp0Max   float64
+	auxTemp1Min   float64
+	auxTemp1Max   float64
 
 	singlePhase bool
-	uMin        float32
-	uMax        float32
-	fMin        float32
-	fMax        float32
-	pMax        float32
-	pTotMax     float32
+	uMin        float64
+	uMax        float64
+	fMin        float64
+	fMax        float64
+	pMax        float64
+	pTotMax     float64
 }
 
 type GensetDeviceBindingsConfig []GensetDeviceBindingConfig
