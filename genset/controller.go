@@ -13,8 +13,10 @@ type Params struct {
 	WarmUpMinTime            time.Duration
 	WarmUpTemp               float64
 	EngineCoolDownTimeout    time.Duration
+	EngineCoolDownMinTime    time.Duration
 	EngineCoolDownTemp       float64
 	EnclosureCoolDownTimeout time.Duration
+	EnclosureCoolDownMinTime time.Duration
 	EnclosureCoolDownTemp    float64
 
 	// IO Check
@@ -276,15 +278,19 @@ func computeStateNode(p Params, i Inputs, prev State) (next StateNode) {
 		if masterSwitch {
 			return Producing
 		}
-		if timeInState >= p.EngineCoolDownTimeout || i.EngineTemp <= p.EngineCoolDownTemp {
-			return EnclosureCoolDown
+		if timeInState >= p.EngineCoolDownMinTime {
+			if timeInState >= p.EngineCoolDownTimeout || i.EngineTemp <= p.EngineCoolDownTemp {
+				return EnclosureCoolDown
+			}
 		}
 	case EnclosureCoolDown:
 		if masterSwitch {
 			return Priming
 		}
-		if timeInState >= p.EnclosureCoolDownTimeout || i.EngineTemp <= p.EnclosureCoolDownTemp {
-			return Ready
+		if timeInState >= p.EnclosureCoolDownMinTime {
+			if timeInState >= p.EnclosureCoolDownTimeout || i.EngineTemp <= p.EnclosureCoolDownTemp {
+				return Ready
+			}
 		}
 	}
 

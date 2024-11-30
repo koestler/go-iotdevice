@@ -19,8 +19,10 @@ type Config interface {
 	WarmUpMinTime() time.Duration
 	WarmUpTemp() float64
 	EngineCoolDownTimeout() time.Duration
+	EngineCoolDownMinTime() time.Duration
 	EngineCoolDownTemp() float64
 	EnclosureCoolDownTimeout() time.Duration
+	EnclosureCooldownMinTime() time.Duration
 	EnclosureCoolDownTemp() float64
 
 	EngineTempMin() float64
@@ -81,8 +83,10 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 			WarmUpMinTime:            d.gensetConfig.WarmUpMinTime(),
 			WarmUpTemp:               d.gensetConfig.WarmUpTemp(),
 			EngineCoolDownTimeout:    d.gensetConfig.EngineCoolDownTimeout(),
+			EngineCoolDownMinTime:    d.gensetConfig.EngineCoolDownMinTime(),
 			EngineCoolDownTemp:       d.gensetConfig.EngineCoolDownTemp(),
 			EnclosureCoolDownTimeout: d.gensetConfig.EnclosureCoolDownTimeout(),
+			EnclosureCoolDownMinTime: d.gensetConfig.EnclosureCooldownMinTime(),
 			EnclosureCoolDownTemp:    d.gensetConfig.EnclosureCoolDownTemp(),
 
 			// IO Check
