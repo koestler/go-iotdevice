@@ -144,28 +144,28 @@ type gensetDeviceConfigRead struct {
 	CrankingTimeout          string   `yaml:"CrankingTimeout"`
 	WarmUpTimeout            string   `yaml:"WarmUpTimeout"`
 	WarmUpMinTime            string   `yaml:"WarmUpMinTime"`
-	WarmUpTemp               *float32 `yaml:"WarmUpTemp"`
+	WarmUpTemp               *float64 `yaml:"WarmUpTemp"`
 	EngineCoolDownTimeout    string   `yaml:"EngineCoolDownTimeout"`
 	EngineCoolDownMinTime    string   `yaml:"EngineCoolDownMinTime"`
-	EngineCoolDownTemp       *float32 `yaml:"EngineCoolDownTemp"`
+	EngineCoolDownTemp       *float64 `yaml:"EngineCoolDownTemp"`
 	EnclosureCoolDownTimeout string   `yaml:"EnclosureCoolDownTimeout"`
 	EnclosureCoolDownMinTime string   `yaml:"EnclosureCoolDownMinTime"`
-	EnclosureCoolDownTemp    *float32 `yaml:"EnclosureCoolDownTemp"`
+	EnclosureCoolDownTemp    *float64 `yaml:"EnclosureCoolDownTemp"`
 
-	EngineTempMin *float32 `yaml:"EngineTempMin"`
-	EngineTempMax *float32 `yaml:"EngineTempMax"`
-	AuxTemp0Min   *float32 `yaml:"AuxTemp0Min"`
-	AuxTemp0Max   *float32 `yaml:"AuxTemp0Max"`
-	AuxTemp1Min   *float32 `yaml:"AuxTemp1Min"`
-	AuxTemp1Max   *float32 `yaml:"AuxTemp1Max"`
+	EngineTempMin *float64 `yaml:"EngineTempMin"`
+	EngineTempMax *float64 `yaml:"EngineTempMax"`
+	AuxTemp0Min   *float64 `yaml:"AuxTemp0Min"`
+	AuxTemp0Max   *float64 `yaml:"AuxTemp0Max"`
+	AuxTemp1Min   *float64 `yaml:"AuxTemp1Min"`
+	AuxTemp1Max   *float64 `yaml:"AuxTemp1Max"`
 
 	SinglePhase *bool    `yaml:"SinglePhase"`
-	UMin        *float32 `yaml:"UMin"`
-	UMax        *float32 `yaml:"UMax"`
-	FMin        *float32 `yaml:"FMin"`
-	FMax        *float32 `yaml:"FMax"`
-	PMax        *float32 `yaml:"PMax"`
-	PTotMax     *float32 `yaml:"PTotMax"`
+	UMin        *float64 `yaml:"UMin"`
+	UMax        *float64 `yaml:"UMax"`
+	FMin        *float64 `yaml:"FMin"`
+	FMax        *float64 `yaml:"FMax"`
+	PMax        *float64 `yaml:"PMax"`
+	PTotMax     *float64 `yaml:"PTotMax"`
 }
 
 type gensetDeviceBindingConfigRead map[string]map[string]string
