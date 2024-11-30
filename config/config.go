@@ -708,6 +708,47 @@ func (c mqttDeviceSectionConfigRead) TransformAndValidate(
 	return
 }
 
+func (c modbusConfigRead) TransformAndValidate(name string) (ret ModbusConfig, err []error) {
+	ret = ModbusConfig{
+		name:     name,
+		device:   c.Device,
+		baudRate: c.BaudRate,
+	}
+
+	if !nameMatcher.MatchString(ret.name) {
+		err = append(err, fmt.Errorf("Modbus->Name='%s' does not match %s", ret.name, NameRegexp))
+	}
+
+	if len(c.Device) < 1 {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->Device must not be empty", name))
+	}
+
+	if c.BaudRate < 1 {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->BaudRate must be positiv", name))
+	}
+
+	if len(c.ReadTimeout) < 1 {
+		// use default 100ms
+		ret.readTimeout = 100 * time.Millisecond
+	} else if readTimeout, e := time.ParseDuration(c.ReadTimeout); e != nil {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->ReadTimeout='%s' parse error: %s",
+			name, c.ReadTimeout, e,
+		))
+	} else if readTimeout < time.Millisecond {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->ReadTimeout='%s' must be >=1ms",
+			name, c.ReadTimeout,
+		))
+	} else {
+		ret.readTimeout = readTimeout
+	}
+
+	if c.LogDebug != nil && *c.LogDebug {
+		ret.logDebug = true
+	}
+
+	return
+}
+
 func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, err []error) {
 	ret = DeviceConfig{
 		name: name,
@@ -937,47 +978,6 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string) (ret MqttDeviceC
 	var e []error
 	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
 	err = append(err, e...)
-
-	return
-}
-
-func (c modbusConfigRead) TransformAndValidate(name string) (ret ModbusConfig, err []error) {
-	ret = ModbusConfig{
-		name:     name,
-		device:   c.Device,
-		baudRate: c.BaudRate,
-	}
-
-	if !nameMatcher.MatchString(ret.name) {
-		err = append(err, fmt.Errorf("Modbus->Name='%s' does not match %s", ret.name, NameRegexp))
-	}
-
-	if len(c.Device) < 1 {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->Device must not be empty", name))
-	}
-
-	if c.BaudRate < 1 {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->BaudRate must be positiv", name))
-	}
-
-	if len(c.ReadTimeout) < 1 {
-		// use default 100ms
-		ret.readTimeout = 100 * time.Millisecond
-	} else if readTimeout, e := time.ParseDuration(c.ReadTimeout); e != nil {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->ReadTimeout='%s' parse error: %s",
-			name, c.ReadTimeout, e,
-		))
-	} else if readTimeout < time.Millisecond {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->ReadTimeout='%s' must be >=1ms",
-			name, c.ReadTimeout,
-		))
-	} else {
-		ret.readTimeout = readTimeout
-	}
-
-	if c.LogDebug != nil && *c.LogDebug {
-		ret.logDebug = true
-	}
 
 	return
 }
