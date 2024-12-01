@@ -26,7 +26,7 @@ func runNonMqttGensetDevices(
 	modbusPool *pool.Pool[*modbus.ModbusStruct],
 	stateStorage *dataflow.ValueStorage,
 	commandStorage *dataflow.ValueStorage,
-) () {
+) {
 	for _, deviceConfig := range cfg.VictronDevices() {
 		if cfg.LogWorkerStart() {
 			log.Printf("device[%s]: start victron type", deviceConfig.Name())
