@@ -117,45 +117,45 @@ func (d *DeviceStruct) inpSetter(name string) (func(*genset.Controller, dataflow
 				return i
 			}
 		}), nil
-	case "U0":
-		return d.numberSetter(name, U0Register, func(v float64) func(genset.Inputs) genset.Inputs {
-			return func(i genset.Inputs) genset.Inputs {
-				i.U0 = v
-				return i
-			}
-		}), nil
 	case "U1":
-		return d.numberSetter(name, U1Register, func(v float64) func(genset.Inputs) genset.Inputs {
+		return d.numberSetter(name, U0Register, func(v float64) func(genset.Inputs) genset.Inputs {
 			return func(i genset.Inputs) genset.Inputs {
 				i.U1 = v
 				return i
 			}
 		}), nil
 	case "U2":
-		return d.numberSetter(name, U2Register, func(v float64) func(genset.Inputs) genset.Inputs {
+		return d.numberSetter(name, U1Register, func(v float64) func(genset.Inputs) genset.Inputs {
 			return func(i genset.Inputs) genset.Inputs {
 				i.U2 = v
 				return i
 			}
 		}), nil
-	case "L0":
-		return d.numberSetter(name, L0Register, func(v float64) func(genset.Inputs) genset.Inputs {
+	case "U3":
+		return d.numberSetter(name, U2Register, func(v float64) func(genset.Inputs) genset.Inputs {
 			return func(i genset.Inputs) genset.Inputs {
-				i.L0 = v
+				i.U3 = v
 				return i
 			}
 		}), nil
 	case "L1":
-		return d.numberSetter(name, L1Register, func(v float64) func(genset.Inputs) genset.Inputs {
+		return d.numberSetter(name, L0Register, func(v float64) func(genset.Inputs) genset.Inputs {
 			return func(i genset.Inputs) genset.Inputs {
 				i.L1 = v
 				return i
 			}
 		}), nil
 	case "L2":
-		return d.numberSetter(name, L2Register, func(v float64) func(genset.Inputs) genset.Inputs {
+		return d.numberSetter(name, L1Register, func(v float64) func(genset.Inputs) genset.Inputs {
 			return func(i genset.Inputs) genset.Inputs {
 				i.L2 = v
+				return i
+			}
+		}), nil
+	case "L3":
+		return d.numberSetter(name, L2Register, func(v float64) func(genset.Inputs) genset.Inputs {
+			return func(i genset.Inputs) genset.Inputs {
+				i.L3 = v
 				return i
 			}
 		}), nil

@@ -128,9 +128,9 @@ func TestController3P(t *testing.T) {
 		// go to warm up
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.OutputAvailable = true
-			i.U0 = 220
 			i.U1 = 220
 			i.U2 = 220
+			i.U3 = 220
 			i.F = 50
 			return i
 		})
@@ -153,7 +153,7 @@ func TestController3P(t *testing.T) {
 			i.Time = t4
 			i.EngineTemp = 70
 			i.F = 48
-			i.L0 = 1000
+			i.L1 = 1000
 			return i
 		})
 		stateTracker.AssertLatest(t, genset.State{Node: genset.Producing, Changed: t3})
@@ -200,12 +200,12 @@ func TestController3P(t *testing.T) {
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
 			i.Time = t8
 			i.F = 0
-			i.U0 = 10
 			i.U1 = 10
 			i.U2 = 10
-			i.L0 = 2
+			i.U3 = 10
 			i.L1 = 2
 			i.L2 = 2
+			i.L3 = 2
 			return i
 		})
 		stateTracker.AssertLatest(t, genset.State{Node: genset.EnclosureCoolDown, Changed: t7})
@@ -316,9 +316,9 @@ func TestController3P(t *testing.T) {
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = t1
 				i.OutputAvailable = true
-				i.U0 = 221
-				i.U1 = 219
-				i.U2 = 222
+				i.U1 = 221
+				i.U2 = 219
+				i.U3 = 222
 				i.F = 49
 				return i
 			})
@@ -395,9 +395,9 @@ func TestController3P(t *testing.T) {
 			IOAvailable:     true,
 			EngineTemp:      20,
 			OutputAvailable: true,
-			U0:              220,
 			U1:              220,
 			U2:              220,
+			U3:              220,
 			F:               50,
 		}
 
@@ -490,9 +490,9 @@ func TestController3P(t *testing.T) {
 			IOAvailable:     true,
 			EngineTemp:      55,
 			OutputAvailable: true,
-			U0:              220,
 			U1:              220,
 			U2:              220,
+			U3:              220,
 			F:               50,
 		}
 
@@ -504,18 +504,18 @@ func TestController3P(t *testing.T) {
 			// voltage and frequency fluctuating
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = i.Time.Add(time.Second)
-				i.U0 = params.UMin + 1
 				i.U1 = params.UMin + 1
 				i.U2 = params.UMin + 1
+				i.U3 = params.UMin + 1
 				i.F = params.FMin + 1
 				return i
 			})
 
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = i.Time.Add(time.Second)
-				i.U0 = params.UMax - 1
 				i.U1 = params.UMax - 1
 				i.U2 = params.UMax - 1
+				i.U3 = params.UMax - 1
 				i.F = params.FMax - 1
 				return i
 			})
@@ -540,17 +540,17 @@ func TestController3P(t *testing.T) {
 			// power fluctuating
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = i.Time.Add(time.Second)
-				i.L0 = 0
 				i.L1 = 0
 				i.L2 = 0
+				i.L3 = 0
 				return i
 			})
 
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = i.Time.Add(time.Second)
-				i.L0 = params.PMax - 1
 				i.L1 = params.PMax - 1
-				i.L2 = params.PTotMax - i.L1 - i.L0 - 1
+				i.L2 = params.PMax - 1
+				i.L3 = params.PTotMax - i.L2 - i.L1 - 1
 				return i
 			})
 
@@ -683,9 +683,9 @@ func TestController3P(t *testing.T) {
 				CommandSwitch:   true,
 				IOAvailable:     true,
 				OutputAvailable: true,
-				U0:              220,
 				U1:              220,
 				U2:              220,
+				U3:              220,
 				F:               50,
 				EngineTemp:      45,
 			}
@@ -737,9 +737,9 @@ func TestController3P(t *testing.T) {
 			IOAvailable:     true,
 			EngineTemp:      70,
 			OutputAvailable: true,
-			U0:              220,
 			U1:              220,
 			U2:              220,
+			U3:              220,
 			F:               50,
 		}
 
@@ -938,7 +938,7 @@ func TestController1P(t *testing.T) {
 			IOAvailable:     true,
 			EngineTemp:      55,
 			OutputAvailable: true,
-			U0:              230,
+			U1:              230,
 			F:               50,
 		}
 
@@ -950,14 +950,14 @@ func TestController1P(t *testing.T) {
 			// voltage and frequency fluctuating
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = i.Time.Add(time.Second)
-				i.U0 = params.UMin + 1
+				i.U1 = params.UMin + 1
 				i.F = params.FMin + 1
 				return i
 			})
 
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = i.Time.Add(time.Second)
-				i.U0 = params.UMax - 1
+				i.U1 = params.UMax - 1
 				i.F = params.FMax - 1
 				return i
 			})
@@ -965,13 +965,13 @@ func TestController1P(t *testing.T) {
 			// power fluctuating
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = i.Time.Add(time.Second)
-				i.L0 = 5
+				i.L1 = 5
 				return i
 			})
 
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = i.Time.Add(time.Second)
-				i.L0 = 900
+				i.L1 = 900
 				return i
 			})
 
@@ -992,7 +992,7 @@ func TestController1P(t *testing.T) {
 			t1 := t0.Add(time.Second)
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = t1
-				i.U0 = params.UMax + 1
+				i.U1 = params.UMax + 1
 				return i
 			})
 
@@ -1017,9 +1017,9 @@ func TestController1P(t *testing.T) {
 			IOAvailable:     true,
 			EngineTemp:      params.EnclosureCoolDownTemp - 1,
 			OutputAvailable: true,
-			U0:              230,
 			U1:              230,
 			U2:              230,
+			U3:              230,
 			F:               50,
 		}
 

@@ -122,48 +122,48 @@ var OutputAvailableRegister = NewOnOffRegister(
 
 var U0Register = NewNumberRegister(
 	"Inputs",
-	"U0",
-	"Voltage U0",
+	"U1",
+	"Voltage U1",
 	"V",
 	21,
 )
 
 var U1Register = NewNumberRegister(
 	"Inputs",
-	"U1",
-	"Voltage U1",
+	"U2",
+	"Voltage U2",
 	"V",
 	22,
 )
 
 var U2Register = NewNumberRegister(
 	"Inputs",
-	"U2",
-	"Voltage U2",
+	"U3",
+	"Voltage U3",
 	"V",
 	23,
 )
 
 var L0Register = NewNumberRegister(
 	"Inputs",
-	"L0",
-	"Load L0",
+	"L1",
+	"Load L1",
 	"W",
 	24,
 )
 
 var L1Register = NewNumberRegister(
 	"Inputs",
-	"L1",
-	"Load L1",
+	"L2",
+	"Load L2",
 	"W",
 	25,
 )
 
 var L2Register = NewNumberRegister(
 	"Inputs",
-	"L2",
-	"Load L2",
+	"L3",
+	"Load L3",
 	"W",
 	26,
 )

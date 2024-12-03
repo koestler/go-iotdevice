@@ -55,12 +55,12 @@ type Inputs struct {
 
 	// Output measurement inputs
 	OutputAvailable bool
-	U0              float64
 	U1              float64
 	U2              float64
-	L0              float64
+	U3              float64
 	L1              float64
 	L2              float64
+	L3              float64
 	F               float64
 }
 
@@ -341,16 +341,16 @@ func outputCheck(p Params, i Inputs) bool {
 	}
 
 	if p.SinglePhase {
-		return i.U0 >= p.UMin && i.U0 <= p.UMax &&
-			i.L0 <= p.PMax &&
-			i.L0 <= p.PTotMax
+		return i.U1 >= p.UMin && i.U1 <= p.UMax &&
+			i.L1 <= p.PMax &&
+			i.L1 <= p.PTotMax
 	}
 	return i.F >= p.FMin && i.F <= p.FMax &&
-		i.U0 >= p.UMin && i.U0 <= p.UMax &&
 		i.U1 >= p.UMin && i.U1 <= p.UMax &&
 		i.U2 >= p.UMin && i.U2 <= p.UMax &&
-		i.L0 <= p.PMax &&
+		i.U3 >= p.UMin && i.U3 <= p.UMax &&
 		i.L1 <= p.PMax &&
 		i.L2 <= p.PMax &&
-		i.L0+i.L1+i.L2 <= p.PTotMax
+		i.L3 <= p.PMax &&
+		i.L1+i.L2+i.L3 <= p.PTotMax
 }
