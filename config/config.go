@@ -1006,8 +1006,8 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 	err = append(err, e...)
 
 	if len(c.PrimingTimeout) < 1 {
-		// use default 1s
-		ret.primingTimeout = time.Second
+		// use default 10s
+		ret.primingTimeout = 10 * time.Second
 	} else if primingTimeout, e := time.ParseDuration(c.PrimingTimeout); e != nil {
 		err = append(err, fmt.Errorf("GensetDevices->%s->PrimingTimeout='%s' parse error: %s",
 			name, c.PrimingTimeout, e,
@@ -1090,7 +1090,7 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 	}
 
 	if c.EngineCoolDownTemp == nil {
-		ret.engineCoolDownTemp = 80 // default 80°C
+		ret.engineCoolDownTemp = 70 // default 70°C
 	} else {
 		ret.engineCoolDownTemp = *c.EngineCoolDownTemp
 	}
