@@ -146,24 +146,24 @@ var U2Register = NewNumberRegister(
 
 var L0Register = NewNumberRegister(
 	"Inputs",
-	"L1",
-	"Load L1",
+	"P1",
+	"Load P1",
 	"W",
 	24,
 )
 
 var L1Register = NewNumberRegister(
 	"Inputs",
-	"L2",
-	"Load L2",
+	"P2",
+	"Load P2",
 	"W",
 	25,
 )
 
 var L2Register = NewNumberRegister(
 	"Inputs",
-	"L3",
-	"Load L3",
+	"P3",
+	"Load P3",
 	"W",
 	26,
 )

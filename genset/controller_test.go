@@ -153,7 +153,7 @@ func TestController3P(t *testing.T) {
 			i.Time = t4
 			i.EngineTemp = 70
 			i.F = 48
-			i.L1 = 1000
+			i.P1 = 1000
 			return i
 		})
 		stateTracker.AssertLatest(t, genset.State{Node: genset.Producing, Changed: t3})
@@ -203,9 +203,9 @@ func TestController3P(t *testing.T) {
 			i.U1 = 10
 			i.U2 = 10
 			i.U3 = 10
-			i.L1 = 2
-			i.L2 = 2
-			i.L3 = 2
+			i.P1 = 2
+			i.P2 = 2
+			i.P3 = 2
 			return i
 		})
 		stateTracker.AssertLatest(t, genset.State{Node: genset.EnclosureCoolDown, Changed: t7})
@@ -540,17 +540,17 @@ func TestController3P(t *testing.T) {
 			// power fluctuating
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = i.Time.Add(time.Second)
-				i.L1 = 0
-				i.L2 = 0
-				i.L3 = 0
+				i.P1 = 0
+				i.P2 = 0
+				i.P3 = 0
 				return i
 			})
 
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = i.Time.Add(time.Second)
-				i.L1 = params.PMax - 1
-				i.L2 = params.PMax - 1
-				i.L3 = params.PTotMax - i.L2 - i.L1 - 1
+				i.P1 = params.PMax - 1
+				i.P2 = params.PMax - 1
+				i.P3 = params.PTotMax - i.P2 - i.P1 - 1
 				return i
 			})
 
@@ -965,13 +965,13 @@ func TestController1P(t *testing.T) {
 			// power fluctuating
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = i.Time.Add(time.Second)
-				i.L1 = 5
+				i.P1 = 5
 				return i
 			})
 
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = i.Time.Add(time.Second)
-				i.L1 = 900
+				i.P1 = 900
 				return i
 			})
 
