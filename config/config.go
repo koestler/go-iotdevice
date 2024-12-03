@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"cmp"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/koestler/go-iotdevice/v3/types"
@@ -1234,6 +1235,14 @@ func (c gensetDeviceBindingConfigRead) TransformAndValidate(devices []DeviceConf
 			})
 		}
 	}
+	slices.SortFunc(ret, func(i, j GensetDeviceBindingConfig) int {
+		return cmp.Or(
+			cmp.Compare(i.deviceName, j.deviceName),
+			cmp.Compare(i.registerName, j.registerName),
+			cmp.Compare(i.name, j.name),
+		)
+	})
+
 	return
 }
 
