@@ -68,8 +68,6 @@ func runNonMqttGensetDevices(
 		watchedDev.Run()
 		devicePool.Add(watchedDev)
 	}
-
-	return
 }
 
 func runMqttDevices(
