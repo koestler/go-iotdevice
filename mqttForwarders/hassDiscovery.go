@@ -8,7 +8,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/mqttClient"
 	"golang.org/x/exp/maps"
 	"log"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -190,7 +190,7 @@ func publishHomeassistantDiscoveryMessage(
 		// generate Jinja2 template to translate enumIdx to string
 		enum := register.Enum()
 		keys := maps.Keys(enum)
-		sort.Ints(keys)
+		slices.Sort(keys)
 
 		if commandFilter(register) && len(keys) >= 2 {
 			offIdx := keys[0]

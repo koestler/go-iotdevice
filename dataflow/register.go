@@ -1,8 +1,9 @@
 package dataflow
 
 import (
+	"cmp"
 	"reflect"
-	"sort"
+	"slices"
 )
 
 //go:generate mockgen -source register.go -destination mock/register_mock.go
@@ -107,7 +108,7 @@ func FilterRegisters[R Register](input []R, filterConf RegisterFilterConf) (outp
 }
 
 func SortRegisterStructs(input []RegisterStruct) {
-	sort.SliceStable(input, func(i, j int) bool { return input[i].Sort() < input[j].Sort() })
+	slices.SortFunc(input, func(a, b RegisterStruct) int { return cmp.Compare(a.Sort(), b.Sort()) })
 }
 
 func (r RegisterStruct) Equals(b RegisterStruct) bool {

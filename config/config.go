@@ -12,7 +12,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 )
@@ -1069,7 +1069,7 @@ func TransformAndValidateMapToList[I any, O any](
 	transformer func(inp I, name string) (ret O, err []error),
 ) (ret []O, err []error) {
 	keys := maps.Keys(inp)
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	ret = make([]O, len(inp))
 	for i, name := range keys {

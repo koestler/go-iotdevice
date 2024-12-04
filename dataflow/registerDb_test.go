@@ -7,7 +7,7 @@ import (
 	mock_dataflow "github.com/koestler/go-iotdevice/v3/dataflow/mock"
 	"go.uber.org/mock/gomock"
 	"reflect"
-	"sort"
+	"slices"
 	"sync"
 	"testing"
 )
@@ -30,7 +30,7 @@ func TestRegisterDb(t *testing.T) {
 			fmt.Sprintf("D%d", i),
 		}...)
 	}
-	sort.Strings(expect)
+	slices.Sort(expect)
 
 	// populate storage
 	rdb.Add(mockRegister(t, "A0"), mockRegister(t, "A1"), mockRegister(t, "A2"))
@@ -76,7 +76,7 @@ func TestRegisterDb(t *testing.T) {
 			for o := range s {
 				got = append(got, o.Name())
 			}
-			sort.Strings(got)
+			slices.Sort(got)
 			if !reflect.DeepEqual(expect, got) {
 				t.Errorf("subscription %d: expect \n%v but got \n%v", i, expect, got)
 			}
@@ -114,7 +114,7 @@ func nameSlice(list []dataflow.RegisterStruct) []string {
 	for i, r := range list {
 		ret[i] = r.Name()
 	}
-	sort.Strings(ret)
+	slices.Sort(ret)
 	return ret
 }
 
