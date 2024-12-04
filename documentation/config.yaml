@@ -4,7 +4,8 @@ Version: 2
 ProjectTitle: Configurable Title of Project
 
 HttpServer:
-  Bind: "[::1]"
+  Bind: "0.0.0.0"
+  Port: 8000
 
 Authentication:
   HtaccessFile: ./auth.passwd
