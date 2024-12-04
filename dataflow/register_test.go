@@ -276,3 +276,47 @@ func TestSortRegisters(t *testing.T) {
 		t.Errorf("expect %#v but got %#v", expect, got)
 	}
 }
+
+func TestEquals(t *testing.T) {
+	a0 := getTestTextRegisterWithName("a")
+	a1 := getTestTextRegisterWithName("a")
+	b := getTestTextRegisterWithName("b")
+
+	if !a0.Equals(a1) {
+		t.Errorf("expect a to equal a")
+	}
+
+	if a0.Equals(b) {
+		t.Errorf("expect a not to equal b")
+	}
+
+	e0 := getTestEnumRegister()
+	e1 := dataflow.NewRegisterStruct(
+		"test-enum-register-category",
+		"test-enum-register-name",
+		"test-enum-register-description",
+		dataflow.EnumRegister,
+		map[int]string{0: "A", 1: "B"},
+		"test-enum-register-unit",
+		42,
+		false,
+	)
+	e2 := dataflow.NewRegisterStruct(
+		"test-enum-register-category",
+		"test-enum-register-name",
+		"test-enum-register-description",
+		dataflow.EnumRegister,
+		map[int]string{0: "A", 1: "xxx"},
+		"test-enum-register-unit",
+		42,
+		false,
+	)
+
+	if !e0.Equals(e1) {
+		t.Errorf("expect e0 to equal e1")
+	}
+
+	if e0.Equals(e2) {
+		t.Errorf("expect e0 not to equal e1")
+	}
+}

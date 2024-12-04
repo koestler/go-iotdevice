@@ -2,7 +2,6 @@ package dataflow
 
 import (
 	"cmp"
-	"reflect"
 	"slices"
 )
 
@@ -112,20 +111,28 @@ func SortRegisterStructs(input []RegisterStruct) {
 }
 
 func (r RegisterStruct) Equals(b RegisterStruct) bool {
-	if r.category == b.category &&
+	return r.category == b.category &&
 		r.name == b.name &&
 		r.description == b.description &&
 		r.registerType == b.registerType &&
 		r.unit == b.unit &&
 		r.sort == b.sort &&
-		r.writable == b.writable {
+		r.writable == b.writable &&
+		mapEquals(r.enum, b.enum)
+}
 
-		if r.registerType == EnumRegister {
-			return reflect.DeepEqual(r.enum, b.enum)
-		}
-
+func mapEquals(a, b map[int]string) bool {
+	if a == nil && b == nil {
 		return true
 	}
 
-	return false
+	if len(a) != len(b) {
+		return false
+	}
+	for k, v := range a {
+		if b[k] != v {
+			return false
+		}
+	}
+	return true
 }
