@@ -105,7 +105,6 @@ For auto-restart on system reboots, configuration, and networking I use `docker 
 ```yaml
 # documentation/docker-compose.yml
 
-version: "3"
 services:
   go-iotdevice:
     restart: always
@@ -117,6 +116,7 @@ services:
     privileged: true # used to access serial devices
     group_add: # add app user running to software to the dialout group
       - dialout
+
 ```
 
 ### Configuration
