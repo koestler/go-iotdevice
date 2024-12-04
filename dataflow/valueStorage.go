@@ -39,7 +39,7 @@ func NewValueStorage() (valueStorage *ValueStorage) {
 	valueStorage = &ValueStorage{
 		ctx:           ctx,
 		ctxCancel:     cancel,
-		state:         make(map[StateKey]Value, 64),
+		state:         make(map[StateKey]Value),
 		subscriptions: list.New[ValueSubscription](),
 		inputChannel:  make(chan Value, 1024),
 	}
