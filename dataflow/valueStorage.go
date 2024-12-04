@@ -41,7 +41,7 @@ func NewValueStorage() (valueStorage *ValueStorage) {
 		ctxCancel:     cancel,
 		state:         make(map[StateKey]Value),
 		subscriptions: list.New[ValueSubscription](),
-		inputChannel:  make(chan Value, 1024),
+		inputChannel:  make(chan Value),
 	}
 
 	// start main go routine
