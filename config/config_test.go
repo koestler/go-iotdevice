@@ -267,7 +267,7 @@ GensetDevices:                                             # optional, a list ge
     AuxTemp1Min: 180                                       # optional, default -20, minimum temperature the aux temperature sensor 1 must have to not trigger the error state
     AuxTemp1Max: 190                                       # optional, default 120, maximum temperature the aux temperature sensor 1 must have to not trigger the error state
 
-    SinglePhase: false                                     # optional, default false, whether the generator is single phase or a three-phase system
+    SinglePhase: true                                      # optional, default false, whether the generator is single phase or a three-phase system
     UMin: 200                                              # optional, default 200, minimum voltage the generator must have to not trigger the error state
     UMax: 210                                              # optional, default 260, maximum voltage the generator must have to not trigger the error state
     FMin: 220                                               # optional, default 45, minimum frequency the generator must have to not trigger the error state
@@ -1320,6 +1320,102 @@ func TestReadConfig_Complete(t *testing.T) {
 				}
 			}
 		}
+
+		if expect, got := 20*time.Second, gd.PrimingTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->PrimingTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 19*time.Second, gd.CrankingTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->CrankingTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 18*time.Second, gd.WarmUpTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->WarmUpTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 17*time.Second, gd.WarmUpMinTime(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->WarmUpMinTime to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 110.0, gd.WarmUpTemp(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->WarmUpTemp to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 16*time.Second, gd.EngineCoolDownTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineCoolDownTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 15*time.Second, gd.EngineCoolDownMinTime(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineCoolDownMinTime to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 120.0, gd.EngineCoolDownTemp(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineCoolDownTemp to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 14*time.Second, gd.EnclosureCoolDownTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EnclosureCoolDownTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 13*time.Second, gd.EnclosureCoolDownMinTime(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EnclosureCoolDownMinTime to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 130.0, gd.EnclosureCoolDownTemp(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EnclosureCoolDownTemp to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 140.0, gd.EngineTempMin(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineTempMin to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 150.0, gd.EngineTempMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineTempMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 160.0, gd.AuxTemp0Min(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp0Min to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 170.0, gd.AuxTemp0Max(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp0Max to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 180.0, gd.AuxTemp1Min(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp1Min to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 190.0, gd.AuxTemp1Max(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp1Max to be %f but got %f", expect, got)
+		}
+
+		if !gd.SinglePhase() {
+			t.Error("expect GensetDevice->genset0->SinglePhase to be true")
+		}
+
+		if expect, got := 200.0, gd.UMin(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->UMin to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 210.0, gd.UMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->UMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 220.0, gd.FMin(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->FMin to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 230.0, gd.FMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->FMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 240.0, gd.PMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->PMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 250.0, gd.PTotMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->PTotMax to be %f but got %f", expect, got)
+		}
 	}
 
 	if expect, got := 2, len(config.Views()); expect != got {
@@ -2105,6 +2201,128 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if expect, got := types.MqttDeviceGoIotdeviceV3Kind, vd.Kind(); expect != got {
 			t.Errorf("expect MqttDevices->bmv1->Kind to be %v but got %v", expect, got)
+		}
+	}
+
+	if expect, got := 1, len(config.GensetDevices()); expect != got {
+		t.Errorf("expect length of config.GensetDevices to be %d but got %d", expect, got)
+	} else {
+		gd := config.GensetDevices()[0]
+
+		if expect, got := "genset0", gd.Name(); expect != got {
+			t.Errorf("expect Name of first GensetDevice to be '%s' but got %s'", expect, got)
+		}
+
+		if expect, got := 200*time.Millisecond, gd.RestartInterval(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->General->RestartInterval to be %s but got %s", expect, got)
+		}
+
+		if expect, got := time.Minute, gd.RestartIntervalMaxBackoff(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
+		}
+
+		if gd.LogDebug() {
+			t.Error("expect GensetDevice->genset0->General->LogDebug to be false")
+		}
+
+		if gd.LogComDebug() {
+			t.Error("expect GensetDevice->genset0->General->LogComDebug to be false")
+		}
+
+		if expect, got := 10*time.Second, gd.PrimingTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->PrimingTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 10*time.Second, gd.CrankingTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->CrankingTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 10*time.Minute, gd.WarmUpTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->WarmUpTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 2*time.Minute, gd.WarmUpMinTime(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->WarmUpMinTime to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 50.0, gd.WarmUpTemp(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->WarmUpTemp to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 5*time.Minute, gd.EngineCoolDownTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineCoolDownTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 2*time.Minute, gd.EngineCoolDownMinTime(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineCoolDownMinTime to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 70.0, gd.EngineCoolDownTemp(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineCoolDownTemp to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 10*time.Minute, gd.EnclosureCoolDownTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EnclosureCoolDownTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 2*time.Minute, gd.EnclosureCoolDownMinTime(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EnclosureCoolDownMinTime to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 30.0, gd.EnclosureCoolDownTemp(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EnclosureCoolDownTemp to be %f but got %f", expect, got)
+		}
+
+		if expect, got := -20.0, gd.EngineTempMin(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineTempMin to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 90.0, gd.EngineTempMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineTempMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := -20.0, gd.AuxTemp0Min(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp0Min to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 120.0, gd.AuxTemp0Max(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp0Max to be %f but got %f", expect, got)
+		}
+
+		if expect, got := -20.0, gd.AuxTemp1Min(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp1Min to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 120.0, gd.AuxTemp1Max(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp1Max to be %f but got %f", expect, got)
+		}
+
+		if gd.SinglePhase() {
+			t.Error("expect GensetDevice->genset0->SinglePhase to be false")
+		}
+
+		if expect, got := 220.0, gd.UMin(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->UMin to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 240.0, gd.UMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->UMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 45.0, gd.FMin(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->FMin to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 55.0, gd.FMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->FMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 1e6, gd.PMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->PMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 1e6, gd.PTotMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->PTotMax to be %f but got %f", expect, got)
 		}
 	}
 

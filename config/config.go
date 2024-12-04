@@ -1171,7 +1171,7 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 	}
 
 	if c.UMin == nil {
-		ret.uMin = 200 // default 200V
+		ret.uMin = 220 // default 220V
 	} else if *c.UMin < 0 {
 		err = append(err, fmt.Errorf("GensetDevices->%s->UMin='%f' must be >=0", name, *c.UMin))
 	} else {
@@ -1179,7 +1179,7 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 	}
 
 	if c.UMax == nil {
-		ret.uMax = 250 // default 250V
+		ret.uMax = 240 // default 240V
 	} else if *c.UMax < 0 {
 		err = append(err, fmt.Errorf("GensetDevices->%s->UMax='%f' must be >=0", name, *c.UMax))
 	} else {
