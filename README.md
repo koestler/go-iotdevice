@@ -608,7 +608,7 @@ MqttClients:                                               # optional, when empt
     MqttDevices:                                           # optional, default empty, which mqtt devices shall receive messages from this client
       bmv1:                                                # mandatory, the identifier of the MqttDevice
         MqttTopics:                                        # mandatory, at least 1 topic must be defined
-          - stat/go-iotdevice/bmv1/+                       # what topic to subscribe to; must match RealtimeTopic of the sending device; %RegisterName% must be replaced by +
+          - stat/go-iotdevice/bmv1/+                       # what topic to subscribe to; must match StructureTopic of the sending device
 
     AvailabilityClient:
       Enabled: true                                        # optional, default true, whether to send online messages and register an offline message as will
