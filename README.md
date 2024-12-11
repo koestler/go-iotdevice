@@ -861,8 +861,8 @@ GensetDevices:                                             # optional, a list ge
     AuxTemp1Max: 120                                       # optional, default 120, maximum temperature the aux temperature sensor 1 must have to not trigger the error state
 
     SinglePhase: false                                     # optional, default false, whether the generator is single phase or a three-phase system
-    UMin: 200                                              # optional, default 200, minimum voltage the generator must have to not trigger the error state
-    UMax: 250                                              # optional, default 260, maximum voltage the generator must have to not trigger the error state
+    UMin: 220                                              # optional, default 220, minimum voltage the generator must have to not trigger the error state
+    UMax: 240                                              # optional, default 240, maximum voltage the generator must have to not trigger the error state
     FMin: 45                                               # optional, default 45, minimum frequency the generator must have to not trigger the error state
     FMax: 55                                               # optional, default 55, maximum frequency the generator must have to not trigger the error state
     PMax: 1E6                                              # optional, default 1E6, maximum power the generator must have to not trigger the error state
