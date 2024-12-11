@@ -6,6 +6,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/koestler/go-iotdevice/v3/device"
 	"github.com/koestler/go-iotdevice/v3/genset"
+	"log"
 	"time"
 )
 
@@ -72,8 +73,10 @@ func NewDevice(
 }
 
 func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
-	addToRegisterDb(d.State.RegisterDb(), d.gensetConfig.SinglePhase())
+	dName := d.Config().Name()
+	ss := d.StateStorage()
 
+	initialState := genset.Off
 	d.controller = genset.NewController(
 		genset.Params{
 			// Transition params
@@ -106,9 +109,18 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 			PMax:        d.gensetConfig.PMax(),
 			PTotMax:     d.gensetConfig.PTotMax(),
 		},
-		genset.Off,
+		initialState,
 		genset.Inputs{},
 	)
+
+	// setup registers
+	commandRegisters := addToRegisterDb(d.State.RegisterDb(), d.gensetConfig.SinglePhase(), d.gensetConfig.InputBindings())
+
+	// send connected now, disconnected when this routine stops
+	d.SetAvailable(true)
+	defer func() {
+		d.SetAvailable(false)
+	}()
 
 	// bind inputs
 	for _, b := range d.gensetConfig.InputBindings() {
@@ -121,7 +133,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 
 		setter, err := d.inpSetter(b.Name())
 		if err != nil {
-			return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", d.Name(), err), true
+			return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", dName, err), true
 		}
 
 		go func() {
@@ -132,7 +144,30 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		}()
 	}
 
-	// update time input
+	// setup command subscription
+	{
+		for _, r := range commandRegisters {
+			registerName := r.Name()
+			_, sub := d.commandStorage.SubscribeReturnInitial(ctx, func(v dataflow.Value) bool {
+				return v.DeviceName() == dName && v.Register().Name() == registerName
+			})
+
+			setter, err := d.inpSetter(registerName)
+			if err != nil {
+				return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", d.Name(), err), true
+			}
+
+			go func() {
+				// routine will return when ctx of the subscription is cancelled
+				for v := range sub.Drain() {
+					log.Printf("gensetDevice[%s]: command %v", dName, v)
+					setter(d.controller, v)
+				}
+			}()
+		}
+	}
+
+	// update inputs
 	go func() {
 		ticker := time.NewTicker(time.Second)
 		defer ticker.Stop()
@@ -150,27 +185,25 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	}()
 
 	// handle state updates
+	lastState := initialState
 	d.controller.OnStateUpdate = func(s genset.State) {
-		name := d.Config().Name()
-		ss := d.StateStorage()
-
-		ss.Fill(dataflow.NewEnumRegisterValue(name, StateRegister, int(s.Node)))
-		ss.Fill(dataflow.NewTextRegisterValue(name, StateChangedRegister, s.Changed.String()))
+		if lastState != s.Node {
+			log.Printf("gensetDevice[%s]: state changed: %s", dName, s.Node)
+			ss.Fill(dataflow.NewEnumRegisterValue(dName, StateRegister, int(s.Node)))
+		}
+		ss.Fill(dataflow.NewTextRegisterValue(dName, StateChangedRegister, s.Changed.String()))
 	}
 
 	// handle output updates
 	d.controller.OnOutputUpdate = func(o genset.Outputs) {
-		name := d.Config().Name()
-		ss := d.StateStorage()
-
-		ss.Fill(dataflow.NewEnumRegisterValue(name, IgnitionRegister, boolToOnOff(o.Ignition)))
-		ss.Fill(dataflow.NewEnumRegisterValue(name, StarterRegister, boolToOnOff(o.Starter)))
-		ss.Fill(dataflow.NewEnumRegisterValue(name, FanRegister, boolToOnOff(o.Fan)))
-		ss.Fill(dataflow.NewEnumRegisterValue(name, PumpRegister, boolToOnOff(o.Pump)))
-		ss.Fill(dataflow.NewEnumRegisterValue(name, LoadRegister, boolToOnOff(o.Load)))
-		ss.Fill(dataflow.NewNumericRegisterValue(name, TimeInStateRegister, o.TimeInState.Seconds()))
-		ss.Fill(dataflow.NewEnumRegisterValue(name, IoCheckRegister, boolToOnOff(o.IoCheck)))
-		ss.Fill(dataflow.NewEnumRegisterValue(name, OutputCheckRegister, boolToOnOff(o.OutputCheck)))
+		ss.Fill(dataflow.NewEnumRegisterValue(dName, IgnitionRegister, boolToOnOff(o.Ignition)))
+		ss.Fill(dataflow.NewEnumRegisterValue(dName, StarterRegister, boolToOnOff(o.Starter)))
+		ss.Fill(dataflow.NewEnumRegisterValue(dName, FanRegister, boolToOnOff(o.Fan)))
+		ss.Fill(dataflow.NewEnumRegisterValue(dName, PumpRegister, boolToOnOff(o.Pump)))
+		ss.Fill(dataflow.NewEnumRegisterValue(dName, LoadRegister, boolToOnOff(o.Load)))
+		ss.Fill(dataflow.NewNumericRegisterValue(dName, TimeInStateRegister, o.TimeInState.Seconds()))
+		ss.Fill(dataflow.NewEnumRegisterValue(dName, IoCheckRegister, boolToOnOff(o.IoCheck)))
+		ss.Fill(dataflow.NewEnumRegisterValue(dName, OutputCheckRegister, boolToOnOff(o.OutputCheck)))
 	}
 
 	// start the controller

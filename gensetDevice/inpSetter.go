@@ -50,11 +50,19 @@ func (d *DeviceStruct) numberSetter(
 
 func (d *DeviceStruct) inpSetter(name string) (func(*genset.Controller, dataflow.Value), error) {
 	switch name {
-	case "ResetSwitch":
-		return d.enumSetter(name, ResetSwitchRegister,
+	case "ArmSwitch":
+		return d.enumSetter(name, ArmSwitchRegister,
 			func(v bool) func(genset.Inputs) genset.Inputs {
 				return func(i genset.Inputs) genset.Inputs {
-					i.ResetSwitch = v
+					i.ArmSwitch = v
+					return i
+				}
+			}), nil
+	case "ArmSwitchRO":
+		return d.enumSetter(name, ArmSwitchRegisterRO,
+			func(v bool) func(genset.Inputs) genset.Inputs {
+				return func(i genset.Inputs) genset.Inputs {
+					i.ArmSwitch = v
 					return i
 				}
 			}), nil
@@ -66,19 +74,35 @@ func (d *DeviceStruct) inpSetter(name string) (func(*genset.Controller, dataflow
 					return i
 				}
 			}), nil
+	case "CommandSwitchRO":
+		return d.enumSetter(name, CommandSwitchRegisterRO,
+			func(v bool) func(genset.Inputs) genset.Inputs {
+				return func(i genset.Inputs) genset.Inputs {
+					i.CommandSwitch = v
+					return i
+				}
+			}), nil
+	case "ResetSwitch":
+		return d.enumSetter(name, ResetSwitchRegister,
+			func(v bool) func(genset.Inputs) genset.Inputs {
+				return func(i genset.Inputs) genset.Inputs {
+					i.ResetSwitch = v
+					return i
+				}
+			}), nil
+	case "ResetSwitchRO":
+		return d.enumSetter(name, ResetSwitchRegisterRO,
+			func(v bool) func(genset.Inputs) genset.Inputs {
+				return func(i genset.Inputs) genset.Inputs {
+					i.ResetSwitch = v
+					return i
+				}
+			}), nil
 	case "IOAvailable":
 		return d.enumSetter(name, IOAvailableRegister,
 			func(v bool) func(genset.Inputs) genset.Inputs {
 				return func(i genset.Inputs) genset.Inputs {
 					i.IOAvailable = v
-					return i
-				}
-			}), nil
-	case "ArmSwitch":
-		return d.enumSetter(name, ArmSwitchRegister,
-			func(v bool) func(genset.Inputs) genset.Inputs {
-				return func(i genset.Inputs) genset.Inputs {
-					i.ArmSwitch = v
 					return i
 				}
 			}), nil

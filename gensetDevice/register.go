@@ -17,7 +17,33 @@ var OnOffEnum = map[int]string{
 	boolToOnOff(true):  "On",
 }
 
-func addToRegisterDb(rdb *dataflow.RegisterDb, singlePhase bool) {
+func addToRegisterDb(
+	rdb *dataflow.RegisterDb, singlePhase bool, inputBindings []Binding,
+) (
+	commandRegisters []dataflow.RegisterStruct,
+) {
+	commandRegisters = make([]dataflow.RegisterStruct, 0)
+
+	if isBindedInput("ArmSwitch", inputBindings) {
+		rdb.AddStruct(ArmSwitchRegisterRO)
+	} else {
+		commandRegisters = append(commandRegisters, ArmSwitchRegister)
+	}
+
+	if isBindedInput("CommandSwitch", inputBindings) {
+		rdb.AddStruct(CommandSwitchRegisterRO)
+	} else {
+		commandRegisters = append(commandRegisters, CommandSwitchRegister)
+	}
+
+	if isBindedInput("ResetSwitch", inputBindings) {
+		rdb.AddStruct(ResetSwitchRegisterRO)
+	} else {
+		commandRegisters = append(commandRegisters, ResetSwitchRegister)
+	}
+
+	rdb.AddStruct(commandRegisters...)
+
 	if singlePhase {
 		rdb.AddStruct(InputRegisters1P...)
 	} else {
@@ -25,6 +51,17 @@ func addToRegisterDb(rdb *dataflow.RegisterDb, singlePhase bool) {
 	}
 	rdb.AddStruct(StateRegisters...)
 	rdb.AddStruct(OutputRegisters...)
+
+	return commandRegisters
+}
+
+func isBindedInput(name string, inputBindings []Binding) bool {
+	for _, b := range inputBindings {
+		if b.RegisterName() == name {
+			return true
+		}
+	}
+	return false
 }
 
 func NewOnOffRegister(
@@ -56,6 +93,14 @@ var ArmSwitchRegister = NewOnOffRegister(
 	true,
 )
 
+var ArmSwitchRegisterRO = NewOnOffRegister(
+	"Switches",
+	"ArmSwitchRO",
+	"Arm switch",
+	0,
+	false,
+)
+
 var CommandSwitchRegister = NewOnOffRegister(
 	"Switches",
 	"CommandSwitch",
@@ -64,12 +109,28 @@ var CommandSwitchRegister = NewOnOffRegister(
 	true,
 )
 
+var CommandSwitchRegisterRO = NewOnOffRegister(
+	"Switches",
+	"CommandSwitchRO",
+	"Command switch",
+	1,
+	false,
+)
+
 var ResetSwitchRegister = NewOnOffRegister(
 	"Switches",
 	"ResetSwitch",
 	"Emergency off and reset switch",
 	2,
 	true,
+)
+
+var ResetSwitchRegisterRO = NewOnOffRegister(
+	"Switches",
+	"ResetSwitchRO",
+	"Emergency off and reset switch",
+	2,
+	false,
 )
 
 var IOAvailableRegister = NewOnOffRegister(
@@ -177,9 +238,6 @@ var FRegister = NewNumberRegister(
 )
 
 var InputRegisters3P = []dataflow.RegisterStruct{
-	ArmSwitchRegister,
-	CommandSwitchRegister,
-	ResetSwitchRegister,
 	IOAvailableRegister,
 	FireDetectedRegister,
 	EngineTempRegister,
