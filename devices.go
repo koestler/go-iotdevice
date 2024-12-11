@@ -4,6 +4,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/config"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/koestler/go-iotdevice/v3/device"
+	"github.com/koestler/go-iotdevice/v3/gensetDevice"
 	"github.com/koestler/go-iotdevice/v3/httpDevice"
 	"github.com/koestler/go-iotdevice/v3/modbus"
 	"github.com/koestler/go-iotdevice/v3/modbusDevice"
@@ -15,14 +16,17 @@ import (
 	"log"
 )
 
-func runNonMqttDevices(
+func runDevicePool() *pool.Pool[*restarter.Restarter[device.Device]] {
+	return pool.RunPool[*restarter.Restarter[device.Device]]()
+}
+
+func runNonMqttGensetDevices(
 	cfg *config.Config,
+	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
 	modbusPool *pool.Pool[*modbus.ModbusStruct],
 	stateStorage *dataflow.ValueStorage,
 	commandStorage *dataflow.ValueStorage,
-) (devicePool *pool.Pool[*restarter.Restarter[device.Device]]) {
-	devicePool = pool.RunPool[*restarter.Restarter[device.Device]]()
-
+) {
 	for _, deviceConfig := range cfg.VictronDevices() {
 		if cfg.LogWorkerStart() {
 			log.Printf("device[%s]: start victron type", deviceConfig.Name())
@@ -64,8 +68,6 @@ func runNonMqttDevices(
 		watchedDev.Run()
 		devicePool.Add(watchedDev)
 	}
-
-	return
 }
 
 func runMqttDevices(
@@ -82,6 +84,25 @@ func runMqttDevices(
 
 		deviceConfig := mqttDeviceConfig{deviceConfig, cfg.MqttClients()}
 		dev := mqttDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, commandStorage, mqttClientPool)
+		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
+		watchedDev.Run()
+		devicePool.Add(watchedDev)
+	}
+}
+
+func runGensetDevices(
+	cfg *config.Config,
+	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
+	stateStorage *dataflow.ValueStorage,
+	commandStorage *dataflow.ValueStorage,
+) {
+	for _, deviceConfig := range cfg.GensetDevices() {
+		if cfg.LogWorkerStart() {
+			log.Printf("device[%s]: start genset type", deviceConfig.Name())
+		}
+
+		deviceConfig := gensetDeviceConfig{deviceConfig}
+		dev := gensetDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, commandStorage)
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		watchedDev.Run()
 		devicePool.Add(watchedDev)
@@ -121,6 +142,32 @@ type mqttDeviceConfig struct {
 
 func (c mqttDeviceConfig) Filter() dataflow.RegisterFilterConf {
 	return c.MqttDeviceConfig.Filter()
+}
+
+type gensetDeviceConfig struct {
+	config.GensetDeviceConfig
+}
+
+func (c gensetDeviceConfig) Filter() dataflow.RegisterFilterConf {
+	return c.GensetDeviceConfig.Filter()
+}
+
+func (c gensetDeviceConfig) InputBindings() []gensetDevice.Binding {
+	inp := c.GensetDeviceConfig.InputBindings()
+	oup := make([]gensetDevice.Binding, len(inp))
+	for i, b := range inp {
+		oup[i] = gensetDevice.Binding(b)
+	}
+	return oup
+}
+
+func (c gensetDeviceConfig) OutputBindings() []gensetDevice.Binding {
+	inp := c.GensetDeviceConfig.OutputBindings()
+	oup := make([]gensetDevice.Binding, len(inp))
+	for i, b := range inp {
+		oup[i] = gensetDevice.Binding(b)
+	}
+	return oup
 }
 
 func (c mqttDeviceConfig) MqttClientTopics() map[string][]string {

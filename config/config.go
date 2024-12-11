@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"cmp"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/koestler/go-iotdevice/v3/types"
@@ -144,7 +145,7 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	err = append(err, e...)
 
 	ret.devices = make([]DeviceConfig, 0, len(
-		ret.victronDevices)+len(ret.modbusDevices)+len(ret.httpDevices)+len(ret.mqttDevices),
+		ret.victronDevices)+len(ret.modbusDevices)+len(ret.httpDevices)+len(ret.mqttDevices)+len(c.GensetDevices),
 	)
 	for _, d := range ret.victronDevices {
 		ret.devices = append(ret.devices, d.DeviceConfig)
@@ -156,6 +157,18 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 		ret.devices = append(ret.devices, d.DeviceConfig)
 	}
 	for _, d := range ret.mqttDevices {
+		ret.devices = append(ret.devices, d.DeviceConfig)
+	}
+
+	ret.gensetDevices, e = TransformAndValidateMapToList(
+		c.GensetDevices,
+		func(inp gensetDeviceConfigRead, name string) (GensetDeviceConfig, []error) {
+			return inp.TransformAndValidate(name, ret.devices)
+		},
+	)
+	err = append(err, e...)
+
+	for _, d := range ret.gensetDevices {
 		ret.devices = append(ret.devices, d.DeviceConfig)
 	}
 
@@ -708,6 +721,47 @@ func (c mqttDeviceSectionConfigRead) TransformAndValidate(
 	return
 }
 
+func (c modbusConfigRead) TransformAndValidate(name string) (ret ModbusConfig, err []error) {
+	ret = ModbusConfig{
+		name:     name,
+		device:   c.Device,
+		baudRate: c.BaudRate,
+	}
+
+	if !nameMatcher.MatchString(ret.name) {
+		err = append(err, fmt.Errorf("Modbus->Name='%s' does not match %s", ret.name, NameRegexp))
+	}
+
+	if len(c.Device) < 1 {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->Device must not be empty", name))
+	}
+
+	if c.BaudRate < 1 {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->BaudRate must be positiv", name))
+	}
+
+	if len(c.ReadTimeout) < 1 {
+		// use default 100ms
+		ret.readTimeout = 100 * time.Millisecond
+	} else if readTimeout, e := time.ParseDuration(c.ReadTimeout); e != nil {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->ReadTimeout='%s' parse error: %s",
+			name, c.ReadTimeout, e,
+		))
+	} else if readTimeout < time.Millisecond {
+		err = append(err, fmt.Errorf("ModbusDevices->%s->ReadTimeout='%s' must be >=1ms",
+			name, c.ReadTimeout,
+		))
+	} else {
+		ret.readTimeout = readTimeout
+	}
+
+	if c.LogDebug != nil && *c.LogDebug {
+		ret.logDebug = true
+	}
+
+	return
+}
+
 func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, err []error) {
 	ret = DeviceConfig{
 		name: name,
@@ -941,43 +995,253 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string) (ret MqttDeviceC
 	return
 }
 
-func (c modbusConfigRead) TransformAndValidate(name string) (ret ModbusConfig, err []error) {
-	ret = ModbusConfig{
-		name:     name,
-		device:   c.Device,
-		baudRate: c.BaudRate,
-	}
+func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []DeviceConfig) (ret GensetDeviceConfig, err []error) {
+	var e []error
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
+	err = append(err, e...)
 
-	if !nameMatcher.MatchString(ret.name) {
-		err = append(err, fmt.Errorf("Modbus->Name='%s' does not match %s", ret.name, NameRegexp))
-	}
+	ret.inputBindings, e = c.InputBindings.TransformAndValidate(devices)
+	err = append(err, e...)
 
-	if len(c.Device) < 1 {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->Device must not be empty", name))
-	}
+	ret.outputBindings, e = c.OutputBindings.TransformAndValidate(devices)
+	err = append(err, e...)
 
-	if c.BaudRate < 1 {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->BaudRate must be positiv", name))
-	}
-
-	if len(c.ReadTimeout) < 1 {
-		// use default 100ms
-		ret.readTimeout = 100 * time.Millisecond
-	} else if readTimeout, e := time.ParseDuration(c.ReadTimeout); e != nil {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->ReadTimeout='%s' parse error: %s",
-			name, c.ReadTimeout, e,
-		))
-	} else if readTimeout < time.Millisecond {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->ReadTimeout='%s' must be >=1ms",
-			name, c.ReadTimeout,
+	if len(c.PrimingTimeout) < 1 {
+		// use default 10s
+		ret.primingTimeout = 10 * time.Second
+	} else if primingTimeout, e := time.ParseDuration(c.PrimingTimeout); e != nil {
+		err = append(err, fmt.Errorf("GensetDevices->%s->PrimingTimeout='%s' parse error: %s",
+			name, c.PrimingTimeout, e,
 		))
 	} else {
-		ret.readTimeout = readTimeout
+		ret.primingTimeout = primingTimeout
 	}
 
-	if c.LogDebug != nil && *c.LogDebug {
-		ret.logDebug = true
+	if len(c.CrankingTimeout) < 1 {
+		// use default 10s
+		ret.crankingTimeout = 10 * time.Second
+	} else if crankingTimeout, e := time.ParseDuration(c.CrankingTimeout); e != nil {
+		err = append(err, fmt.Errorf("GensetDevices->%s->CrankingTimeout='%s' parse error: %s",
+			name, c.CrankingTimeout, e,
+		))
+	} else {
+		ret.crankingTimeout = crankingTimeout
 	}
+
+	if len(c.WarmUpTimeout) < 1 {
+		// use default 10m
+		ret.warmUpTimeout = 10 * time.Minute
+	} else if warmUpTimeout, e := time.ParseDuration(c.WarmUpTimeout); e != nil {
+		err = append(err, fmt.Errorf("GensetDevices->%s->WarmUpTimeout='%s' parse error: %s",
+			name, c.WarmUpTimeout, e,
+		))
+	} else {
+		ret.warmUpTimeout = warmUpTimeout
+	}
+
+	if len(c.WarmUpMinTime) < 1 {
+		// use default 2m
+		ret.warmUpMinTime = 2 * time.Minute
+	} else if warmUpMinTime, e := time.ParseDuration(c.WarmUpMinTime); e != nil {
+		err = append(err, fmt.Errorf("GensetDevices->%s->WarmUpMinTime='%s' parse error: %s",
+			name, c.WarmUpMinTime, e,
+		))
+	} else {
+		ret.warmUpMinTime = warmUpMinTime
+	}
+
+	if ret.warmUpMinTime > ret.warmUpTimeout {
+		err = append(err, fmt.Errorf("GensetDevices->%s->WarmUpMinTime='%s' must be less or equal than WarmUpTimeout='%s'",
+			name, c.WarmUpMinTime, c.WarmUpTimeout,
+		))
+	}
+
+	if c.WarmUpTemp == nil {
+		ret.warmUpTemp = 50 // default 50°C
+	} else {
+		ret.warmUpTemp = *c.WarmUpTemp
+	}
+
+	if len(c.EngineCoolDownTimeout) < 1 {
+		// use default 5m
+		ret.engineCoolDownTimeout = 5 * time.Minute
+	} else if engineCoolDownTimeout, e := time.ParseDuration(c.EngineCoolDownTimeout); e != nil {
+		err = append(err, fmt.Errorf("GensetDevices->%s->EngineCoolDownTimeout='%s' parse error: %s",
+			name, c.EngineCoolDownTimeout, e,
+		))
+	} else {
+		ret.engineCoolDownTimeout = engineCoolDownTimeout
+	}
+
+	if len(c.EngineCoolDownMinTime) < 1 {
+		// use default 2m
+		ret.engineCoolDownMinTime = 2 * time.Minute
+	} else if engineCoolDownMinTime, e := time.ParseDuration(c.EngineCoolDownMinTime); e != nil {
+		err = append(err, fmt.Errorf("GensetDevices->%s->EngineCoolDownMinTime='%s' parse error: %s",
+			name, c.EngineCoolDownMinTime, e,
+		))
+	} else {
+		ret.engineCoolDownMinTime = engineCoolDownMinTime
+	}
+
+	if ret.engineCoolDownMinTime > ret.engineCoolDownTimeout {
+		err = append(err, fmt.Errorf("GensetDevices->%s->EngineCoolDownMinTime='%s' must be less or equal than EngineCoolDownTimeout='%s'",
+			name, c.EngineCoolDownMinTime, c.EngineCoolDownTimeout,
+		))
+	}
+
+	if c.EngineCoolDownTemp == nil {
+		ret.engineCoolDownTemp = 70 // default 70°C
+	} else {
+		ret.engineCoolDownTemp = *c.EngineCoolDownTemp
+	}
+
+	if len(c.EnclosureCoolDownTimeout) < 1 {
+		// use default 10m
+		ret.enclosureCoolDownTimeout = 10 * time.Minute
+	} else if enclosureCoolDownTimeout, e := time.ParseDuration(c.EnclosureCoolDownTimeout); e != nil {
+		err = append(err, fmt.Errorf("GensetDevices->%s->EnclosureCoolDownTimeout='%s' parse error: %s",
+			name, c.EnclosureCoolDownTimeout, e,
+		))
+	} else {
+		ret.enclosureCoolDownTimeout = enclosureCoolDownTimeout
+	}
+
+	if len(c.EnclosureCoolDownMinTime) < 1 {
+		// use default 2m
+		ret.enclosureCoolDownMinTime = 2 * time.Minute
+	} else if enclosureCoolDownMinTime, e := time.ParseDuration(c.EnclosureCoolDownMinTime); e != nil {
+		err = append(err, fmt.Errorf("GensetDevices->%s->EnclosureCoolDownMinTime='%s' parse error: %s",
+			name, c.EnclosureCoolDownMinTime, e,
+		))
+	} else {
+		ret.enclosureCoolDownMinTime = enclosureCoolDownMinTime
+	}
+
+	if ret.enclosureCoolDownMinTime > ret.enclosureCoolDownTimeout {
+		err = append(err, fmt.Errorf("GensetDevices->%s->EnclosureCoolDownMinTime='%s' must be less or equal than EnclosureCoolDownTimeout='%s'",
+			name, c.EnclosureCoolDownMinTime, c.EnclosureCoolDownTimeout,
+		))
+	}
+
+	if c.EnclosureCoolDownTemp == nil {
+		ret.enclosureCoolDownTemp = 30 // default 30°C
+	} else {
+		ret.enclosureCoolDownTemp = *c.EnclosureCoolDownTemp
+	}
+
+	if c.EngineTempMin == nil {
+		ret.engineTempMin = -20 // default -20°C
+	} else {
+		ret.engineTempMin = *c.EngineTempMin
+	}
+
+	if c.EngineTempMax == nil {
+		ret.engineTempMax = 90 // default 90°C
+	} else {
+		ret.engineTempMax = *c.EngineTempMax
+	}
+
+	if c.AuxTemp0Min == nil {
+		ret.auxTemp0Min = -20 // default -20°C
+	} else {
+		ret.auxTemp0Min = *c.AuxTemp0Min
+	}
+
+	if c.AuxTemp0Max == nil {
+		ret.auxTemp0Max = 120 // default 120°C
+	} else {
+		ret.auxTemp0Max = *c.AuxTemp0Max
+	}
+
+	if c.AuxTemp1Min == nil {
+		ret.auxTemp1Min = -20 // default -20°C
+	} else {
+		ret.auxTemp1Min = *c.AuxTemp1Min
+	}
+
+	if c.AuxTemp1Max == nil {
+		ret.auxTemp1Max = 120 // default 120°C
+	} else {
+		ret.auxTemp1Max = *c.AuxTemp1Max
+	}
+
+	if c.SinglePhase != nil {
+		ret.singlePhase = *c.SinglePhase
+	}
+
+	if c.UMin == nil {
+		ret.uMin = 220 // default 220V
+	} else if *c.UMin < 0 {
+		err = append(err, fmt.Errorf("GensetDevices->%s->UMin='%f' must be >=0", name, *c.UMin))
+	} else {
+		ret.uMin = *c.UMin
+	}
+
+	if c.UMax == nil {
+		ret.uMax = 240 // default 240V
+	} else if *c.UMax < 0 {
+		err = append(err, fmt.Errorf("GensetDevices->%s->UMax='%f' must be >=0", name, *c.UMax))
+	} else {
+		ret.uMax = *c.UMax
+	}
+
+	if c.FMin == nil {
+		ret.fMin = 45 // default 45Hz
+	} else if *c.FMin < 0 {
+		err = append(err, fmt.Errorf("GensetDevices->%s->FMin='%f' must be >=0", name, *c.FMin))
+	} else {
+		ret.fMin = *c.FMin
+	}
+
+	if c.FMax == nil {
+		ret.fMax = 55 // default 55Hz
+	} else if *c.FMax < 0 {
+		err = append(err, fmt.Errorf("GensetDevices->%s->FMax='%f' must be >=0", name, *c.FMax))
+	} else {
+		ret.fMax = *c.FMax
+	}
+
+	if c.PMax == nil {
+		ret.pMax = 1000000 // default 1MW
+	} else if *c.PMax < 0 {
+		err = append(err, fmt.Errorf("GensetDevices->%s->PMax='%f' must be >=0", name, *c.PMax))
+	} else {
+		ret.pMax = *c.PMax
+	}
+
+	if c.PTotMax == nil {
+		ret.pTotMax = 1000000 // default 1MW
+	} else if *c.PTotMax < 0 {
+		err = append(err, fmt.Errorf("GensetDevices->%s->PTotMax='%f' must be >=0", name, *c.PTotMax))
+	} else {
+		ret.pTotMax = *c.PTotMax
+	}
+
+	return
+}
+
+func (c gensetDeviceBindingConfigRead) TransformAndValidate(devices []DeviceConfig) (ret []GensetDeviceBindingConfig, err []error) {
+	for deviceName, m := range c {
+		if !existsByName(deviceName, devices) {
+			err = append(err, fmt.Errorf("device='%s' is not defined", deviceName))
+		}
+
+		for registerName, name := range m {
+			ret = append(ret, GensetDeviceBindingConfig{
+				deviceName:   deviceName,
+				registerName: registerName,
+				name:         name,
+			})
+		}
+	}
+	slices.SortFunc(ret, func(i, j GensetDeviceBindingConfig) int {
+		return cmp.Or(
+			cmp.Compare(i.deviceName, j.deviceName),
+			cmp.Compare(i.registerName, j.registerName),
+			cmp.Compare(i.name, j.name),
+		)
+	})
 
 	return
 }
@@ -1120,6 +1384,7 @@ func existsByName[N Nameable](needle string, haystack []N) bool {
 	}
 	return false
 }
+
 func getNames[N Nameable](list []N) (ret []string) {
 	ret = make([]string, len(list))
 	for i, t := range list {

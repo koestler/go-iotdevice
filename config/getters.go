@@ -69,6 +69,10 @@ func (c Config) MqttDevices() []MqttDeviceConfig {
 	return c.mqttDevices
 }
 
+func (c Config) GensetDevices() []GensetDeviceConfig {
+	return c.gensetDevices
+}
+
 func (c Config) Views() []ViewConfig {
 	return c.views
 }
@@ -446,10 +450,130 @@ func (c HttpDeviceConfig) LogDebug() bool {
 	return c.logDebug
 }
 
-// Getters for MqttDeviceCofig struct
+// Getters for MqttDeviceConfig struct
 
 func (c MqttDeviceConfig) Kind() types.MqttDeviceKind {
 	return c.kind
+}
+
+// Getter for GensetDeviceConfig struct
+
+func (c GensetDeviceConfig) InputBindings() []GensetDeviceBindingConfig {
+	return c.inputBindings
+}
+
+func (c GensetDeviceConfig) OutputBindings() []GensetDeviceBindingConfig {
+	return c.outputBindings
+}
+
+func (c GensetDeviceConfig) PrimingTimeout() time.Duration {
+	return c.primingTimeout
+}
+
+func (c GensetDeviceConfig) CrankingTimeout() time.Duration {
+	return c.crankingTimeout
+}
+
+func (c GensetDeviceConfig) WarmUpTimeout() time.Duration {
+	return c.warmUpTimeout
+}
+
+func (c GensetDeviceConfig) WarmUpMinTime() time.Duration {
+	return c.warmUpMinTime
+}
+
+func (c GensetDeviceConfig) WarmUpTemp() float64 {
+	return c.warmUpTemp
+}
+
+func (c GensetDeviceConfig) EngineCoolDownTimeout() time.Duration {
+	return c.engineCoolDownTimeout
+}
+
+func (c GensetDeviceConfig) EngineCoolDownMinTime() time.Duration {
+	return c.engineCoolDownMinTime
+}
+
+func (c GensetDeviceConfig) EngineCoolDownTemp() float64 {
+	return c.engineCoolDownTemp
+}
+
+func (c GensetDeviceConfig) EnclosureCoolDownTimeout() time.Duration {
+	return c.enclosureCoolDownTimeout
+}
+
+func (c GensetDeviceConfig) EnclosureCoolDownMinTime() time.Duration {
+	return c.enclosureCoolDownMinTime
+}
+
+func (c GensetDeviceConfig) EnclosureCoolDownTemp() float64 {
+	return c.enclosureCoolDownTemp
+}
+
+func (c GensetDeviceConfig) EngineTempMin() float64 {
+	return c.engineTempMin
+}
+
+func (c GensetDeviceConfig) EngineTempMax() float64 {
+	return c.engineTempMax
+}
+
+func (c GensetDeviceConfig) AuxTemp0Min() float64 {
+	return c.auxTemp0Min
+}
+
+func (c GensetDeviceConfig) AuxTemp0Max() float64 {
+	return c.auxTemp0Max
+}
+
+func (c GensetDeviceConfig) AuxTemp1Min() float64 {
+	return c.auxTemp1Min
+}
+
+func (c GensetDeviceConfig) AuxTemp1Max() float64 {
+	return c.auxTemp1Max
+}
+
+func (c GensetDeviceConfig) SinglePhase() bool {
+	return c.singlePhase
+}
+
+func (c GensetDeviceConfig) UMin() float64 {
+	return c.uMin
+}
+
+func (c GensetDeviceConfig) UMax() float64 {
+	return c.uMax
+}
+
+func (c GensetDeviceConfig) FMin() float64 {
+	return c.fMin
+}
+
+func (c GensetDeviceConfig) FMax() float64 {
+	return c.fMax
+}
+
+func (c GensetDeviceConfig) PMax() float64 {
+	return c.pMax
+}
+
+func (c GensetDeviceConfig) PTotMax() float64 {
+	return c.pTotMax
+}
+
+// Getter for GensetDeviceBindingConfig struct
+
+func (c GensetDeviceBindingConfig) Name() string {
+	return c.name
+}
+
+func (c GensetDeviceBindingConfig) DeviceName() string {
+	return c.deviceName
+}
+
+func (c GensetDeviceBindingConfig) RegisterName() string {
+	return c.registerName
 }
 
 // Getters for ViewConfig struct

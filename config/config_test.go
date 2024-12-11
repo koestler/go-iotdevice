@@ -226,6 +226,55 @@ MqttDevices:                                               # optional, a list of
     LogComDebug: true                                    # optional, default false, enable a verbose log of the communication with the device
     Kind: GoIotdeviceV3
 
+GensetDevices:                                             # optional, a list generator set control devices
+  genset0:                                                 # mandatory, an arbitrary name used for logging and for referencing in other config sections
+    RestartInterval: 60ms                                  # optional, default 200ms, how fast to restart the device if it fails / disconnects
+    RestartIntervalMaxBackoff: 3m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    LogDebug: false                                        # optional, default false, enable debug log output
+    LogComDebug: true                                      # optional, default false, enable a verbose log of the communication with the device
+
+    InputBindings:                                         # mandatory, a list of input bindings
+      tcw241:                                              # the device name of the input device
+        Available: IOAvailable                             # key: register name of input device; value: the target value of the genset controller
+        DI0: ArmSwitch
+        DI1: ResetSwitch
+        DI2: FireDetected
+
+    OutputBindings:                                        # mandatory, a list of output bindings
+      modbus-rtu0:                                         # the device name of the output device
+        CH0: Ignition                                      # key: register name of output device; value: the source value of the genset controller
+        CH1: Starter
+        CH2: Fan
+        CH3: Pump
+        CH4: Load
+
+    PrimingTimeout: 20s                                    # optional, default 10s, time in priming (only fuel pump on) state
+    CrankingTimeout: 19s                                   # optional, default 10s, maximum time in cranking state
+    WarmUpTimeout: 18s                                     # optional, default 10m, maximum time in warm-up state
+    WarmUpMinTime: 17s                                      # optional, default 2m, minimum time in warm-up state
+    WarmUpTemp: 110                                         # optional, default 50, minimum temperature to transition from warm-up to producing state
+    EngineCoolDownTimeout: 16s                              # optional, default 5m, maximum time in engine cool-down state
+    EngineCoolDownMinTime: 15s                              # optional, default 2m, minimum time in engine cool-down state
+    EngineCoolDownTemp: 120                                 # optional, default 70, maximum temperature to transition from engine cool-down to enclosure cool-down state
+    EnclosureCoolDownTimeout: 14s                          # optional, default 10m, maximum time in enclosure cool-down state
+    EnclosureCoolDownMinTime: 13s                           # optional, default 2m, minimum time in enclosure cool-down state
+    EnclosureCoolDownTemp: 130                              # optional, default 30, maximum temperature to transition from enclosure cool-down to ready state
+
+    EngineTempMin: 140                                     # optional, default -10, minimum temperature the engine must have to not trigger the error state
+    EngineTempMax: 150                                      # optional, default 90, maximum temperature the engine must have to not trigger the error state
+    AuxTemp0Min: 160                                       # optional, default -20, minimum temperature the aux temperature sensor 0 must have to not trigger the error state
+    AuxTemp0Max: 170                                       # optional, default 120, maximum temperature the aux temperature sensor 0 must have to not trigger the error state
+    AuxTemp1Min: 180                                       # optional, default -20, minimum temperature the aux temperature sensor 1 must have to not trigger the error state
+    AuxTemp1Max: 190                                       # optional, default 120, maximum temperature the aux temperature sensor 1 must have to not trigger the error state
+
+    SinglePhase: true                                      # optional, default false, whether the generator is single phase or a three-phase system
+    UMin: 200                                              # optional, default 200, minimum voltage the generator must have to not trigger the error state
+    UMax: 210                                              # optional, default 260, maximum voltage the generator must have to not trigger the error state
+    FMin: 220                                               # optional, default 45, minimum frequency the generator must have to not trigger the error state
+    FMax: 230                                               # optional, default 55, maximum frequency the generator must have to not trigger the error state
+    PMax: 240                                              # optional, default 1E6, maximum power the generator must have to not trigger the error state
+    PTotMax: 250                                          # optional, default 1E6, maximum total power the generator must have to not trigger the error state
+
 Views:                                                     # optional, a list of views (=categories in the frontend / paths in the api URLs)
   - Name: private                                          # mandatory, a technical name used in the URLs
     Title: Private                                         # mandatory, a nice title displayed in the frontend
@@ -293,6 +342,17 @@ HttpDevices:                                               # optional, a list of
 MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Kind: GoIotdeviceV3
+
+GensetDevices:                                             # optional, a list generator set control devices
+  genset0:                                                 # mandatory, an arbitrary name used for logging and for referencing in other config sections
+
+    InputBindings:                                         # mandatory, a list of input bindings
+      tcw241:                                              # the device name of the input device
+        Available: IOAvailable                             # key: register name of input device; value: the target value of the genset controller
+
+    OutputBindings:                                        # mandatory, a list of output bindings
+      modbus-rtu0:                                         # the device name of the output device
+        CH0: Ignition                                      # key: register name of output device; value: the source value of the genset controller
 
 Views:                                                     # optional, a list of views (=categories in the frontend / paths in the api URLs)
   - Name: private                                          # mandatory, a technical name used in the URLs
@@ -728,7 +788,7 @@ func TestReadConfig_Complete(t *testing.T) {
 					t.Errorf("expect %s->Qos to be %d but got %d", sPrefix, expect, got)
 				}
 
-				if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+				if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 					t.Errorf("expect %s->Devices to be %v but got %v", sPrefix, expect, got)
 				} else {
 					prefix := sPrefix + "->Devices->bmv0"
@@ -784,7 +844,7 @@ func TestReadConfig_Complete(t *testing.T) {
 					t.Errorf("expect %s->Qos to be %d but got %d", sPrefix, expect, got)
 				}
 
-				if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+				if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 					t.Errorf("expect %s->Devices to be %v but got %v", sPrefix, expect, got)
 				} else {
 					prefix := sPrefix + "->Devices->bmv0"
@@ -840,7 +900,7 @@ func TestReadConfig_Complete(t *testing.T) {
 					t.Errorf("expect %s->Qos to be %d but got %d", sPrefix, expect, got)
 				}
 
-				if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+				if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 					t.Errorf("expect %s->Devices to be %v but got %v", sPrefix, expect, got)
 				} else {
 					prefix := sPrefix + "->Devices->bmv0"
@@ -1172,6 +1232,192 @@ func TestReadConfig_Complete(t *testing.T) {
 		}
 	}
 
+	if expect, got := 1, len(config.GensetDevices()); expect != got {
+		t.Errorf("expect length of config.GensetDevices to be %d but got %d", expect, got)
+	} else {
+		gd := config.GensetDevices()[0]
+
+		if expect, got := "genset0", gd.Name(); expect != got {
+			t.Errorf("expect Name of first GensetDevice to be '%s' but got %s'", expect, got)
+		}
+
+		if expect, got := 60*time.Millisecond, gd.RestartInterval(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->General->RestartInterval to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 3*time.Minute, gd.RestartIntervalMaxBackoff(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
+		}
+
+		if gd.LogDebug() {
+			t.Error("expect GensetDevice->genset0->General->LogDebug to be false")
+		}
+
+		if !gd.LogComDebug() {
+			t.Error("expect GensetDevice->genset0->General->LogComDebug to be true")
+		}
+
+		{
+			ib := gd.InputBindings()
+			if expect, got := 4, len(ib); expect != got {
+				t.Errorf("expect GensetDevice->genset0->InputBindings to have %d items but got %d", expect, got)
+			} else {
+				{
+					b := ib[0]
+					if expect, got := "tcw241", b.DeviceName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->InputBindings->0->DeviceName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "Available", b.RegisterName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->InputBindings->0->RegisterName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "IOAvailable", b.Name(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->InputBindings->0->Name to be '%s' but got '%s'", expect, got)
+					}
+				}
+				{
+					b := ib[1]
+					if expect, got := "tcw241", b.DeviceName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->InputBindings->1->DeviceName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "DI0", b.RegisterName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->InputBindings->1->RegisterName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "ArmSwitch", b.Name(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->InputBindings->1->Name to be '%s' but got '%s'", expect, got)
+					}
+				}
+			}
+		}
+
+		{
+			ob := gd.OutputBindings()
+			if expect, got := 5, len(ob); expect != got {
+				t.Errorf("expect GensetDevice->genset0->OutputBindings to have %d items but got %d", expect, got)
+			} else {
+				{
+					b := ob[0]
+					if expect, got := "modbus-rtu0", b.DeviceName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->0->DeviceName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "CH0", b.RegisterName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->0->RegisterName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "Ignition", b.Name(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->0->Name to be '%s' but got '%s'", expect, got)
+					}
+				}
+				{
+					b := ob[1]
+					if expect, got := "modbus-rtu0", b.DeviceName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->1->DeviceName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "CH1", b.RegisterName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->1->RegisterName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "Starter", b.Name(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->1->Name to be '%s' but got '%s'", expect, got)
+					}
+				}
+			}
+		}
+
+		if expect, got := 20*time.Second, gd.PrimingTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->PrimingTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 19*time.Second, gd.CrankingTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->CrankingTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 18*time.Second, gd.WarmUpTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->WarmUpTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 17*time.Second, gd.WarmUpMinTime(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->WarmUpMinTime to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 110.0, gd.WarmUpTemp(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->WarmUpTemp to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 16*time.Second, gd.EngineCoolDownTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineCoolDownTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 15*time.Second, gd.EngineCoolDownMinTime(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineCoolDownMinTime to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 120.0, gd.EngineCoolDownTemp(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineCoolDownTemp to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 14*time.Second, gd.EnclosureCoolDownTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EnclosureCoolDownTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 13*time.Second, gd.EnclosureCoolDownMinTime(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EnclosureCoolDownMinTime to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 130.0, gd.EnclosureCoolDownTemp(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EnclosureCoolDownTemp to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 140.0, gd.EngineTempMin(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineTempMin to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 150.0, gd.EngineTempMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineTempMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 160.0, gd.AuxTemp0Min(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp0Min to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 170.0, gd.AuxTemp0Max(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp0Max to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 180.0, gd.AuxTemp1Min(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp1Min to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 190.0, gd.AuxTemp1Max(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp1Max to be %f but got %f", expect, got)
+		}
+
+		if !gd.SinglePhase() {
+			t.Error("expect GensetDevice->genset0->SinglePhase to be true")
+		}
+
+		if expect, got := 200.0, gd.UMin(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->UMin to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 210.0, gd.UMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->UMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 220.0, gd.FMin(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->FMin to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 230.0, gd.FMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->FMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 240.0, gd.PMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->PMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 250.0, gd.PTotMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->PTotMax to be %f but got %f", expect, got)
+		}
+	}
+
 	if expect, got := 2, len(config.Views()); expect != got {
 		t.Errorf("expect length of config.Views to be %d but got %d", expect, got)
 	} else {
@@ -1459,7 +1705,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Qos to be %d but got %d", prefix, expect, got)
 			}
 
-			if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+			if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
@@ -1515,7 +1761,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Qos to be %d but got %d", prefix, expect, got)
 			}
 
-			if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+			if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
@@ -1571,7 +1817,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Qos to be %d but got %d", prefix, expect, got)
 			}
 
-			if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+			if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
@@ -1627,7 +1873,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Qos to be %d but got %d", prefix, expect, got)
 			}
 
-			if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+			if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
@@ -1683,7 +1929,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Qos to be %d but got %d", prefix, expect, got)
 			}
 
-			if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+			if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
@@ -1739,7 +1985,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Qos to be %d but got %d", prefix, expect, got)
 			}
 
-			if expect, got := []string{"bmv0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+			if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
@@ -1955,6 +2201,128 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if expect, got := types.MqttDeviceGoIotdeviceV3Kind, vd.Kind(); expect != got {
 			t.Errorf("expect MqttDevices->bmv1->Kind to be %v but got %v", expect, got)
+		}
+	}
+
+	if expect, got := 1, len(config.GensetDevices()); expect != got {
+		t.Errorf("expect length of config.GensetDevices to be %d but got %d", expect, got)
+	} else {
+		gd := config.GensetDevices()[0]
+
+		if expect, got := "genset0", gd.Name(); expect != got {
+			t.Errorf("expect Name of first GensetDevice to be '%s' but got %s'", expect, got)
+		}
+
+		if expect, got := 200*time.Millisecond, gd.RestartInterval(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->General->RestartInterval to be %s but got %s", expect, got)
+		}
+
+		if expect, got := time.Minute, gd.RestartIntervalMaxBackoff(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
+		}
+
+		if gd.LogDebug() {
+			t.Error("expect GensetDevice->genset0->General->LogDebug to be false")
+		}
+
+		if gd.LogComDebug() {
+			t.Error("expect GensetDevice->genset0->General->LogComDebug to be false")
+		}
+
+		if expect, got := 10*time.Second, gd.PrimingTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->PrimingTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 10*time.Second, gd.CrankingTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->CrankingTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 10*time.Minute, gd.WarmUpTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->WarmUpTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 2*time.Minute, gd.WarmUpMinTime(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->WarmUpMinTime to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 50.0, gd.WarmUpTemp(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->WarmUpTemp to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 5*time.Minute, gd.EngineCoolDownTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineCoolDownTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 2*time.Minute, gd.EngineCoolDownMinTime(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineCoolDownMinTime to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 70.0, gd.EngineCoolDownTemp(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineCoolDownTemp to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 10*time.Minute, gd.EnclosureCoolDownTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EnclosureCoolDownTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 2*time.Minute, gd.EnclosureCoolDownMinTime(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EnclosureCoolDownMinTime to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 30.0, gd.EnclosureCoolDownTemp(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EnclosureCoolDownTemp to be %f but got %f", expect, got)
+		}
+
+		if expect, got := -20.0, gd.EngineTempMin(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineTempMin to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 90.0, gd.EngineTempMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->EngineTempMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := -20.0, gd.AuxTemp0Min(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp0Min to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 120.0, gd.AuxTemp0Max(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp0Max to be %f but got %f", expect, got)
+		}
+
+		if expect, got := -20.0, gd.AuxTemp1Min(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp1Min to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 120.0, gd.AuxTemp1Max(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->AuxTemp1Max to be %f but got %f", expect, got)
+		}
+
+		if gd.SinglePhase() {
+			t.Error("expect GensetDevice->genset0->SinglePhase to be false")
+		}
+
+		if expect, got := 220.0, gd.UMin(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->UMin to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 240.0, gd.UMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->UMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 45.0, gd.FMin(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->FMin to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 55.0, gd.FMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->FMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 1e6, gd.PMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->PMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 1e6, gd.PTotMax(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->PTotMax to be %f but got %f", expect, got)
 		}
 	}
 

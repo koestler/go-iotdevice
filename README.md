@@ -742,7 +742,7 @@ VictronDevices:                                            # optional, a list of
 ModbusDevices:                                             # optional, a list of devices connected via ModBus
   modbus-rtu0:                                             # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Bus: bus0                                              # mandatory, the identifier of the modbus to use
-    Kind: WaveshareRtuRelay8                               # mandatory, type/model of the device; possibilities: WaveshareRtuRelay8
+    Kind: WaveshareRtuRelay8                               # mandatory, type/model of the device; possibilities: WaveshareRtuRelay8, Finder7M38
     Address: 0x01                                          # mandatory, the modbus address of the device in hex as a string, e.g. 0x0A
     Relays:                                                # optional: a map of custom labels for the relays
       CH1:
@@ -763,6 +763,10 @@ ModbusDevices:                                             # optional, a list of
     LogDebug: false                                        # optional, default false, enable debug log output
     LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
 
+  modbus-finder:                                           # mandatory, an arbitrary name used for logging and for referencing in other config sections
+    Bus: bus0                                              # mandatory, the identifier of the modbus to use
+    Kind: Finder7M38                                       # mandatory, type/model of the device; possibilities: WaveshareRtuRelay8, Finder7M38
+    Address: 33                                            # mandatory, the modbus address of the device in hex as a string, e.g. 0x0A
 
 HttpDevices:                                               # optional, a list of devices controlled via http
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections
@@ -783,7 +787,6 @@ HttpDevices:                                               # optional, a list of
     LogDebug: false                                        # optional, default false, enable debug log output
     LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
 
-
 MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Kind: GoIotdeviceV3                                    # mandatory, only GoIotdevice is supported at the moment
@@ -798,6 +801,72 @@ MqttDevices:                                               # optional, a list of
     RestartIntervalMaxBackoff: 1m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
     LogDebug: false                                        # optional, default false, enable debug log output
     LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
+
+GensetDevices:                                             # optional, a list generator set control devices
+  genset0:                                                 # mandatory, an arbitrary name used for logging and for referencing in other config sections
+    Filter:                                                # optional, default include all, defines which registers are show in the view,
+      # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
+      IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
+      SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
+      IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
+      SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
+      DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
+    RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
+    RestartIntervalMaxBackoff: 1m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    LogDebug: false                                        # optional, default false, enable debug log output
+    LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
+
+    InputBindings:                                         # mandatory, a list of input bindings
+      tcw241:                                              # the device name of the input device
+        Available: IOAvailable                             # key: register name of input device; value: the target value of the genset controller
+        DI0: ArmSwitch
+        DI1: ResetSwitch
+        DI2: FireDetected
+
+      modbus-finder:                                       # the device name of a second input device providing data
+        Available: OutputAvailable
+        U1: U1
+        U2: U2
+        U3: U3
+        P1: P1
+        P2: P2
+        P3: P3
+        F: F
+
+    OutputBindings:                                        # mandatory, a list of output bindings
+      modbus-rtu0:                                         # the device name of the output device
+        CH0: Ignition                                      # key: register name of output device; value: the source value of the genset controller
+        CH1: Starter
+        CH2: Fan
+        CH3: Pump
+        CH4: Load
+
+    PrimingTimeout: 10s                                    # optional, default 10s, time in priming (only fuel pump on) state
+    CrankingTimeout: 10s                                   # optional, default 10s, maximum time in cranking state
+    WarmUpTimeout: 10m                                     # optional, default 10m, maximum time in warm-up state
+    WarmUpMinTime: 2m                                      # optional, default 2m, minimum time in warm-up state
+    WarmUpTemp: 50                                         # optional, default 50, minimum temperature to transition from warm-up to producing state
+    EngineCoolDownTimeout: 5m                              # optional, default 5m, maximum time in engine cool-down state
+    EngineCoolDownMinTime: 2m                              # optional, default 2m, minimum time in engine cool-down state
+    EngineCoolDownTemp: 70                                 # optional, default 70, maximum temperature to transition from engine cool-down to enclosure cool-down state
+    EnclosureCoolDownTimeout: 10m                          # optional, default 10m, maximum time in enclosure cool-down state
+    EnclosureCoolDownMinTime: 2m                           # optional, default 2m, minimum time in enclosure cool-down state
+    EnclosureCoolDownTemp: 30                              # optional, default 30, maximum temperature to transition from enclosure cool-down to ready state
+
+    EngineTempMin: -20                                     # optional, default -10, minimum temperature the engine must have to not trigger the error state
+    EngineTempMax: 90                                      # optional, default 90, maximum temperature the engine must have to not trigger the error state
+    AuxTemp0Min: -20                                       # optional, default -20, minimum temperature the aux temperature sensor 0 must have to not trigger the error state
+    AuxTemp0Max: 120                                       # optional, default 120, maximum temperature the aux temperature sensor 0 must have to not trigger the error state
+    AuxTemp1Min: -20                                       # optional, default -20, minimum temperature the aux temperature sensor 1 must have to not trigger the error state
+    AuxTemp1Max: 120                                       # optional, default 120, maximum temperature the aux temperature sensor 1 must have to not trigger the error state
+
+    SinglePhase: false                                     # optional, default false, whether the generator is single phase or a three-phase system
+    UMin: 200                                              # optional, default 200, minimum voltage the generator must have to not trigger the error state
+    UMax: 250                                              # optional, default 260, maximum voltage the generator must have to not trigger the error state
+    FMin: 45                                               # optional, default 45, minimum frequency the generator must have to not trigger the error state
+    FMax: 55                                               # optional, default 55, maximum frequency the generator must have to not trigger the error state
+    PMax: 1E6                                              # optional, default 1E6, maximum power the generator must have to not trigger the error state
+    PTotMax: 1E6                                           # optional, default 1E6, maximum total power the generator must have to not trigger the error state
 
 Views:                                                     # optional, a list of views (=categories in the frontend / paths in the api URLs)
   - Name: victron                                          # mandatory, a technical name used in the URLs

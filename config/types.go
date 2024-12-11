@@ -26,6 +26,7 @@ type Config struct {
 	modbusDevices          []ModbusDeviceConfig
 	httpDevices            []HttpDeviceConfig
 	mqttDevices            []MqttDeviceConfig
+	gensetDevices          []GensetDeviceConfig
 	views                  []ViewConfig
 }
 
@@ -149,6 +150,48 @@ type HttpDeviceConfig struct {
 type MqttDeviceConfig struct {
 	DeviceConfig
 	kind types.MqttDeviceKind
+}
+
+type GensetDeviceConfig struct {
+	DeviceConfig
+
+	inputBindings  GensetDeviceBindingsConfig
+	outputBindings GensetDeviceBindingsConfig
+
+	primingTimeout           time.Duration
+	crankingTimeout          time.Duration
+	warmUpTimeout            time.Duration
+	warmUpMinTime            time.Duration
+	warmUpTemp               float64
+	engineCoolDownTimeout    time.Duration
+	engineCoolDownMinTime    time.Duration
+	engineCoolDownTemp       float64
+	enclosureCoolDownTimeout time.Duration
+	enclosureCoolDownMinTime time.Duration
+	enclosureCoolDownTemp    float64
+
+	engineTempMin float64
+	engineTempMax float64
+	auxTemp0Min   float64
+	auxTemp0Max   float64
+	auxTemp1Min   float64
+	auxTemp1Max   float64
+
+	singlePhase bool
+	uMin        float64
+	uMax        float64
+	fMin        float64
+	fMax        float64
+	pMax        float64
+	pTotMax     float64
+}
+
+type GensetDeviceBindingsConfig []GensetDeviceBindingConfig
+
+type GensetDeviceBindingConfig struct {
+	name         string
+	deviceName   string
+	registerName string
 }
 
 type ViewConfig struct {
