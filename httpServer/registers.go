@@ -25,7 +25,7 @@ type registerResponse struct {
 // @Summary List registers
 // @Description Outputs information about all the available registers (not the current values) of the given device.
 // @Description Depending on the device model (bmv, bluesolar) a different set of registers are available.
-// @Description On some devices (eg. TCW241), the registers are even dynamic and configurable on the device.
+// @Description On some devices (e.g. TCW241), the registers are even dynamic and configurable on the device.
 // @Description This endpoint outputs a list of fields including a name, a unit and a datatype.
 // @ID registers
 // @Param viewName path string true "View name as provided by the config endpoint"

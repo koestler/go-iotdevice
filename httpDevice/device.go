@@ -145,7 +145,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 			}
 		}
 
-		// reset the command; this allows the same command (eG. toggle) to be sent again
+		// reset the command; this allows the same command (e.g. toggle) to be sent again
 		ds.commandStorage.Fill(dataflow.NewNullRegisterValue(ds.Config().Name(), value.Register()))
 	}
 
