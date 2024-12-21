@@ -5,6 +5,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/koestler/go-iotdevice/v3/device"
 	"github.com/koestler/go-iotdevice/v3/gensetDevice"
+	"github.com/koestler/go-iotdevice/v3/gpioDevice"
 	"github.com/koestler/go-iotdevice/v3/httpDevice"
 	"github.com/koestler/go-iotdevice/v3/modbus"
 	"github.com/koestler/go-iotdevice/v3/modbusDevice"
@@ -52,6 +53,19 @@ func runNonMqttGensetDevices(
 		}
 
 		dev := modbusDevice.NewDevice(deviceConfig, deviceConfig, modbusInstance, stateStorage, commandStorage)
+		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
+		watchedDev.Run()
+		devicePool.Add(watchedDev)
+	}
+
+	for _, deviceConfig := range cfg.GpioDevices() {
+		if cfg.LogWorkerStart() {
+			log.Printf("device[%s]: start gpio type", deviceConfig.Name())
+		}
+
+		deviceConfig := gpioDeviceConfig{deviceConfig}
+
+		dev := gpioDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, commandStorage)
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		watchedDev.Run()
 		devicePool.Add(watchedDev)
@@ -125,6 +139,32 @@ type modbusDeviceConfig struct {
 
 func (c modbusDeviceConfig) Filter() dataflow.RegisterFilterConf {
 	return c.ModbusDeviceConfig.Filter()
+}
+
+type gpioDeviceConfig struct {
+	config.GpioDeviceConfig
+}
+
+func (c gpioDeviceConfig) Filter() dataflow.RegisterFilterConf {
+	return c.GpioDeviceConfig.Filter()
+}
+
+func (c gpioDeviceConfig) Inputs() []gpioDevice.Pin {
+	inp := c.GpioDeviceConfig.Inputs()
+	oup := make([]gpioDevice.Pin, len(inp))
+	for i, b := range inp {
+		oup[i] = gpioDevice.Pin(b)
+	}
+	return oup
+}
+
+func (c gpioDeviceConfig) Outputs() []gpioDevice.Pin {
+	inp := c.GpioDeviceConfig.Outputs()
+	oup := make([]gpioDevice.Pin, len(inp))
+	for i, b := range inp {
+		oup[i] = gpioDevice.Pin(b)
+	}
+	return oup
 }
 
 type httpDeviceConfig struct {
