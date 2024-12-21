@@ -46,6 +46,10 @@ func NewDevice(
 }
 
 func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
+	if err = hostInitOnce(); err != nil {
+		return fmt.Errorf("gpioDevice: host init failed: %w", err), true
+	}
+
 	dName := d.Config().Name()
 
 	// setup registers
