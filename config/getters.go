@@ -61,6 +61,10 @@ func (c Config) ModbusDevices() []ModbusDeviceConfig {
 	return c.modbusDevices
 }
 
+func (c Config) GpioDevices() []GpioDeviceConfig {
+	return c.gpioDevices
+}
+
 func (c Config) HttpDevices() []HttpDeviceConfig {
 	return c.httpDevices
 }
@@ -422,6 +426,37 @@ func (c ModbusDeviceConfig) RelayClosedLabel(name string) string {
 
 func (c ModbusDeviceConfig) PollInterval() time.Duration {
 	return c.pollInterval
+}
+
+// Getters for GpioDeviceConfig struct
+func (c GpioDeviceConfig) Inputs() []PinConfig {
+	return c.inputs
+}
+
+func (c GpioDeviceConfig) Outputs() []PinConfig {
+	return c.outputs
+}
+
+// Getters for PinConfig struct
+
+func (c PinConfig) Pin() string {
+	return c.pin
+}
+
+func (c PinConfig) Name() string {
+	return c.name
+}
+
+func (c PinConfig) Description() string {
+	return c.description
+}
+
+func (c PinConfig) LowLabel() string {
+	return c.lowLabel
+}
+
+func (c PinConfig) HighLabel() string {
+	return c.highLabel
 }
 
 // Getters for HttpDeviceConfig struct
