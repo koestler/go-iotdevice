@@ -142,10 +142,11 @@ func (c *Controller) Run() {
 		if c.OnOutputUpdate != nil {
 			c.OnOutputUpdate(c.outputs)
 		}
-		close(initDone)
 
 		// initial computation
 		c.compute()
+
+		close(initDone)
 
 		// listen for input changes until the channel is closed (End is called)
 		for change := range c.changeInputs {
