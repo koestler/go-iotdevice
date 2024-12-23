@@ -768,6 +768,38 @@ ModbusDevices:                                             # optional, a list of
     Kind: Finder7M38                                       # mandatory, type/model of the device; possibilities: WaveshareRtuRelay8, Finder7M38
     Address: 33                                            # mandatory, the modbus address of the device in hex as a string, e.g. 0x0A
 
+GpioDevices:                                               # optional, a list of devices controlled via gpio
+  gpio0:                                                   # mandatory, an arbitrary name used for logging and for referencing in other config sections
+    Filter:                                                # optional, default include all, defines which registers are show in the view,
+      # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
+      IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
+      SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
+      IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
+      SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
+      DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
+    RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
+    RestartIntervalMaxBackoff: 1m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    LogDebug: false                                        # optional, default false, enable debug log output
+    Inputs:                                                # optional, a list of inputs
+      Switch0:                                             # mandatory, a technical name used for the register
+        Pin: GPIO2                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Description: Switch 0                              # optional, default name, a nice title displayed in the frontend
+        LowLabel: Pressed                                  # optional, default "low", a label for the low state
+        HighLabel: Released                                # optional, default "high", a label for the high state
+      Switch1:                                             # mandatory, a technical name used for the register
+        Pin: GPIO3                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Description: Switch 1                              # optional, default name, a nice title displayed in the frontend
+    Outputs:
+      Relay0:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO4                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Description: Relay 0                               # optional, default name, a nice title displayed in the frontend
+        LowLabel: Off                                      # optional, default "low", a label for the low state
+        HighLabel: On                                      # optional, default "high", a label for the high state
+      Relay1:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Description: Relay 1                               # optional, default name, a nice title displayed in the frontend
+    PollInterval: 100ms                                    # optional, default 100ms, how often to fetch the device status
+
 HttpDevices:                                               # optional, a list of devices controlled via http
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Url: http://control0/                                  # mandatory, URL to the device; supported protocol is http/https; e.g. http://device0.local/

@@ -231,6 +231,7 @@ GpioDevices:                                               # optional, a list of
       Relay1:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
         Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
         Description: Relay 1                               # optional, default name, a nice title displayed in the frontend
+    PollInterval: 100ms                                    # optional, default 100ms, how often to fetch the device status
 
 HttpDevices:                                               # optional, a list of devices controlled via http
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections

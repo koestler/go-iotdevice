@@ -437,6 +437,10 @@ func (c GpioDeviceConfig) Outputs() []PinConfig {
 	return c.outputs
 }
 
+func (c GpioDeviceConfig) PollInterval() time.Duration {
+	return c.pollInterval
+}
+
 // Getters for PinConfig struct
 
 func (c PinConfig) Pin() string {

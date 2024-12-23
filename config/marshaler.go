@@ -220,6 +220,7 @@ func (c GpioDeviceConfig) convertToRead() gpioDeviceConfigRead {
 		deviceConfigRead: c.DeviceConfig.convertToRead(),
 		Inputs:           convertMapToRead[PinConfig, pinConfigRead](c.inputs),
 		Outputs:          convertMapToRead[PinConfig, pinConfigRead](c.outputs),
+		PollInterval:     c.pollInterval.String(),
 	}
 }
 

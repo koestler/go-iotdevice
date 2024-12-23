@@ -971,6 +971,21 @@ func (c gpioDeviceConfigRead) TransformAndValidate(deviceName string) (ret GpioD
 	)
 	err = append(err, e...)
 
+	if len(c.PollInterval) < 1 {
+		// use default 100ms
+		ret.pollInterval = 100 * time.Millisecond
+	} else if pollInterval, e := time.ParseDuration(c.PollInterval); e != nil {
+		err = append(err, fmt.Errorf("GpioDevices->%s->PollInterval='%s' parse error: %s",
+			deviceName, c.PollInterval, e,
+		))
+	} else if pollInterval < time.Millisecond {
+		err = append(err, fmt.Errorf("GpioDevices->%s->PollInterval='%s' must be >=1ms",
+			deviceName, c.PollInterval,
+		))
+	} else {
+		ret.pollInterval = pollInterval
+	}
+
 	return
 }
 

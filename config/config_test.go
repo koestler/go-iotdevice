@@ -236,6 +236,7 @@ GpioDevices:                                               # optional, a list of
       Relay1:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
         Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
         Description: Relay 1                               # mandatory, a nice title displayed in the frontend
+    PollInterval: 1s                                       # optional, default 100ms, how often to fetch the device status
 
 HttpDevices:                                               # optional, a list of devices controlled via http
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections
@@ -1268,6 +1269,11 @@ func TestReadConfig_Complete(t *testing.T) {
 					t.Errorf("expect GpioDevices->gpio0->Inputs->in0->HighLabel to be '%s' but got '%s'", expect, got)
 				}
 			}
+
+			if expect, got := 1000*time.Millisecond, gd.PollInterval(); expect != got {
+				t.Errorf("expect GpioDevices->gpio0->PollInterval to be %s but got %s", expect, got)
+			}
+
 		}
 
 		if expect, got := 2, len(gd.Outputs()); expect != got {
@@ -2343,6 +2349,10 @@ func TestReadConfig_Default(t *testing.T) {
 			if expect, got := "high", in.HighLabel(); expect != got {
 				t.Errorf("expect GpioDevices->gpio0->Inputs->in0->HighLabel to be '%s' but got '%s'", expect, got)
 			}
+		}
+
+		if expect, got := 100*time.Millisecond, gd.PollInterval(); expect != got {
+			t.Errorf("expect GpioDevices->gpio0->PollInterval to be %s but got %s", expect, got)
 		}
 	}
 
