@@ -67,11 +67,21 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	addToRegisterDb(d.State.RegisterDb(), inpRegisters)
 	addToRegisterDb(d.State.RegisterDb(), oupRegisters)
 
-	// also fetch output registers
-	maps.Copy(inpRegisters, oupRegisters)
+	// setup inputs
+	for _, reg := range inpRegisters {
+		if err := reg.pin.In(gpio.PullNoChange, gpio.NoEdge); err != nil {
+			return fmt.Errorf("gpioDevice[%s]: input setup failed: %w", dName, err), true
+		}
+	}
 
-	// fetch initial state
-	d.execPoll(inpRegisters)
+	// also fetch output registers
+	{
+		allRegisters := maps.Clone(inpRegisters)
+		maps.Copy(allRegisters, oupRegisters)
+
+		// fetch initial state all inp and oup registers
+		d.execPoll(allRegisters)
+	}
 
 	// send connected now, disconnected when this routine stops
 	d.SetAvailable(true)
@@ -97,8 +107,6 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 }
 
 func (d *DeviceStruct) execPoll(inpRegisters map[string]GpioRegister) {
-	start := time.Now()
-
 	// fetch registers
 	for _, reg := range inpRegisters {
 		value := 0
@@ -114,11 +122,7 @@ func (d *DeviceStruct) execPoll(inpRegisters map[string]GpioRegister) {
 	}
 
 	if d.Config().LogDebug() {
-		log.Printf(
-			"gpioDevice[%s]: registers fetched, took=%.3fs",
-			d.Name(),
-			time.Since(start).Seconds(),
-		)
+		log.Printf("gpioDevice[%s]: registers fetched", d.Name())
 	}
 }
 
