@@ -53,6 +53,8 @@ github.com/klauspost/cpuid/v2 v2.2.9/go.mod h1:rqkxqrZ1EhYM9G+hXH7YdowN5R5RGN6NK
 github.com/knz/go-libedit v1.10.1/go.mod h1:MZTVkCWyz0oBc7JOWP3wNAzd002ZbM/5hgShxwh4x8M=
 github.com/koestler/go-victron v0.0.9 h1:Bubx0Yf1JCBuNZvsqhVRICV+6cj+32TDsTcTYpqVf9I=
 github.com/koestler/go-victron v0.0.9/go.mod h1:g1Y7V5/kPacLrKmCRN0XhxSDYYlwxOnv1jUpcpLu/K4=
+github.com/koestler/go-victron v0.1.0 h1:RAvfCA9Y7Dn27+hCS3Z2kBKAi9agJz6peXwkVgebDx4=
+github.com/koestler/go-victron v0.1.0/go.mod h1:g1Y7V5/kPacLrKmCRN0XhxSDYYlwxOnv1jUpcpLu/K4=
 github.com/leodido/go-urn v1.4.0 h1:WT9HwE9SGECu3lg4d/dIA+jxlljEa1/ffXKmRjqdmIQ=
 github.com/leodido/go-urn v1.4.0/go.mod h1:bvxc+MVxLKB4z00jd1z+Dvzr47oO32F/QSNjSBOlFxI=
 github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY=
