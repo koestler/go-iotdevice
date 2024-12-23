@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/koestler/go-iotdevice/v3/device"
+	"golang.org/x/exp/maps"
 	"log"
 	"periph.io/x/conn/v3/gpio"
+	"time"
 )
 
 type Config interface {
 	Inputs() []Pin
 	Outputs() []Pin
+	PollInterval() time.Duration
 }
 
 type Pin interface {
@@ -64,6 +67,12 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	addToRegisterDb(d.State.RegisterDb(), inpRegisters)
 	addToRegisterDb(d.State.RegisterDb(), oupRegisters)
 
+	// also fetch output registers
+	maps.Copy(inpRegisters, oupRegisters)
+
+	// fetch initial state
+	d.execPoll(inpRegisters)
+
 	// send connected now, disconnected when this routine stops
 	d.SetAvailable(true)
 	defer func() {
@@ -73,23 +82,43 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	// setup subscription to listen for updates of writable registers
 	_, commandSubscription := d.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullValueFilter(dName))
 
-	// setup inputs
-	for _, reg := range inpRegisters {
-		if err := reg.pin.In(gpio.PullNoChange, gpio.BothEdges); err != nil {
-			return fmt.Errorf("gpioDevice[%s]: input failed: %w", dName, err), true
-		} else {
-			go d.WatchInput(ctx, reg)
-		}
-	}
-
-	// loop to listen for commands
+	ticker := time.NewTicker(d.gpioConfig.PollInterval())
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, false
+		case <-ticker.C:
+			d.execPoll(inpRegisters)
 		case value := <-commandSubscription.Drain():
 			d.execCommand(oupRegisters, value)
 		}
+	}
+}
+
+func (d *DeviceStruct) execPoll(inpRegisters map[string]GpioRegister) {
+	start := time.Now()
+
+	// fetch registers
+	for _, reg := range inpRegisters {
+		value := 0
+		if reg.pin.Read() {
+			value = 1
+		}
+
+		d.StateStorage().Fill(dataflow.NewEnumRegisterValue(
+			d.Name(),
+			reg,
+			value,
+		))
+	}
+
+	if d.Config().LogDebug() {
+		log.Printf(
+			"gpioDevice[%s]: registers fetched, took=%.3fs",
+			d.Name(),
+			time.Since(start).Seconds(),
+		)
 	}
 }
 
@@ -145,37 +174,6 @@ func (d *DeviceStruct) execCommand(oupRegisters map[string]GpioRegister, value d
 
 	// reset the command; this allows the same command (e.g. toggle) to be sent again
 	d.commandStorage.Fill(dataflow.NewNullRegisterValue(dName, value.Register()))
-}
-
-func (d *DeviceStruct) WatchInput(ctx context.Context, reg GpioRegister) {
-	for {
-		value := 0
-
-		// block until edge detected
-		s := reg.pin.WaitForEdge(-1)
-		if s {
-			value = 1
-		}
-
-		// abort if context is done
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
-
-		if d.Config().LogDebug() {
-			log.Printf("gpioDevice[%s]: edge detected: register=%s, state=%v",
-				d.Name(), reg.Name(), value,
-			)
-		}
-
-		d.StateStorage().Fill(dataflow.NewEnumRegisterValue(
-			reg.Name(),
-			reg,
-			value,
-		))
-	}
 }
 
 func (d *DeviceStruct) Model() string {
