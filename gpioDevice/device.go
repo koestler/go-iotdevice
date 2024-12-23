@@ -107,11 +107,20 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 }
 
 func (d *DeviceStruct) execPoll(inpRegisters map[string]GpioRegister) {
+	start := time.Now()
+
 	// fetch registers
 	for _, reg := range inpRegisters {
+		l := reg.pin.Read()
 		value := 0
-		if reg.pin.Read() {
+		if l {
 			value = 1
+		}
+
+		if d.Config().LogDebug() {
+			log.Printf("gpioDevice[%s]: get register=%s, pin=%s, level=%s",
+				d.Name(), reg.Name(), reg.pin.Name(), l,
+			)
 		}
 
 		d.StateStorage().Fill(dataflow.NewEnumRegisterValue(
@@ -122,7 +131,11 @@ func (d *DeviceStruct) execPoll(inpRegisters map[string]GpioRegister) {
 	}
 
 	if d.Config().LogDebug() {
-		log.Printf("gpioDevice[%s]: registers fetched", d.Name())
+		log.Printf(
+			"gpioDevice[%s]: registers fetched, took=%.3fs",
+			d.Name(),
+			time.Since(start).Seconds(),
+		)
 	}
 }
 
@@ -156,7 +169,7 @@ func (d *DeviceStruct) execCommand(oupRegisters map[string]GpioRegister, value d
 	}
 
 	if d.Config().LogDebug() {
-		log.Printf("gpioDevice[%s]: write register=%s, pin=%s, level: %s",
+		log.Printf("gpioDevice[%s]: write register=%s, pin=%s, level=%s",
 			dName, reg.Name(), reg.pin.Name(), command,
 		)
 	}
