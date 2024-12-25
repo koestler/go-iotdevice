@@ -433,6 +433,18 @@ func (c GpioDeviceConfig) Chip() string {
 	return c.chip
 }
 
+func (c GpioDeviceConfig) InputDebounce() time.Duration {
+	return c.inputDebounce
+}
+
+func (c GpioDeviceConfig) InputOptions() []string {
+	return c.inputOptions
+}
+
+func (c GpioDeviceConfig) OutputOptions() []string {
+	return c.outputOptions
+}
+
 func (c GpioDeviceConfig) Inputs() []PinConfig {
 	return c.inputs
 }

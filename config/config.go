@@ -963,6 +963,43 @@ func (c gpioDeviceConfigRead) TransformAndValidate(deviceName string) (ret GpioD
 		ret.chip = *c.Chip
 	}
 
+	if len(c.InputDebounce) < 1 {
+		// use default 100ms
+		ret.inputDebounce = 100 * time.Millisecond
+	} else if pollInterval, e := time.ParseDuration(c.InputDebounce); e != nil {
+		err = append(err, fmt.Errorf("GpioDevices->%s->InputDebounce='%s' parse error: %s",
+			deviceName, c.InputDebounce, e,
+		))
+	} else {
+		ret.inputDebounce = pollInterval
+	}
+
+	ret.inputOptions = make([]string, 0)
+	for _, opt := range c.InputOptions {
+		switch opt {
+		case "WithBiasDisabled", "WithPullDown", "WithPullUp":
+			ret.inputOptions = append(ret.inputOptions, opt)
+		default:
+			err = append(err, fmt.Errorf("GpioDevices->%s->InputOptions='%s' is invalid", deviceName, opt))
+		}
+	}
+	if len(ret.inputOptions) > 1 {
+		err = append(err, fmt.Errorf("GpioDevices->%s->InputOptions must not contain more than one option", deviceName))
+	}
+
+	ret.outputOptions = make([]string, 0)
+	for _, opt := range c.OutputOptions {
+		switch opt {
+		case "AsOpenDrain", "AsOpenSource", "AsPushPull":
+			ret.outputOptions = append(ret.outputOptions, opt)
+		default:
+			err = append(err, fmt.Errorf("GpioDevices->%s->OutputOptions='%s' is invalid", deviceName, opt))
+		}
+	}
+	if len(ret.outputOptions) > 1 {
+		err = append(err, fmt.Errorf("GpioDevices->%s->OutputOptions must not contain more than one option", deviceName))
+	}
+
 	ret.inputs, e = TransformAndValidateMapToList(
 		c.Inputs,
 		func(inp pinConfigRead, name string) (PinConfig, []error) {

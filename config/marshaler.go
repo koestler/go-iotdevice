@@ -219,6 +219,9 @@ func (c GpioDeviceConfig) convertToRead() gpioDeviceConfigRead {
 	return gpioDeviceConfigRead{
 		deviceConfigRead: c.DeviceConfig.convertToRead(),
 		Chip:             &c.chip,
+		InputDebounce:    c.inputDebounce.String(),
+		InputOptions:     c.inputOptions,
+		OutputOptions:    c.outputOptions,
 		Inputs:           convertMapToRead[PinConfig, pinConfigRead](c.inputs),
 		Outputs:          convertMapToRead[PinConfig, pinConfigRead](c.outputs),
 	}

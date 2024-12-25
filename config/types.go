@@ -141,9 +141,12 @@ type RelayConfig struct {
 
 type GpioDeviceConfig struct {
 	DeviceConfig
-	chip    string
-	inputs  []PinConfig
-	outputs []PinConfig
+	chip          string
+	inputDebounce time.Duration
+	inputOptions  []string
+	outputOptions []string
+	inputs        []PinConfig
+	outputs       []PinConfig
 }
 
 type PinConfig struct {

@@ -217,8 +217,11 @@ GpioDevices:                                               # optional, a list of
       DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
     RestartInterval: 400ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
     RestartIntervalMaxBackoff: 200s                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
-    LogDebug: true                                        # optional, default false, enable debug log output
-    Chip: gpiochip42                                       # optional, default gpiochip0, the gpiochip to use. See output of gpioinfo 
+    LogDebug: true                                         # optional, default false, enable debug log output
+    Chip: gpiochip42                                       # optional, default gpiochip0, the gpiochip to use. See output of gpioinfo
+    InputDebounce: 10ms                                    # optional, default 100ms, debounce the input signal, 0 to disable
+    InputOptions: ["WithPullUp"]                           # optional, default unchanged, valid options: WithBiasDisabled, WithPullDown, WithPullUp
+    OutputOptions: ["AsPushPull"]                          # optional, default unchanged, valid options: AsOpenDrain, AsOpenSource, AsPushPull
     Inputs:                                                # optional, a list of inputs
       Switch0:                                             # mandatory, a technical name used for the register
         Pin: GPIO2                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
@@ -1222,6 +1225,18 @@ func TestReadConfig_Complete(t *testing.T) {
 
 		if expect, got := "gpiochip42", gd.Chip(); expect != got {
 			t.Errorf("expect GpioDevices->gpio0->Chip to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := 10*time.Millisecond, gd.InputDebounce(); expect != got {
+			t.Errorf("expect GpioDevices->gpio0->Chip to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := []string{"WithPullUp"}, gd.InputOptions(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect GpioDevices->gpio0->InputOptions to be %v but got %v", expect, got)
+		}
+
+		if expect, got := []string{"AsPushPull"}, gd.OutputOptions(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect GpioDevices->gpio0->OutputOptions to be %v but got %v", expect, got)
 		}
 
 		if expect, got := 2, len(gd.Inputs()); expect != got {
@@ -2326,6 +2341,18 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if expect, got := "gpiochip0", gd.Chip(); expect != got {
 			t.Errorf("expect GpioDevices->gpio0->Chip to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := 100*time.Millisecond, gd.InputDebounce(); expect != got {
+			t.Errorf("expect GpioDevices->gpio0->InputDebounce to be '%s' but got '%s'", expect, got)
+		}
+
+		if got := gd.InputOptions(); len(got) != 0 {
+			t.Errorf("expect GpioDevices->gpio0->InputOptions to be empty but got %v", got)
+		}
+
+		if got := gd.OutputOptions(); len(got) != 0 {
+			t.Errorf("expect GpioDevices->gpio0->OutputOptions to be empty but got %v", got)
 		}
 
 		if expect, got := 1, len(gd.Inputs()); expect != got {

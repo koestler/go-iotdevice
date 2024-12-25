@@ -124,6 +124,9 @@ type relayConfigRead struct {
 type gpioDeviceConfigRead struct {
 	deviceConfigRead `yaml:",inline"`
 	Chip             *string                  `yaml:"Chip"`
+	InputDebounce    string                   `yaml:"InputDebounce"`
+	InputOptions     []string                 `yaml:"InputOptions"`
+	OutputOptions    []string                 `yaml:"OutputOptions"`
 	Inputs           map[string]pinConfigRead `yaml:"Inputs"`
 	Outputs          map[string]pinConfigRead `yaml:"Outputs"`
 }

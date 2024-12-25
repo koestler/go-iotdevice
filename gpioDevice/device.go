@@ -8,11 +8,19 @@ import (
 	"github.com/warthog618/go-gpiocdev"
 	"golang.org/x/exp/maps"
 	"log"
+	"slices"
 	"time"
 )
 
 type Config interface {
 	Chip() string
+	InputDebounce() time.Duration
+	// InputOptions are used to configure the pin.
+	// Valid options: WithBiasDisabled, WithPullDown, WithPullUp
+	InputOptions() []string
+	// OutputOptions are used to configure the pin.
+	// Valid options: AsOpenDrain, AsOpenSource, AsPushPull
+	OutputOptions() []string
 	Inputs() []Pin
 	Outputs() []Pin
 }
@@ -125,13 +133,33 @@ func (d *DeviceStruct) setupInputs(chip *gpiocdev.Chip, regMap map[string]GpioRe
 		}
 	}
 
-	lines, err := chip.RequestLines(
-		offsets,
-		gpiocdev.WithPullUp, // todo: make configurable
+	// configure as input and set additional options
+	opts := []gpiocdev.LineReqOption{
 		gpiocdev.WithBothEdges,
-		gpiocdev.WithDebounce(100*time.Millisecond), // todo: make configurable
 		gpiocdev.WithEventHandler(d.eventHandler(regList)),
-	)
+	}
+	if d := d.gpioConfig.InputDebounce(); d > 0 {
+		opts = append(opts, gpiocdev.WithDebounce(d))
+	}
+	{
+		inputOpts := d.gpioConfig.InputOptions()
+		slices.Sort(inputOpts)
+		for _, o := range slices.Compact(inputOpts) {
+			switch o {
+			case "WithBiasDisabled":
+				opts = append(opts, gpiocdev.WithBiasDisabled)
+				break
+			case "WithPullDown":
+				opts = append(opts, gpiocdev.WithPullDown)
+				break
+			case "WithPullUp":
+				opts = append(opts, gpiocdev.WithPullUp)
+				break
+			}
+		}
+	}
+
+	lines, err := chip.RequestLines(offsets, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("request inputs lines failed: %w", err)
 	}
@@ -230,8 +258,29 @@ func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioR
 		d.StateStorage().Fill(dataflow.NewEnumRegisterValue(d.Name(), reg, v))
 	}
 
-	// configure as output
-	err = lines.Reconfigure(gpiocdev.AsOutput(values...))
+	// configure as output, set the initial values, and additional options
+	opts := []gpiocdev.LineConfigOption{
+		gpiocdev.AsOutput(values...),
+	}
+	{
+		outputOpts := d.gpioConfig.OutputOptions()
+		slices.Sort(outputOpts)
+		for _, o := range slices.Compact(outputOpts) {
+			switch o {
+			case "AsOpenDrain":
+				opts = append(opts, gpiocdev.AsOpenDrain)
+				break
+			case "AsOpenSource":
+				opts = append(opts, gpiocdev.AsOpenSource)
+				break
+			case "AsPushPull":
+				opts = append(opts, gpiocdev.AsPushPull)
+				break
+			}
+		}
+	}
+
+	err = lines.Reconfigure(opts...)
 	if err != nil {
 		return fmt.Errorf("reconfigure as output failed: %w", err)
 	}
