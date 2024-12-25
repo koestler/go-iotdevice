@@ -1,7 +1,7 @@
 # build backend
 FROM golang:1.23-alpine AS go-builder
 
-RUN apk add build-base git npm libgpiod-dev
+RUN apk add build-base git npm
 
 WORKDIR /app
 COPY . /app
@@ -16,6 +16,9 @@ RUN  ./build.sh
 # used to generate /etc/passwd /etc/group
 RUN addgroup -S app && adduser -S app -G app
 RUN chown app:app /app/go-iotdevice
+
+# add gpio group
+RUN addgroup -g 993 gpio
 
 # use already compiled frontend
 FROM ghcr.io/koestler/js-iotdevice:v2.1.0 AS js-builder
