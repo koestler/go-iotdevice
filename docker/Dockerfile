@@ -1,7 +1,7 @@
 # build backend
 FROM golang:1.23-alpine AS go-builder
 
-RUN apk add build-base git npm
+RUN apk add build-base git npm libgpiod-dev
 
 WORKDIR /app
 COPY . /app
