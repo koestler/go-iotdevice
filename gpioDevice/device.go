@@ -8,7 +8,6 @@ import (
 	"github.com/warthog618/go-gpiocdev"
 	"golang.org/x/exp/maps"
 	"log"
-	"time"
 )
 
 type Config interface {
@@ -104,16 +103,10 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		}
 	*/
 
-	// also fetch output registers
-	{
-		allRegisters := maps.Clone(inpRegisters)
-		maps.Copy(allRegisters, oupRegisters)
-
-		// fetch initial state all inp and oup registers
-		err = d.execPoll(chip, allRegisters)
-		if err != nil {
-			return fmt.Errorf("gpioDevice[%s]: initial state fetch failed: %w", dName, err), true
-		}
+	// initial read output registers and configure them as outputs
+	err = d.setupOutputs(chip, oupRegisters)
+	if err != nil {
+		return fmt.Errorf("gpioDevice[%s]: setup outputs failed: %w", dName, err), true
 	}
 
 	// send connected now, disconnected when this routine stops
@@ -135,9 +128,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	}
 }
 
-func (d *DeviceStruct) execPoll(chip *gpiocdev.Chip, regMap map[string]GpioRegister) error {
-	start := time.Now()
-
+func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioRegister) error {
 	// generate ordered list of registers
 	regList := maps.Values(regMap)
 
@@ -164,7 +155,7 @@ func (d *DeviceStruct) execPoll(chip *gpiocdev.Chip, regMap map[string]GpioRegis
 		return err
 	}
 
-	// fetch registers
+	// send initial state to the state storage
 	for i, reg := range regList {
 		v := values[i]
 
@@ -179,12 +170,14 @@ func (d *DeviceStruct) execPoll(chip *gpiocdev.Chip, regMap map[string]GpioRegis
 		d.StateStorage().Fill(dataflow.NewEnumRegisterValue(d.Name(), reg, v))
 	}
 
+	// configure as output
+	err = lines.Reconfigure(gpiocdev.AsOutput(values...))
+	if err != nil {
+		return fmt.Errorf("reconfigure as output failed: %w", err)
+	}
+
 	if d.Config().LogDebug() {
-		log.Printf(
-			"gpioDevice[%s]: registers fetched, took=%.3fs",
-			d.Name(),
-			time.Since(start).Seconds(),
-		)
+		log.Printf("gpioDevice[%s]: registers setup", d.Name())
 	}
 
 	return nil
@@ -219,7 +212,7 @@ func (d *DeviceStruct) execCommand(chip *gpiocdev.Chip, oupRegisters map[string]
 		log.Printf("gpioDevice[%s]: write register %s, value=%d", dName, reg, v)
 	}
 
-	l, err := chip.RequestLine(reg.offset)
+	l, err := chip.RequestLine(reg.offset, gpiocdev.AsOutput(0))
 	if err != nil {
 		log.Printf("gpioDevice[%s]: request line failed: %s", dName, err)
 		return
@@ -232,7 +225,7 @@ func (d *DeviceStruct) execCommand(chip *gpiocdev.Chip, oupRegisters map[string]
 
 	err = l.SetValue(v)
 	if err != nil {
-		log.Printf("gpioDevice[%s]: set value failed: %s", dName, err)
+		log.Printf("gpioDevice[%s]: set register %s, value=%d failed: %s", dName, reg, v, err)
 		return
 	}
 
@@ -242,10 +235,6 @@ func (d *DeviceStruct) execCommand(chip *gpiocdev.Chip, oupRegisters map[string]
 		value.Register(),
 		enumValue.EnumIdx(),
 	))
-
-	if d.Config().LogDebug() {
-		log.Printf("gpioDevice[%s]: command request successful", dName)
-	}
 
 	// reset the command; this allows the same command (e.g. toggle) to be sent again
 	d.commandStorage.Fill(dataflow.NewNullRegisterValue(dName, value.Register()))
