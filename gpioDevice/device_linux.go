@@ -11,6 +11,17 @@ import (
 	"slices"
 )
 
+type DeviceStruct struct {
+	device.State
+	gpioConfig Config
+
+	commandStorage *dataflow.ValueStorage
+}
+
+func (d *DeviceStruct) Model() string {
+	return "Gpio Device"
+}
+
 func NewDevice(
 	deviceConfig device.Config,
 	gpioConfig Config,

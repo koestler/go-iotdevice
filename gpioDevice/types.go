@@ -1,8 +1,6 @@
 package gpioDevice
 
 import (
-	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-iotdevice/v3/device"
 	"time"
 )
 
@@ -25,15 +23,4 @@ type Pin interface {
 	Description() string
 	LowLabel() string
 	HighLabel() string
-}
-
-type DeviceStruct struct {
-	device.State
-	gpioConfig Config
-
-	commandStorage *dataflow.ValueStorage
-}
-
-func (d *DeviceStruct) Model() string {
-	return "Gpio Device"
 }
