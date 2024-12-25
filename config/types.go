@@ -141,9 +141,9 @@ type RelayConfig struct {
 
 type GpioDeviceConfig struct {
 	DeviceConfig
-	inputs       []PinConfig
-	outputs      []PinConfig
-	pollInterval time.Duration
+	chip    string
+	inputs  []PinConfig
+	outputs []PinConfig
 }
 
 type PinConfig struct {

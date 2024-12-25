@@ -429,16 +429,16 @@ func (c ModbusDeviceConfig) PollInterval() time.Duration {
 }
 
 // Getters for GpioDeviceConfig struct
+func (c GpioDeviceConfig) Chip() string {
+	return c.chip
+}
+
 func (c GpioDeviceConfig) Inputs() []PinConfig {
 	return c.inputs
 }
 
 func (c GpioDeviceConfig) Outputs() []PinConfig {
 	return c.outputs
-}
-
-func (c GpioDeviceConfig) PollInterval() time.Duration {
-	return c.pollInterval
 }
 
 // Getters for PinConfig struct

@@ -4,21 +4,25 @@ import (
 	"errors"
 	"fmt"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"periph.io/x/conn/v3/gpio"
-	"periph.io/x/conn/v3/gpio/gpioreg"
+	"github.com/warthog618/go-gpiocdev"
 )
 
 var ErrRegisterNotFound = errors.New("register not found")
 
 type GpioRegister struct {
 	dataflow.RegisterStruct
-	pin gpio.PinIO
+	pin    string
+	offset int
 }
 
-func pinToRegisterMap(bindings []Pin, category string, sort int, writable bool) (map[string]GpioRegister, error) {
+func (r GpioRegister) String() string {
+	return fmt.Sprintf("name=%s, pin=%s, offset=%d", r.RegisterStruct.Name(), r.pin, r.offset)
+}
+
+func pinToRegisterMap(chip *gpiocdev.Chip, bindings []Pin, category string, sort int, writable bool) (map[string]GpioRegister, error) {
 	regs := make(map[string]GpioRegister, len(bindings))
 	for i, b := range bindings {
-		r, err := pinToRegister(b, category, sort+i, writable)
+		r, err := pinToRegister(chip, b, category, sort+i, writable)
 		if err != nil {
 			return nil, err
 		}
@@ -27,9 +31,9 @@ func pinToRegisterMap(bindings []Pin, category string, sort int, writable bool) 
 	return regs, nil
 }
 
-func pinToRegister(b Pin, category string, sort int, writable bool) (r GpioRegister, err error) {
-	pin := gpioreg.ByName(b.Pin())
-	if pin == nil {
+func pinToRegister(chip *gpiocdev.Chip, b Pin, category string, sort int, writable bool) (r GpioRegister, err error) {
+	offset, err := chip.FindLine(b.Pin())
+	if err != nil {
 		return r, fmt.Errorf("%w: pinName=%s", ErrRegisterNotFound, b.Pin())
 	}
 
@@ -43,10 +47,15 @@ func pinToRegister(b Pin, category string, sort int, writable bool) (r GpioRegis
 			},
 			"", sort, writable,
 		),
-		pin: pin,
+		pin:    b.Pin(),
+		offset: offset,
 	}
 
 	return r, nil
+}
+
+func isValidValue(value int) bool {
+	return value == 0 || value == 1
 }
 
 func addToRegisterDb(rdb *dataflow.RegisterDb, registers map[string]GpioRegister) {

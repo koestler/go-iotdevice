@@ -218,9 +218,9 @@ func (c RelayConfig) convertToRead() relayConfigRead {
 func (c GpioDeviceConfig) convertToRead() gpioDeviceConfigRead {
 	return gpioDeviceConfigRead{
 		deviceConfigRead: c.DeviceConfig.convertToRead(),
+		Chip:             &c.chip,
 		Inputs:           convertMapToRead[PinConfig, pinConfigRead](c.inputs),
 		Outputs:          convertMapToRead[PinConfig, pinConfigRead](c.outputs),
-		PollInterval:     c.pollInterval.String(),
 	}
 }
 
