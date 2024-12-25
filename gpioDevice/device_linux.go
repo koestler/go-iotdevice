@@ -126,17 +126,18 @@ func (d *DeviceStruct) setupInputs(chip *gpiocdev.Chip, regMap map[string]GpioRe
 	{
 		inputOpts := d.gpioConfig.InputOptions()
 		slices.Sort(inputOpts)
+	loop:
 		for _, o := range slices.Compact(inputOpts) {
 			switch o {
 			case "WithBiasDisabled":
 				opts = append(opts, gpiocdev.WithBiasDisabled)
-				break
+				break loop
 			case "WithPullDown":
 				opts = append(opts, gpiocdev.WithPullDown)
-				break
+				break loop
 			case "WithPullUp":
 				opts = append(opts, gpiocdev.WithPullUp)
-				break
+				break loop
 			}
 		}
 	}
