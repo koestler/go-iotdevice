@@ -247,17 +247,18 @@ func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioR
 	{
 		outputOpts := d.gpioConfig.OutputOptions()
 		slices.Sort(outputOpts)
+	loop:
 		for _, o := range slices.Compact(outputOpts) {
 			switch o {
 			case "AsOpenDrain":
 				opts = append(opts, gpiocdev.AsOpenDrain)
-				break
+				break loop
 			case "AsOpenSource":
 				opts = append(opts, gpiocdev.AsOpenSource)
-				break
+				break loop
 			case "AsPushPull":
 				opts = append(opts, gpiocdev.AsPushPull)
-				break
+				break loop
 			}
 		}
 	}
