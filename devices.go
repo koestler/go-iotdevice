@@ -65,7 +65,11 @@ func runNonMqttGensetDevices(
 
 		deviceConfig := gpioDeviceConfig{deviceConfig}
 
-		dev := gpioDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, commandStorage)
+		dev, err := gpioDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, commandStorage)
+		if err != nil {
+			log.Printf("device[%s]: start failed: %s", deviceConfig.Name(), err)
+			continue
+		}
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		watchedDev.Run()
 		devicePool.Add(watchedDev)

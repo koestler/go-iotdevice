@@ -4,7 +4,7 @@ package gpioDevice
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/koestler/go-iotdevice/v3/device"
 )
@@ -14,17 +14,10 @@ func NewDevice(
 	gpioConfig Config,
 	stateStorage *dataflow.ValueStorage,
 	commandStorage *dataflow.ValueStorage,
-) *DeviceStruct {
-	return &DeviceStruct{
-		State: device.NewState(
-			deviceConfig,
-			stateStorage,
-		),
-		gpioConfig:     gpioConfig,
-		commandStorage: commandStorage,
-	}
+) (*DeviceStruct, error) {
+	return nil, errors.New("not supported on this platform")
 }
 
 func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
-	return fmt.Errorf("gpioDevice[%s]: not supported on this platform", d.Config().Name()), true
+	return
 }

@@ -16,7 +16,7 @@ func NewDevice(
 	gpioConfig Config,
 	stateStorage *dataflow.ValueStorage,
 	commandStorage *dataflow.ValueStorage,
-) *DeviceStruct {
+) (*DeviceStruct, error) {
 	return &DeviceStruct{
 		State: device.NewState(
 			deviceConfig,
@@ -24,7 +24,7 @@ func NewDevice(
 		),
 		gpioConfig:     gpioConfig,
 		commandStorage: commandStorage,
-	}
+	}, nil
 }
 
 func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
