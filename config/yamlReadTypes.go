@@ -13,6 +13,7 @@ type configRead struct {
 	Modbus                 map[string]modbusConfigRead        `yaml:"Modbus"`
 	VictronDevices         map[string]victronDeviceConfigRead `yaml:"VictronDevices"`
 	ModbusDevices          map[string]modbusDeviceConfigRead  `yaml:"ModbusDevices"`
+	GpioDevices            map[string]gpioDeviceConfigRead    `yaml:"GpioDevices"`
 	HttpDevices            map[string]httpDeviceConfigRead    `yaml:"HttpDevices"`
 	MqttDevices            map[string]mqttDeviceConfigRead    `yaml:"MqttDevices"`
 	GensetDevices          map[string]gensetDeviceConfigRead  `yaml:"GensetDevices"`
@@ -118,6 +119,23 @@ type relayConfigRead struct {
 	Description *string `yaml:"Description"`
 	OpenLabel   *string `yaml:"OpenLabel"`
 	ClosedLabel *string `yaml:"ClosedLabel"`
+}
+
+type gpioDeviceConfigRead struct {
+	deviceConfigRead `yaml:",inline"`
+	Chip             *string                  `yaml:"Chip"`
+	InputDebounce    string                   `yaml:"InputDebounce"`
+	InputOptions     []string                 `yaml:"InputOptions"`
+	OutputOptions    []string                 `yaml:"OutputOptions"`
+	Inputs           map[string]pinConfigRead `yaml:"Inputs"`
+	Outputs          map[string]pinConfigRead `yaml:"Outputs"`
+}
+
+type pinConfigRead struct {
+	Pin         string  `yaml:"Pin"`
+	Description *string `yaml:"Description"`
+	LowLabel    *string `yaml:"LowLabel"`
+	HighLabel   *string `yaml:"HighLabel"`
 }
 
 type httpDeviceConfigRead struct {

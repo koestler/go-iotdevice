@@ -19,10 +19,12 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07
 	github.com/tg123/go-htpasswd v1.2.3
+	github.com/warthog618/go-gpiocdev v0.9.1
 	go.uber.org/mock v0.4.0
 	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
 	golang.org/x/sync v0.10.0
 	gopkg.in/yaml.v3 v3.0.1
+	periph.io/x/conn/v3 v3.7.1
 )
 
 require (

@@ -19,6 +19,7 @@ func (c Config) MarshalYAML() (interface{}, error) {
 		Modbus:                 convertMapToRead[ModbusConfig, modbusConfigRead](c.modbus),
 		VictronDevices:         convertMapToRead[VictronDeviceConfig, victronDeviceConfigRead](c.victronDevices),
 		ModbusDevices:          convertMapToRead[ModbusDeviceConfig, modbusDeviceConfigRead](c.modbusDevices),
+		GpioDevices:            convertMapToRead[GpioDeviceConfig, gpioDeviceConfigRead](c.gpioDevices),
 		HttpDevices:            convertMapToRead[HttpDeviceConfig, httpDeviceConfigRead](c.httpDevices),
 		MqttDevices:            convertMapToRead[MqttDeviceConfig, mqttDeviceConfigRead](c.mqttDevices),
 		GensetDevices:          convertMapToRead[GensetDeviceConfig, gensetDeviceConfigRead](c.gensetDevices),
@@ -210,6 +211,29 @@ func (c RelayConfig) convertToRead() relayConfigRead {
 		Description: &c.description,
 		OpenLabel:   &c.openLabel,
 		ClosedLabel: &c.closedLabel,
+	}
+}
+
+//lint:ignore U1000 linter does not catch that this is used generic code
+func (c GpioDeviceConfig) convertToRead() gpioDeviceConfigRead {
+	return gpioDeviceConfigRead{
+		deviceConfigRead: c.DeviceConfig.convertToRead(),
+		Chip:             &c.chip,
+		InputDebounce:    c.inputDebounce.String(),
+		InputOptions:     c.inputOptions,
+		OutputOptions:    c.outputOptions,
+		Inputs:           convertMapToRead[PinConfig, pinConfigRead](c.inputs),
+		Outputs:          convertMapToRead[PinConfig, pinConfigRead](c.outputs),
+	}
+}
+
+//lint:ignore U1000 linter does not catch that this is used generic code
+func (c PinConfig) convertToRead() pinConfigRead {
+	return pinConfigRead{
+		Pin:         c.pin,
+		Description: &c.description,
+		LowLabel:    &c.lowLabel,
+		HighLabel:   &c.highLabel,
 	}
 }
 

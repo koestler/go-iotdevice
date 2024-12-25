@@ -128,6 +128,14 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	)
 	err = append(err, e...)
 
+	ret.gpioDevices, e = TransformAndValidateMapToList(
+		c.GpioDevices,
+		func(inp gpioDeviceConfigRead, name string) (GpioDeviceConfig, []error) {
+			return inp.TransformAndValidate(name)
+		},
+	)
+	err = append(err, e...)
+
 	ret.httpDevices, e = TransformAndValidateMapToList(
 		c.HttpDevices,
 		func(inp httpDeviceConfigRead, name string) (HttpDeviceConfig, []error) {
@@ -144,13 +152,21 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	)
 	err = append(err, e...)
 
-	ret.devices = make([]DeviceConfig, 0, len(
-		ret.victronDevices)+len(ret.modbusDevices)+len(ret.httpDevices)+len(ret.mqttDevices)+len(c.GensetDevices),
+	ret.devices = make([]DeviceConfig, 0,
+		len(ret.victronDevices)+
+			len(ret.modbusDevices)+
+			len(ret.gpioDevices)+
+			len(ret.httpDevices)+
+			len(ret.mqttDevices)+
+			len(c.GensetDevices),
 	)
 	for _, d := range ret.victronDevices {
 		ret.devices = append(ret.devices, d.DeviceConfig)
 	}
 	for _, d := range ret.modbusDevices {
+		ret.devices = append(ret.devices, d.DeviceConfig)
+	}
+	for _, d := range ret.gpioDevices {
 		ret.devices = append(ret.devices, d.DeviceConfig)
 	}
 	for _, d := range ret.httpDevices {
@@ -186,6 +202,12 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 			c.Views,
 			func(inp viewConfigRead) (ViewConfig, []error) {
 				return inp.TransformAndValidate(ret.devices)
+			},
+			func(needle ViewConfig, haystack []ViewConfig) (err []error) {
+				if existsByName(needle.Name(), haystack) {
+					err = append(err, fmt.Errorf("duplicate name='%s'", needle.Name()))
+				}
+				return err
 			},
 		)
 		for _, ve := range viewsErr {
@@ -913,12 +935,6 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 }
 
 func (c relayConfigRead) TransformAndValidate() (ret RelayConfig, err []error) {
-	ret = RelayConfig{
-		description: "",
-		openLabel:   "",
-		closedLabel: "",
-	}
-
 	if c.Description != nil {
 		ret.description = *c.Description
 	}
@@ -929,6 +945,107 @@ func (c relayConfigRead) TransformAndValidate() (ret RelayConfig, err []error) {
 
 	if c.ClosedLabel != nil {
 		ret.closedLabel = *c.ClosedLabel
+	}
+
+	return
+}
+
+func (c gpioDeviceConfigRead) TransformAndValidate(deviceName string) (ret GpioDeviceConfig, err []error) {
+	var e []error
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(deviceName)
+	err = append(err, e...)
+
+	if c.Chip == nil {
+		ret.chip = "gpiochip0"
+	} else if len(*c.Chip) < 1 {
+		err = append(err, fmt.Errorf("GpioDevices->%s->Chip must not be empty", deviceName))
+	} else {
+		ret.chip = *c.Chip
+	}
+
+	if len(c.InputDebounce) < 1 {
+		// use default 100ms
+		ret.inputDebounce = 100 * time.Millisecond
+	} else if pollInterval, e := time.ParseDuration(c.InputDebounce); e != nil {
+		err = append(err, fmt.Errorf("GpioDevices->%s->InputDebounce='%s' parse error: %s",
+			deviceName, c.InputDebounce, e,
+		))
+	} else {
+		ret.inputDebounce = pollInterval
+	}
+
+	ret.inputOptions = make([]string, 0)
+	for _, opt := range c.InputOptions {
+		switch opt {
+		case "WithBiasDisabled", "WithPullDown", "WithPullUp":
+			ret.inputOptions = append(ret.inputOptions, opt)
+		default:
+			err = append(err, fmt.Errorf("GpioDevices->%s->InputOptions='%s' is invalid", deviceName, opt))
+		}
+	}
+	if len(ret.inputOptions) > 1 {
+		err = append(err, fmt.Errorf("GpioDevices->%s->InputOptions must not contain more than one option", deviceName))
+	}
+
+	ret.outputOptions = make([]string, 0)
+	for _, opt := range c.OutputOptions {
+		switch opt {
+		case "AsOpenDrain", "AsOpenSource", "AsPushPull":
+			ret.outputOptions = append(ret.outputOptions, opt)
+		default:
+			err = append(err, fmt.Errorf("GpioDevices->%s->OutputOptions='%s' is invalid", deviceName, opt))
+		}
+	}
+	if len(ret.outputOptions) > 1 {
+		err = append(err, fmt.Errorf("GpioDevices->%s->OutputOptions must not contain more than one option", deviceName))
+	}
+
+	ret.inputs, e = TransformAndValidateMapToList(
+		c.Inputs,
+		func(inp pinConfigRead, name string) (PinConfig, []error) {
+			return inp.TransformAndValidate(name, fmt.Sprintf("GpioDevices->%s->Inputs->%s", deviceName, name))
+		},
+	)
+	err = append(err, e...)
+
+	ret.outputs, e = TransformAndValidateMapToList(
+		c.Outputs,
+		func(inp pinConfigRead, name string) (PinConfig, []error) {
+			return inp.TransformAndValidate(name, fmt.Sprintf("GpioDevices->%s->Outputs->%s", deviceName, name))
+		},
+	)
+	err = append(err, e...)
+
+	return
+}
+
+func (c pinConfigRead) TransformAndValidate(name, errPrefix string) (ret PinConfig, err []error) {
+	ret = PinConfig{
+		pin:         c.Pin,
+		name:        name,
+		description: name,
+		lowLabel:    "low",
+		highLabel:   "high",
+	}
+
+	if len(c.Pin) < 1 {
+		err = append(err, fmt.Errorf("%s->Pin must not be empty", errPrefix))
+	}
+
+	if !nameMatcher.MatchString(ret.name) {
+		err = append(err, fmt.Errorf("%s name '%s' does not match %s", errPrefix, ret.name, NameRegexp))
+	}
+
+	if c.Description != nil {
+		ret.description = *c.Description
+	}
+
+	if c.LowLabel != nil {
+		ret.lowLabel = *c.LowLabel
+	}
+
+	if c.HighLabel != nil {
+		ret.highLabel = *c.HighLabel
 	}
 
 	return
@@ -1270,6 +1387,12 @@ func (c viewConfigRead) TransformAndValidate(devices []DeviceConfig) (ret ViewCo
 			func(inp viewDeviceConfigRead) (ViewDeviceConfig, []error) {
 				return inp.TransformAndValidate(devices)
 			},
+			func(needle ViewDeviceConfig, haystack []ViewDeviceConfig) (err []error) {
+				if existsByName(needle.Name(), haystack) {
+					err = append(err, fmt.Errorf("duplicate name='%s'", needle.Name()))
+				}
+				return err
+			},
 		)
 
 		for _, ce := range devicesErr {
@@ -1360,13 +1483,14 @@ func TransformAndValidateMap[I any, O any](
 func TransformAndValidateListUnique[I any, O Nameable](
 	inp []I,
 	transformer func(inp I) (ret O, err []error),
+	uniqueErr func(needle O, haystack []O) []error,
 ) (ret []O, err []error) {
 	ret = make([]O, 0, len(inp))
 	for _, cr := range inp {
 		r, e := transformer(cr)
 
-		if existsByName(r.Name(), ret) {
-			err = append(err, fmt.Errorf("duplicate name='%s'", r.Name()))
+		if e := uniqueErr(r, ret); e != nil {
+			err = append(err, e...)
 		}
 
 		ret = append(ret, r)

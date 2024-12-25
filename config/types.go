@@ -24,6 +24,7 @@ type Config struct {
 	devices                []DeviceConfig
 	victronDevices         []VictronDeviceConfig
 	modbusDevices          []ModbusDeviceConfig
+	gpioDevices            []GpioDeviceConfig
 	httpDevices            []HttpDeviceConfig
 	mqttDevices            []MqttDeviceConfig
 	gensetDevices          []GensetDeviceConfig
@@ -136,6 +137,24 @@ type RelayConfig struct {
 	description string
 	openLabel   string
 	closedLabel string
+}
+
+type GpioDeviceConfig struct {
+	DeviceConfig
+	chip          string
+	inputDebounce time.Duration
+	inputOptions  []string
+	outputOptions []string
+	inputs        []PinConfig
+	outputs       []PinConfig
+}
+
+type PinConfig struct {
+	pin         string
+	name        string
+	description string
+	lowLabel    string
+	highLabel   string
 }
 
 type HttpDeviceConfig struct {

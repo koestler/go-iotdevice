@@ -206,6 +206,41 @@ ModbusDevices:                                             # optional, a list of
         ClosedLabel: On                                    # optional, default "closed", a label for the closed state
     PollInterval: 1s                                       # optional, default 1s, how often to fetch the device status
 
+GpioDevices:                                               # optional, a list of devices controlled via gpio
+  gpio0:                                                   # mandatory, an arbitrary name used for logging and for referencing in other config sections
+    Filter:                                                # optional, default include all, defines which registers are show in the view,
+      # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
+      IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
+      SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
+      IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
+      SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
+      DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
+    RestartInterval: 400ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
+    RestartIntervalMaxBackoff: 200s                        # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    LogDebug: true                                         # optional, default false, enable debug log output
+    Chip: gpiochip42                                       # optional, default gpiochip0, the gpiochip to use. See output of gpioinfo
+    InputDebounce: 10ms                                    # optional, default 100ms, debounce the input signal, 0 to disable
+    InputOptions: ["WithPullUp"]                           # optional, default unchanged, valid options: WithBiasDisabled, WithPullDown, WithPullUp
+    OutputOptions: ["AsPushPull"]                          # optional, default unchanged, valid options: AsOpenDrain, AsOpenSource, AsPushPull
+    Inputs:                                                # optional, a list of inputs
+      Switch0:                                             # mandatory, a technical name used for the register
+        Pin: GPIO2                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Description: Switch 0                              # mandatory, a nice title displayed in the frontend
+        LowLabel: Pressed                                  # optional, default "low", a label for the low state
+        HighLabel: Released                                # optional, default "high", a label for the high state
+      Switch1:                                             # mandatory, a technical name used for the register
+        Pin: GPIO3                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Description: Switch 1                              # mandatory, a nice title displayed in the frontend
+    Outputs:
+      Relay0:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO4                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Description: Relay 0                               # mandatory, a nice title displayed in the frontend
+        LowLabel: Off                                      # optional, default "low", a label for the low state
+        HighLabel: On                                      # optional, default "high", a label for the high state
+      Relay1:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Description: Relay 1                               # mandatory, a nice title displayed in the frontend
+
 HttpDevices:                                               # optional, a list of devices controlled via http
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections
     RestartInterval: 1m                                  # optional, default 200ms, how fast to restart the device if it fails / disconnects
@@ -333,6 +368,13 @@ ModbusDevices:                                             # optional, a list of
     Bus: bus0                                              # mandatory, the identifier of the modbus to use
     Kind: WaveshareRtuRelay8                               # mandatory, type/model of the device; possibilities: WaveshareRtuRelay8
     Address: 0x02                                          # mandatory, the modbus address of the device in hex as a string, e.g. 0x0A
+
+GpioDevices:                                               # optional, a list of devices controlled via gpio
+  gpio0:                                                   # mandatory, an arbitrary name used for logging and for referencing in other config sections
+    Inputs:
+      Switch0:                                               # mandatory, a technical name used for the register
+        Pin: GPIO2                                           # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Description: Switch 0                                # optional, default name, a nice title displayed in the frontend
 
 HttpDevices:                                               # optional, a list of devices controlled via http
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections
@@ -788,7 +830,7 @@ func TestReadConfig_Complete(t *testing.T) {
 					t.Errorf("expect %s->Qos to be %d but got %d", sPrefix, expect, got)
 				}
 
-				if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+				if expect, got := []string{"bmv0", "genset0", "gpio0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 					t.Errorf("expect %s->Devices to be %v but got %v", sPrefix, expect, got)
 				} else {
 					prefix := sPrefix + "->Devices->bmv0"
@@ -844,7 +886,7 @@ func TestReadConfig_Complete(t *testing.T) {
 					t.Errorf("expect %s->Qos to be %d but got %d", sPrefix, expect, got)
 				}
 
-				if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+				if expect, got := []string{"bmv0", "genset0", "gpio0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 					t.Errorf("expect %s->Devices to be %v but got %v", sPrefix, expect, got)
 				} else {
 					prefix := sPrefix + "->Devices->bmv0"
@@ -900,7 +942,7 @@ func TestReadConfig_Complete(t *testing.T) {
 					t.Errorf("expect %s->Qos to be %d but got %d", sPrefix, expect, got)
 				}
 
-				if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+				if expect, got := []string{"bmv0", "genset0", "gpio0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 					t.Errorf("expect %s->Devices to be %v but got %v", sPrefix, expect, got)
 				} else {
 					prefix := sPrefix + "->Devices->bmv0"
@@ -1153,6 +1195,150 @@ func TestReadConfig_Complete(t *testing.T) {
 
 		if expect, got := byte(0x01), md.Address(); expect != got {
 			t.Errorf("expect ModbusDevices->modbus-rtu0->Address to be 0x%x but got 0x%x", expect, got)
+		}
+	}
+
+	if expect, got := 1, len(config.GpioDevices()); expect != got {
+		t.Errorf("expect length of config.GpioDevices to be %d but got %d", expect, got)
+	} else {
+		gd := config.GpioDevices()[0]
+
+		if expect, got := "gpio0", gd.Name(); expect != got {
+			t.Errorf("expect Name of first GpioDevices to be '%s' but got %s'", expect, got)
+		}
+
+		if expect, got := 400*time.Millisecond, gd.RestartInterval(); expect != got {
+			t.Errorf("expect GpioDevices->gpio0->General->RestartInterval to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 200*time.Second, gd.RestartIntervalMaxBackoff(); expect != got {
+			t.Errorf("expect GpioDevices->gpio0->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
+		}
+
+		if !gd.LogDebug() {
+			t.Error("expect GpioDevices->gpio0->General->LogDebug to be true")
+		}
+
+		if gd.LogComDebug() {
+			t.Error("expect GpioDevices->gpio0->General->LogComDebug to be false")
+		}
+
+		if expect, got := "gpiochip42", gd.Chip(); expect != got {
+			t.Errorf("expect GpioDevices->gpio0->Chip to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := 10*time.Millisecond, gd.InputDebounce(); expect != got {
+			t.Errorf("expect GpioDevices->gpio0->Chip to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := []string{"WithPullUp"}, gd.InputOptions(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect GpioDevices->gpio0->InputOptions to be %v but got %v", expect, got)
+		}
+
+		if expect, got := []string{"AsPushPull"}, gd.OutputOptions(); !reflect.DeepEqual(expect, got) {
+			t.Errorf("expect GpioDevices->gpio0->OutputOptions to be %v but got %v", expect, got)
+		}
+
+		if expect, got := 2, len(gd.Inputs()); expect != got {
+			t.Errorf("expect length of GpioDevices->gpio0->Inputs to be %d but got %d", expect, got)
+		} else {
+			{
+				in := gd.Inputs()[0]
+
+				if expect, got := "Switch0", in.Name(); expect != got {
+					t.Errorf("expect Name of first GpioDevices->gpio0->Inputs to be '%s' but got %s'", expect, got)
+				}
+
+				if expect, got := "GPIO2", in.Pin(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Inputs->in0->Pin to be '%s' but got '%s'", expect, got)
+				}
+
+				if expect, got := "Switch 0", in.Description(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Inputs->in0->Description to be '%s' but got '%s'", expect, got)
+				}
+
+				if expect, got := "Pressed", in.LowLabel(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Inputs->in0->LowLabel to be '%s' but got '%s'", expect, got)
+				}
+
+				if expect, got := "Released", in.HighLabel(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Inputs->in0->HighLabel to be '%s' but got '%s'", expect, got)
+				}
+			}
+			{
+				in := gd.Inputs()[1]
+
+				if expect, got := "Switch1", in.Name(); expect != got {
+					t.Errorf("expect Name of first GpioDevices->gpio0->Inputs to be '%s' but got %s'", expect, got)
+				}
+
+				if expect, got := "GPIO3", in.Pin(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Inputs->in0->Pin to be '%s' but got '%s'", expect, got)
+				}
+
+				if expect, got := "Switch 1", in.Description(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Inputs->in0->Description to be '%s' but got '%s'", expect, got)
+				}
+
+				if expect, got := "low", in.LowLabel(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Inputs->in0->LowLabel to be '%s' but got '%s'", expect, got)
+				}
+
+				if expect, got := "high", in.HighLabel(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Inputs->in0->HighLabel to be '%s' but got '%s'", expect, got)
+				}
+			}
+		}
+
+		if expect, got := 2, len(gd.Outputs()); expect != got {
+			t.Errorf("expect length of GpioDevices->gpio0->Outputs to be %d but got %d", expect, got)
+		} else {
+			{
+				in := gd.Outputs()[0]
+
+				if expect, got := "Relay0", in.Name(); expect != got {
+					t.Errorf("expect Name of first GpioDevices->gpio0->Outputs to be '%s' but got %s'", expect, got)
+				}
+
+				if expect, got := "GPIO4", in.Pin(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Outputs->in0->Pin to be '%s' but got '%s'", expect, got)
+				}
+
+				if expect, got := "Relay 0", in.Description(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Outputs->in0->Description to be '%s' but got '%s'", expect, got)
+				}
+
+				if expect, got := "Off", in.LowLabel(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Outputs->in0->LowLabel to be '%s' but got '%s'", expect, got)
+				}
+
+				if expect, got := "On", in.HighLabel(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Outputs->in0->HighLabel to be '%s' but got '%s'", expect, got)
+				}
+			}
+			{
+				in := gd.Outputs()[1]
+
+				if expect, got := "Relay1", in.Name(); expect != got {
+					t.Errorf("expect Name of first GpioDevices->gpio0->Outputs to be '%s' but got %s'", expect, got)
+				}
+
+				if expect, got := "GPIO5", in.Pin(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Outputs->in0->Pin to be '%s' but got '%s'", expect, got)
+				}
+
+				if expect, got := "Relay 1", in.Description(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Outputs->in0->Description to be '%s' but got '%s'", expect, got)
+				}
+
+				if expect, got := "low", in.LowLabel(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Outputs->in0->LowLabel to be '%s' but got '%s'", expect, got)
+				}
+
+				if expect, got := "high", in.HighLabel(); expect != got {
+					t.Errorf("expect GpioDevices->gpio0->Outputs->in0->HighLabel to be '%s' but got '%s'", expect, got)
+				}
+			}
 		}
 	}
 
@@ -1705,7 +1891,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Qos to be %d but got %d", prefix, expect, got)
 			}
 
-			if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+			if expect, got := []string{"bmv0", "genset0", "gpio0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
@@ -1761,7 +1947,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Qos to be %d but got %d", prefix, expect, got)
 			}
 
-			if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+			if expect, got := []string{"bmv0", "genset0", "gpio0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
@@ -1817,7 +2003,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Qos to be %d but got %d", prefix, expect, got)
 			}
 
-			if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+			if expect, got := []string{"bmv0", "genset0", "gpio0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
@@ -1873,7 +2059,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Qos to be %d but got %d", prefix, expect, got)
 			}
 
-			if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+			if expect, got := []string{"bmv0", "genset0", "gpio0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
@@ -1929,7 +2115,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Qos to be %d but got %d", prefix, expect, got)
 			}
 
-			if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+			if expect, got := []string{"bmv0", "genset0", "gpio0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
@@ -1985,7 +2171,7 @@ func TestReadConfig_Default(t *testing.T) {
 				t.Errorf("expect %s->Qos to be %d but got %d", prefix, expect, got)
 			}
 
-			if expect, got := []string{"bmv0", "genset0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
+			if expect, got := []string{"bmv0", "genset0", "gpio0", "modbus-rtu0", "tcw241"}, getNames(mcSect.Devices()); !reflect.DeepEqual(expect, got) {
 				t.Errorf("expect %s->Devices to be %v but got %v", prefix, expect, got)
 			} else {
 				prefix := prefix + "->Devices->bmv0"
@@ -2125,6 +2311,74 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if expect, got := byte(0x02), md.Address(); expect != got {
 			t.Errorf("expect ModbusDevices->modbus-rtu0->Address to be 0x%x but got 0x%x", expect, got)
+		}
+	}
+
+	if expect, got := 1, len(config.GpioDevices()); expect != got {
+		t.Errorf("expect length of config.GpioDevices to be %d but got %d", expect, got)
+	} else {
+		gd := config.GpioDevices()[0]
+
+		if expect, got := "gpio0", gd.Name(); expect != got {
+			t.Errorf("expect Name of first GpioDevices to be '%s' but got %s'", expect, got)
+		}
+
+		if expect, got := 200*time.Millisecond, gd.RestartInterval(); expect != got {
+			t.Errorf("expect GpioDevices->gpio0->General->RestartInterval to be %s but got %s", expect, got)
+		}
+
+		if expect, got := time.Minute, gd.RestartIntervalMaxBackoff(); expect != got {
+			t.Errorf("expect GpioDevices->gpio0->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
+		}
+
+		if gd.LogDebug() {
+			t.Error("expect GpioDevices->gpio0->General->LogDebug to be false")
+		}
+
+		if gd.LogComDebug() {
+			t.Error("expect GpioDevices->gpio0->General->LogComDebug to be false")
+		}
+
+		if expect, got := "gpiochip0", gd.Chip(); expect != got {
+			t.Errorf("expect GpioDevices->gpio0->Chip to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := 100*time.Millisecond, gd.InputDebounce(); expect != got {
+			t.Errorf("expect GpioDevices->gpio0->InputDebounce to be '%s' but got '%s'", expect, got)
+		}
+
+		if got := gd.InputOptions(); len(got) != 0 {
+			t.Errorf("expect GpioDevices->gpio0->InputOptions to be empty but got %v", got)
+		}
+
+		if got := gd.OutputOptions(); len(got) != 0 {
+			t.Errorf("expect GpioDevices->gpio0->OutputOptions to be empty but got %v", got)
+		}
+
+		if expect, got := 1, len(gd.Inputs()); expect != got {
+			t.Errorf("expect length of GpioDevices->gpio0->Inputs to be %d but got %d", expect, got)
+		} else {
+			in := gd.Inputs()[0]
+
+			if expect, got := "Switch0", in.Name(); expect != got {
+				t.Errorf("expect Name of first GpioDevices->gpio0->Inputs to be '%s' but got %s'", expect, got)
+			}
+
+			if expect, got := "GPIO2", in.Pin(); expect != got {
+				t.Errorf("expect GpioDevices->gpio0->Inputs->in0->Pin to be '%s' but got '%s'", expect, got)
+			}
+
+			if expect, got := "Switch 0", in.Description(); expect != got {
+				t.Errorf("expect GpioDevices->gpio0->Inputs->in0->Description to be '%s' but got '%s'", expect, got)
+			}
+
+			if expect, got := "low", in.LowLabel(); expect != got {
+				t.Errorf("expect GpioDevices->gpio0->Inputs->in0->LowLabel to be '%s' but got '%s'", expect, got)
+			}
+
+			if expect, got := "high", in.HighLabel(); expect != got {
+				t.Errorf("expect GpioDevices->gpio0->Inputs->in0->HighLabel to be '%s' but got '%s'", expect, got)
+			}
 		}
 	}
 

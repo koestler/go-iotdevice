@@ -32,21 +32,23 @@ The tool currently implements the following devices, which are all used in an ac
 However, it is made to be extended. Feel free to send pull requests or 
 [create an issue](https://github.com/koestler/go-iotdevice/issues).
 
-| Configuration section              | Kind=              | Name                                                                                                                                                                                                                                                | State                              | 
-|------------------------------------|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------|
-| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [BlueSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/mppt7510) (different versions)                                                                                                                               | production ready                   |
-| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [SmartSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/smartsolar-150-35) (different versions)                                                                                                                     | production ready                   |
-| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 700](https://www.victronenergy.com/battery-monitors/bmv-700)                                                                                                                                                    | production ready                   |
-| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 702](https://www.victronenergy.com/battery-monitors/bmv-702)                                                                                                                                                    | production ready                   |
-| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV-712 Smart](https://www.victronenergy.com/battery-monitors/bmv-712-smart)                                                                                                                                        | production ready                   |
-| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt)                                                                                                                                                     | production ready                   |
-| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [Phoenix Inverter](https://www.victronenergy.com/inverters)                                                                                                                                                                          | production ready                   |
-| [VictronDevcies](#Victron-devices) | Vebus              | Victron Energy [Multiplus](https://www.victronenergy.com/inverters-chargers/multiplus-12v-24v-48v-800va-3kva)                                                                                                                                       | in development, see v3vebus branch |
-| [ModbusDevices](#Modbus-devices)   | WaveshareRtuRelay8 | [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay.htm)                                                                                                                                                 | production ready                   |
-| [ModbusDevices](#Modbus-devices)   | Finder7M38         | [Finder TYPE 7M.38 - bi-directional multi-functional energy meters](https://www.findernet.com/en/uk/series/7m-series-smart-energy-meters/type/type-7m-38-three-phase-multi-function-bi-directional-energy-meters-with-backlit-matrix-lcd-display/)  | beta testing                       |
-| [HttpDevcies](#http-devices)       | Teracom            | Teracom [TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/) industrial relay/sensor board                                                                                                                                  | production ready                   | 
-| [HttpDevcies](#http-devices)       | ShellyEm3          | Shelly [3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) 3-phase energy power monitor                                                                                                                                     | production ready                   |
-| [MqttDevcies](#mqtt-devices)       | GoIotdeviceV3      | Another go-iotdevice instance connected to the same MQTT server                                                                                                                                                                                     | production ready                   |
+| Configuration section              | Kind=              | Name                                                                                                                                                                                                                                               | State                              | 
+|------------------------------------|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------|
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [BlueSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/mppt7510) (different versions)                                                                                                                              | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [SmartSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/smartsolar-150-35) (different versions)                                                                                                                    | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 700](https://www.victronenergy.com/battery-monitors/bmv-700)                                                                                                                                                   | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 702](https://www.victronenergy.com/battery-monitors/bmv-702)                                                                                                                                                   | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV-712 Smart](https://www.victronenergy.com/battery-monitors/bmv-712-smart)                                                                                                                                       | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt)                                                                                                                                                    | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [Phoenix Inverter](https://www.victronenergy.com/inverters)                                                                                                                                                                         | production ready                   |
+| [VictronDevcies](#Victron-devices) | Vebus              | Victron Energy [Multiplus](https://www.victronenergy.com/inverters-chargers/multiplus-12v-24v-48v-800va-3kva)                                                                                                                                      | in development, see v3vebus branch |
+| [ModbusDevices](#Modbus-devices)   | WaveshareRtuRelay8 | [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay.htm)                                                                                                                                                | production ready                   |
+| [ModbusDevices](#Modbus-devices)   | Finder7M38         | [Finder TYPE 7M.38 - bi-directional multi-functional energy meters](https://www.findernet.com/en/uk/series/7m-series-smart-energy-meters/type/type-7m-38-three-phase-multi-function-bi-directional-energy-meters-with-backlit-matrix-lcd-display/) | production ready                   |
+| [GpioDevices](#gpio-devices)       |                    | Raspberry Pi General Purpose IO Pins. E.g. used for [Waveshare Industrial 6-ch Relay Module for Raspberry Pi Zero](https://www.waveshare.com/rpi-zero-relay.htm)                                                                                   | beta testing                       |
+| [HttpDevcies](#http-devices)       | Teracom            | Teracom [TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/) industrial relay/sensor board                                                                                                                                 | production ready                   | 
+| [HttpDevcies](#http-devices)       | ShellyEm3          | Shelly [3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) 3-phase energy power monitor                                                                                                                                    | production ready                   |
+| [MqttDevcies](#mqtt-devices)       | GoIotdeviceV3      | Another go-iotdevice instance connected to the same MQTT server                                                                                                                                                                                    | production ready                   |
+
 
 See [Devices](#devices) section on how to configure each.
 
@@ -230,6 +232,40 @@ ModbusDevices:
         ClosedLabel: Off
     Filter: # You can skip unused outputs
       SkipRegisters: [CH3, CH4, CH5, CH6, CH7, CH8]
+```
+
+### Gpio devices
+General Purpose Devices uses the GPIO pins of e.g. a Raspberry Pi to read and set individual pins.
+The pins are controlled using the [periph.io library](https://periph.io/). Check [supported platforms](https://periph.io/platform/).
+
+An example configuration for the [Waveshare Industrial 6-ch Relay Module for Raspberry Pi Zero](https://www.waveshare.com/rpi-zero-relay.htm):
+
+```yaml
+GpioDevices:
+  gpio:
+    LogDebug: True
+    Inputs:
+      TestInput:
+        Pin: GPIO4 # just an example, the pin is not connected on the board
+    Outputs:
+      Relay1:
+        Pin: GPIO5
+        Description: Relay Channel 1
+      Relay2:
+        Pin: GPIO6
+        Description: Relay Channel 2
+      Relay3:
+        Pin: GPIO13
+        Description: Relay Channel 3
+      Relay4:
+        Pin: GPIO16
+        Description: Relay Channel 4
+      Relay5:
+        Pin: GPIO19
+        Description: Relay Channel 5
+      Relay6:
+        Pin: GPIO20
+        Description: Relay Channel 6
 ```
 
 ### Http devices
@@ -767,6 +803,38 @@ ModbusDevices:                                             # optional, a list of
     Bus: bus0                                              # mandatory, the identifier of the modbus to use
     Kind: Finder7M38                                       # mandatory, type/model of the device; possibilities: WaveshareRtuRelay8, Finder7M38
     Address: 33                                            # mandatory, the modbus address of the device in hex as a string, e.g. 0x0A
+
+GpioDevices:                                               # optional, a list of devices controlled via gpio
+  gpio0:                                                   # mandatory, an arbitrary name used for logging and for referencing in other config sections
+    Filter:                                                # optional, default include all, defines which registers are show in the view,
+      # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
+      IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
+      SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
+      IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
+      SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
+      DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
+    RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
+    RestartIntervalMaxBackoff: 1m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    LogDebug: false                                        # optional, default false, enable debug log output
+    Inputs:                                                # optional, a list of inputs
+      Switch0:                                             # mandatory, a technical name used for the register
+        Pin: GPIO2                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Description: Switch 0                              # optional, default name, a nice title displayed in the frontend
+        LowLabel: Pressed                                  # optional, default "low", a label for the low state
+        HighLabel: Released                                # optional, default "high", a label for the high state
+      Switch1:                                             # mandatory, a technical name used for the register
+        Pin: GPIO3                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Description: Switch 1                              # optional, default name, a nice title displayed in the frontend
+    Outputs:
+      Relay0:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO4                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Description: Relay 0                               # optional, default name, a nice title displayed in the frontend
+        LowLabel: Off                                      # optional, default "low", a label for the low state
+        HighLabel: On                                      # optional, default "high", a label for the high state
+      Relay1:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Description: Relay 1                               # optional, default name, a nice title displayed in the frontend
+    PollInterval: 100ms                                    # optional, default 100ms, how often to fetch the device status
 
 HttpDevices:                                               # optional, a list of devices controlled via http
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections

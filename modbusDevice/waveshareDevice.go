@@ -26,43 +26,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	registers = dataflow.FilterRegisters(registers, c.Config().Filter())
 	c.RegisterDb().AddStruct(registers...)
 
-	// setup polling
-	execPoll := func() error {
-		start := time.Now()
-
-		// fetch registers
-		state, err := WaveshareReadRelays(c.modbus.WriteRead, c.modbusConfig.Address())
-		if err != nil {
-			return fmt.Errorf("waveshareDevice[%s]: read failed: %s", c.Name(), err)
-		}
-
-		for _, register := range registers {
-			value := 0
-			if address, err := waveshareRtuRelay8RegisterAddress(register); err == nil {
-				if state[address] {
-					value = 1
-				}
-			}
-
-			c.StateStorage().Fill(dataflow.NewEnumRegisterValue(
-				c.Name(),
-				register,
-				value,
-			))
-		}
-
-		if c.Config().LogDebug() {
-			log.Printf(
-				"waveshareDevice[%s]: registers fetched, took=%.3fs",
-				c.Name(),
-				time.Since(start).Seconds(),
-			)
-		}
-
-		return nil
-	}
-
-	if err := execPoll(); err != nil {
+	if err := c.execPoll(registers); err != nil {
 		return err, true
 	}
 
@@ -75,73 +39,6 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	// setup subscription to listen for updates of writable registers
 	_, commandSubscription := c.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullValueFilter(c.Config().Name()))
 
-	execCommand := func(value dataflow.Value) {
-		if c.Config().LogDebug() {
-			log.Printf(
-				"waveshareDevice[%s]: value command: %s",
-				c.Config().Name(), value.String(),
-			)
-		}
-
-		enumValue, ok := value.(dataflow.EnumRegisterValue)
-		if !ok {
-			// unable to handle non enum value
-			return
-		}
-
-		var command Command
-		switch enumValue.EnumIdx() {
-		case 0:
-			command = RelayOpen
-		case 1:
-			command = RelayClose
-		default:
-			return
-		}
-
-		var relayNr uint16
-		if address, err := waveshareRtuRelay8RegisterAddress(value.Register()); err != nil {
-			if c.Config().LogDebug() {
-				log.Printf("waveshareDevice[%s]: cannot get register address, register=%v, err: %s",
-					c.Config().Name(),
-					value.Register(), err,
-				)
-			}
-			// unknown register
-			return
-		} else {
-			relayNr = uint16(address)
-		}
-
-		if c.Config().LogDebug() {
-			log.Printf(
-				"waveshareDevice[%s]: write relayNr=%v, command: %v",
-				c.Config().Name(), relayNr, command,
-			)
-		}
-
-		if err := WaveshareWriteRelay(c.modbus.WriteRead, c.modbusConfig.Address(), relayNr, command); err != nil {
-			log.Printf(
-				"waveshareDevice[%s]: command request genration failed: %s",
-				c.Config().Name(), err,
-			)
-		} else {
-			// set the current state immediately after a successful write
-			c.StateStorage().Fill(dataflow.NewEnumRegisterValue(
-				c.Name(),
-				value.Register(),
-				enumValue.EnumIdx(),
-			))
-
-			if c.Config().LogDebug() {
-				log.Printf("waveshareDevice[%s]: command request successful", c.Config().Name())
-			}
-		}
-
-		// reset the command; this allows the same command (eg. toggle) to be sent again
-		c.commandStorage.Fill(dataflow.NewNullRegisterValue(c.Config().Name(), value.Register()))
-	}
-
 	ticker := time.NewTicker(c.modbusConfig.PollInterval())
 	defer ticker.Stop()
 	for {
@@ -149,13 +46,115 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 		case <-ctx.Done():
 			return nil, false
 		case <-ticker.C:
-			if err := execPoll(); err != nil {
+			if err := c.execPoll(registers); err != nil {
 				return err, false
 			}
 		case value := <-commandSubscription.Drain():
-			execCommand(value)
+			c.execCommand(value)
 		}
 	}
+}
+
+func (c *DeviceStruct) execPoll(registers []dataflow.RegisterStruct) error {
+	start := time.Now()
+
+	// fetch registers
+	state, err := WaveshareReadRelays(c.modbus.WriteRead, c.modbusConfig.Address())
+	if err != nil {
+		return fmt.Errorf("waveshareDevice[%s]: read failed: %s", c.Name(), err)
+	}
+
+	for _, register := range registers {
+		value := 0
+		if address, err := waveshareRtuRelay8RegisterAddress(register); err == nil {
+			if state[address] {
+				value = 1
+			}
+		}
+
+		c.StateStorage().Fill(dataflow.NewEnumRegisterValue(
+			c.Name(),
+			register,
+			value,
+		))
+	}
+
+	if c.Config().LogDebug() {
+		log.Printf(
+			"waveshareDevice[%s]: registers fetched, took=%.3fs",
+			c.Name(),
+			time.Since(start).Seconds(),
+		)
+	}
+
+	return nil
+}
+
+func (c *DeviceStruct) execCommand(value dataflow.Value) {
+	if c.Config().LogDebug() {
+		log.Printf(
+			"waveshareDevice[%s]: value command: %s",
+			c.Config().Name(), value.String(),
+		)
+	}
+
+	enumValue, ok := value.(dataflow.EnumRegisterValue)
+	if !ok {
+		// unable to handle non enum value
+		return
+	}
+
+	var command Command
+	switch enumValue.EnumIdx() {
+	case 0:
+		command = RelayOpen
+	case 1:
+		command = RelayClose
+	default:
+		return
+	}
+
+	var relayNr uint16
+	if address, err := waveshareRtuRelay8RegisterAddress(value.Register()); err != nil {
+		if c.Config().LogDebug() {
+			log.Printf("waveshareDevice[%s]: cannot get register address, register=%v, err: %s",
+				c.Config().Name(),
+				value.Register(), err,
+			)
+		}
+		// unknown register
+		return
+	} else {
+		relayNr = uint16(address)
+	}
+
+	if c.Config().LogDebug() {
+		log.Printf(
+			"waveshareDevice[%s]: write relayNr=%v, command: %v",
+			c.Config().Name(), relayNr, command,
+		)
+	}
+
+	if err := WaveshareWriteRelay(c.modbus.WriteRead, c.modbusConfig.Address(), relayNr, command); err != nil {
+		log.Printf(
+			"waveshareDevice[%s]: command request genration failed: %s",
+			c.Config().Name(), err,
+		)
+	} else {
+		// set the current state immediately after a successful write
+		c.StateStorage().Fill(dataflow.NewEnumRegisterValue(
+			c.Name(),
+			value.Register(),
+			enumValue.EnumIdx(),
+		))
+
+		if c.Config().LogDebug() {
+			log.Printf("waveshareDevice[%s]: command request successful", c.Config().Name())
+		}
+	}
+
+	// reset the command; this allows the same command (e.g. toggle) to be sent again
+	c.commandStorage.Fill(dataflow.NewNullRegisterValue(c.Config().Name(), value.Register()))
 }
 
 func (c *DeviceStruct) getWaveshareRtuRelay8Registers() (registers []dataflow.RegisterStruct) {
