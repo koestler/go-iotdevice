@@ -8,6 +8,7 @@ import (
 	"github.com/warthog618/go-gpiocdev"
 	"golang.org/x/exp/maps"
 	"log"
+	"time"
 )
 
 type Config interface {
@@ -76,32 +77,16 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	addToRegisterDb(d.State.RegisterDb(), inpRegisters)
 	addToRegisterDb(d.State.RegisterDb(), oupRegisters)
 
-	// setup inputs
-	/*
-		for _, reg := range inpRegisters {
-			go func() {
-				if d.Config().LogDebug() {
-					log.Printf("gpioDevice[%s]: setup input register %s",			dName, reg,					)
-				}
-
-				l, err := gpiocdev.RequestLine(
-					reg.chip, reg.offset,
-					gpiocdev.WithPullUp, // todo: make bias configurable
-					gpiocdev.WithBothEdges,
-					gpiocdev.WithEventHandler(eventHandler))
-				if err != nil {
-					fmt.Printf("RequestLine returned error: %s\n", err)
-					if err == syscall.Errno(22) {
-						fmt.Println("Note that the WithPullUp option requires Linux 5.5 or later - check your kernel version.")
-					}
-					os.Exit(1)
-				}
-				defer l.Close()
-
-
-			}()
+	// watch inputs
+	lines, err := d.setupInputs(chip, inpRegisters)
+	if err != nil {
+		return fmt.Errorf("gpioDevice[%s]: setup inputs failed: %w", dName, err), true
+	}
+	defer func() {
+		if err := lines.Close(); err != nil {
+			log.Printf("gpioDevice[%s]: error while closing lines: %s", d.Config().Name(), err)
 		}
-	*/
+	}()
 
 	// initial read output registers and configure them as outputs
 	err = d.setupOutputs(chip, oupRegisters)
@@ -128,15 +113,89 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	}
 }
 
-func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioRegister) error {
-	// generate ordered list of registers
+// setupInputs configures the given registers as inputs and registers an event listener.
+// The caller shall close the returned lines whenever there is no error returned.
+func (d *DeviceStruct) setupInputs(chip *gpiocdev.Chip, regMap map[string]GpioRegister) (*gpiocdev.Lines, error) {
 	regList := maps.Values(regMap)
+	offsets := offsetList(regList)
 
-	// compute ordered list of offsets
-	offsets := make([]int, len(regList))
-	for i, reg := range regList {
-		offsets[i] = reg.offset
+	if d.Config().LogDebug() {
+		for i, reg := range regList {
+			log.Printf("gpioDevice[%s]: setup input register: %s, offset=%d", d.Name(), reg, offsets[i])
+		}
 	}
+
+	lines, err := chip.RequestLines(
+		offsets,
+		gpiocdev.WithPullUp, // todo: make configurable
+		gpiocdev.WithBothEdges,
+		gpiocdev.WithDebounce(100*time.Millisecond), // todo: make configurable
+		gpiocdev.WithEventHandler(d.eventHandler(regList)),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("request inputs lines failed: %w", err)
+	}
+
+	// fetch initial values
+	values := make([]int, len(offsets))
+	err = lines.Values(values)
+	if err != nil {
+		if err := lines.Close(); err != nil {
+			log.Printf("gpioDevice[%s]: error while closing lines: %s", d.Config().Name(), err)
+		}
+		return nil, fmt.Errorf("fetch initial values failed: %w", err)
+	}
+
+	// send initial state to the state storage
+	for i, reg := range regList {
+		v := values[i]
+
+		if d.Config().LogDebug() {
+			log.Printf("gpioDevice[%s]: read input register %s, value=%d", d.Name(), reg, v)
+		}
+
+		if !isValidValue(v) {
+			log.Printf("gpioDevice[%s]: ignoring invalid value for input register %s, value=%d", d.Name(), reg, v)
+			continue
+		}
+
+		d.StateStorage().Fill(dataflow.NewEnumRegisterValue(d.Name(), reg, v))
+	}
+
+	// do not close lines, the caller should do this
+	return lines, nil
+}
+
+func (d *DeviceStruct) eventHandler(regList []GpioRegister) func(e gpiocdev.LineEvent) {
+	offsetToRegMap := make(map[int]GpioRegister, len(regList))
+	for _, reg := range regList {
+		offsetToRegMap[reg.offset] = reg
+	}
+
+	return func(e gpiocdev.LineEvent) {
+		reg, ok := offsetToRegMap[e.Offset]
+		if !ok {
+			log.Printf("gpioDevice[%s]: register not found for offset %d", d.Name(), e.Offset)
+			return
+		}
+
+		v := 0
+		if e.Type == gpiocdev.LineEventRisingEdge {
+			v = 1
+		}
+
+		if d.Config().LogDebug() {
+			log.Printf("gpioDevice[%s]: set input: register %s, value=%v", d.Name(), reg, v)
+		}
+
+		d.StateStorage().Fill(dataflow.NewEnumRegisterValue(d.Name(), reg, v))
+	}
+}
+
+func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioRegister) error {
+	// generate ordered list of registers and offsets
+	regList := maps.Values(regMap)
+	offsets := offsetList(regList)
 
 	// fetch the line values
 	lines, err := chip.RequestLines(offsets)
@@ -160,11 +219,12 @@ func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioR
 		v := values[i]
 
 		if d.Config().LogDebug() {
-			log.Printf("gpioDevice[%s]: read %s, value=%d", d.Name(), reg, v)
+			log.Printf("gpioDevice[%s]: read output register %s, value=%d", d.Name(), reg, v)
 		}
 
 		if !isValidValue(v) {
-			return fmt.Errorf("invalid value %d for register %s", v, reg)
+			log.Printf("gpioDevice[%s]: ignoring invalid value for output register %s, value=%d", d.Name(), reg, v)
+			continue
 		}
 
 		d.StateStorage().Fill(dataflow.NewEnumRegisterValue(d.Name(), reg, v))
@@ -174,10 +234,6 @@ func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioR
 	err = lines.Reconfigure(gpiocdev.AsOutput(values...))
 	if err != nil {
 		return fmt.Errorf("reconfigure as output failed: %w", err)
-	}
-
-	if d.Config().LogDebug() {
-		log.Printf("gpioDevice[%s]: registers setup", d.Name())
 	}
 
 	return nil
@@ -242,4 +298,12 @@ func (d *DeviceStruct) execCommand(chip *gpiocdev.Chip, oupRegisters map[string]
 
 func (d *DeviceStruct) Model() string {
 	return "Gpio Device"
+}
+
+func offsetList(regList []GpioRegister) []int {
+	offsets := make([]int, len(regList))
+	for i, reg := range regList {
+		offsets[i] = reg.offset
+	}
+	return offsets
 }
