@@ -1,7 +1,7 @@
 package queue
 
 import (
-	"github.com/koestler/go-iotdevice/v3/list"
+	"github.com/koestler/go-list"
 	"sync"
 )
 
