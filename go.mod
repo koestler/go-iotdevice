@@ -12,11 +12,11 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/json-iterator/go v1.1.12
-	github.com/koestler/go-victron v0.1.0
+	github.com/koestler/go-victron v0.0.10-0.20250104194610-921faea01e24
 	github.com/mileusna/useragent v1.3.5
 	github.com/pkg/errors v0.9.1
 	github.com/sigurn/crc16 v0.0.0-20240131213347-83fcde1e29d1
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07
 	github.com/tg123/go-htpasswd v1.2.3
 	github.com/warthog618/go-gpiocdev v0.9.1

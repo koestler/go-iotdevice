@@ -53,6 +53,8 @@ github.com/klauspost/cpuid/v2 v2.2.9/go.mod h1:rqkxqrZ1EhYM9G+hXH7YdowN5R5RGN6NK
 github.com/knz/go-libedit v1.10.1/go.mod h1:MZTVkCWyz0oBc7JOWP3wNAzd002ZbM/5hgShxwh4x8M=
 github.com/koestler/go-list v1.0.0 h1:iN59BdUMOXrWhA4HqaVZsZ5hVCd/pzIn24ayqWLKW08=
 github.com/koestler/go-list v1.0.0/go.mod h1:OSIm1gK7gs+um+UcLS0ywICwmgqCqNdIjsyu8WjjUhA=
+github.com/koestler/go-victron v0.0.10-0.20250104194610-921faea01e24 h1:kDUx3lBuyFF7oqtD5MGpnlHzHWNES1JIYfsTy9xPWyM=
+github.com/koestler/go-victron v0.0.10-0.20250104194610-921faea01e24/go.mod h1:A+24EVPNouJjxi2shmSMue6p5lhfLwLRp9FNR6XzZHU=
 github.com/koestler/go-victron v0.1.0 h1:RAvfCA9Y7Dn27+hCS3Z2kBKAi9agJz6peXwkVgebDx4=
 github.com/koestler/go-victron v0.1.0/go.mod h1:g1Y7V5/kPacLrKmCRN0XhxSDYYlwxOnv1jUpcpLu/K4=
 github.com/leodido/go-urn v1.4.0 h1:WT9HwE9SGECu3lg4d/dIA+jxlljEa1/ffXKmRjqdmIQ=
@@ -84,6 +86,7 @@ github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
+github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07 h1:UyzmZLoiDWMRywV4DUYb9Fbt8uiOSooupjTq10vpvnU=
 github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07/go.mod h1:kDXzergiv9cbyO7IOYJZWg1U88JhDg3PB6klq9Hg2pA=
 github.com/tg123/go-htpasswd v1.2.3 h1:ALR6ZBIc2m9u70m+eAWUFt5p43ISbIvAvRFYzZPTOY8=
