@@ -151,7 +151,7 @@ Modbus:                                                    # optional, when empt
     ReadTimeout: 100ms                                     # optional, default 100ms, how long to wait for a response
     LogDebug: false                                        # optional, default false, verbose debug log
 
-VictronDevices:                                            # optional, a list of Victron Energy devices to connect to
+VictronDevices:                                            # optional, a list of Victron Energy devices to connect to via wired interfaces
   bmv0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Device: /dev/serial/by-id/usb-VictronEnergy_BV_VE_Direct_cable_VEHTVQT-if00-port0 # mandatory except if Kind: Random*, the path to the usb-to-serial converter
     Kind: Vedirect                                         # mandatory, possibilities: Vedirect, RandomBmv, RandomSolar, always set to Vedirect expect for development
@@ -159,6 +159,25 @@ VictronDevices:                                            # optional, a list of
     IoLog:                                                 # optional, default empty, path to a file where the raw io is logged
     Filter:                                                # optional, default include all, defines which registers are show in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
+      IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
+      SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
+        - Temperature                                      # for BMV devices without a temperature sensor connected
+        - AuxVoltage                                       # for BMV devices without a mid- or starter-voltage reading
+      IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
+      SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
+        - Settings                                         # for solar devices it might make sense to not fetch/output the settings
+      DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
+    RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
+    RestartIntervalMaxBackoff: 1m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    LogDebug: false                                        # optional, default false, enable debug log output
+    LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
+
+VictronBleDevices:                                         # optional, a list of Victron Energy devices to connect to via Blootooth Low Energy
+  bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
+    AnnouncedName: bmv1                                    # optional, default to the name, the name which is announced by the device (can be set via the VictronConnect app)
+    EncryptionKey: 12345678901234567890123456789012        # mandatory, the encryption key of the device (32 hex characters)
+    Filter:                                                # optional, default include all, defines which registers are show in the view,
+      # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
       IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
       SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
         - Temperature                                      # for BMV devices without a temperature sensor connected

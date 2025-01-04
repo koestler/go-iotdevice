@@ -174,6 +174,22 @@ VictronDevices:                                            # optional, a list of
     PollInterval: 700ms                                   # optional, default 0.1s, how often to fetch the registers
     IoLog: /tmp/bmv0.log                                  # optional, default empty, path to a file where the raw io is logged
 
+VictronBleDevices:                                         # optional, a list of Victron Energy devices to connect to via Blootooth Low Energy
+  bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
+    AnnouncedName: "SmartSolar HQ22484YWWN"                # optional, default to the name, the name which is announced by the device (can be set via the VictronConnect app)
+    EncryptionKey: 12345678901234567890123456789012        # mandatory, the encryption key of the device (32 hex characters)
+    Filter:                                                # optional, default include all, defines which registers are show in the view,
+      # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
+      IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
+      SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
+      IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
+      SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
+      DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
+    RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
+    RestartIntervalMaxBackoff: 10m                         # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    LogDebug: true                                         # optional, default false, enable debug log output
+    LogComDebug: true                                      # optional, default false, enable a verbose log of the communication with the device
+
 ModbusDevices:                                             # optional, a list of devices connected via ModBus
   modbus-rtu0:                                             # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Filter:
@@ -362,6 +378,10 @@ Modbus:                                                    # optional, when empt
 VictronDevices:                                            # optional, a list of Victron Energy devices to connect to
   bmv0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Kind: RandomBmv                                        # mandatory, possibilities: Vedirect, RandomBmv, RandomSolar, always set to Vedirect expect for development
+
+VictronBleDevices:                                            # optional, a list of Victron Energy devices to connect to
+  bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
+    EncryptionKey: 12345678901234567890123456789012        # mandatory, the encryption key of the device (32 hex characters)
 
 ModbusDevices:                                             # optional, a list of devices connected via ModBus
   modbus-rtu0:                                             # mandatory, an arbitrary name used for logging and for referencing in other config sections
@@ -1132,6 +1152,40 @@ func TestReadConfig_Complete(t *testing.T) {
 
 		if expect, got := 700*time.Millisecond, vd.PollInterval(); expect != got {
 			t.Errorf("expect VictronDevices->bmv0->PollInterval to be %s but got %s", expect, got)
+		}
+	}
+
+	if expect, got := 1, len(config.VictronBleDevices()); expect != got {
+		t.Errorf("expect length of config.VictronBleDevices to be %d but got %d", expect, got)
+	} else {
+		vd := config.VictronBleDevices()[0]
+
+		if expect, got := "bmv1", vd.Name(); expect != got {
+			t.Errorf("expect Name of first VictronBleDevices to be '%s' but got %s'", expect, got)
+		}
+
+		if expect, got := "SmartSolar HQ22484YWWN", vd.AnnouncedName(); expect != got {
+			t.Errorf("expect VictronBleDevices->bmv1->AnnouncedName to be '%s' but got %s", expect, got)
+		}
+
+		if expect, got := "12345678901234567890123456789012", vd.EncryptionKey(); expect != got {
+			t.Errorf("expect VictronBleDevices->bmv1->EncryptionKey to be '%s' but got %s", expect, got)
+		}
+
+		if expect, got := 200*time.Millisecond, vd.RestartInterval(); expect != got {
+			t.Errorf("expect VictronBleDevices->bmv1->General->RestartInterval to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 10*time.Minute, vd.RestartIntervalMaxBackoff(); expect != got {
+			t.Errorf("expect VictronBleDevices->bmv1->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
+		}
+
+		if !vd.LogDebug() {
+			t.Error("expect VictronBleDevices->bmv1->General->LogDebug to be true")
+		}
+
+		if !vd.LogComDebug() {
+			t.Error("expect VictronBleDevices->bmv1->General->LogComDebug to be true")
 		}
 	}
 
@@ -2273,6 +2327,40 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if expect, got := 500*time.Millisecond, vd.PollInterval(); expect != got {
 			t.Errorf("expect VictronDevices->bmv0->PollInterval to be %s but got %s", expect, got)
+		}
+	}
+
+	if expect, got := 1, len(config.VictronBleDevices()); expect != got {
+		t.Errorf("expect length of config.VictronBleDevices to be %d but got %d", expect, got)
+	} else {
+		vd := config.VictronBleDevices()[0]
+
+		if expect, got := "bmv1", vd.Name(); expect != got {
+			t.Errorf("expect Name of first VictronBleDevices to be '%s' but got %s'", expect, got)
+		}
+
+		if expect, got := "bmv1", vd.AnnouncedName(); expect != got {
+			t.Errorf("expect VictronBleDevices->bmv1->AnnouncedName to be '%s' but got %s", expect, got)
+		}
+
+		if expect, got := "12345678901234567890123456789012", vd.EncryptionKey(); expect != got {
+			t.Errorf("expect VictronBleDevices->bmv1->EncryptionKey to be '%s' but got %s", expect, got)
+		}
+
+		if expect, got := 200*time.Millisecond, vd.RestartInterval(); expect != got {
+			t.Errorf("expect VictronBleDevices->bmv1->General->RestartInterval to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 1*time.Minute, vd.RestartIntervalMaxBackoff(); expect != got {
+			t.Errorf("expect VictronBleDevices->bmv1->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
+		}
+
+		if vd.LogDebug() {
+			t.Error("expect VictronBleDevices->bmv1->General->LogDebug to be false")
+		}
+
+		if vd.LogComDebug() {
+			t.Error("expect VictronBleDevices->bmv1->General->LogComDebug to be false")
 		}
 	}
 

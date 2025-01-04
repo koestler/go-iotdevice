@@ -22,6 +22,10 @@ const NameRegexp = "^[a-zA-Z0-9\\-]{1,32}$"
 
 var nameMatcher = regexp.MustCompile(NameRegexp)
 
+const EncryptionKeyRegexp = "^[0-9a-f]{32}$"
+
+var encryptionKeyMatcher = regexp.MustCompile(EncryptionKeyRegexp)
+
 func ReadConfigFile(exe, source string, bypassFileCheck bool) (config Config, err []error) {
 	yamlStr, e := os.ReadFile(source)
 	if e != nil {
@@ -120,6 +124,14 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	)
 	err = append(err, e...)
 
+	ret.victronBleDevices, e = TransformAndValidateMapToList(
+		c.VictronBleDevices,
+		func(inp victronBleDeviceConfigRead, name string) (VictronBleDeviceConfig, []error) {
+			return inp.TransformAndValidate(name)
+		},
+	)
+	err = append(err, e...)
+
 	ret.modbusDevices, e = TransformAndValidateMapToList(
 		c.ModbusDevices,
 		func(inp modbusDeviceConfigRead, name string) (ModbusDeviceConfig, []error) {
@@ -154,6 +166,7 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 
 	ret.devices = make([]DeviceConfig, 0,
 		len(ret.victronDevices)+
+			len(ret.victronBleDevices)+
 			len(ret.modbusDevices)+
 			len(ret.gpioDevices)+
 			len(ret.httpDevices)+
@@ -161,6 +174,9 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 			len(c.GensetDevices),
 	)
 	for _, d := range ret.victronDevices {
+		ret.devices = append(ret.devices, d.DeviceConfig)
+	}
+	for _, d := range ret.victronBleDevices {
 		ret.devices = append(ret.devices, d.DeviceConfig)
 	}
 	for _, d := range ret.modbusDevices {
@@ -873,6 +889,29 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string) (ret VictronD
 		))
 	} else {
 		ret.pollInterval = pollInterval
+	}
+
+	return
+}
+
+func (c victronBleDeviceConfigRead) TransformAndValidate(name string) (ret VictronBleDeviceConfig, err []error) {
+	var e []error
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
+	err = append(err, e...)
+
+	if len(c.AnnouncedName) < 1 {
+		// use default name
+		ret.announcedName = name
+	} else {
+		ret.announcedName = c.AnnouncedName
+	}
+
+	if !encryptionKeyMatcher.MatchString(c.EncryptionKey) {
+		err = append(err, fmt.Errorf("VictronBleDevices->%s->EncryptionKey='%s' does not match %s",
+			name, c.EncryptionKey, EncryptionKeyRegexp,
+		))
+	} else {
+		ret.encryptionKey = c.EncryptionKey
 	}
 
 	return

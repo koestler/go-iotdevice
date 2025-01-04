@@ -23,6 +23,7 @@ type Config struct {
 	modbus                 []ModbusConfig
 	devices                []DeviceConfig
 	victronDevices         []VictronDeviceConfig
+	victronBleDevices      []VictronBleDeviceConfig
 	modbusDevices          []ModbusDeviceConfig
 	gpioDevices            []GpioDeviceConfig
 	httpDevices            []HttpDeviceConfig
@@ -122,6 +123,12 @@ type VictronDeviceConfig struct {
 	kind         types.VictronDeviceKind
 	pollInterval time.Duration
 	ioLog        string
+}
+
+type VictronBleDeviceConfig struct {
+	DeviceConfig
+	announcedName string
+	encryptionKey string
 }
 
 type ModbusDeviceConfig struct {

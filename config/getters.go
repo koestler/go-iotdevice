@@ -57,6 +57,10 @@ func (c Config) VictronDevices() []VictronDeviceConfig {
 	return c.victronDevices
 }
 
+func (c Config) VictronBleDevices() []VictronBleDeviceConfig {
+	return c.victronBleDevices
+}
+
 func (c Config) ModbusDevices() []ModbusDeviceConfig {
 	return c.modbusDevices
 }
@@ -387,6 +391,16 @@ func (c VictronDeviceConfig) PollInterval() time.Duration {
 
 func (c VictronDeviceConfig) IoLog() string {
 	return c.ioLog
+}
+
+// Getters for VictronBleDeviceConfig struct
+
+func (c VictronBleDeviceConfig) AnnouncedName() string {
+	return c.announcedName
+}
+
+func (c VictronBleDeviceConfig) EncryptionKey() string {
+	return c.encryptionKey
 }
 
 // Getters for ModbusDeviceConfig struct

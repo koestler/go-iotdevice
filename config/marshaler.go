@@ -18,6 +18,7 @@ func (c Config) MarshalYAML() (interface{}, error) {
 		MqttClients:            convertMapToRead[MqttClientConfig, mqttClientConfigRead](c.mqttClients),
 		Modbus:                 convertMapToRead[ModbusConfig, modbusConfigRead](c.modbus),
 		VictronDevices:         convertMapToRead[VictronDeviceConfig, victronDeviceConfigRead](c.victronDevices),
+		VictronBleDevices:      convertMapToRead[VictronBleDeviceConfig, victronBleDeviceConfigRead](c.victronBleDevices),
 		ModbusDevices:          convertMapToRead[ModbusDeviceConfig, modbusDeviceConfigRead](c.modbusDevices),
 		GpioDevices:            convertMapToRead[GpioDeviceConfig, gpioDeviceConfigRead](c.gpioDevices),
 		HttpDevices:            convertMapToRead[HttpDeviceConfig, httpDeviceConfigRead](c.httpDevices),
@@ -184,6 +185,15 @@ func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 		Kind:             c.kind.String(),
 		PollInterval:     c.pollInterval.String(),
 		IoLog:            &c.ioLog,
+	}
+}
+
+//lint:ignore U1000 linter does not catch that this is used generic code
+func (c VictronBleDeviceConfig) convertToRead() victronBleDeviceConfigRead {
+	return victronBleDeviceConfigRead{
+		deviceConfigRead: c.DeviceConfig.convertToRead(),
+		AnnouncedName:    c.announcedName,
+		EncryptionKey:    c.encryptionKey,
 	}
 }
 
