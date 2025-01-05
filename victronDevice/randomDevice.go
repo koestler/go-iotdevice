@@ -26,7 +26,7 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 	addToRegisterDb(c.RegisterDb(), rl)
 
 	if c.Config().LogDebug() {
-		log.Printf("device[%s]: start random source", c.Name())
+		log.Printf("victronDevice[%s]: start random source", c.Name())
 	}
 
 	// start source loop

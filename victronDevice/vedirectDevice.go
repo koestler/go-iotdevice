@@ -20,14 +20,14 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	if c.Config().LogComDebug() {
 		vedirectConfig.DebugLogger = log.New(
 			log.Writer(),
-			fmt.Sprintf("device[%s]: vedirect: ", c.Name()),
+			fmt.Sprintf("victronDevice[%s]: vedirect: ", c.Name()),
 			log.LstdFlags|log.Lmsgprefix,
 		)
 	}
 
 	if ioLog := c.victronConfig.IoLog(); ioLog != "" {
 		if logger, err := vedirectapi.NewFileLogger(ioLog); err != nil {
-			log.Printf("device[%s]: cannot log io: %s", c.Name(), err)
+			log.Printf("victronDevice[%s]: cannot log io: %s", c.Name(), err)
 		} else {
 			defer logger.Close()
 			vedirectConfig.IoLogger = logger
@@ -40,7 +40,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	}
 	defer func() {
 		if err := api.Close(); err != nil {
-			log.Printf("device[%s]: Close failed: %s", c.Name(), err)
+			log.Printf("victronDevice[%s]: Close failed: %s", c.Name(), err)
 		}
 	}()
 
@@ -51,7 +51,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	}()
 
 	c.model = api.Product.String()
-	log.Printf("device[%s]: source: connect to %s", c.Name(), c.model)
+	log.Printf("victronDevice[%s]: source: connect to %s", c.Name(), c.model)
 
 	// filter registers by skip list
 	api.Registers.FilterRegister(func() func(r veregister.Register) bool {
@@ -103,7 +103,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 	fetch := func(regs veregister.RegisterList) (took time.Duration, err error) {
 		// log fetching intervals
 		if c.Config().LogDebug() {
-			log.Printf("device[%s]: start fetching, since(lastFetch)=%.3fs", deviceName, time.Since(lastFetch).Seconds())
+			log.Printf("victronDevice[%s]: start fetching, since(lastFetch)=%.3fs", deviceName, time.Since(lastFetch).Seconds())
 			lastFetch = time.Now()
 		}
 
@@ -124,7 +124,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 		took = time.Since(start)
 
 		if c.Config().LogDebug() {
-			log.Printf("device[%s]: %d registers fetched, took=%.3fs", deviceName, regs.Len(), took.Seconds())
+			log.Printf("victronDevice[%s]: %d registers fetched, took=%.3fs", deviceName, regs.Len(), took.Seconds())
 		}
 		return
 	}
