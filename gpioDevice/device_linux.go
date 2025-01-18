@@ -68,20 +68,24 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	addToRegisterDb(d.State.RegisterDb(), oupRegisters)
 
 	// watch inputs
-	lines, err := d.setupInputs(chip, inpRegisters)
-	if err != nil {
-		return fmt.Errorf("gpioDevice[%s]: setup inputs failed: %w", dName, err), true
-	}
-	defer func() {
-		if err := lines.Close(); err != nil {
-			log.Printf("gpioDevice[%s]: error while closing lines: %s", d.Config().Name(), err)
+	if len(inpRegisters) > 0 {
+		lines, err := d.setupInputs(chip, inpRegisters)
+		if err != nil {
+			return fmt.Errorf("gpioDevice[%s]: setup inputs failed: %w", dName, err), true
 		}
-	}()
+		defer func() {
+			if err := lines.Close(); err != nil {
+				log.Printf("gpioDevice[%s]: error while closing lines: %s", d.Config().Name(), err)
+			}
+		}()
+	}
 
 	// initial read output registers and configure them as outputs
-	err = d.setupOutputs(chip, oupRegisters)
-	if err != nil {
-		return fmt.Errorf("gpioDevice[%s]: setup outputs failed: %w", dName, err), true
+	if len(oupRegisters) > 0 {
+		err = d.setupOutputs(chip, oupRegisters)
+		if err != nil {
+			return fmt.Errorf("gpioDevice[%s]: setup outputs failed: %w", dName, err), true
+		}
 	}
 
 	// send connected now, disconnected when this routine stops
@@ -90,17 +94,23 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		d.SetAvailable(false)
 	}()
 
-	// setup subscription to listen for updates of writable registers
-	_, commandSubscription := d.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullValueFilter(dName))
+	if len(oupRegisters) > 0 {
+		// setup subscription to listen for updates of writable registers
+		_, commandSubscription := d.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullValueFilter(dName))
 
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, false
-		case value := <-commandSubscription.Drain():
-			d.execCommand(chip, oupRegisters, value)
+		for {
+			select {
+			case <-ctx.Done():
+				return nil, false
+			case value := <-commandSubscription.Drain():
+				d.execCommand(chip, oupRegisters, value)
+			}
 		}
 	}
+
+	// no writable registers, just wait for context to be done
+	<-ctx.Done()
+	return nil, false
 }
 
 // setupInputs configures the given registers as inputs and registers an event listener.
