@@ -1,6 +1,10 @@
 # Changelog
 
-### 3.5.0
+## 3.5.1
+* Fix gpioDevice: handle case when no inputs or no outputs are configured
+* Bump dependencies
+
+## 3.5.0
 * Add gpio device
 
 ## v3.4.0
