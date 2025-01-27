@@ -13,7 +13,7 @@ require (
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/json-iterator/go v1.1.12
 	github.com/koestler/go-list v1.0.0
-	github.com/koestler/go-victron v0.1.0
+	github.com/koestler/go-victron v0.1.1-0.20250127181532-b3ddd6e5bc72
 	github.com/mileusna/useragent v1.3.5
 	github.com/pkg/errors v0.9.1
 	github.com/sigurn/crc16 v0.0.0-20240131213347-83fcde1e29d1
