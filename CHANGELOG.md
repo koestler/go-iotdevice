@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.6.0
+* go-victron: add solar load registers for 10/15/20A solar chargers.
+* Bump dependencies
+
 ## 3.5.1
 * Fix gpioDevice: handle case when no inputs or no outputs are configured
 * Bump dependencies
