@@ -23,6 +23,8 @@ github.com/eclipse/paho.golang v0.22.0 h1:JhhUngr8TBlyUZDZw/L6WVayPi9qmSmdWeki48
 github.com/eclipse/paho.golang v0.22.0/go.mod h1:9ZiYJ93iEfGRJri8tErNeStPKLXIGBHiqbHV74t5pqI=
 github.com/gabriel-vasile/mimetype v1.4.8 h1:FfZ3gj38NjllZIeJAmMhr+qKL8Wu+nOoI3GqacKw1NM=
 github.com/gabriel-vasile/mimetype v1.4.8/go.mod h1:ByKUIKGjh1ODkGM1asKUbQZOLGrPjydw3hYPU2YU9t8=
+github.com/gabriel-vasile/mimetype v1.4.9 h1:5k+WDwEsD9eTLL8Tz3L0VnmVh9QxGjRmjBvAG7U/oYY=
+github.com/gabriel-vasile/mimetype v1.4.9/go.mod h1:WnSQhFKJuBlRyLiKohA/2DtIlPFAbguNaG7QCHcyGok=
 github.com/gin-contrib/gzip v1.2.2 h1:iUU/EYCM8ENfkjmZaVrxbjF/ZC267Iqv5S0MMCMEliI=
 github.com/gin-contrib/gzip v1.2.2/go.mod h1:C1a5cacjlDsS20cKnHlZRCPUu57D3qH6B2pV0rl+Y/s=
 github.com/gin-contrib/gzip v1.2.3 h1:dAhT722RuEG330ce2agAs75z7yB+NKvX/ZM1r8w0u2U=
@@ -107,6 +109,8 @@ github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07 h1:UyzmZLoiDWMRywV4DUY
 github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07/go.mod h1:kDXzergiv9cbyO7IOYJZWg1U88JhDg3PB6klq9Hg2pA=
 github.com/tg123/go-htpasswd v1.2.3 h1:ALR6ZBIc2m9u70m+eAWUFt5p43ISbIvAvRFYzZPTOY8=
 github.com/tg123/go-htpasswd v1.2.3/go.mod h1:FcIrK0J+6zptgVwK1JDlqyajW/1B4PtuJ/FLWl7nx8A=
+github.com/tg123/go-htpasswd v1.2.4 h1:HgH8KKCjdmo7jjXWN9k1nefPBd7Be3tFCTjc2jPraPU=
+github.com/tg123/go-htpasswd v1.2.4/go.mod h1:EKThQok9xHkun6NBMynNv6Jmu24A33XdZzzl4Q7H1+0=
 github.com/twitchyliquid64/golang-asm v0.15.1 h1:SU5vSMR7hnwNxj24w34ZyCi/FmDZTkS4MhqMhdFk5YI=
 github.com/twitchyliquid64/golang-asm v0.15.1/go.mod h1:a1lVb/DtPvCB8fslRZhAngC2+aY1QWCk3Cedj/Gdt08=
 github.com/ugorji/go/codec v1.2.12 h1:9LC83zGrHhuUA9l16C9AHXAqEV/2wBQ4nkvumAE65EE=

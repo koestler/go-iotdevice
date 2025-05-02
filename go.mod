@@ -19,7 +19,7 @@ require (
 	github.com/sigurn/crc16 v0.0.0-20240131213347-83fcde1e29d1
 	github.com/stretchr/testify v1.10.0
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07
-	github.com/tg123/go-htpasswd v1.2.3
+	github.com/tg123/go-htpasswd v1.2.4
 	github.com/warthog618/go-gpiocdev v0.9.1
 	go.uber.org/mock v0.4.0
 	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0
@@ -33,7 +33,7 @@ require (
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.9 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
