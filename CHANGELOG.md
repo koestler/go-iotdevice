@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.6.1
+* genset
+  * Change register names L[0-2] -> P[1-3] (to align with Finder7M38)
+
 ## 3.6.0
 * go-victron: add solar load registers for 10/15/20A solar chargers.
 * Bump dependencies

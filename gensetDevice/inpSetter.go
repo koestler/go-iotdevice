@@ -163,21 +163,21 @@ func (d *DeviceStruct) inpSetter(name string) (func(*genset.Controller, dataflow
 			}
 		}), nil
 	case "P1":
-		return d.numberSetter(name, L0Register, func(v float64) func(genset.Inputs) genset.Inputs {
+		return d.numberSetter(name, P1Register, func(v float64) func(genset.Inputs) genset.Inputs {
 			return func(i genset.Inputs) genset.Inputs {
 				i.P1 = v
 				return i
 			}
 		}), nil
 	case "P2":
-		return d.numberSetter(name, L1Register, func(v float64) func(genset.Inputs) genset.Inputs {
+		return d.numberSetter(name, P2Register, func(v float64) func(genset.Inputs) genset.Inputs {
 			return func(i genset.Inputs) genset.Inputs {
 				i.P2 = v
 				return i
 			}
 		}), nil
 	case "P3":
-		return d.numberSetter(name, L2Register, func(v float64) func(genset.Inputs) genset.Inputs {
+		return d.numberSetter(name, P3Register, func(v float64) func(genset.Inputs) genset.Inputs {
 			return func(i genset.Inputs) genset.Inputs {
 				i.P3 = v
 				return i

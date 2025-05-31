@@ -205,7 +205,7 @@ var U2Register = NewNumberRegister(
 	23,
 )
 
-var L0Register = NewNumberRegister(
+var P1Register = NewNumberRegister(
 	"Inputs",
 	"P1",
 	"Load P1",
@@ -213,7 +213,7 @@ var L0Register = NewNumberRegister(
 	24,
 )
 
-var L1Register = NewNumberRegister(
+var P2Register = NewNumberRegister(
 	"Inputs",
 	"P2",
 	"Load P2",
@@ -221,7 +221,7 @@ var L1Register = NewNumberRegister(
 	25,
 )
 
-var L2Register = NewNumberRegister(
+var P3Register = NewNumberRegister(
 	"Inputs",
 	"P3",
 	"Load P3",
@@ -245,14 +245,14 @@ var InputRegisters3P = []dataflow.RegisterStruct{
 	AuxTemp1Register,
 	OutputAvailableRegister,
 	U0Register,
-	L0Register,
+	P1Register,
 	FRegister,
 
 	// only for 3-phase
 	U1Register,
 	U2Register,
-	L1Register,
-	L2Register,
+	P2Register,
+	P3Register,
 }
 
 var InputRegisters1P = InputRegisters3P[:len(InputRegisters3P)-4]
