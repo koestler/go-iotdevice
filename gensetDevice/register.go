@@ -181,7 +181,7 @@ var OutputAvailableRegister = NewOnOffRegister(
 	false,
 )
 
-var U0Register = NewNumberRegister(
+var U1Register = NewNumberRegister(
 	"Inputs",
 	"U1",
 	"Voltage U1",
@@ -189,7 +189,7 @@ var U0Register = NewNumberRegister(
 	21,
 )
 
-var U1Register = NewNumberRegister(
+var U2Register = NewNumberRegister(
 	"Inputs",
 	"U2",
 	"Voltage U2",
@@ -197,7 +197,7 @@ var U1Register = NewNumberRegister(
 	22,
 )
 
-var U2Register = NewNumberRegister(
+var U3Register = NewNumberRegister(
 	"Inputs",
 	"U3",
 	"Voltage U3",
@@ -244,13 +244,13 @@ var InputRegisters3P = []dataflow.RegisterStruct{
 	AuxTemp0Register,
 	AuxTemp1Register,
 	OutputAvailableRegister,
-	U0Register,
+	U1Register,
 	P1Register,
 	FRegister,
 
 	// only for 3-phase
-	U1Register,
 	U2Register,
+	U3Register,
 	P2Register,
 	P3Register,
 }
