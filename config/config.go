@@ -1344,7 +1344,7 @@ func (c gensetDeviceBindingConfigRead) TransformAndValidate(devices []DeviceConf
 			err = append(err, fmt.Errorf("device='%s' is not defined", deviceName))
 		}
 
-		for registerName, name := range m {
+		for name, registerName := range m {
 			ret = append(ret, GensetDeviceBindingConfig{
 				deviceName:   deviceName,
 				registerName: registerName,

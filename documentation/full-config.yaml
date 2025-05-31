@@ -286,13 +286,13 @@ GensetDevices:                                             # optional, a list ge
 
     InputBindings:                                         # mandatory, a list of input bindings
       tcw241:                                              # the device name of the input device
-        Available: IOAvailable                             # key: register name of input device; value: the target value of the genset controller
-        DI0: ArmSwitch
-        DI1: ResetSwitch
-        DI2: FireDetected
+        IOAvailable: Available                             # key: the target value of the genset controller; value: register name of input device
+        ArmSwitch: DI0
+        ResetSwitch: DI1
+        FireDetected: DI2
 
       modbus-finder:                                       # the device name of a second input device providing data
-        Available: OutputAvailable
+        OutputAvailable: Available
         U1: U1
         U2: U2
         U3: U3

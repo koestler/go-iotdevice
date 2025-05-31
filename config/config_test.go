@@ -270,18 +270,18 @@ GensetDevices:                                             # optional, a list ge
 
     InputBindings:                                         # mandatory, a list of input bindings
       tcw241:                                              # the device name of the input device
-        Available: IOAvailable                             # key: register name of input device; value: the target value of the genset controller
-        DI0: ArmSwitch
-        DI1: ResetSwitch
-        DI2: FireDetected
+        IOAvailable: Available                             # key: the target value of the genset controller; value: register name of input device
+        ArmSwitch: DI0
+        ResetSwitch: DI1
+        FireDetected: DI2
 
     OutputBindings:                                        # mandatory, a list of output bindings
       modbus-rtu0:                                         # the device name of the output device
-        CH0: Ignition                                      # key: register name of output device; value: the source value of the genset controller
-        CH1: Starter
-        CH2: Fan
-        CH3: Pump
-        CH4: Load
+        Ignition: CH0
+        Starter: CH1
+        Fan: CH2
+        Pump: CH3
+        Load: CH4
 
     PrimingTimeout: 20s                                    # optional, default 10s, time in priming (only fuel pump on) state
     CrankingTimeout: 19s                                   # optional, default 10s, maximum time in cranking state
@@ -390,11 +390,11 @@ GensetDevices:                                             # optional, a list ge
 
     InputBindings:                                         # mandatory, a list of input bindings
       tcw241:                                              # the device name of the input device
-        Available: IOAvailable                             # key: register name of input device; value: the target value of the genset controller
+        IOAvailable: Available                             # key: register name of input device; value: the target value of the genset controller
 
     OutputBindings:                                        # mandatory, a list of output bindings
       modbus-rtu0:                                         # the device name of the output device
-        CH0: Ignition                                      # key: register name of output device; value: the source value of the genset controller
+        Ignition: CH0                                      # key: register name of output device; value: the source value of the genset controller
 
 Views:                                                     # optional, a list of views (=categories in the frontend / paths in the api URLs)
   - Name: private                                          # mandatory, a technical name used in the URLs
