@@ -6,7 +6,7 @@ require (
 	github.com/coder/websocket v1.8.13
 	github.com/eclipse/paho.golang v0.22.0
 	github.com/gin-contrib/gzip v1.2.3
-	github.com/gin-gonic/gin v1.10.0
+	github.com/gin-gonic/gin v1.10.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/go-cmp v0.6.0
 	github.com/google/uuid v1.6.0
@@ -22,8 +22,8 @@ require (
 	github.com/tg123/go-htpasswd v1.2.4
 	github.com/warthog618/go-gpiocdev v0.9.1
 	go.uber.org/mock v0.4.0
-	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0
-	golang.org/x/sync v0.13.0
+	golang.org/x/exp v0.0.0-20250531010427-b6e5de432a8b
+	golang.org/x/sync v0.14.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -48,11 +48,11 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
-	github.com/ugorji/go/codec v1.2.12 // indirect
-	golang.org/x/arch v0.16.0 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	github.com/ugorji/go/codec v1.2.14 // indirect
+	golang.org/x/arch v0.17.0 // indirect
+	golang.org/x/crypto v0.38.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 )
