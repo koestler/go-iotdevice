@@ -2,7 +2,7 @@ package httpServer
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	"net/http"
 	"time"
@@ -10,17 +10,17 @@ import (
 
 type jwtClaims struct {
 	User string `json:"sub"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func createJwtToken(config AuthenticationConfig, user string) (tokenStr string, err error) {
 	claims := &jwtClaims{
 		User: user,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(config.JwtValidityPeriod()).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.JwtValidityPeriod())),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
-
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return jwtToken.SignedString(config.JwtSecret())
 }

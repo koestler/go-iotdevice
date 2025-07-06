@@ -5,6 +5,7 @@
 * genset:
   * respect output bindings
   * switch the configuration structure of bindings
+* upgrade from golang-jwt/jwt to golang-jwt/jwt/v5
 
 ## 3.6.1
 * genset
