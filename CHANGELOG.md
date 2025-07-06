@@ -11,6 +11,7 @@
   * simplify send timer and send messages (if available) in fixed intervals for 250ms
   * add a send timeout of 5s for websocket messages
   * really make sure that the ws sender never stalls the state storage
+* tests: remove dependency on google/go-cmp
 
 ## 3.6.1
 * genset

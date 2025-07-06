@@ -2,11 +2,10 @@ package dataflow_test
 
 import (
 	"fmt"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	mock_dataflow "github.com/koestler/go-iotdevice/v3/dataflow/mock"
 	"go.uber.org/mock/gomock"
+	"slices"
 	"testing"
 )
 
@@ -121,8 +120,16 @@ func BenchmarkValueStorageGetStateFiltered(b *testing.B) {
 }
 
 func equalIgnoreOrder(a, b []string) bool {
-	less := func(a, b string) bool { return a < b }
-	return cmp.Diff(a, b, cmpopts.SortSlices(less)) == ""
+	if len(a) != len(b) {
+		return false
+	}
+
+	aCpy := append([]string{}, a...)
+	bCpy := append([]string{}, b...)
+
+	slices.Sort(aCpy)
+	slices.Sort(bCpy)
+	return slices.Equal(aCpy, bCpy)
 }
 
 func getAsStrings(values []dataflow.Value) (lines []string) {
