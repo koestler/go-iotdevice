@@ -155,8 +155,6 @@ func startValuesSender(
 			append2DValueResponse(pv.values, v)
 			pv.mu.Unlock()
 		}
-
-		log.Printf("%s: subscription routined stopped", logPrefix)
 	}()
 
 	// send the packet values to the websocket connection
@@ -167,8 +165,6 @@ func startValuesSender(
 		for {
 			select {
 			case <-ctx.Done():
-				log.Printf("%s: sender routined stopped", logPrefix)
-
 				return
 			case <-ticker.C:
 				msg, err := pv.encodeAndReset()
