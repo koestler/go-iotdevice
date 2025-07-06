@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const clockUpdateInterval = 500 * time.Millisecond
+
 type Config interface {
 	InputBindings() []Binding
 	OutputBindings() []Binding
@@ -176,11 +178,11 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		}
 	}
 
-	// update inputs
+	// update clock
 	shutdownWg.Add(1)
 	go func() {
 		defer shutdownWg.Done()
-		ticker := time.NewTicker(time.Second)
+		ticker := time.NewTicker(clockUpdateInterval)
 		defer ticker.Stop()
 		for {
 			select {
