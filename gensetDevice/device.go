@@ -7,6 +7,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/device"
 	"github.com/koestler/go-iotdevice/v3/genset"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -110,8 +111,12 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 			PTotMax:     d.gensetConfig.PTotMax(),
 		},
 		initialState,
-		genset.Inputs{},
+		genset.Inputs{
+			Time: time.Now(),
+		},
 	)
+
+	var shutdownWg sync.WaitGroup
 
 	// setup registers
 	commandRegisters := addToRegisterDb(d.State.RegisterDb(), d.gensetConfig.SinglePhase(), d.gensetConfig.InputBindings())
@@ -136,7 +141,9 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 			return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", dName, err), true
 		}
 
+		shutdownWg.Add(1)
 		go func() {
+			defer shutdownWg.Done()
 			// routine will return when ctx of the subscription is cancelled
 			for v := range sub.Drain() {
 				setter(d.controller, v)
@@ -157,7 +164,9 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 				return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", d.Name(), err), true
 			}
 
+			shutdownWg.Add(1)
 			go func() {
+				defer shutdownWg.Done()
 				// routine will return when ctx of the subscription is cancelled
 				for v := range sub.Drain() {
 					log.Printf("gensetDevice[%s]: command %v", dName, v)
@@ -168,7 +177,9 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	}
 
 	// update inputs
+	shutdownWg.Add(1)
 	go func() {
+		defer shutdownWg.Done()
 		ticker := time.NewTicker(time.Second)
 		defer ticker.Stop()
 		for {
@@ -191,7 +202,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 			log.Printf("gensetDevice[%s]: state changed: %s", dName, s.Node)
 			ss.Fill(dataflow.NewEnumRegisterValue(dName, StateRegister, int(s.Node)))
 		}
-		ss.Fill(dataflow.NewTextRegisterValue(dName, StateChangedRegister, s.Changed.String()))
+		ss.Fill(dataflow.NewTextRegisterValue(dName, StateChangedRegister, s.Changed.Format(time.RFC1123)))
 	}
 
 	// handle output updates
@@ -210,8 +221,8 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	d.controller.Run()
 	defer d.controller.End()
 
-	// wait for context to be done
-	<-ctx.Done()
+	// after context got cancelled, all goroutines will stop. Wait for that to finish
+	shutdownWg.Wait()
 
 	return nil, false
 }
