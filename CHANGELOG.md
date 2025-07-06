@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.7.0
+* refactor http server: do not depend on devicePool directly, use RegisterDbOfDeviceFunc instead
+
 ## 3.6.1
 * genset
   * Change register names L[0-2] -> P[1-3] (to align with Finder7M38)

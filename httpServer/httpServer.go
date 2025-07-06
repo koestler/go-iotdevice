@@ -5,9 +5,6 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-iotdevice/v3/device"
-	"github.com/koestler/go-iotdevice/v3/pool"
-	"github.com/koestler/go-iotdevice/v3/restarter"
 	"log"
 	"net/http"
 	"net/url"
@@ -20,14 +17,16 @@ type HttpServer struct {
 	server *http.Server
 }
 
+type RegisterDbOfDeviceFunc func(deviceName string) *dataflow.RegisterDb
+
 type Environment struct {
-	Config         Config
-	ProjectTitle   string
-	Views          []ViewConfig
-	Authentication AuthenticationConfig
-	DevicePool     *pool.Pool[*restarter.Restarter[device.Device]]
-	StateStorage   *dataflow.ValueStorage
-	CommandStorage *dataflow.ValueStorage
+	Config             Config
+	ProjectTitle       string
+	Views              []ViewConfig
+	Authentication     AuthenticationConfig
+	RegisterDbOfDevice RegisterDbOfDeviceFunc
+	StateStorage       *dataflow.ValueStorage
+	CommandStorage     *dataflow.ValueStorage
 }
 
 type Config interface {

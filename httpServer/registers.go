@@ -42,10 +42,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 		for _, vd := range view.Devices() {
 			viewDevice := vd
 
-			deviceWatcher := env.DevicePool.GetByName(viewDevice.Name())
-			if deviceWatcher == nil {
-				continue
-			}
+			deviceName := viewDevice.Name()
 
 			relativePath := "views/" + view.Name() + "/devices/" + viewDevice.Name() + "/registers"
 			r.GET(relativePath, func(c *gin.Context) {
@@ -55,7 +52,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 					return
 				}
 
-				registers := deviceWatcher.Service().RegisterDb().GetAll()
+				registers := env.RegisterDbOfDevice(deviceName).GetAll()
 				registers = dataflow.FilterRegisters(registers, viewDevice.Filter())
 				dataflow.SortRegisterStructs(registers)
 
