@@ -2,6 +2,9 @@
 
 ## 3.7.0
 * refactor http server: do not depend on devicePool directly, use RegisterDbOfDeviceFunc instead
+* genset:
+  * respect output bindings
+  * switch the configuration structure of bindings
 
 ## 3.6.1
 * genset
