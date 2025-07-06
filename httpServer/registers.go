@@ -87,14 +87,6 @@ func compile1DRegisterResponse(registers []dataflow.RegisterStruct) (response []
 	return
 }
 
-func compile2DRegisterResponse(values []dataflow.Value) (response map[string]map[string]registerResponse) {
-	response = make(map[string]map[string]registerResponse)
-	for _, value := range values {
-		append2DRegisterResponse(response, value)
-	}
-	return
-}
-
 func append2DRegisterResponse(m map[string]map[string]registerResponse, value dataflow.Value) (created bool) {
 	d0 := value.DeviceName()
 	d1 := value.Register().Name()

@@ -11,7 +11,6 @@ import (
 
 type valueResponse interface{}
 type values1DResponse map[string]valueResponse
-type values2DResponse map[string]map[string]valueResponse
 
 // setupValuesGetJson godoc
 // @Summary List values
@@ -136,14 +135,6 @@ func compile1DValueResponse(values []dataflow.Value) (response values1DResponse)
 	response = make(map[string]valueResponse, len(values))
 	for _, value := range values {
 		response[value.Register().Name()] = value.GenericValue()
-	}
-	return
-}
-
-func compile2DValueResponse(values []dataflow.Value) (response values2DResponse) {
-	response = make(map[string]map[string]valueResponse)
-	for _, value := range values {
-		append2DValueResponse(response, value)
 	}
 	return
 }
