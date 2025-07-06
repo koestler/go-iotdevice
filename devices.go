@@ -15,7 +15,13 @@ import (
 	"github.com/koestler/go-iotdevice/v3/restarter"
 	"github.com/koestler/go-iotdevice/v3/victronDevice"
 	"log"
+	"time"
 )
+
+// gensetRunDelay is the delay before starting genset devices.
+// This is used so that input/output devices have a change to start up and fetch their register list before
+// the genset device sets up its bindings.
+const gensetRunDelay = 2 * time.Second
 
 func runDevicePool() *pool.Pool[*restarter.Restarter[device.Device]] {
 	return pool.RunPool[*restarter.Restarter[device.Device]]()
@@ -130,7 +136,10 @@ func runGensetDevices(
 			},
 		)
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
-		watchedDev.Run()
+		go func() {
+			time.Sleep(gensetRunDelay)
+			watchedDev.Run()
+		}()
 		devicePool.Add(watchedDev)
 	}
 }

@@ -138,7 +138,6 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	for _, b := range d.gensetConfig.InputBindings() {
 		deviceName := b.DeviceName()
 		registerName := b.RegisterName()
-
 		sub := d.StateStorage().SubscribeSendInitial(ctx, func(v dataflow.Value) bool {
 			return v.DeviceName() == deviceName && v.Register().Name() == registerName
 		})
@@ -222,6 +221,35 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		ss.Fill(dataflow.NewNumericRegisterValue(dName, TimeInStateRegister, o.TimeInState.Seconds()))
 		ss.Fill(dataflow.NewEnumRegisterValue(dName, IoCheckRegister, boolToOnOff(o.IoCheck)))
 		ss.Fill(dataflow.NewEnumRegisterValue(dName, OutputCheckRegister, boolToOnOff(o.OutputCheck)))
+	}
+
+	// bind outputs (by subscribing to the state storage which deduplicates unchanged values)
+	for _, b := range d.gensetConfig.OutputBindings() {
+		bindingName := b.Name()
+		deviceName := b.DeviceName()
+		registerName := b.RegisterName()
+		sub := d.StateStorage().SubscribeSendInitial(ctx, func(v dataflow.Value) bool {
+			return v.DeviceName() == dName && v.Register().Name() == bindingName
+		})
+		getRegister := func() (reg dataflow.RegisterStruct, ok bool) {
+			return d.registerDbOfDevice(deviceName).GetByName(registerName)
+		}
+
+		shutdownWg.Add(1)
+		go func() {
+			defer shutdownWg.Done()
+
+			for v := range sub.Drain() {
+				r, ok := getRegister()
+				if !ok {
+					log.Printf("gensetDevice[%s]: output register %s not found", dName, registerName)
+					continue
+				}
+				newValue := dataflow.NewRegisterValue(deviceName, r, v)
+				log.Printf("gensetDevice[%s]: set output binding: %s -> %s", dName, v, newValue)
+				d.commandStorage.Fill(newValue)
+			}
+		}()
 	}
 
 	// start the controller

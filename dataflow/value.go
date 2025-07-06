@@ -163,3 +163,16 @@ func NewNullRegisterValue(deviceName string, register Register) NullRegisterValu
 		},
 	}
 }
+
+// NewRegisterValue creates a new RegisterValue struct based on a Value interface.
+func NewRegisterValue(deviceName string, register Register, v Value) Value {
+	if nv, ok := v.(NumericRegisterValue); ok {
+		return NewNumericRegisterValue(deviceName, register, nv.Value())
+	} else if tv, ok := v.(TextRegisterValue); ok {
+		return NewTextRegisterValue(deviceName, register, tv.Value())
+	} else if ev, ok := v.(EnumRegisterValue); ok {
+		return NewEnumRegisterValue(deviceName, register, ev.EnumIdx())
+	}
+
+	return NewNullRegisterValue(deviceName, register)
+}
