@@ -120,7 +120,15 @@ func runGensetDevices(
 		}
 
 		deviceConfig := gensetDeviceConfig{deviceConfig}
-		dev := gensetDevice.NewDevice(deviceConfig, deviceConfig, stateStorage, commandStorage)
+		dev := gensetDevice.NewDevice(
+			deviceConfig,
+			deviceConfig,
+			stateStorage,
+			commandStorage,
+			func(deviceName string) *dataflow.RegisterDb {
+				return devicePool.GetByName(deviceName).Service().RegisterDb()
+			},
+		)
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		watchedDev.Run()
 		devicePool.Add(watchedDev)

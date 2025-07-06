@@ -51,12 +51,15 @@ type Binding interface {
 	RegisterName() string
 }
 
+type RegisterDbOfDeviceFunc func(deviceName string) *dataflow.RegisterDb
+
 type DeviceStruct struct {
 	device.State
 	gensetConfig Config
 
-	commandStorage *dataflow.ValueStorage
-	controller     *genset.Controller
+	commandStorage     *dataflow.ValueStorage
+	registerDbOfDevice RegisterDbOfDeviceFunc
+	controller         *genset.Controller
 }
 
 func NewDevice(
@@ -64,14 +67,16 @@ func NewDevice(
 	gensetConfig Config,
 	stateStorage *dataflow.ValueStorage,
 	commandStorage *dataflow.ValueStorage,
+	registerDbOfDevice RegisterDbOfDeviceFunc,
 ) *DeviceStruct {
 	return &DeviceStruct{
 		State: device.NewState(
 			deviceConfig,
 			stateStorage,
 		),
-		gensetConfig:   gensetConfig,
-		commandStorage: commandStorage,
+		gensetConfig:       gensetConfig,
+		commandStorage:     commandStorage,
+		registerDbOfDevice: registerDbOfDevice,
 	}
 }
 
