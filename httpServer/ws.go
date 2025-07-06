@@ -7,14 +7,17 @@ import (
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/mileusna/useragent"
 	"log"
+	"sync"
+	"time"
 
 	"github.com/coder/websocket"
-	"time"
 )
+
+const wsSendTimeout = 5 * time.Second
+const wsSendInterval = 250 * time.Millisecond
 
 // registers / values maps use deviceName as the first dimension and registerName as the second dimension.
 type outputMessage struct {
-	Operation string                                 `json:"op" example:"init"`
 	Registers map[string]map[string]registerResponse `json:"registers,omitempty"`
 	Values    map[string]map[string]valueResponse    `json:"values,omitempty"`
 }
@@ -34,8 +37,7 @@ type authMessage struct {
 // @Security ApiKeyAuth
 func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 	// add dynamic routes
-	for _, v := range env.Views {
-		view := v
+	for _, view := range env.Views {
 		relativePath := "views/" + view.Name() + "/ws"
 		logPrefix := fmt.Sprintf("httpServer: %s%s", r.BasePath(), relativePath)
 		viewFilter := getViewValueFilter(view.Devices())
@@ -63,7 +65,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 
 			conn, err := websocket.Accept(c.Writer, c.Request, &websocketAcceptOptions)
 			defer func() {
-				err := conn.Close(websocket.StatusInternalError, "")
+				err := conn.CloseNow()
 				if env.Config.LogDebug() {
 					log.Printf("%s: error during close: %s", logPrefix, err)
 				}
@@ -78,14 +80,9 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 			senderCtx, senderCancel := context.WithCancel(c)
 			defer senderCancel()
 
-			valueSenderStarted := false
-			startValueSenderOnce := func() {
-				if valueSenderStarted {
-					return
-				}
-				go wsValuesSender(env, viewFilter, conn, senderCtx, logPrefix)
-				valueSenderStarted = true
-			}
+			startValueSenderOnce := sync.OnceFunc(func() {
+				startValuesSender(senderCtx, env, viewFilter, conn, logPrefix)
+			})
 
 			if view.IsPublic() {
 				// do not wait for auth message, start sender immediately
@@ -123,11 +120,11 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 	}
 }
 
-func wsValuesSender(
+func startValuesSender(
+	ctx context.Context,
 	env *Environment,
 	viewFilter dataflow.ValueFilterFunc,
 	conn *websocket.Conn,
-	ctx context.Context,
 	logPrefix string,
 
 ) {
@@ -136,87 +133,90 @@ func wsValuesSender(
 		defer log.Printf("%s: tx routine closed", logPrefix)
 	}
 
-	initial, subscription := env.StateStorage.SubscribeReturnInitial(ctx, viewFilter)
-
-	// send all values after initial connect
-	registers := compile2DRegisterResponse(initial)
-	{
-		values := compile2DValueResponse(initial)
-		if err := wsSendResponse(ctx, conn, "init", registers, values); err != nil {
-			log.Printf("%s: error while sending initial values: %s", logPrefix, err)
-			return
-		}
+	pv := &packedValues{
+		registers: make(map[string]map[string]registerResponse),
+		values:    make(map[string]map[string]valueResponse),
 	}
 
-	// send updates
-	{
-		// rate limit number of sent messages to 4 per second
-		tickerDuration := 250 * time.Millisecond
-		ticker := time.NewTicker(tickerDuration)
+	// subscribe to the storage and update the packet values
+	go func() {
+		subscription := env.StateStorage.SubscribeSendInitial(ctx, viewFilter)
+
+		sentRegisters := make(map[string]map[string]registerResponse)
+
+		// this loop must never block long. Otherwise, the stateStorage is stalled.
+		for v := range subscription.Drain() {
+			pv.mu.Lock()
+
+			// only append registers, if it was not sent before
+			if append2DRegisterResponse(sentRegisters, v) {
+				append2DRegisterResponse(pv.registers, v)
+			}
+			append2DValueResponse(pv.values, v)
+			pv.mu.Unlock()
+		}
+
+		log.Printf("%s: subscription routined stopped", logPrefix)
+	}()
+
+	// send the packet values to the websocket connection
+	go func() {
+		ticker := time.NewTicker(wsSendInterval)
 		defer ticker.Stop()
 
-		tickerRunning := true
-		valuesC := subscription.Drain()
-
-		newRegisters := make(map[string]map[string]registerResponse)
-		newValues := make(map[string]map[string]valueResponse)
 		for {
 			select {
+			case <-ctx.Done():
+				log.Printf("%s: sender routined stopped", logPrefix)
+
+				return
 			case <-ticker.C:
-				if len(newValues) > 0 {
-					// there is data to send, send it
-					if err := wsSendResponse(ctx, conn, "inc", newRegisters, newValues); err != nil {
-						log.Printf("%s: error while sending value: %s", logPrefix, err)
-						return
-					}
-
-					clear(newRegisters)
-					clear(newValues)
-				} else {
-					// no data to send; stop timer
-					ticker.Stop()
-					tickerRunning = false
+				msg, err := pv.encodeAndReset()
+				if err != nil {
+					log.Printf("%s: error while encoding values: %s", logPrefix, err)
+					continue
 				}
-			case v, ok := <-valuesC:
-				if ok {
-					if append2DRegisterResponse(registers, v) {
-						append2DRegisterResponse(newRegisters, v)
-					}
-					append2DValueResponse(newValues, v)
+				if msg == nil {
+					continue
+				}
 
-					if !tickerRunning {
-						ticker.Reset(tickerDuration)
-						tickerRunning = true
-					}
-				} else {
-					// subscription was shutdown, stop
-					return
+				err = writeMessage(ctx, conn, msg)
+				if err != nil {
+					log.Printf("%s: error while sending values: %s", logPrefix, err)
 				}
 			}
 		}
-	}
+	}()
 }
 
-func wsSendResponse(
-	ctx context.Context,
-	conn *websocket.Conn,
-	operation string,
-	registers map[string]map[string]registerResponse,
-	values map[string]map[string]valueResponse,
-) error {
-	w, err := conn.Writer(ctx, websocket.MessageText)
-	if err != nil {
-		return err
+func writeMessage(ctx context.Context, conn *websocket.Conn, msg []byte) error {
+	ctx, cancel := context.WithTimeout(ctx, wsSendTimeout)
+	defer cancel()
+
+	return conn.Write(ctx, websocket.MessageText, msg)
+}
+
+type packedValues struct {
+	mu        sync.Mutex
+	registers map[string]map[string]registerResponse
+	values    map[string]map[string]valueResponse
+}
+
+func (pv *packedValues) encodeAndReset() (msg []byte, err error) {
+	pv.mu.Lock()
+	defer pv.mu.Unlock()
+
+	if len(pv.registers) == 0 && len(pv.values) == 0 {
+		return nil, nil // nothing to send
 	}
 
-	err1 := json.NewEncoder(w).Encode(outputMessage{
-		Operation: operation,
-		Registers: registers,
-		Values:    values,
-	})
-	err2 := w.Close()
-	if err1 != nil {
-		return err1
+	defer clear(pv.registers)
+	defer clear(pv.values)
+
+	om := outputMessage{
+		Registers: pv.registers,
+		Values:    pv.values,
 	}
-	return err2
+
+	return json.Marshal(om)
 }

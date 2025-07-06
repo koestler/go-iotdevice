@@ -6,6 +6,11 @@
   * respect output bindings
   * switch the configuration structure of bindings
 * upgrade from golang-jwt/jwt to golang-jwt/jwt/v5
+* refactor websocket server
+  * remove unused "op" in output Message
+  * simplify send timer and send messages (if available) in fixed intervals for 250ms
+  * add a send timeout of 5s for websocket messages
+  * really make sure that the ws sender never stalls the state storage
 
 ## 3.6.1
 * genset
