@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.7.1
+* bugfix: finder7M38: do not publish register list when device is unavailable
+
 ## 3.7.0
 * refactor http server: do not depend on devicePool directly, use RegisterDbOfDeviceFunc instead
 * genset:

@@ -27,51 +27,21 @@ func runFinder7M38(ctx context.Context, c *DeviceStruct) (err error, immediateEr
 	// assign registers
 	registers := RegisterList7M38()
 	registers = dataflow.FilterRegisters(registers, c.Config().Filter())
+
+	if len(registers) < 1 {
+		return fmt.Errorf("no registers found for device %s", c.Name()), true
+	}
+
+	// ping the device
+	if _, err := FinderReadRegister(c, registers[0]); err != nil {
+		return err, true
+	}
+
+	// put registers into the db
 	addToRegisterDb(c.RegisterDb(), registers)
 
 	// setup polling
-	execPoll := func(ctx context.Context, reducedSet bool) error {
-		start := time.Now()
-
-		// fetch registers
-		for _, register := range registers {
-
-			if reducedSet {
-				// skip registers that are static
-				if c := register.Category(); c == "Device Info" || c == "Energy Counter" {
-					continue
-				}
-			}
-
-			v, err := FinderReadRegister(c, register)
-
-			if err != nil {
-				return err
-			}
-
-			c.StateStorage().Fill(v)
-
-			// abort loop when context expires
-			select {
-			case <-ctx.Done():
-				return nil
-			default:
-				// continue the loop
-			}
-		}
-
-		if c.Config().LogDebug() {
-			log.Printf(
-				"finder7N38Device[%s]: registers fetched, took=%.3fs",
-				c.Name(),
-				time.Since(start).Seconds(),
-			)
-		}
-
-		return nil
-	}
-
-	if err := execPoll(ctx, false); err != nil {
+	if err := execPoll(ctx, c, registers, false); err != nil {
 		return err, true
 	}
 
@@ -92,11 +62,51 @@ func runFinder7M38(ctx context.Context, c *DeviceStruct) (err error, immediateEr
 			reducedSet := pollCounter%60 != 0
 			pollCounter++
 
-			if err := execPoll(ctx, reducedSet); err != nil {
+			if err := execPoll(ctx, c, registers, reducedSet); err != nil {
 				return err, false
 			}
 		}
 	}
+}
+
+func execPoll(ctx context.Context, c *DeviceStruct, registers []FinderRegister, reducedSet bool) error {
+	start := time.Now()
+
+	// fetch registers
+	for _, register := range registers {
+		if reducedSet {
+			// skip registers that are static
+			if c := register.Category(); c == "Device Info" || c == "Energy Counter" {
+				continue
+			}
+		}
+
+		v, err := FinderReadRegister(c, register)
+
+		if err != nil {
+			return err
+		}
+
+		c.StateStorage().Fill(v)
+
+		// abort loop when context expires
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			// continue the loop
+		}
+	}
+
+	if c.Config().LogDebug() {
+		log.Printf(
+			"finder7N38Device[%s]: registers fetched, took=%.3fs",
+			c.Name(),
+			time.Since(start).Seconds(),
+		)
+	}
+
+	return nil
 }
 
 var RegisterList7M38FloatRegisters = []struct {
