@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.7.2
+- bump go-victron to v0.2.1:
+  veregister: filter unavailable ProductRevision and Description registers for BMV700,BMV702,BMV700H
+
 ## 3.7.1
 * bugfix: finder7M38: do not publish register list when device is unavailable
 

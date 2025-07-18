@@ -54,6 +54,8 @@ github.com/koestler/go-list v1.0.0 h1:iN59BdUMOXrWhA4HqaVZsZ5hVCd/pzIn24ayqWLKW0
 github.com/koestler/go-list v1.0.0/go.mod h1:OSIm1gK7gs+um+UcLS0ywICwmgqCqNdIjsyu8WjjUhA=
 github.com/koestler/go-victron v0.2.0 h1:j4HTPgnqYnY23lkOJyL02qv9NBM/IL60TywkrGlJaeY=
 github.com/koestler/go-victron v0.2.0/go.mod h1:g1Y7V5/kPacLrKmCRN0XhxSDYYlwxOnv1jUpcpLu/K4=
+github.com/koestler/go-victron v0.2.1 h1:nEQOjr4GrmBtf8JehYdre/OjKR4Fcx8yy5WLZxrgb1k=
+github.com/koestler/go-victron v0.2.1/go.mod h1:g1Y7V5/kPacLrKmCRN0XhxSDYYlwxOnv1jUpcpLu/K4=
 github.com/leodido/go-urn v1.4.0 h1:WT9HwE9SGECu3lg4d/dIA+jxlljEa1/ffXKmRjqdmIQ=
 github.com/leodido/go-urn v1.4.0/go.mod h1:bvxc+MVxLKB4z00jd1z+Dvzr47oO32F/QSNjSBOlFxI=
 github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY=
