@@ -21,7 +21,7 @@ RUN chown app:app /app/go-iotdevice
 RUN addgroup -g 993 gpio
 
 # use already compiled frontend
-FROM ghcr.io/koestler/js-iotdevice:v2.1.0 AS js-builder
+FROM --platform=linux/amd64 ghcr.io/koestler/js-iotdevice:v2.1.0 AS js-builder
 
 # build final image
 FROM scratch
