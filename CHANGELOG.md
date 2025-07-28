@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.8.0
+- Genset: add ErrTrigger state variable
+
 ## 3.7.2
 - bump go-victron to v0.2.1:
   veregister: filter unavailable ProductRevision and Description registers for BMV700,BMV702,BMV700H

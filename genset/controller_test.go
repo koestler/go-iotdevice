@@ -356,7 +356,7 @@ func TestController3P(t *testing.T) {
 
 			stateTracker.Assert(t, []genset.State{
 				{Node: genset.Cranking, Changed: t0},
-				{Node: genset.Error, Changed: t0.Add(params.CrankingTimeout)},
+				{Node: genset.Error, Changed: t0.Add(params.CrankingTimeout), ErrorTrigger: genset.ErrCrankingTimeout},
 			})
 
 			{ // check starter off
@@ -607,7 +607,7 @@ func TestController3P(t *testing.T) {
 
 			stateTracker.Assert(t, []genset.State{
 				{Node: genset.Producing, Changed: t0},
-				{Node: genset.Error, Changed: t1},
+				{Node: genset.Error, Changed: t1, ErrorTrigger: genset.ErrFrequencyHigh},
 			})
 
 			// check ignition is off
@@ -630,7 +630,7 @@ func TestController3P(t *testing.T) {
 
 			stateTracker.Assert(t, []genset.State{
 				{Node: genset.Producing, Changed: t0},
-				{Node: genset.Error, Changed: t1},
+				{Node: genset.Error, Changed: t1, ErrorTrigger: genset.ErrIOUnavailable},
 			})
 
 			// check ignition is off
@@ -998,7 +998,7 @@ func TestController1P(t *testing.T) {
 
 			stateTracker.Assert(t, []genset.State{
 				{Node: genset.Producing, Changed: t0},
-				{Node: genset.Error, Changed: t1},
+				{Node: genset.Error, Changed: t1, ErrorTrigger: genset.ErrU1High},
 			})
 
 			// check ignition is off

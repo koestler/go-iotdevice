@@ -285,9 +285,21 @@ var StateChangedRegister = dataflow.NewRegisterStruct(
 	false,
 )
 
+var StateErrorTrigger = dataflow.NewRegisterStruct(
+	"State",
+	"StateErrorTrigger",
+	"Error Trigger",
+	dataflow.TextRegister,
+	nil,
+	"",
+	32,
+	false,
+)
+
 var StateRegisters = []dataflow.RegisterStruct{
 	StateRegister,
 	StateChangedRegister,
+	StateErrorTrigger,
 }
 
 var IgnitionRegister = NewOnOffRegister(

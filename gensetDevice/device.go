@@ -209,6 +209,14 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 			ss.Fill(dataflow.NewEnumRegisterValue(dName, StateRegister, int(s.Node)))
 		}
 		ss.Fill(dataflow.NewTextRegisterValue(dName, StateChangedRegister, s.Changed.Format(time.RFC1123)))
+		ss.Fill(dataflow.NewTextRegisterValue(dName, StateErrorTrigger,
+			func() string {
+				if s.ErrorTrigger != nil {
+					return s.ErrorTrigger.Error()
+				}
+				return ""
+			}(),
+		))
 	}
 
 	// handle output updates

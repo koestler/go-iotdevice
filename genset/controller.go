@@ -1,6 +1,7 @@
 package genset
 
 import (
+	"errors"
 	"time"
 )
 
@@ -65,8 +66,9 @@ type Inputs struct {
 }
 
 type State struct {
-	Node    StateNode
-	Changed time.Time
+	Node         StateNode
+	Changed      time.Time
+	ErrorTrigger error
 }
 
 type Outputs struct {
@@ -102,8 +104,9 @@ type Controller struct {
 // To terminate the controller, call the End method.
 func NewController(params Params, initialNode StateNode, initialInputs Inputs) *Controller {
 	initialState := State{
-		Node:    initialNode,
-		Changed: initialInputs.Time,
+		Node:         initialNode,
+		Changed:      initialInputs.Time,
+		ErrorTrigger: nil,
 	}
 
 	c := &Controller{
@@ -197,33 +200,42 @@ func (c *Controller) compute() {
 }
 
 func computeState(p Params, i Inputs, prev State) (next State) {
-	nextNode := computeStateNode(p, i, prev)
+	nextNode, errorTrigger := computeStateNode(p, i, prev)
 	nextChanged := prev.Changed
 	if nextNode != prev.Node {
 		nextChanged = i.Time
 	}
 	return State{
-		Node:    nextNode,
-		Changed: nextChanged,
+		Node:         nextNode,
+		Changed:      nextChanged,
+		ErrorTrigger: errorTrigger,
 	}
 }
 
-func computeStateNode(p Params, i Inputs, prev State) (next StateNode) {
+var ErrCrankingTimeout = errors.New("cranking timeout reached")
+
+func computeStateNode(p Params, i Inputs, prev State) (next StateNode, errorTrigger error) {
 	// Multi state transitions
 	// in every case: reset switch triggers the reset state
 	if i.ResetSwitch {
-		return Reset
+		return Reset, nil
 	}
 
 	// in every state except reset, off and failed: a temperature or fire detection triggers the failed state
-	if !(prev.Node == Reset || prev.Node == Off || prev.Node == Error) && !ioCheck(p, i) {
-		return Error
+	if !(prev.Node == Reset || prev.Node == Off || prev.Node == Error) {
+		ioErr := ioError(p, i)
+		if ioErr != nil {
+			return Error, ioErr
+		}
 	}
 
 	// in warm up, producing and engine cool down: a negative output check triggers the failed state
 	outCheck := outputCheck(p, i)
-	if (prev.Node == WarmUp || prev.Node == Producing || prev.Node == EngineCoolDown) && !outCheck {
-		return Error
+	if prev.Node == WarmUp || prev.Node == Producing || prev.Node == EngineCoolDown {
+		outputErr := outputError(p, i)
+		if outputErr != nil {
+			return Error, outputErr
+		}
 	}
 
 	masterSwitch := i.ArmSwitch && i.CommandSwitch
@@ -234,68 +246,68 @@ func computeStateNode(p Params, i Inputs, prev State) (next StateNode) {
 	case Error:
 	case Reset:
 		if !i.ResetSwitch && !masterSwitch {
-			return Off
+			return Off, nil
 		}
 	case Off:
 		if i.IOAvailable {
-			return Ready
+			return Ready, nil
 		}
 	case Ready:
 		if masterSwitch {
-			return Priming
+			return Priming, nil
 		}
 	case Priming:
 		if !masterSwitch {
-			return Ready
+			return Ready, nil
 		}
 		if timeInState >= p.PrimingTimeout {
-			return Cranking
+			return Cranking, nil
 		}
 	case Cranking:
 		if !masterSwitch {
-			return Ready
+			return Ready, nil
 		}
 		if timeInState >= p.CrankingTimeout {
-			return Error
+			return Error, ErrCrankingTimeout
 		}
 		if outCheck {
-			return WarmUp
+			return WarmUp, nil
 		}
 	case WarmUp:
 		if !masterSwitch {
-			return EnclosureCoolDown
+			return EnclosureCoolDown, nil
 		}
 
 		if timeInState >= p.WarmUpMinTime {
 			if timeInState >= p.WarmUpTimeout || i.EngineTemp >= p.WarmUpTemp {
-				return Producing
+				return Producing, nil
 			}
 		}
 	case Producing:
 		if !masterSwitch {
-			return EngineCoolDown
+			return EngineCoolDown, nil
 		}
 	case EngineCoolDown:
 		if masterSwitch {
-			return Producing
+			return Producing, nil
 		}
 		if timeInState >= p.EngineCoolDownMinTime {
 			if timeInState >= p.EngineCoolDownTimeout || i.EngineTemp <= p.EngineCoolDownTemp {
-				return EnclosureCoolDown
+				return EnclosureCoolDown, nil
 			}
 		}
 	case EnclosureCoolDown:
 		if masterSwitch {
-			return Priming
+			return Priming, nil
 		}
 		if timeInState >= p.EnclosureCoolDownMinTime {
 			if timeInState >= p.EnclosureCoolDownTimeout || i.EngineTemp <= p.EnclosureCoolDownTemp {
-				return Ready
+				return Ready, nil
 			}
 		}
 	}
 
-	return prev.Node
+	return prev.Node, prev.ErrorTrigger
 }
 
 func computeOutputs(p Params, i Inputs, s State) Outputs {
@@ -326,32 +338,123 @@ func computeOutputs(p Params, i Inputs, s State) Outputs {
 }
 
 func ioCheck(p Params, i Inputs) bool {
-	return !i.FireDetected && i.IOAvailable &&
-		i.EngineTemp >= p.EngineTempMin && i.EngineTemp <= p.EngineTempMax &&
-		i.AuxTemp0 >= p.AuxTemp0Min && i.AuxTemp0 <= p.AuxTemp0Max &&
-		i.AuxTemp1 >= p.AuxTemp1Min && i.AuxTemp1 <= p.AuxTemp1Max
+	return ioError(p, i) == nil
+}
+
+var ErrFireDirected = errors.New("fire detected")
+var ErrIOUnavailable = errors.New("I/O controller unavailable")
+var ErrEngineTempLow = errors.New("engine temperature too low")
+var ErrEngineTempHigh = errors.New("engine temperature too high")
+var ErrAuxTemp0Low = errors.New("auxiliary temperature 0 too low")
+var ErrAuxTemp0High = errors.New("auxiliary temperature 0 too high")
+var ErrAuxTemp1Low = errors.New("auxiliary temperature 1 too low")
+var ErrAuxTemp1High = errors.New("auxiliary temperature 1 too high")
+
+func ioError(p Params, i Inputs) error {
+	if i.FireDetected {
+		return ErrFireDirected
+	}
+
+	if !i.IOAvailable {
+		return ErrIOUnavailable
+	}
+
+	if i.EngineTemp < p.EngineTempMin {
+		return ErrEngineTempLow
+	}
+	if i.EngineTemp > p.EngineTempMax {
+		return ErrEngineTempHigh
+	}
+
+	if i.AuxTemp0 < p.AuxTemp0Min {
+		return ErrAuxTemp0Low
+	}
+	if i.AuxTemp0 > p.AuxTemp0Max {
+		return ErrAuxTemp0High
+	}
+
+	if i.AuxTemp1 < p.AuxTemp1Min {
+		return ErrAuxTemp1Low
+	}
+	if i.AuxTemp1 > p.AuxTemp1Max {
+		return ErrAuxTemp1High
+	}
+
+	return nil
 }
 
 func outputCheck(p Params, i Inputs) bool {
+	return outputError(p, i) == nil
+}
+
+var ErrOutputUnavailable = errors.New("output measurements unavailable")
+var ErrFrequencyLow = errors.New("frequency too low")
+var ErrFrequencyHigh = errors.New("frequency too high")
+var ErrU1Low = errors.New("U1 too low")
+var ErrU1High = errors.New("U1 too high")
+var ErrU2Low = errors.New("U2 too low")
+var ErrU2High = errors.New("U2 too high")
+var ErrU3Low = errors.New("U3 too low")
+var ErrU3High = errors.New("U3 too high")
+var ErrP1High = errors.New("P1 too high")
+var ErrP2High = errors.New("P2 too high")
+var ErrP3High = errors.New("P3 too high")
+var ErrPTotHigh = errors.New("total power too high")
+
+func outputError(p Params, i Inputs) error {
 	if !i.OutputAvailable {
-		return false
+		return ErrOutputUnavailable
 	}
 
-	if i.F < p.FMin || i.F > p.FMax {
-		return false
+	if i.F < p.FMin {
+		return ErrFrequencyLow
+	}
+	if i.F > p.FMax {
+		return ErrFrequencyHigh
+	}
+
+	if i.U1 < p.UMin {
+		return ErrU1Low
+	}
+	if i.U1 > p.UMax {
+		return ErrU1High
+	}
+
+	if i.P1 > p.PMax {
+		return ErrP1High
 	}
 
 	if p.SinglePhase {
-		return i.U1 >= p.UMin && i.U1 <= p.UMax &&
-			i.P1 <= p.PMax &&
-			i.P1 <= p.PTotMax
+		if i.P1 > p.PTotMax {
+			return ErrPTotHigh
+		}
+	} else {
+		if i.U2 < p.UMin {
+			return ErrU2Low
+		}
+		if i.U2 > p.UMax {
+			return ErrU2High
+		}
+
+		if i.U3 < p.UMin {
+			return ErrU3Low
+		}
+		if i.U3 > p.UMax {
+			return ErrU3High
+		}
+
+		if i.P2 > p.PMax {
+			return ErrP2High
+		}
+
+		if i.P3 > p.PMax {
+			return ErrP3High
+		}
+
+		if i.P1+i.P2+i.P3 > p.PTotMax {
+			return ErrPTotHigh
+		}
 	}
-	return i.F >= p.FMin && i.F <= p.FMax &&
-		i.U1 >= p.UMin && i.U1 <= p.UMax &&
-		i.U2 >= p.UMin && i.U2 <= p.UMax &&
-		i.U3 >= p.UMin && i.U3 <= p.UMax &&
-		i.P1 <= p.PMax &&
-		i.P2 <= p.PMax &&
-		i.P3 <= p.PMax &&
-		i.P1+i.P2+i.P3 <= p.PTotMax
+
+	return nil
 }
