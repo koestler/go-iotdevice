@@ -141,13 +141,17 @@ func TestController3P(t *testing.T) {
 
 		// go to warm up
 		t3 := t2.Add(params.StabilizingTimeout)
+		setInp(t, c, func(i genset.Inputs) genset.Inputs {
+			i.Time = t3
+			return i
+		})
 		stateTracker.AssertLatest(t, genset.State{Node: genset.WarmUp, Changed: t3})
 		outputTracker.AssertLatest(t, genset.Outputs{Fan: true, Pump: true, Ignition: true, IoCheck: true, OutputCheck: true})
 
 		// go to producing
 		t4 := t3.Add(params.WarmUpMinTime)
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
-			i.Time = t3
+			i.Time = t4
 			i.EngineTemp = 45
 			return i
 		})
@@ -157,7 +161,7 @@ func TestController3P(t *testing.T) {
 		// running, engine getting warm, frequency fluctuating
 		t5 := t4.Add(time.Second)
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
-			i.Time = t4
+			i.Time = t5
 			i.EngineTemp = 70
 			i.F = 48
 			i.P1 = 1000
@@ -171,7 +175,7 @@ func TestController3P(t *testing.T) {
 
 		t6 := t5.Add(time.Second)
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
-			i.Time = t5
+			i.Time = t6
 			i.EngineTemp = 72
 			i.F = 51
 			return i
@@ -185,7 +189,7 @@ func TestController3P(t *testing.T) {
 		// go to engine cool down
 		t7 := t6.Add(time.Second)
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
-			i.Time = t6
+			i.Time = t7
 			i.CommandSwitch = false
 			return i
 		})
@@ -195,7 +199,7 @@ func TestController3P(t *testing.T) {
 		// go to enclosure cool down
 		t8 := t7.Add(params.EngineCoolDownMinTime)
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
-			i.Time = t7
+			i.Time = t8
 			i.EngineTemp = 55
 			return i
 		})
@@ -205,7 +209,7 @@ func TestController3P(t *testing.T) {
 		// stay in enclosure cool down, engine has stopped
 		t9 := t8.Add(time.Second)
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
-			i.Time = t8
+			i.Time = t9
 			i.F = 0
 			i.U1 = 10
 			i.U2 = 10
@@ -221,7 +225,7 @@ func TestController3P(t *testing.T) {
 		// go to ready
 		t10 := t9.Add(time.Minute)
 		setInp(t, c, func(i genset.Inputs) genset.Inputs {
-			i.Time = t9
+			i.Time = t10
 			i.EngineTemp = 45
 			return i
 		})
@@ -318,7 +322,7 @@ func TestController3P(t *testing.T) {
 				assert.Equal(t, true, l.Starter)
 			}
 
-			// engine started
+			// engine started, stabilizing
 			t1 := t0.Add(time.Second)
 			setInp(t, c, func(i genset.Inputs) genset.Inputs {
 				i.Time = t1
@@ -330,9 +334,17 @@ func TestController3P(t *testing.T) {
 				return i
 			})
 
+			// stabilization timed out
+			t2 := t1.Add(params.StabilizingTimeout)
+			setInp(t, c, func(i genset.Inputs) genset.Inputs {
+				i.Time = t2
+				return i
+			})
+
 			stateTracker.Assert(t, []genset.State{
 				{Node: genset.Cranking, Changed: t0},
-				{Node: genset.WarmUp, Changed: t1},
+				{Node: genset.Stabilizing, Changed: t1},
+				{Node: genset.WarmUp, Changed: t2},
 			})
 
 			{ // check starter off
