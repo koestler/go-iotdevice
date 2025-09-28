@@ -3,6 +3,7 @@
 ## 3.8.0
 - genset: add stabilizing state between cranking and warm up.
   This allows the frequency / voltage to go out of the defined tolerance for a short time after cranking.
+- Genset: add ErrTrigger state variable
 
 ## 3.7.2
 - bump go-victron to v0.2.1:

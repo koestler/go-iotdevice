@@ -14,6 +14,9 @@ func (i Inputs) String() string {
 }
 
 func (s State) String() string {
+	if s.ErrorTrigger != nil {
+		return fmt.Sprintf("State{Node:\t%v,\tChanged: %v, ErrorTrigger: %s}", s.Node, s.Changed, s.ErrorTrigger)
+	}
 	return fmt.Sprintf("State{Node:\t%v,\tChanged: %v}", s.Node, s.Changed)
 }
 
