@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.8.0
+- genset: add stabilizing state between cranking and warm up.
+  This allows the frequency / voltage to go out of the defined tolerance for a short time after cranking.
+
 ## 3.7.2
 - bump go-victron to v0.2.1:
   veregister: filter unavailable ProductRevision and Description registers for BMV700,BMV702,BMV700H

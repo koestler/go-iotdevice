@@ -311,6 +311,7 @@ GensetDevices:                                             # optional, a list ge
 
     PrimingTimeout: 10s                                    # optional, default 10s, time in priming (only fuel pump on) state
     CrankingTimeout: 10s                                   # optional, default 10s, maximum time in cranking state
+    StabilizingTimeout: 3s                                 # optional, default 3s, time spent waiting for the output to stabilize after startup
     WarmUpTimeout: 10m                                     # optional, default 10m, maximum time in warm-up state
     WarmUpMinTime: 2m                                      # optional, default 2m, minimum time in warm-up state
     WarmUpTemp: 50                                         # optional, default 50, minimum temperature to transition from warm-up to producing state

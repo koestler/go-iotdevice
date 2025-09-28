@@ -3,12 +3,13 @@ package gensetDevice
 import (
 	"context"
 	"fmt"
-	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-iotdevice/v3/device"
-	"github.com/koestler/go-iotdevice/v3/genset"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/device"
+	"github.com/koestler/go-iotdevice/v3/genset"
 )
 
 const clockUpdateInterval = 500 * time.Millisecond
@@ -19,6 +20,7 @@ type Config interface {
 
 	PrimingTimeout() time.Duration
 	CrankingTimeout() time.Duration
+	StabilizingTimeout() time.Duration
 	WarmUpTimeout() time.Duration
 	WarmUpMinTime() time.Duration
 	WarmUpTemp() float64
@@ -90,6 +92,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 			// Transition params
 			PrimingTimeout:           d.gensetConfig.PrimingTimeout(),
 			CrankingTimeout:          d.gensetConfig.CrankingTimeout(),
+			StabilizingTimeout:       d.gensetConfig.StabilizingTimeout(),
 			WarmUpTimeout:            d.gensetConfig.WarmUpTimeout(),
 			WarmUpMinTime:            d.gensetConfig.WarmUpMinTime(),
 			WarmUpTemp:               d.gensetConfig.WarmUpTemp(),

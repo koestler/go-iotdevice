@@ -9,6 +9,7 @@ type Params struct {
 	// Transition params
 	PrimingTimeout           time.Duration
 	CrankingTimeout          time.Duration
+	StabilizingTimeout       time.Duration
 	WarmUpTimeout            time.Duration
 	WarmUpMinTime            time.Duration
 	WarmUpTemp               float64
@@ -259,6 +260,13 @@ func computeStateNode(p Params, i Inputs, prev State) (next StateNode) {
 			return Error
 		}
 		if outCheck {
+			return Stabilizing
+		}
+	case Stabilizing:
+		if !masterSwitch {
+			return Ready
+		}
+		if timeInState >= p.StabilizingTimeout {
 			return WarmUp
 		}
 	case WarmUp:
@@ -302,18 +310,21 @@ func computeOutputs(p Params, i Inputs, s State) Outputs {
 	sN := s.Node
 	return Outputs{
 		Ignition: sN == Cranking ||
+			sN == Stabilizing ||
 			sN == WarmUp ||
 			sN == Producing ||
 			sN == EngineCoolDown,
 		Starter: sN == Cranking,
 		Fan: sN == Priming ||
 			sN == Cranking ||
+			sN == Stabilizing ||
 			sN == WarmUp ||
 			sN == Producing ||
 			sN == EngineCoolDown ||
 			sN == EnclosureCoolDown,
 		Pump: sN == Priming ||
 			sN == Cranking ||
+			sN == Stabilizing ||
 			sN == WarmUp ||
 			sN == Producing ||
 			sN == EngineCoolDown,

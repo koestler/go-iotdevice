@@ -1,10 +1,11 @@
 package config
 
 import (
-	"github.com/koestler/go-iotdevice/v3/types"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/koestler/go-iotdevice/v3/types"
 )
 
 // Getters for Config struct
@@ -523,6 +524,10 @@ func (c GensetDeviceConfig) PrimingTimeout() time.Duration {
 
 func (c GensetDeviceConfig) CrankingTimeout() time.Duration {
 	return c.crankingTimeout
+}
+
+func (c GensetDeviceConfig) StabilizingTimeout() time.Duration {
+	return c.stabilizingTimeout
 }
 
 func (c GensetDeviceConfig) WarmUpTimeout() time.Duration {

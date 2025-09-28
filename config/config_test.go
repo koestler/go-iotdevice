@@ -2,13 +2,14 @@ package config
 
 import (
 	"bytes"
-	"github.com/koestler/go-iotdevice/v3/types"
 	"log"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/koestler/go-iotdevice/v3/types"
 )
 
 const (
@@ -285,14 +286,15 @@ GensetDevices:                                             # optional, a list ge
 
     PrimingTimeout: 20s                                    # optional, default 10s, time in priming (only fuel pump on) state
     CrankingTimeout: 19s                                   # optional, default 10s, maximum time in cranking state
-    WarmUpTimeout: 18s                                     # optional, default 10m, maximum time in warm-up state
-    WarmUpMinTime: 17s                                      # optional, default 2m, minimum time in warm-up state
+    StabilizingTimeout: 18s                                 # optional, default 3s, time spent waiting for the output to stabilize after startup
+    WarmUpTimeout: 17s                                     # optional, default 10m, maximum time in warm-up state
+    WarmUpMinTime: 16s                                      # optional, default 2m, minimum time in warm-up state
     WarmUpTemp: 110                                         # optional, default 50, minimum temperature to transition from warm-up to producing state
-    EngineCoolDownTimeout: 16s                              # optional, default 5m, maximum time in engine cool-down state
-    EngineCoolDownMinTime: 15s                              # optional, default 2m, minimum time in engine cool-down state
+    EngineCoolDownTimeout: 15s                              # optional, default 5m, maximum time in engine cool-down state
+    EngineCoolDownMinTime: 14s                              # optional, default 2m, minimum time in engine cool-down state
     EngineCoolDownTemp: 120                                 # optional, default 70, maximum temperature to transition from engine cool-down to enclosure cool-down state
-    EnclosureCoolDownTimeout: 14s                          # optional, default 10m, maximum time in enclosure cool-down state
-    EnclosureCoolDownMinTime: 13s                           # optional, default 2m, minimum time in enclosure cool-down state
+    EnclosureCoolDownTimeout: 13s                          # optional, default 10m, maximum time in enclosure cool-down state
+    EnclosureCoolDownMinTime: 12s                           # optional, default 2m, minimum time in enclosure cool-down state
     EnclosureCoolDownTemp: 130                              # optional, default 30, maximum temperature to transition from enclosure cool-down to ready state
 
     EngineTempMin: 140                                     # optional, default -10, minimum temperature the engine must have to not trigger the error state
@@ -1515,11 +1517,15 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect GensetDevice->genset0->CrankingTimeout to be %s but got %s", expect, got)
 		}
 
-		if expect, got := 18*time.Second, gd.WarmUpTimeout(); expect != got {
+		if expect, got := 18*time.Second, gd.StabilizingTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->StabilizingTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 17*time.Second, gd.WarmUpTimeout(); expect != got {
 			t.Errorf("expect GensetDevice->genset0->WarmUpTimeout to be %s but got %s", expect, got)
 		}
 
-		if expect, got := 17*time.Second, gd.WarmUpMinTime(); expect != got {
+		if expect, got := 16*time.Second, gd.WarmUpMinTime(); expect != got {
 			t.Errorf("expect GensetDevice->genset0->WarmUpMinTime to be %s but got %s", expect, got)
 		}
 
@@ -1527,11 +1533,11 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect GensetDevice->genset0->WarmUpTemp to be %f but got %f", expect, got)
 		}
 
-		if expect, got := 16*time.Second, gd.EngineCoolDownTimeout(); expect != got {
+		if expect, got := 15*time.Second, gd.EngineCoolDownTimeout(); expect != got {
 			t.Errorf("expect GensetDevice->genset0->EngineCoolDownTimeout to be %s but got %s", expect, got)
 		}
 
-		if expect, got := 15*time.Second, gd.EngineCoolDownMinTime(); expect != got {
+		if expect, got := 14*time.Second, gd.EngineCoolDownMinTime(); expect != got {
 			t.Errorf("expect GensetDevice->genset0->EngineCoolDownMinTime to be %s but got %s", expect, got)
 		}
 
@@ -1539,11 +1545,11 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect GensetDevice->genset0->EngineCoolDownTemp to be %f but got %f", expect, got)
 		}
 
-		if expect, got := 14*time.Second, gd.EnclosureCoolDownTimeout(); expect != got {
+		if expect, got := 13*time.Second, gd.EnclosureCoolDownTimeout(); expect != got {
 			t.Errorf("expect GensetDevice->genset0->EnclosureCoolDownTimeout to be %s but got %s", expect, got)
 		}
 
-		if expect, got := 13*time.Second, gd.EnclosureCoolDownMinTime(); expect != got {
+		if expect, got := 12*time.Second, gd.EnclosureCoolDownMinTime(); expect != got {
 			t.Errorf("expect GensetDevice->genset0->EnclosureCoolDownMinTime to be %s but got %s", expect, got)
 		}
 
@@ -2489,6 +2495,10 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if expect, got := 10*time.Second, gd.CrankingTimeout(); expect != got {
 			t.Errorf("expect GensetDevice->genset0->CrankingTimeout to be %s but got %s", expect, got)
+		}
+
+		if expect, got := 3*time.Second, gd.StabilizingTimeout(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->StabilizingTimeout to be %s but got %s", expect, got)
 		}
 
 		if expect, got := 10*time.Minute, gd.WarmUpTimeout(); expect != got {

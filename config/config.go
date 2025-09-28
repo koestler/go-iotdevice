@@ -4,11 +4,6 @@ import (
 	"bytes"
 	"cmp"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/koestler/go-iotdevice/v3/types"
-	"github.com/pkg/errors"
-	"golang.org/x/exp/maps"
-	"gopkg.in/yaml.v3"
 	"log"
 	"net/url"
 	"os"
@@ -16,6 +11,12 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/koestler/go-iotdevice/v3/types"
+	"github.com/pkg/errors"
+	"golang.org/x/exp/maps"
+	"gopkg.in/yaml.v3"
 )
 
 const NameRegexp = "^[a-zA-Z0-9\\-]{1,32}$"
@@ -1143,6 +1144,17 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 		))
 	} else {
 		ret.crankingTimeout = crankingTimeout
+	}
+
+	if len(c.StabilizingTimeout) < 1 {
+		// use default 3s
+		ret.stabilizingTimeout = 3 * time.Second
+	} else if stabilizingTimeout, e := time.ParseDuration(c.StabilizingTimeout); e != nil {
+		err = append(err, fmt.Errorf("GensetDevices->%s->StabilizingTimeout='%s' parse error: %s",
+			name, c.CrankingTimeout, e,
+		))
+	} else {
+		ret.stabilizingTimeout = stabilizingTimeout
 	}
 
 	if len(c.WarmUpTimeout) < 1 {

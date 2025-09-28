@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/koestler/go-iotdevice/v3/types"
 	"net/url"
 	"time"
+
+	"github.com/koestler/go-iotdevice/v3/types"
 )
 
 type Nameable interface {
@@ -179,6 +180,7 @@ type GensetDeviceConfig struct {
 
 	primingTimeout           time.Duration
 	crankingTimeout          time.Duration
+	stabilizingTimeout       time.Duration
 	warmUpTimeout            time.Duration
 	warmUpMinTime            time.Duration
 	warmUpTemp               float64

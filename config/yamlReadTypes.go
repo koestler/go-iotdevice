@@ -160,6 +160,7 @@ type gensetDeviceConfigRead struct {
 
 	PrimingTimeout           string   `yaml:"PrimingTimeout"`
 	CrankingTimeout          string   `yaml:"CrankingTimeout"`
+	StabilizingTimeout       string   `yaml:"StabilizingTimeout"`
 	WarmUpTimeout            string   `yaml:"WarmUpTimeout"`
 	WarmUpMinTime            string   `yaml:"WarmUpMinTime"`
 	WarmUpTemp               *float64 `yaml:"WarmUpTemp"`

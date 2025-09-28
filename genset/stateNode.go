@@ -9,6 +9,7 @@ const (
 	Ready
 	Priming
 	Cranking
+	Stabilizing
 	WarmUp
 	Producing
 	EngineCoolDown
@@ -23,6 +24,7 @@ func StateNodeMap() map[StateNode]string {
 		Ready:             "Ready",
 		Priming:           "Priming",
 		Cranking:          "Cranking",
+		Stabilizing:       "Stabilizing",
 		WarmUp:            "WarmUp",
 		Producing:         "Producing",
 		EngineCoolDown:    "EngineCoolDown",

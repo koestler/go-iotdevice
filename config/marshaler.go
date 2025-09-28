@@ -265,6 +265,7 @@ func (c GensetDeviceConfig) convertToRead() gensetDeviceConfigRead {
 		OutputBindings:           c.outputBindings.convertToRead(),
 		PrimingTimeout:           c.primingTimeout.String(),
 		CrankingTimeout:          c.crankingTimeout.String(),
+		StabilizingTimeout:       c.stabilizingTimeout.String(),
 		WarmUpTimeout:            c.warmUpTimeout.String(),
 		WarmUpMinTime:            c.warmUpMinTime.String(),
 		WarmUpTemp:               &c.warmUpTemp,
