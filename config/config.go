@@ -1315,6 +1315,14 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 		ret.uMax = *c.UMax
 	}
 
+	if c.UAvgWindow == nil {
+		ret.uAvgWindow = 3 // default 3
+	} else if *c.UAvgWindow < 1 {
+		err = append(err, fmt.Errorf("GensetDevices->%s->UAvgWindow='%d' must be >=1", name, *c.UAvgWindow))
+	} else {
+		ret.uAvgWindow = *c.UAvgWindow
+	}
+
 	if c.FMin == nil {
 		ret.fMin = 45 // default 45Hz
 	} else if *c.FMin < 0 {
