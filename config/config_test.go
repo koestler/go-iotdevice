@@ -307,8 +307,10 @@ GensetDevices:                                             # optional, a list ge
     SinglePhase: true                                      # optional, default false, whether the generator is single phase or a three-phase system
     UMin: 200                                              # optional, default 200, minimum voltage the generator must have to not trigger the error state
     UMax: 210                                              # optional, default 260, maximum voltage the generator must have to not trigger the error state
+    UAvgWindow: 2                                          # optional, default 3, number of samples for voltage averaging window
     FMin: 220                                               # optional, default 45, minimum frequency the generator must have to not trigger the error state
     FMax: 230                                               # optional, default 55, maximum frequency the generator must have to not trigger the error state
+    FAvgWindow: 2                                          # optional, default 3, number of samples for frequency averaging window
     PMax: 240                                              # optional, default 1E6, maximum power the generator must have to not trigger the error state
     PTotMax: 250                                          # optional, default 1E6, maximum total power the generator must have to not trigger the error state
 
@@ -1601,6 +1603,10 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect GensetDevice->genset0->FMax to be %f but got %f", expect, got)
 		}
 
+		if expect, got := 2, gd.FAvgWindow(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->FAvgWindow to be %d but got %d", expect, got)
+		}
+
 		if expect, got := 240.0, gd.PMax(); expect != got {
 			t.Errorf("expect GensetDevice->genset0->PMax to be %f but got %f", expect, got)
 		}
@@ -2571,6 +2577,10 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if expect, got := 240.0, gd.UMax(); expect != got {
 			t.Errorf("expect GensetDevice->genset0->UMax to be %f but got %f", expect, got)
+		}
+
+		if expect, got := 3, gd.UAvgWindow(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->UAvgWindow to be %d but got %d", expect, got)
 		}
 
 		if expect, got := 45.0, gd.FMin(); expect != got {
