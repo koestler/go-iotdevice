@@ -1331,6 +1331,14 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 		ret.fMax = *c.FMax
 	}
 
+	if c.FAvgWindow == nil {
+		ret.fAvgWindow = 3 // default 3
+	} else if *c.FAvgWindow < 1 {
+		err = append(err, fmt.Errorf("GensetDevices->%s->FAvgWindow='%d' must be >=1", name, *c.FAvgWindow))
+	} else {
+		ret.fAvgWindow = *c.FAvgWindow
+	}
+
 	if c.PMax == nil {
 		ret.pMax = 1000000 // default 1MW
 	} else if *c.PMax < 0 {

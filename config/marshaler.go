@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+
 	"golang.org/x/exp/maps"
 )
 
@@ -284,8 +285,10 @@ func (c GensetDeviceConfig) convertToRead() gensetDeviceConfigRead {
 		SinglePhase:              &c.singlePhase,
 		UMin:                     &c.uMin,
 		UMax:                     &c.uMax,
+		UAvgWindow:               &c.uAvgWindow,
 		FMin:                     &c.fMin,
 		FMax:                     &c.fMax,
+		FAvgWindow:               &c.fAvgWindow,
 		PMax:                     &c.pMax,
 		PTotMax:                  &c.pTotMax,
 	}

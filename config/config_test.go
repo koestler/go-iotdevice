@@ -2581,6 +2581,10 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Errorf("expect GensetDevice->genset0->FMax to be %f but got %f", expect, got)
 		}
 
+		if expect, got := 3, gd.FAvgWindow(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->FAvgWindow to be %d but got %d", expect, got)
+		}
+
 		if expect, got := 1e6, gd.PMax(); expect != got {
 			t.Errorf("expect GensetDevice->genset0->PMax to be %f but got %f", expect, got)
 		}

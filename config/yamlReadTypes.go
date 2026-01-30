@@ -181,8 +181,10 @@ type gensetDeviceConfigRead struct {
 	SinglePhase *bool    `yaml:"SinglePhase"`
 	UMin        *float64 `yaml:"UMin"`
 	UMax        *float64 `yaml:"UMax"`
+	UAvgWindow  *int     `yaml:"UAvgWindow"`
 	FMin        *float64 `yaml:"FMin"`
 	FMax        *float64 `yaml:"FMax"`
+	FAvgWindow  *int     `yaml:"FAvgWindow"`
 	PMax        *float64 `yaml:"PMax"`
 	PTotMax     *float64 `yaml:"PTotMax"`
 }

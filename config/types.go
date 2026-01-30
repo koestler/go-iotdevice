@@ -201,8 +201,10 @@ type GensetDeviceConfig struct {
 	singlePhase bool
 	uMin        float64
 	uMax        float64
+	uAvgWindow  int
 	fMin        float64
 	fMax        float64
+	fAvgWindow  int
 	pMax        float64
 	pTotMax     float64
 }

@@ -602,12 +602,20 @@ func (c GensetDeviceConfig) UMax() float64 {
 	return c.uMax
 }
 
+func (c GensetDeviceConfig) UAvgWindow() int {
+	return c.uAvgWindow
+}
+
 func (c GensetDeviceConfig) FMin() float64 {
 	return c.fMin
 }
 
 func (c GensetDeviceConfig) FMax() float64 {
 	return c.fMax
+}
+
+func (c GensetDeviceConfig) FAvgWindow() int {
+	return c.fAvgWindow
 }
 
 func (c GensetDeviceConfig) PMax() float64 {
