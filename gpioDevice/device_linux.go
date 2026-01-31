@@ -3,12 +3,13 @@ package gpioDevice
 import (
 	"context"
 	"fmt"
+	"log"
+	"slices"
+
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/koestler/go-iotdevice/v3/device"
 	"github.com/warthog618/go-gpiocdev"
 	"golang.org/x/exp/maps"
-	"log"
-	"slices"
 )
 
 type DeviceStruct struct {
@@ -64,8 +65,8 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	if err != nil {
 		return fmt.Errorf("gpioDevice[%s]: output setup failed: %w", dName, err), true
 	}
-	addToRegisterDb(d.State.RegisterDb(), inpRegisters)
-	addToRegisterDb(d.State.RegisterDb(), oupRegisters)
+	addToRegisterDb(d.State.RegisterDb(), inpRegisters) //nolint:staticcheck
+	addToRegisterDb(d.State.RegisterDb(), oupRegisters) //nolint:staticcheck
 
 	// watch inputs
 	if len(inpRegisters) > 0 {

@@ -3,6 +3,7 @@ package gpioDevice
 import (
 	"errors"
 	"fmt"
+
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/warthog618/go-gpiocdev"
 )
@@ -16,7 +17,7 @@ type GpioRegister struct {
 }
 
 func (r GpioRegister) String() string {
-	return fmt.Sprintf("name=%s, pin=%s, offset=%d", r.RegisterStruct.Name(), r.pin, r.offset)
+	return fmt.Sprintf("name=%s, pin=%s, offset=%d", r.Name(), r.pin, r.offset)
 }
 
 func pinToRegisterMap(chip *gpiocdev.Chip, bindings []Pin, category string, sort int, writable bool) (map[string]GpioRegister, error) {
