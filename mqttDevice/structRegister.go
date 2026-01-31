@@ -22,7 +22,7 @@ func (s StructRegister) Description() string {
 }
 
 func (s StructRegister) RegisterType() dataflow.RegisterType {
-	return dataflow.RegisterTypeFromString(s.StructRegister.Type)
+	return dataflow.RegisterTypeFromString(s.StructRegister.Type) //nolint:staticcheck
 }
 
 func (s StructRegister) Enum() map[int]string {
