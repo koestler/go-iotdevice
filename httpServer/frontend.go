@@ -1,13 +1,15 @@
 package httpServer
 
 import (
-	"github.com/pkg/errors"
+	"io/fs"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/pkg/errors"
 )
 
 func setupFrontend(mux *http.ServeMux, env *Environment) {
@@ -32,28 +34,24 @@ func setupFrontend(mux *http.ServeMux, env *Environment) {
 			} else if !frontendPathInfo.IsDir() {
 				log.Printf("httpServer: given frontend path is not a directory")
 			} else {
-				err := filepath.Walk(frontendPath, func(filePath string, info os.FileInfo, err error) error {
+				fSys := os.DirFS(frontendPath)
+				err = fs.WalkDir(fSys, ".", func(path string, d fs.DirEntry, err error) error {
 					if err != nil {
 						return err
 					}
-					if info.IsDir() {
+					if d.IsDir() {
 						return nil
 					}
 
-					route := filePath[len(frontendPath):] // remove frontendPath prefix
-					if len(route) > 0 && route[0] != '/' {
-						route = "/" + route
-					}
-					serveStatic(mux, config, route, filePath)
+					route := "/" + path
+					serveStatic(mux, config, route, filepath.Join(frontendPath, path))
 					return nil
 				})
 
 				// load index file single page frontend application
 				for _, route := range append(getNames(env.Views), "", "login") {
-					if route != "" {
-						route = "/" + route
-					}
-					serveStatic(mux, config, route, frontendPath+"/index.html")
+					route = "/" + route
+					serveStatic(mux, config, route, filepath.Join(frontendPath, "index.html"))
 				}
 
 				if err != nil {
