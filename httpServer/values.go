@@ -2,7 +2,6 @@ package httpServer
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/pkg/errors"
 	"log"
@@ -22,27 +21,27 @@ type values1DResponse map[string]valueResponse
 // @Failure 404 {object} ErrorResponse
 // @Router /views/{viewName}/devices/{deviceName}/values [get]
 // @Security ApiKeyAuth
-func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
+func setupValuesGetJson(mux *http.ServeMux, env *Environment) {
 	// add dynamic routes
 	for _, v := range env.Views {
 		view := v
 		for _, vd := range view.Devices() {
 			viewDevice := vd
 
-			relativePath := "views/" + view.Name() + "/devices/" + viewDevice.Name() + "/values"
+			pattern := "GET /api/v2/views/" + view.Name() + "/devices/" + viewDevice.Name() + "/values"
 
 			filter := getViewValueFilter([]ViewDeviceConfig{viewDevice})
-			r.GET(relativePath, func(c *gin.Context) {
+			mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 				// check authorization
-				if !isViewAuthenticated(view, c, true) {
-					jsonErrorResponse(c, http.StatusForbidden, errors.New("User is not allowed here"))
+				if !isViewAuthenticated(view, r, true) {
+					jsonErrorResponse(w, http.StatusForbidden, errors.New("User is not allowed here"))
 					return
 				}
 				values := env.StateStorage.GetStateFiltered(filter)
-				jsonGetResponse(c, compile1DValueResponse(values))
+				jsonGetResponse(w, r, compile1DValueResponse(values))
 			})
 			if env.Config.LogConfig() {
-				log.Printf("httpServer: GET %s%s -> serve values as json", r.BasePath(), relativePath)
+				log.Printf("httpServer: GET /api/v2/views/%s/devices/%s/values -> serve values as json", view.Name(), viewDevice.Name())
 			}
 		}
 	}
@@ -58,7 +57,7 @@ func setupValuesGetJson(r *gin.RouterGroup, env *Environment) {
 // @Failure 404 {object} ErrorResponse
 // @Router /views/{viewName}/devices/{deviceName}/values [patch]
 // @Security ApiKeyAuth
-func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
+func setupValuesPatch(mux *http.ServeMux, env *Environment) {
 	// add dynamic routes
 	for _, v := range env.Views {
 		view := v
@@ -66,17 +65,17 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 			// the following line uses a loop variable; it must be outside the closure
 			deviceName := dn.Name()
 
-			relativePath := "views/" + view.Name() + "/devices/" + deviceName + "/values"
-			r.PATCH(relativePath, func(c *gin.Context) {
+			pattern := "PATCH /api/v2/views/" + view.Name() + "/devices/" + deviceName + "/values"
+			mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 				// check authorization
-				if !isViewAuthenticated(view, c, false) {
-					jsonErrorResponse(c, http.StatusForbidden, errors.New("User is not allowed here"))
+				if !isViewAuthenticated(view, r, false) {
+					jsonErrorResponse(w, http.StatusForbidden, errors.New("User is not allowed here"))
 					return
 				}
 
 				var req map[string]interface{}
-				if err := c.ShouldBindJSON(&req); err != nil {
-					jsonErrorResponse(c, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
+				if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+					jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
 					return
 				}
 
@@ -85,12 +84,12 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 				for registerName, value := range req {
 					register, ok := env.RegisterDbOfDevice(deviceName).GetByName(registerName)
 					if !ok {
-						jsonErrorResponse(c, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
+						jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
 						return
 					}
 
 					invalidType := func(t string) {
-						jsonErrorResponse(c, http.StatusUnprocessableEntity, fmt.Errorf("expect type of %s to be a %s", registerName, t))
+						jsonErrorResponse(w, http.StatusUnprocessableEntity, fmt.Errorf("expect type of %s to be a %s", registerName, t))
 					}
 
 					switch register.RegisterType() {
@@ -123,9 +122,11 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 				for _, inp := range inputs {
 					env.CommandStorage.Fill(inp)
 				}
+
+				w.WriteHeader(http.StatusOK)
 			})
 			if env.Config.LogConfig() {
-				log.Printf("httpServer: PATCH %s%s -> setup value dispatcher", r.BasePath(), relativePath)
+				log.Printf("httpServer: PATCH /api/v2/views/%s/devices/%s/values -> setup value dispatcher", view.Name(), deviceName)
 			}
 		}
 	}

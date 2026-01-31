@@ -3,7 +3,6 @@ package httpServer
 import (
 	"context"
 	"errors"
-	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"log"
 	"net/http"
@@ -68,20 +67,21 @@ type AuthenticationConfig interface {
 func Run(env *Environment) (httpServer *HttpServer) {
 	cfg := env.Config
 
-	gin.SetMode("release")
-	engine := gin.New()
-	if cfg.LogRequests() {
-		engine.Use(gin.Logger())
-	}
-	engine.Use(gin.Recovery())
-	engine.Use(authJwtMiddleware(env))
+	mux := http.NewServeMux()
 
-	addApiV2Routes(engine, env)
-	setupFrontend(engine, env)
+	// Create handler chain with middleware
+	handler := loggingMiddleware(cfg)(
+		recoveryMiddleware(
+			authJwtMiddleware(env)(mux),
+		),
+	)
+
+	addApiV2Routes(mux, env)
+	setupFrontend(mux, env)
 
 	server := &http.Server{
 		Addr:    cfg.Bind() + ":" + strconv.Itoa(cfg.Port()),
-		Handler: engine,
+		Handler: handler,
 	}
 
 	go func() {
