@@ -41,8 +41,10 @@ type Config interface {
 	SinglePhase() bool
 	UMin() float64
 	UMax() float64
+	UAvgWindow() int
 	FMin() float64
 	FMax() float64
+	FAvgWindow() int
 	PMax() float64
 	PTotMax() float64
 }

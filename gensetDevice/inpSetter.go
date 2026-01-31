@@ -3,9 +3,10 @@ package gensetDevice
 import (
 	"errors"
 	"fmt"
+	"log"
+
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/koestler/go-iotdevice/v3/genset"
-	"log"
 )
 
 var ErrUnknownInputName = errors.New("unknown input name")
@@ -143,22 +144,28 @@ func (d *DeviceStruct) inpSetter(name string) (func(*genset.Controller, dataflow
 		}), nil
 	case "U1":
 		return d.numberSetter(name, U1Register, func(v float64) func(genset.Inputs) genset.Inputs {
+			avg := NewAverage(d.gensetConfig.UAvgWindow())
 			return func(i genset.Inputs) genset.Inputs {
-				i.U1 = v
+				avg.Add(v)
+				i.U1 = avg.Value()
 				return i
 			}
 		}), nil
 	case "U2":
 		return d.numberSetter(name, U2Register, func(v float64) func(genset.Inputs) genset.Inputs {
+			avg := NewAverage(d.gensetConfig.UAvgWindow())
 			return func(i genset.Inputs) genset.Inputs {
-				i.U2 = v
+				avg.Add(v)
+				i.U2 = avg.Value()
 				return i
 			}
 		}), nil
 	case "U3":
 		return d.numberSetter(name, U3Register, func(v float64) func(genset.Inputs) genset.Inputs {
+			avg := NewAverage(d.gensetConfig.UAvgWindow())
 			return func(i genset.Inputs) genset.Inputs {
-				i.U3 = v
+				avg.Add(v)
+				i.U3 = avg.Value()
 				return i
 			}
 		}), nil
@@ -185,8 +192,11 @@ func (d *DeviceStruct) inpSetter(name string) (func(*genset.Controller, dataflow
 		}), nil
 	case "F":
 		return d.numberSetter(name, FRegister, func(v float64) func(genset.Inputs) genset.Inputs {
+			avg := NewAverage(d.gensetConfig.FAvgWindow())
 			return func(i genset.Inputs) genset.Inputs {
-				i.F = v
+				avg.Add(v)
+				i.F = avg.Value()
+				log.Printf("gensetDevice: F input add=%f, value=%f", v, i.F)
 				return i
 			}
 		}), nil
