@@ -143,8 +143,8 @@ func (d *DeviceStruct) inpSetter(name string) (func(*genset.Controller, dataflow
 			}
 		}), nil
 	case "U1":
+		avg := NewAverage(d.gensetConfig.UAvgWindow())
 		return d.numberSetter(name, U1Register, func(v float64) func(genset.Inputs) genset.Inputs {
-			avg := NewAverage(d.gensetConfig.UAvgWindow())
 			return func(i genset.Inputs) genset.Inputs {
 				avg.Add(v)
 				i.U1 = avg.Value()
@@ -152,8 +152,8 @@ func (d *DeviceStruct) inpSetter(name string) (func(*genset.Controller, dataflow
 			}
 		}), nil
 	case "U2":
+		avg := NewAverage(d.gensetConfig.UAvgWindow())
 		return d.numberSetter(name, U2Register, func(v float64) func(genset.Inputs) genset.Inputs {
-			avg := NewAverage(d.gensetConfig.UAvgWindow())
 			return func(i genset.Inputs) genset.Inputs {
 				avg.Add(v)
 				i.U2 = avg.Value()
@@ -161,8 +161,8 @@ func (d *DeviceStruct) inpSetter(name string) (func(*genset.Controller, dataflow
 			}
 		}), nil
 	case "U3":
+		avg := NewAverage(d.gensetConfig.UAvgWindow())
 		return d.numberSetter(name, U3Register, func(v float64) func(genset.Inputs) genset.Inputs {
-			avg := NewAverage(d.gensetConfig.UAvgWindow())
 			return func(i genset.Inputs) genset.Inputs {
 				avg.Add(v)
 				i.U3 = avg.Value()
@@ -191,9 +191,9 @@ func (d *DeviceStruct) inpSetter(name string) (func(*genset.Controller, dataflow
 			}
 		}), nil
 	case "F":
+		avg := NewAverage(d.gensetConfig.FAvgWindow())
+		log.Printf("newAverage F input window=%d", d.gensetConfig.FAvgWindow())
 		return d.numberSetter(name, FRegister, func(v float64) func(genset.Inputs) genset.Inputs {
-			avg := NewAverage(d.gensetConfig.FAvgWindow())
-			log.Printf("newAverage F input window=%d", d.gensetConfig.FAvgWindow())
 			return func(i genset.Inputs) genset.Inputs {
 				avg.Add(v)
 				i.F = avg.Value()
