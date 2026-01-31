@@ -3,14 +3,15 @@ package httpDevice
 import (
 	"context"
 	"fmt"
-	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-iotdevice/v3/device"
-	"github.com/koestler/go-iotdevice/v3/types"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/device"
+	"github.com/koestler/go-iotdevice/v3/types"
 )
 
 type Config interface {
@@ -120,7 +121,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 				)
 			} else {
 				// ready and discard response body
-				defer resp.Body.Close()
+				defer resp.Body.Close() //nolint:errcheck
 
 				if resp.StatusCode != http.StatusOK {
 					log.Printf(
@@ -194,7 +195,7 @@ func (ds *DeviceStruct) poll() error {
 	if err != nil {
 		return fmt.Errorf("GET %s failed", ds.pollRequest.URL.String())
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("cannot get response body: %s", err)

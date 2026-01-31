@@ -3,13 +3,14 @@ package victronDevice
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/koestler/go-victron/vedirect"
 	"github.com/koestler/go-victron/vedirectapi"
 	"github.com/koestler/go-victron/veregister"
 	"github.com/pkg/errors"
-	"log"
-	"time"
 )
 
 func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable) (err error, immediateError bool) {
@@ -29,7 +30,7 @@ func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable)
 		if logger, err := vedirectapi.NewFileLogger(ioLog); err != nil {
 			log.Printf("device[%s]: cannot log io: %s", c.Name(), err)
 		} else {
-			defer logger.Close()
+			defer logger.Close() //nolint:errcheck
 			vedirectConfig.IoLogger = logger
 		}
 	}

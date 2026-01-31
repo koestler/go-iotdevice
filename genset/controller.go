@@ -223,7 +223,7 @@ func computeStateNode(p Params, i Inputs, prev State) (next StateNode, errorTrig
 	}
 
 	// in every state except reset, off and failed: a temperature or fire detection triggers the failed state
-	if !(prev.Node == Reset || prev.Node == Off || prev.Node == Error) {
+	if !(prev.Node == Reset || prev.Node == Off || prev.Node == Error) { //nolint:staticcheck
 		ioErr := ioError(p, i)
 		if ioErr != nil {
 			return Error, ioErr

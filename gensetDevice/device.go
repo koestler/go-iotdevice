@@ -44,7 +44,7 @@ type Config interface {
 	UAvgWindow() int
 	FMin() float64
 	FMax() float64
-	FAvgWindow() int
+	FAvgWindow()
 	PMax() float64
 	PTotMax() float64
 }
@@ -131,7 +131,11 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	var shutdownWg sync.WaitGroup
 
 	// setup registers
-	commandRegisters := addToRegisterDb(d.State.RegisterDb(), d.gensetConfig.SinglePhase(), d.gensetConfig.InputBindings())
+	commandRegisters := addToRegisterDb(
+		d.State.RegisterDb(), //nolint:staticcheck
+		d.gensetConfig.SinglePhase(),
+		d.gensetConfig.InputBindings(),
+	)
 
 	// send connected now, disconnected when this routine stops
 	d.SetAvailable(true)
