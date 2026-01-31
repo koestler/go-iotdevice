@@ -44,7 +44,7 @@ type Config interface {
 	UAvgWindow() int
 	FMin() float64
 	FMax() float64
-	FAvgWindow()
+	FAvgWindow() int
 	PMax() float64
 	PTotMax() float64
 }
