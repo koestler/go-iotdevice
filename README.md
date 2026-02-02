@@ -816,6 +816,10 @@ GpioDevices:                                               # optional, a list of
     RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
     RestartIntervalMaxBackoff: 1m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
     LogDebug: false                                        # optional, default false, enable debug log output
+    Chip: gpiochip0                                        # optional, default gpiochip0, the gpiochip to use. See output of gpioinfo
+    InputDebounce: 100ms                                   # optional, default 100ms, debounce the input signal, 0 to disable
+    InputOptions: []                                       # optional, default unchanged, valid options: WithBiasDisabled, WithPullDown, WithPullUp
+    OutputOptions: []                                      # optional, default unchanged, valid options: AsOpenDrain, AsOpenSource, AsPushPull
     Inputs:                                                # optional, a list of inputs
       Switch0:                                             # mandatory, a technical name used for the register
         Pin: GPIO2                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
@@ -834,7 +838,6 @@ GpioDevices:                                               # optional, a list of
       Relay1:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
         Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
         Description: Relay 1                               # optional, default name, a nice title displayed in the frontend
-    PollInterval: 100ms                                    # optional, default 100ms, how often to fetch the device status
 
 HttpDevices:                                               # optional, a list of devices controlled via http
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections
@@ -886,13 +889,13 @@ GensetDevices:                                             # optional, a list ge
 
     InputBindings:                                         # mandatory, a list of input bindings
       tcw241:                                              # the device name of the input device
-        Available: IOAvailable                             # key: register name of input device; value: the target value of the genset controller
-        DI0: ArmSwitch
-        DI1: ResetSwitch
-        DI2: FireDetected
+        IOAvailable: Available                             # key: the target value of the genset controller; value: register name of input device
+        ArmSwitch: DI0
+        ResetSwitch: DI1
+        FireDetected: DI2
 
       modbus-finder:                                       # the device name of a second input device providing data
-        Available: OutputAvailable
+        OutputAvailable: Available
         U1: U1
         U2: U2
         U3: U3
@@ -911,6 +914,7 @@ GensetDevices:                                             # optional, a list ge
 
     PrimingTimeout: 10s                                    # optional, default 10s, time in priming (only fuel pump on) state
     CrankingTimeout: 10s                                   # optional, default 10s, maximum time in cranking state
+    StabilizingTimeout: 3s                                 # optional, default 3s, time spent waiting for the output to stabilize after startup
     WarmUpTimeout: 10m                                     # optional, default 10m, maximum time in warm-up state
     WarmUpMinTime: 2m                                      # optional, default 2m, minimum time in warm-up state
     WarmUpTemp: 50                                         # optional, default 50, minimum temperature to transition from warm-up to producing state
@@ -931,8 +935,10 @@ GensetDevices:                                             # optional, a list ge
     SinglePhase: false                                     # optional, default false, whether the generator is single phase or a three-phase system
     UMin: 220                                              # optional, default 220, minimum voltage the generator must have to not trigger the error state
     UMax: 240                                              # optional, default 240, maximum voltage the generator must have to not trigger the error state
+    UAvgWindow: 3                                          # optional, default 3, a sliding window over which the average voltage is calculated for error detection
     FMin: 45                                               # optional, default 45, minimum frequency the generator must have to not trigger the error state
     FMax: 55                                               # optional, default 55, maximum frequency the generator must have to not trigger the error state
+    FAvgWindow: 3                                          # optional, default 3, a sliding window over which the average frequency is calculated for error detection
     PMax: 1E6                                              # optional, default 1E6, maximum power the generator must have to not trigger the error state
     PTotMax: 1E6                                           # optional, default 1E6, maximum total power the generator must have to not trigger the error state
 
