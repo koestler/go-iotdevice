@@ -216,83 +216,89 @@ func TestConfigFrontendEndpoint(t *testing.T) {
 	assert.Equal(t, expected, response)
 }
 
-// TestLoginEndpointDisabled tests POST /api/v2/auth/login when authentication is disabled
-func TestLoginEndpointDisabled(t *testing.T) {
-	router, _ := setupTestEnvironment()
+// TestLoginEndpoint tests POST /api/v2/auth/login with various scenarios
+func TestLoginEndpoint(t *testing.T) {
+	t.Run("Disabled", func(t *testing.T) {
+		router, _ := setupTestEnvironment()
 
-	loginReq := loginRequest{
-		User:     "testuser",
-		Password: "testpass",
-	}
-	body, _ := stdjson.Marshal(loginReq)
+		loginReq := loginRequest{
+			User:     "testuser",
+			Password: "testpass",
+		}
+		body, _ := stdjson.Marshal(loginReq)
 
-	req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+		req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusServiceUnavailable, w.Code, "Expected status 503 when auth is disabled")
+		assert.Equal(t, http.StatusServiceUnavailable, w.Code, "Expected status 503 when auth is disabled")
 
-	var response ErrorResponse
-	err := stdjson.Unmarshal(w.Body.Bytes(), &response)
-	assert.NoError(t, err)
-	assert.Contains(t, response.Message, "disabled")
+		var response ErrorResponse
+		err := stdjson.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+		assert.Contains(t, response.Message, "disabled")
+	})
+
+	t.Run("InvalidJSON", func(t *testing.T) {
+		router, env := setupTestEnvironment()
+
+		// Enable authentication but don't provide valid htaccess file
+		env.Authentication = &mockAuthenticationConfig{
+			enabled:           true,
+			jwtSecret:         []byte("test-secret"),
+			jwtValidityPeriod: 1 * time.Hour,
+			htaccessFile:      "/tmp/nonexistent.passwd",
+		}
+
+		req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer([]byte("invalid json")))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		// Should get 503 because htaccess file doesn't exist
+		assert.Equal(t, http.StatusServiceUnavailable, w.Code)
+	})
 }
 
-// TestLoginEndpointInvalidJSON tests POST /api/v2/auth/login with invalid JSON
-func TestLoginEndpointInvalidJSON(t *testing.T) {
-	router, env := setupTestEnvironment()
-
-	// Enable authentication but don't provide valid htaccess file
-	env.Authentication = &mockAuthenticationConfig{
-		enabled:           true,
-		jwtSecret:         []byte("test-secret"),
-		jwtValidityPeriod: 1 * time.Hour,
-		htaccessFile:      "/tmp/nonexistent.passwd",
-	}
-
-	req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer([]byte("invalid json")))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	// Should get 503 because htaccess file doesn't exist
-	assert.Equal(t, http.StatusServiceUnavailable, w.Code)
-}
-
-// TestRegistersEndpoint tests GET /api/v2/views/{viewName}/devices/{deviceName}/registers
+// TestRegistersEndpoint tests GET /api/v2/views/{viewName}/devices/{deviceName}/registers with various scenarios
 func TestRegistersEndpoint(t *testing.T) {
-	router, _ := setupTestEnvironment()
+	t.Run("ok", func(t *testing.T) {
+		router, _ := setupTestEnvironment()
 
-	req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/test-device/registers", nil)
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+		req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/dev0/registers", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code, "Expected status 200 OK")
+		assert.Equal(t, http.StatusOK, w.Code, "Expected status 200 OK")
 
-	var response []registerResponse
-	err := stdjson.Unmarshal(w.Body.Bytes(), &response)
-	assert.NoError(t, err, "Response should be valid JSON")
+		var response []registerResponse
+		err := stdjson.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err, "Response should be valid JSON")
 
-	assert.Len(t, response, 1)
-	assert.Equal(t, "Monitor", response[0].Category)
-	assert.Equal(t, "Temperature", response[0].Name)
-	assert.Equal(t, "Room temperature", response[0].Description)
-	assert.Equal(t, "number", response[0].Type)
-	assert.Equal(t, "°C", response[0].Unit)
-	assert.Equal(t, 100, response[0].Sort)
-	assert.False(t, response[0].Writable)
-}
+		expected := []registerResponse{
+			{Category: "Monitor",
+				Name:        "Temperature",
+				Description: "Room temperature",
+				Type:        "number",
+				Unit:        "°C",
+				Sort:        100,
+				Writable:    false,
+			},
+		}
 
-// TestRegistersEndpointNonexistentDevice tests GET /api/v2/views/{viewName}/devices/{deviceName}/registers with invalid device
-func TestRegistersEndpointNonexistentDevice(t *testing.T) {
-	router, _ := setupTestEnvironment()
+		assert.Equal(t, expected, response)
+	})
 
-	req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/nonexistent-device/registers", nil)
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	t.Run("NonexistentDevice", func(t *testing.T) {
+		router, _ := setupTestEnvironment()
 
-	assert.Equal(t, http.StatusNotFound, w.Code, "Expected status 404 Not Found")
+		req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/nonexistent-device/registers", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code, "Expected status 404 Not Found")
+	})
 }
 
 // TestValuesGetEndpoint tests GET /api/v2/views/{viewName}/devices/{deviceName}/values
