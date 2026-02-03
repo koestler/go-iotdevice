@@ -196,17 +196,24 @@ func TestConfigFrontendEndpoint(t *testing.T) {
 	err := stdjson.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err, "Response should be valid JSON")
 
-	assert.Equal(t, "Test Project", response.ProjectTitle)
-	assert.Equal(t, "v1.0.0-test", response.BackendVersion)
-	assert.Len(t, response.Views, 1)
-	assert.Equal(t, "public", response.Views[0].Name)
-	assert.Equal(t, "Public View", response.Views[0].Title)
-	assert.True(t, response.Views[0].Autoplay)
-	assert.True(t, response.Views[0].IsPublic)
-	assert.False(t, response.Views[0].Hidden)
-	assert.Len(t, response.Views[0].Devices, 2)
-	assert.Equal(t, "test-device", response.Views[0].Devices[0].Name)
-	assert.Equal(t, "Test Device", response.Views[0].Devices[0].Title)
+	expected := configResponse{
+		ProjectTitle:   "Test Project",
+		BackendVersion: "v0.0.0-test",
+		Views: []viewResponse{
+			{
+				Name:  "public",
+				Title: "Public View",
+				Devices: []deviceViewResponse{
+					{Name: "dev0", Title: "Test Device 0"},
+					{Name: "dev1", Title: "Test Device 1"},
+				},
+				Autoplay: true,
+				IsPublic: true,
+				Hidden:   false},
+		},
+	}
+
+	assert.Equal(t, expected, response)
 }
 
 // TestLoginEndpointDisabled tests POST /api/v2/auth/login when authentication is disabled
