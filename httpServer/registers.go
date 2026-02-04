@@ -1,12 +1,13 @@
 package httpServer
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/pkg/errors"
 )
 
 type registerResponse struct {
@@ -20,6 +21,8 @@ type registerResponse struct {
 	Writable    bool           `json:"commandable" example:"false"` // json is kept at commandable for compatibility reasons
 	// consider changing when going to majer version 4
 }
+
+const RegistersExpires = 10 * time.Second
 
 // setupRegisters godoc
 // @Summary List registers
@@ -56,7 +59,7 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 				registers = dataflow.FilterRegisters(registers, viewDevice.Filter())
 				dataflow.SortRegisterStructs(registers)
 
-				setCacheControlPublic(c, 10*time.Second)
+				setCacheControlPublic(c, RegistersExpires)
 				jsonGetResponse(c, compile1DRegisterResponse(registers))
 			})
 			if env.Config.LogConfig() {

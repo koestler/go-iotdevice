@@ -17,5 +17,4 @@ func addApiV2Routes(r *gin.Engine, env *Environment) {
 
 	v2Ws := r.Group("/api/v2/")
 	setupValuesWs(v2Ws, env)
-
 }

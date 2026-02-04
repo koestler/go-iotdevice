@@ -2,6 +2,7 @@ package httpServer
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -112,9 +113,9 @@ func setupTestEnvironment(t *testing.T) *Environment {
 		buildVersion:    "v0.0.0-test",
 		bind:            "localhost",
 		port:            8080,
-		logRequests:     false,
-		logDebug:        false,
-		logConfig:       false,
+		logRequests:     true,
+		logDebug:        true,
+		logConfig:       true,
 		frontendPath:    "./frontend-build/",
 		frontendExpires: 5 * time.Minute,
 		configExpires:   1 * time.Minute,
@@ -245,64 +246,94 @@ func setupTestHtaccessFile(t *testing.T) string {
 	return htaccessPath
 }
 
+func setupToken(t *testing.T, env *Environment) string {
+	token, err := createJwtToken(env.Authentication, "testuser")
+	assert.NoError(t, err)
+	return token
+}
+
 // TestConfigFrontendEndpoint tests GET /api/v2/config/frontend
 func TestConfigFrontendEndpoint(t *testing.T) {
 	env := setupTestEnvironment(t)
 	router := setupRouter(t, env)
 
-	req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	t.Run("content", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code, "Expected status 200 OK")
+		assert.Equal(t, http.StatusOK, w.Code, "Expected status 200 OK")
 
-	var response configResponse
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	assert.NoError(t, err, "Response should be valid JSON")
+		assertCacheControlHeader(t, w, env.Config.ConfigExpires())
 
-	expected := configResponse{
-		ProjectTitle:   "Test Project",
-		BackendVersion: "v0.0.0-test",
-		Views: []viewResponse{
-			{
-				Name:  "public",
-				Title: "Public View",
-				Devices: []deviceViewResponse{
-					{Name: "dev0", Title: "Test Device 0"},
-					{Name: "dev1", Title: "Test Device 1"},
+		var response configResponse
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err, "Response should be valid JSON")
+
+		expected := configResponse{
+			ProjectTitle:   "Test Project",
+			BackendVersion: "v0.0.0-test",
+			Views: []viewResponse{
+				{
+					Name:  "public",
+					Title: "Public View",
+					Devices: []deviceViewResponse{
+						{Name: "dev0", Title: "Test Device 0"},
+						{Name: "dev1", Title: "Test Device 1"},
+					},
+					Autoplay: false,
+					IsPublic: true,
+					Hidden:   false,
+				}, {
+					Name:  "private",
+					Title: "Private View",
+					Devices: []deviceViewResponse{
+						{Name: "dev2", Title: "Test Device 2"},
+					},
+					Autoplay: true,
+					IsPublic: false,
+					Hidden:   false,
+				}, {
+					Name:  "forbidden",
+					Title: "Forbidden View",
+					Devices: []deviceViewResponse{
+						{Name: "dev1", Title: "Test Device 1"},
+					},
+					Autoplay: true,
+					IsPublic: false,
+					Hidden:   false,
 				},
-				Autoplay: false,
-				IsPublic: true,
-				Hidden:   false,
-			}, {
-				Name:  "private",
-				Title: "Private View",
-				Devices: []deviceViewResponse{
-					{Name: "dev2", Title: "Test Device 2"},
-				},
-				Autoplay: true,
-				IsPublic: false,
-				Hidden:   false,
-			}, {
-				Name:  "forbidden",
-				Title: "Forbidden View",
-				Devices: []deviceViewResponse{
-					{Name: "dev1", Title: "Test Device 1"},
-				},
-				Autoplay: true,
-				IsPublic: false,
-				Hidden:   false,
 			},
-		},
-	}
+		}
+		assert.Equal(t, expected, response)
+	})
 
-	assert.Equal(t, expected, response)
+	t.Run("ETag", func(t *testing.T) {
+		// First request
+		req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		etag := w.Header().Get("ETag")
+		assert.NotEmpty(t, etag, "ETag header should be present")
+
+		// Second request with If-None-Match header
+		req2, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
+		req2.Header.Set("If-None-Match", etag)
+		w2 := httptest.NewRecorder()
+		router.ServeHTTP(w2, req2)
+
+		assert.Equal(t, http.StatusNotModified, w2.Code, "Should return 304 Not Modified when ETag matches")
+	})
 }
 
-func setupToken(t *testing.T, env *Environment) string {
-	token, err := createJwtToken(env.Authentication, "testuser")
-	assert.NoError(t, err)
-	return token
+func assertCacheControlHeader(t *testing.T, w *httptest.ResponseRecorder, expected time.Duration) {
+	if expected > 0 {
+		expectedHeader := fmt.Sprintf("public, max-age=%.0f", expected.Seconds())
+		cacheControl := w.Header().Get("Cache-Control")
+		assert.Equal(t, expectedHeader, cacheControl, "Cache-Control header should match expected value")
+	}
 }
 
 // TestLoginEndpoint tests POST /api/v2/auth/login with various scenarios
@@ -437,6 +468,7 @@ func TestRegistersEndpoint(t *testing.T) {
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code, "Expected status 200 OK")
+		assertCacheControlHeader(t, w, RegistersExpires)
 
 		var response []registerResponse
 		err := json.Unmarshal(w.Body.Bytes(), &response)
@@ -522,6 +554,7 @@ func TestValuesGetEndpoint(t *testing.T) {
 		value := dataflow.NewNumericRegisterValue(devName, reg, 25.5)
 		env.StateStorage.Fill(value)
 	}
+	env.StateStorage.Wait()
 
 	t.Run("okPublic", func(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/dev0/values", nil)
@@ -546,6 +579,15 @@ func TestValuesGetEndpoint(t *testing.T) {
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code, "Expected status 200 OK")
+	})
+
+	t.Run("wrongToken", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/v2/views/private/devices/dev2/values", nil)
+		req.Header.Set("Authorization", "invalid")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden for invalid token")
 	})
 
 	t.Run("UnauthorizedPrivate", func(t *testing.T) {
@@ -654,42 +696,4 @@ func TestValuesPatchEndpoint(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, w.Code, "Expected status 404 Not Found")
 	})
-}
-
-// TestCacheHeaders tests that appropriate cache headers are set
-func TestCacheHeaders(t *testing.T) {
-	env := setupTestEnvironment(t)
-	router := setupRouter(t, env)
-
-	req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-
-	cacheControl := w.Header().Get("Cache-Control")
-	assert.NotEmpty(t, cacheControl, "Cache-Control header should be set")
-}
-
-// TestETagSupport tests that ETag headers are properly supported
-func TestETagSupport(t *testing.T) {
-	env := setupTestEnvironment(t)
-	router := setupRouter(t, env)
-
-	// First request
-	req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	etag := w.Header().Get("ETag")
-	assert.NotEmpty(t, etag, "ETag header should be present")
-
-	// Second request with If-None-Match header
-	req2, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
-	req2.Header.Set("If-None-Match", etag)
-	w2 := httptest.NewRecorder()
-	router.ServeHTTP(w2, req2)
-
-	assert.Equal(t, http.StatusNotModified, w2.Code, "Should return 304 Not Modified when ETag matches")
 }
