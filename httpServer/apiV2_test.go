@@ -183,7 +183,7 @@ func setupTestEnvironment(t *testing.T) *Environment {
 
 	// Create register database
 	registerDb := dataflow.NewRegisterDb()
-	testRegister := dataflow.NewRegisterStruct(
+	registerDb.Add(dataflow.NewRegisterStruct(
 		"Monitor",
 		"Temperature",
 		"Room temperature",
@@ -192,8 +192,17 @@ func setupTestEnvironment(t *testing.T) *Environment {
 		"°C",
 		100,
 		false,
-	)
-	registerDb.Add(testRegister)
+	))
+	registerDb.Add(dataflow.NewRegisterStruct(
+		"Control",
+		"Setpoint",
+		"Temperature setpoint",
+		dataflow.NumberRegister,
+		nil,
+		"°C",
+		200,
+		true, // writable
+	))
 
 	env := &Environment{
 		Config:         config,
@@ -491,6 +500,7 @@ func TestRegistersEndpoint(t *testing.T) {
 func TestValuesGetEndpoint(t *testing.T) {
 	env := setupTestEnvironment(t)
 	router := setupRouter(t, env)
+	token := testLogin(t, router)
 
 	// Add a value to the state storage
 	devName := "dev0"
@@ -501,92 +511,99 @@ func TestValuesGetEndpoint(t *testing.T) {
 		env.StateStorage.Fill(value)
 	}
 
-	req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/dev0/values", nil)
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	t.Run("okPublic", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/dev0/values", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code, "Expected status 200 OK")
+		assert.Equal(t, http.StatusOK, w.Code, "Expected status 200 OK")
 
-	var response values1DResponse
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	assert.NoError(t, err, "Response should be valid JSON")
+		var response values1DResponse
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err, "Response should be valid JSON")
 
-	// Check if the value is present
-	assert.Len(t, response, 1)
-	assert.Contains(t, response, "Temperature")
-	assert.Equal(t, 25.5, response["Temperature"])
-}
+		// Check if the value is present
+		assert.Len(t, response, 1)
+		assert.Contains(t, response, "Temperature")
+		assert.Equal(t, 25.5, response["Temperature"])
+	})
 
-// TestValuesGetEndpointNonexistentDevice tests GET /api/v2/views/{viewName}/devices/{deviceName}/values with invalid device
-func TestValuesGetEndpointNonexistentDevice(t *testing.T) {
-	env := setupTestEnvironment(t)
-	router := setupRouter(t, env)
+	t.Run("okPrivate", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/v2/views/private/devices/dev2/values", nil)
+		req.Header.Set("Authorization", token)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
 
-	req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/nonexistent-device/values", nil)
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusOK, w.Code, "Expected status 200 OK")
+	})
 
-	assert.Equal(t, http.StatusNotFound, w.Code, "Expected status 404 Not Found")
+	t.Run("UnauthorizedPrivate", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/v2/views/private/devices/dev2/values", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden for private view without token")
+	})
+
+	t.Run("ForbiddenPrivate", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/v2/views/forbidden/devices/dev1/values", nil)
+		req.Header.Set("Authorization", token)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden for private view without token")
+	})
 }
 
 // TestValuesPatchEndpoint tests PATCH /api/v2/views/{viewName}/devices/{deviceName}/values
 func TestValuesPatchEndpoint(t *testing.T) {
 	env := setupTestEnvironment(t)
 	router := setupRouter(t, env)
+	token := testLogin(t, router)
 
-	// Enable authentication and create a token
-	env.Authentication = &mockAuthenticationConfig{
-		enabled:           true,
-		jwtSecret:         []byte("test-secret-key"),
-		jwtValidityPeriod: 1 * time.Hour,
-	}
+	t.Run("okPublic", func(t *testing.T) {
+		patchData := map[string]interface{}{
+			"Setpoint": 22.0,
+		}
+		body, _ := json.Marshal(patchData)
 
-	token, _ := createJwtToken(env.Authentication, "testuser")
+		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", token)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
 
-	// Add a writable register
-	registerDb := env.RegisterDbOfDevice("test-device")
-	writableRegister := dataflow.NewRegisterStruct(
-		"Control",
-		"Setpoint",
-		"Temperature setpoint",
-		dataflow.NumberRegister,
-		nil,
-		"°C",
-		200,
-		true, // writable
-	)
-	registerDb.Add(writableRegister)
+		assert.Equal(t, http.StatusOK, w.Code, "Expected status 200 OK")
+	})
 
-	patchData := map[string]interface{}{
-		"Setpoint": 22.0,
-	}
-	body, _ := json.Marshal(patchData)
+	t.Run("ForbiddenWithoutAuth", func(t *testing.T) {
+		patchData := map[string]interface{}{
+			"Setpoint": 22.0,
+		}
+		body, _ := json.Marshal(patchData)
 
-	req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/test-device/values", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", token)
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code, "Expected status 200 OK")
-}
+		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden without authentication")
+	})
 
-// TestValuesPatchEndpointUnauthenticated tests PATCH without authentication (should fail)
-func TestValuesPatchEndpointUnauthenticated(t *testing.T) {
-	env := setupTestEnvironment(t)
-	router := setupRouter(t, env)
+	t.Run("nonWritableRegister", func(t *testing.T) {
+		patchData := map[string]interface{}{
+			"Temperature": 22.0,
+		}
+		body, _ := json.Marshal(patchData)
 
-	patchData := map[string]interface{}{
-		"Temperature": 22.0,
-	}
-	body, _ := json.Marshal(patchData)
+		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", token)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
 
-	req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/test-device/values", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden without authentication")
+		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden without authentication")
+	})
 }
 
 // TestValuesPatchEndpointInvalidJSON tests PATCH /api/v2/views/{viewName}/devices/{deviceName}/values with invalid JSON
