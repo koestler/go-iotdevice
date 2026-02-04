@@ -2,11 +2,12 @@ package httpServer
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/pkg/errors"
-	"log"
-	"net/http"
 )
 
 type valueResponse interface{}
@@ -87,6 +88,10 @@ func setupValuesPatch(r *gin.RouterGroup, env *Environment) {
 					if !ok {
 						jsonErrorResponse(c, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
 						return
+					}
+
+					if !register.Writable() {
+						jsonErrorResponse(c, http.StatusForbidden, fmt.Errorf("register %s is not writable", registerName))
 					}
 
 					invalidType := func(t string) {
