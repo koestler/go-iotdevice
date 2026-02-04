@@ -1,18 +1,18 @@
 package httpServer
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
-func setupFrontend(engine *gin.Engine, env *Environment) {
-	config := env.Config
+func setupFrontend(engine *gin.Engine, config Config, views []ViewConfig) {
 	frontendUrl := config.FrontendProxy()
 
 	r := engine.Group("/")
@@ -48,7 +48,7 @@ func setupFrontend(engine *gin.Engine, env *Environment) {
 				})
 
 				// load index file single page frontend application
-				for _, route := range append(getNames(env.Views), "", "login") {
+				for _, route := range append(getNames(views), "", "login") {
 					serveStatic(r, config, route, frontendPath+"/index.html")
 				}
 

@@ -3,13 +3,14 @@ package httpServer
 import (
 	"context"
 	"errors"
-	"github.com/gin-gonic/gin"
-	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
 )
 
 type HttpServer struct {
@@ -77,7 +78,7 @@ func Run(env *Environment) (httpServer *HttpServer) {
 	engine.Use(authJwtMiddleware(env))
 
 	addApiV2Routes(engine, env)
-	setupFrontend(engine, env)
+	setupFrontend(engine, env.Config, env.Views)
 
 	server := &http.Server{
 		Addr:    cfg.Bind() + ":" + strconv.Itoa(cfg.Port()),
