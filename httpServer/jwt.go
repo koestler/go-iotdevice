@@ -1,11 +1,12 @@
 package httpServer
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
-	"net/http"
-	"time"
 )
 
 type jwtClaims struct {
@@ -34,8 +35,8 @@ func authJwtMiddleware(env *Environment) gin.HandlerFunc {
 			return
 		}
 
-		if user, err := checkToken(tokenStr, env.Authentication.JwtSecret()); err != nil {
-			jsonErrorResponse(c, http.StatusUnauthorized, errors.New("invalid jwt token"))
+		if user, code, err := checkToken(tokenStr, env.Authentication.JwtSecret()); err != nil {
+			jsonErrorResponse(c, code, errors.New("auth failed"))
 			c.Abort()
 		} else {
 			// continue; if user is set this means a valid token is present
@@ -45,19 +46,19 @@ func authJwtMiddleware(env *Environment) gin.HandlerFunc {
 	}
 }
 
-func checkToken(tokenStr string, jwtSecret []byte) (user string, err error) {
+func checkToken(tokenStr string, jwtSecret []byte) (user string, code int, err error) {
 	// decode jwt token
 	claims := &jwtClaims{}
 	tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
 	if err != nil {
-		return "", err
+		return "", http.StatusUnauthorized, err
 	}
 	if !tkn.Valid {
-		return "", errors.New("invalid token")
+		return "", http.StatusForbidden, errors.New("invalid jwt token")
 	}
-	return claims.User, nil
+	return claims.User, 0, nil
 }
 
 func isViewAuthenticated(view ViewConfig, c *gin.Context, allowAnonymous bool) bool {

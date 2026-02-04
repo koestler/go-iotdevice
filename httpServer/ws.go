@@ -3,12 +3,13 @@ package httpServer
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/mileusna/useragent"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/mileusna/useragent"
 
 	"github.com/coder/websocket"
 )
@@ -103,7 +104,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 				if mt == websocket.MessageText {
 					var authMsg authMessage
 					if err := json.Unmarshal(msg, &authMsg); err == nil {
-						if user, err := checkToken(authMsg.AuthToken, env.Authentication.JwtSecret()); err == nil {
+						if user, _, err := checkToken(authMsg.AuthToken, env.Authentication.JwtSecret()); err == nil {
 							log.Printf("httpServer: %s%s: user=%s authenticated", r.BasePath(), relativePath, user)
 							if isViewAuthenticatedByUser(view, user, true) {
 								startValueSenderOnce()
