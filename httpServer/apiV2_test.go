@@ -120,7 +120,7 @@ func setupTestEnvironment(t *testing.T) *Environment {
 		configExpires:   1 * time.Minute,
 	}
 
-	device1 := &mockViewDeviceConfig{
+	dev0 := &mockViewDeviceConfig{
 		name:  "dev0",
 		title: "Test Device 0",
 		filter: &mockRegisterFilterConf{
@@ -128,7 +128,7 @@ func setupTestEnvironment(t *testing.T) *Environment {
 		},
 	}
 
-	device2 := &mockViewDeviceConfig{
+	dev1 := &mockViewDeviceConfig{
 		name:  "dev1",
 		title: "Test Device 1",
 		filter: &mockRegisterFilterConf{
@@ -136,15 +136,31 @@ func setupTestEnvironment(t *testing.T) *Environment {
 		},
 	}
 
-	view := &mockViewConfig{
+	dev2 := &mockViewDeviceConfig{
+		name:  "dev2",
+		title: "Test Device 2",
+		filter: &mockRegisterFilterConf{
+			defaultInclude: true,
+		},
+	}
+
+	publicView := &mockViewConfig{
 		name:     "public",
 		title:    "Public View",
-		devices:  []ViewDeviceConfig{device1, device2},
-		autoplay: true,
+		devices:  []ViewDeviceConfig{dev0, dev1},
+		autoplay: false,
 		isPublic: true,
 		hidden:   false,
 	}
 
+	privateView := &mockViewConfig{
+		name:     "private",
+		title:    "Private View",
+		devices:  []ViewDeviceConfig{dev2},
+		autoplay: true,
+		isPublic: false,
+		hidden:   false,
+	}
 	authConfig := &mockAuthenticationConfig{
 		enabled:           true,
 		jwtSecret:         []byte("test-secret"),
@@ -169,7 +185,7 @@ func setupTestEnvironment(t *testing.T) *Environment {
 	env := &Environment{
 		Config:         config,
 		ProjectTitle:   "Test Project",
-		Views:          []ViewConfig{view},
+		Views:          []ViewConfig{publicView, privateView},
 		Authentication: authConfig,
 		RegisterDbOfDevice: func(deviceName string) *dataflow.RegisterDb {
 			return registerDb
@@ -233,9 +249,19 @@ func TestConfigFrontendEndpoint(t *testing.T) {
 					{Name: "dev0", Title: "Test Device 0"},
 					{Name: "dev1", Title: "Test Device 1"},
 				},
-				Autoplay: true,
+				Autoplay: false,
 				IsPublic: true,
-				Hidden:   false},
+				Hidden:   false,
+			}, {
+				Name:  "private",
+				Title: "Private View",
+				Devices: []deviceViewResponse{
+					{Name: "dev2", Title: "Test Device 2"},
+				},
+				Autoplay: true,
+				IsPublic: false,
+				Hidden:   false,
+			},
 		},
 	}
 
@@ -370,10 +396,9 @@ func TestLoginEndpoint(t *testing.T) {
 
 // TestRegistersEndpoint tests GET /api/v2/views/{viewName}/devices/{deviceName}/registers with various scenarios
 func TestRegistersEndpoint(t *testing.T) {
-	t.Run("ok", func(t *testing.T) {
-		env := setupTestEnvironment(t)
-		router := setupRouter(t, env)
-
+	env := setupTestEnvironment(t)
+	router := setupRouter(t, env)
+	t.Run("okPublic", func(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/dev0/registers", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -399,9 +424,6 @@ func TestRegistersEndpoint(t *testing.T) {
 	})
 
 	t.Run("NonexistentDevice", func(t *testing.T) {
-		env := setupTestEnvironment(t)
-		router := setupRouter(t, env)
-
 		req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/nonexistent-device/registers", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -416,14 +438,15 @@ func TestValuesGetEndpoint(t *testing.T) {
 	router := setupRouter(t, env)
 
 	// Add a value to the state storage
-	registerDb := env.RegisterDbOfDevice("test-device")
+	devName := "dev0"
+	registerDb := env.RegisterDbOfDevice(devName)
 	registers := registerDb.GetAll()
 	if len(registers) > 0 {
-		value := dataflow.NewNumericRegisterValue("test-device", registers[0], 25.5)
+		value := dataflow.NewNumericRegisterValue(devName, registers[0], 25.5)
 		env.StateStorage.Fill(value)
 	}
 
-	req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/test-device/values", nil)
+	req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/dev0/values", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
@@ -434,10 +457,9 @@ func TestValuesGetEndpoint(t *testing.T) {
 	assert.NoError(t, err, "Response should be valid JSON")
 
 	// Check if the value is present
-	if len(response) > 0 {
-		assert.Contains(t, response, "Temperature")
-		assert.Equal(t, 25.5, response["Temperature"])
-	}
+	assert.Len(t, response, 1)
+	assert.Contains(t, response, "Temperature")
+	assert.Equal(t, 25.5, response["Temperature"])
 }
 
 // TestValuesGetEndpointNonexistentDevice tests GET /api/v2/views/{viewName}/devices/{deviceName}/values with invalid device
