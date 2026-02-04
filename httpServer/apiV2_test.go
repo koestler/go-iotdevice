@@ -161,6 +161,19 @@ func setupTestEnvironment(t *testing.T) *Environment {
 		isPublic: false,
 		hidden:   false,
 	}
+
+	forbiddenView := &mockViewConfig{
+		name:     "forbidden",
+		title:    "Forbidden View",
+		devices:  []ViewDeviceConfig{dev1},
+		autoplay: true,
+		isPublic: false,
+		hidden:   false,
+		allowed: map[string]bool{
+			"not-me": true,
+		},
+	}
+
 	authConfig := &mockAuthenticationConfig{
 		enabled:           true,
 		jwtSecret:         []byte("test-secret"),
@@ -185,7 +198,7 @@ func setupTestEnvironment(t *testing.T) *Environment {
 	env := &Environment{
 		Config:         config,
 		ProjectTitle:   "Test Project",
-		Views:          []ViewConfig{publicView, privateView},
+		Views:          []ViewConfig{publicView, privateView, forbiddenView},
 		Authentication: authConfig,
 		RegisterDbOfDevice: func(deviceName string) *dataflow.RegisterDb {
 			return registerDb
@@ -261,6 +274,15 @@ func TestConfigFrontendEndpoint(t *testing.T) {
 				Autoplay: true,
 				IsPublic: false,
 				Hidden:   false,
+			}, {
+				Name:  "forbidden",
+				Title: "Forbidden View",
+				Devices: []deviceViewResponse{
+					{Name: "dev1", Title: "Test Device 1"},
+				},
+				Autoplay: true,
+				IsPublic: false,
+				Hidden:   false,
 			},
 		},
 	}
@@ -287,7 +309,7 @@ func testLogin(t *testing.T, router *gin.Engine) string {
 	assert.NoError(t, err)
 
 	assert.Equal(t, loginReq.User, response.User)
-	assert.Equal(t, []string{"public"}, response.AllowedViews)
+	assert.Equal(t, []string{"public", "private"}, response.AllowedViews)
 
 	assert.NotEmpty(t, response.Token)
 	return response.Token
@@ -421,6 +443,39 @@ func TestRegistersEndpoint(t *testing.T) {
 		}
 
 		assert.Equal(t, expected, response)
+	})
+
+	t.Run("okPrivate", func(t *testing.T) {
+		token := testLogin(t, router)
+		req, _ := http.NewRequest("GET", "/api/v2/views/private/devices/dev2/registers", nil)
+		req.Header.Set("Authorization", token)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code, "Expected status 200 OK")
+
+		var response []registerResponse
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err, "Response should be valid JSON")
+		assert.Len(t, response, 1)
+	})
+
+	t.Run("UnauthorizedPrivate", func(t *testing.T) {
+		req, _ := http.NewRequest("GET", "/api/v2/views/private/devices/dev2/registers", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden for private view without token")
+	})
+
+	t.Run("ForbiddenPrivate", func(t *testing.T) {
+		token := testLogin(t, router)
+		req, _ := http.NewRequest("GET", "/api/v2/views/forbidden/devices/dev1/registers", nil)
+		req.Header.Set("Authorization", token)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden for private view without token")
 	})
 
 	t.Run("NonexistentDevice", func(t *testing.T) {

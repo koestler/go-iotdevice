@@ -35,8 +35,8 @@ func authJwtMiddleware(env *Environment) gin.HandlerFunc {
 			return
 		}
 
-		if user, code, err := checkToken(tokenStr, env.Authentication.JwtSecret()); err != nil {
-			jsonErrorResponse(c, code, errors.New("auth failed"))
+		if user, err := checkToken(tokenStr, env.Authentication.JwtSecret()); err != nil {
+			jsonErrorResponse(c, http.StatusForbidden, errors.New("invalid jwt token"))
 			c.Abort()
 		} else {
 			// continue; if user is set this means a valid token is present
@@ -46,19 +46,19 @@ func authJwtMiddleware(env *Environment) gin.HandlerFunc {
 	}
 }
 
-func checkToken(tokenStr string, jwtSecret []byte) (user string, code int, err error) {
+func checkToken(tokenStr string, jwtSecret []byte) (user string, err error) {
 	// decode jwt token
 	claims := &jwtClaims{}
 	tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
 	if err != nil {
-		return "", http.StatusUnauthorized, err
+		return "", err
 	}
 	if !tkn.Valid {
-		return "", http.StatusForbidden, errors.New("invalid jwt token")
+		return "", errors.New("invalid token")
 	}
-	return claims.User, 0, nil
+	return claims.User, nil
 }
 
 func isViewAuthenticated(view ViewConfig, c *gin.Context, allowAnonymous bool) bool {
