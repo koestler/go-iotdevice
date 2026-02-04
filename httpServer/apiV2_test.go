@@ -104,7 +104,7 @@ func (m *mockAuthenticationConfig) JwtValidityPeriod() time.Duration { return m.
 func (m *mockAuthenticationConfig) HtaccessFile() string             { return m.htaccessFile }
 
 // setupTestEnvironment creates a test environment with router
-func setupTestEnvironment(t *testing.T) (*gin.Engine, *Environment) {
+func setupTestEnvironment(t *testing.T) *Environment {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 
@@ -178,11 +178,17 @@ func setupTestEnvironment(t *testing.T) (*gin.Engine, *Environment) {
 		CommandStorage: dataflow.NewValueStorage(),
 	}
 
+	return env
+}
+
+func setupRouter(t *testing.T, env *Environment) *gin.Engine {
+	t.Helper()
+
 	router := gin.New()
 	router.Use(authJwtMiddleware(env))
 	addApiV2Routes(router, env)
 
-	return router, env
+	return router
 }
 
 const testUser = "testuser"
@@ -203,7 +209,8 @@ func setupTestHtaccessFile(t *testing.T) string {
 
 // TestConfigFrontendEndpoint tests GET /api/v2/config/frontend
 func TestConfigFrontendEndpoint(t *testing.T) {
-	router, _ := setupTestEnvironment(t)
+	env := setupTestEnvironment(t)
+	router := setupRouter(t, env)
 
 	req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
 	w := httptest.NewRecorder()
@@ -263,12 +270,14 @@ func testLogin(t *testing.T, router *gin.Engine) string {
 // TestLoginEndpoint tests POST /api/v2/auth/login with various scenarios
 func TestLoginEndpoint(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
-		router, _ := setupTestEnvironment(t)
+		env := setupTestEnvironment(t)
+		router := setupRouter(t, env)
 		testLogin(t, router)
 	})
 
 	t.Run("InvalidCredentials", func(t *testing.T) {
-		router, _ := setupTestEnvironment(t)
+		env := setupTestEnvironment(t)
+		router := setupRouter(t, env)
 
 		loginReq := loginRequest{
 			User:     "testuser",
@@ -290,17 +299,14 @@ func TestLoginEndpoint(t *testing.T) {
 	})
 
 	t.Run("Disabled", func(t *testing.T) {
-		router, env := setupTestEnvironment(t)
+		env := setupTestEnvironment(t)
 
 		// Disable authentication
 		env.Authentication = &mockAuthenticationConfig{
 			enabled: false,
 		}
 
-		// Rebuild router with disabled authentication
-		router = gin.New()
-		router.Use(authJwtMiddleware(env))
-		addApiV2Routes(router, env)
+		router := setupRouter(t, env)
 
 		loginReq := loginRequest{
 			User:     "testuser",
@@ -322,7 +328,8 @@ func TestLoginEndpoint(t *testing.T) {
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {
-		router, _ := setupTestEnvironment(t)
+		env := setupTestEnvironment(t)
+		router := setupRouter(t, env)
 
 		req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer([]byte("invalid json")))
 		req.Header.Set("Content-Type", "application/json")
@@ -333,7 +340,7 @@ func TestLoginEndpoint(t *testing.T) {
 	})
 
 	t.Run("MissingHtaccessFile", func(t *testing.T) {
-		router, env := setupTestEnvironment(t)
+		env := setupTestEnvironment(t)
 
 		// Enable authentication but don't provide valid htaccess file
 		env.Authentication = &mockAuthenticationConfig{
@@ -343,10 +350,7 @@ func TestLoginEndpoint(t *testing.T) {
 			htaccessFile:      "/tmp/nonexistent.passwd",
 		}
 
-		// Rebuild router with invalid htaccess file
-		router = gin.New()
-		router.Use(authJwtMiddleware(env))
-		addApiV2Routes(router, env)
+		router := setupRouter(t, env)
 
 		loginReq := loginRequest{
 			User:     "testuser",
@@ -367,7 +371,8 @@ func TestLoginEndpoint(t *testing.T) {
 // TestRegistersEndpoint tests GET /api/v2/views/{viewName}/devices/{deviceName}/registers with various scenarios
 func TestRegistersEndpoint(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
-		router, _ := setupTestEnvironment(t)
+		env := setupTestEnvironment(t)
+		router := setupRouter(t, env)
 
 		req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/dev0/registers", nil)
 		w := httptest.NewRecorder()
@@ -394,7 +399,8 @@ func TestRegistersEndpoint(t *testing.T) {
 	})
 
 	t.Run("NonexistentDevice", func(t *testing.T) {
-		router, _ := setupTestEnvironment(t)
+		env := setupTestEnvironment(t)
+		router := setupRouter(t, env)
 
 		req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/nonexistent-device/registers", nil)
 		w := httptest.NewRecorder()
@@ -406,7 +412,8 @@ func TestRegistersEndpoint(t *testing.T) {
 
 // TestValuesGetEndpoint tests GET /api/v2/views/{viewName}/devices/{deviceName}/values
 func TestValuesGetEndpoint(t *testing.T) {
-	router, env := setupTestEnvironment(t)
+	env := setupTestEnvironment(t)
+	router := setupRouter(t, env)
 
 	// Add a value to the state storage
 	registerDb := env.RegisterDbOfDevice("test-device")
@@ -435,7 +442,8 @@ func TestValuesGetEndpoint(t *testing.T) {
 
 // TestValuesGetEndpointNonexistentDevice tests GET /api/v2/views/{viewName}/devices/{deviceName}/values with invalid device
 func TestValuesGetEndpointNonexistentDevice(t *testing.T) {
-	router, _ := setupTestEnvironment(t)
+	env := setupTestEnvironment(t)
+	router := setupRouter(t, env)
 
 	req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/nonexistent-device/values", nil)
 	w := httptest.NewRecorder()
@@ -446,7 +454,8 @@ func TestValuesGetEndpointNonexistentDevice(t *testing.T) {
 
 // TestValuesPatchEndpoint tests PATCH /api/v2/views/{viewName}/devices/{deviceName}/values
 func TestValuesPatchEndpoint(t *testing.T) {
-	router, env := setupTestEnvironment(t)
+	env := setupTestEnvironment(t)
+	router := setupRouter(t, env)
 
 	// Enable authentication and create a token
 	env.Authentication = &mockAuthenticationConfig{
@@ -487,7 +496,8 @@ func TestValuesPatchEndpoint(t *testing.T) {
 
 // TestValuesPatchEndpointUnauthenticated tests PATCH without authentication (should fail)
 func TestValuesPatchEndpointUnauthenticated(t *testing.T) {
-	router, _ := setupTestEnvironment(t)
+	env := setupTestEnvironment(t)
+	router := setupRouter(t, env)
 
 	patchData := map[string]interface{}{
 		"Temperature": 22.0,
@@ -504,7 +514,8 @@ func TestValuesPatchEndpointUnauthenticated(t *testing.T) {
 
 // TestValuesPatchEndpointInvalidJSON tests PATCH /api/v2/views/{viewName}/devices/{deviceName}/values with invalid JSON
 func TestValuesPatchEndpointInvalidJSON(t *testing.T) {
-	router, env := setupTestEnvironment(t)
+	env := setupTestEnvironment(t)
+	router := setupRouter(t, env)
 
 	// Enable authentication and create a token
 	env.Authentication = &mockAuthenticationConfig{
@@ -526,7 +537,8 @@ func TestValuesPatchEndpointInvalidJSON(t *testing.T) {
 
 // TestValuesPatchEndpointInvalidRegister tests PATCH /api/v2/views/{viewName}/devices/{deviceName}/values with invalid register
 func TestValuesPatchEndpointInvalidRegister(t *testing.T) {
-	router, env := setupTestEnvironment(t)
+	env := setupTestEnvironment(t)
+	router := setupRouter(t, env)
 
 	// Enable authentication and create a token
 	env.Authentication = &mockAuthenticationConfig{
@@ -553,7 +565,8 @@ func TestValuesPatchEndpointInvalidRegister(t *testing.T) {
 
 // TestValuesPatchEndpointNonexistentDevice tests PATCH /api/v2/views/{viewName}/devices/{deviceName}/values with invalid device
 func TestValuesPatchEndpointNonexistentDevice(t *testing.T) {
-	router, _ := setupTestEnvironment(t)
+	env := setupTestEnvironment(t)
+	router := setupRouter(t, env)
 
 	patchData := map[string]interface{}{
 		"Temperature": 22.0,
@@ -570,7 +583,8 @@ func TestValuesPatchEndpointNonexistentDevice(t *testing.T) {
 
 // TestAuthenticationWithJWT tests endpoints with JWT authentication
 func TestAuthenticationWithJWT(t *testing.T) {
-	router, env := setupTestEnvironment(t)
+	env := setupTestEnvironment(t)
+	router := setupRouter(t, env)
 
 	// Create a private view
 	privateView := &mockViewConfig{
@@ -606,7 +620,8 @@ func TestAuthenticationWithJWT(t *testing.T) {
 
 // TestAuthenticationWithInvalidJWT tests endpoints with invalid JWT authentication
 func TestAuthenticationWithInvalidJWT(t *testing.T) {
-	router, env := setupTestEnvironment(t)
+	env := setupTestEnvironment(t)
+	router := setupRouter(t, env)
 
 	// Enable authentication
 	env.Authentication = &mockAuthenticationConfig{
@@ -633,7 +648,8 @@ func TestWebsocketEndpointExists(t *testing.T) {
 
 // TestCacheHeaders tests that appropriate cache headers are set
 func TestCacheHeaders(t *testing.T) {
-	router, _ := setupTestEnvironment(t)
+	env := setupTestEnvironment(t)
+	router := setupRouter(t, env)
 
 	req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
 	w := httptest.NewRecorder()
@@ -647,7 +663,8 @@ func TestCacheHeaders(t *testing.T) {
 
 // TestETagSupport tests that ETag headers are properly supported
 func TestETagSupport(t *testing.T) {
-	router, _ := setupTestEnvironment(t)
+	env := setupTestEnvironment(t)
+	router := setupRouter(t, env)
 
 	// First request
 	req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
