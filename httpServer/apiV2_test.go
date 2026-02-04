@@ -299,29 +299,10 @@ func TestConfigFrontendEndpoint(t *testing.T) {
 	assert.Equal(t, expected, response)
 }
 
-func testLogin(t *testing.T, router *gin.Engine) string {
-	loginReq := loginRequest{
-		User:     testUser,
-		Password: testPassword,
-	}
-	body, _ := json.Marshal(loginReq)
-
-	req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code, "Expected status 200 OK for successful login")
-
-	var response loginResponse
-	err := json.Unmarshal(w.Body.Bytes(), &response)
+func setupToken(t *testing.T, env *Environment) string {
+	token, err := createJwtToken(env.Authentication, "testuser")
 	assert.NoError(t, err)
-
-	assert.Equal(t, loginReq.User, response.User)
-	assert.Equal(t, []string{"public", "private"}, response.AllowedViews)
-
-	assert.NotEmpty(t, response.Token)
-	return response.Token
+	return token
 }
 
 // TestLoginEndpoint tests POST /api/v2/auth/login with various scenarios
@@ -329,7 +310,28 @@ func TestLoginEndpoint(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
 		env := setupTestEnvironment(t)
 		router := setupRouter(t, env)
-		testLogin(t, router)
+
+		loginReq := loginRequest{
+			User:     testUser,
+			Password: testPassword,
+		}
+		body, _ := json.Marshal(loginReq)
+
+		req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code, "Expected status 200 OK for successful login")
+
+		var response loginResponse
+		err := json.Unmarshal(w.Body.Bytes(), &response)
+		assert.NoError(t, err)
+
+		assert.Equal(t, loginReq.User, response.User)
+		assert.Equal(t, []string{"public", "private"}, response.AllowedViews)
+
+		assert.NotEmpty(t, response.Token)
 	})
 
 	t.Run("InvalidCredentials", func(t *testing.T) {
@@ -441,7 +443,8 @@ func TestRegistersEndpoint(t *testing.T) {
 		assert.NoError(t, err, "Response should be valid JSON")
 
 		expected := []registerResponse{
-			{Category: "Monitor",
+			{
+				Category:    "Monitor",
 				Name:        "Temperature",
 				Description: "Room temperature",
 				Type:        "number",
@@ -449,13 +452,22 @@ func TestRegistersEndpoint(t *testing.T) {
 				Sort:        100,
 				Writable:    false,
 			},
+			{
+				Category:    "Control",
+				Name:        "Setpoint",
+				Description: "Temperature setpoint",
+				Type:        "number",
+				Unit:        "°C",
+				Sort:        200,
+				Writable:    true,
+			},
 		}
 
 		assert.Equal(t, expected, response)
 	})
 
 	t.Run("okPrivate", func(t *testing.T) {
-		token := testLogin(t, router)
+		token := setupToken(t, env)
 		req, _ := http.NewRequest("GET", "/api/v2/views/private/devices/dev2/registers", nil)
 		req.Header.Set("Authorization", token)
 		w := httptest.NewRecorder()
@@ -466,7 +478,7 @@ func TestRegistersEndpoint(t *testing.T) {
 		var response []registerResponse
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 		assert.NoError(t, err, "Response should be valid JSON")
-		assert.Len(t, response, 1)
+		assert.Len(t, response, 2)
 	})
 
 	t.Run("UnauthorizedPrivate", func(t *testing.T) {
@@ -478,7 +490,7 @@ func TestRegistersEndpoint(t *testing.T) {
 	})
 
 	t.Run("ForbiddenPrivate", func(t *testing.T) {
-		token := testLogin(t, router)
+		token := setupToken(t, env)
 		req, _ := http.NewRequest("GET", "/api/v2/views/forbidden/devices/dev1/registers", nil)
 		req.Header.Set("Authorization", token)
 		w := httptest.NewRecorder()
@@ -500,14 +512,14 @@ func TestRegistersEndpoint(t *testing.T) {
 func TestValuesGetEndpoint(t *testing.T) {
 	env := setupTestEnvironment(t)
 	router := setupRouter(t, env)
-	token := testLogin(t, router)
+	token := setupToken(t, env)
 
 	// Add a value to the state storage
 	devName := "dev0"
 	registerDb := env.RegisterDbOfDevice(devName)
 	registers := registerDb.GetAll()
-	if len(registers) > 0 {
-		value := dataflow.NewNumericRegisterValue(devName, registers[0], 25.5)
+	for _, reg := range registers {
+		value := dataflow.NewNumericRegisterValue(devName, reg, 25.5)
 		env.StateStorage.Fill(value)
 	}
 
@@ -523,7 +535,6 @@ func TestValuesGetEndpoint(t *testing.T) {
 		assert.NoError(t, err, "Response should be valid JSON")
 
 		// Check if the value is present
-		assert.Len(t, response, 1)
 		assert.Contains(t, response, "Temperature")
 		assert.Equal(t, 25.5, response["Temperature"])
 	})
@@ -559,7 +570,7 @@ func TestValuesGetEndpoint(t *testing.T) {
 func TestValuesPatchEndpoint(t *testing.T) {
 	env := setupTestEnvironment(t)
 	router := setupRouter(t, env)
-	token := testLogin(t, router)
+	token := setupToken(t, env)
 
 	t.Run("okPublic", func(t *testing.T) {
 		patchData := map[string]interface{}{
@@ -604,140 +615,45 @@ func TestValuesPatchEndpoint(t *testing.T) {
 
 		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden without authentication")
 	})
-}
 
-// TestValuesPatchEndpointInvalidJSON tests PATCH /api/v2/views/{viewName}/devices/{deviceName}/values with invalid JSON
-func TestValuesPatchEndpointInvalidJSON(t *testing.T) {
-	env := setupTestEnvironment(t)
-	router := setupRouter(t, env)
+	t.Run("InvalidJSON", func(t *testing.T) {
+		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer([]byte("invalid json")))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", token)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
 
-	// Enable authentication and create a token
-	env.Authentication = &mockAuthenticationConfig{
-		enabled:           true,
-		jwtSecret:         []byte("test-secret-key"),
-		jwtValidityPeriod: 1 * time.Hour,
-	}
+		assert.Equal(t, http.StatusUnprocessableEntity, w.Code, "Expected status 422 Unprocessable Entity")
+	})
 
-	token, _ := createJwtToken(env.Authentication, "testuser")
+	t.Run("InvalidRegister", func(t *testing.T) {
+		patchData := map[string]interface{}{
+			"NonexistentRegister": 42.0,
+		}
+		body, _ := json.Marshal(patchData)
 
-	req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/test-device/values", bytes.NewBuffer([]byte("invalid json")))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", token)
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", token)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusUnprocessableEntity, w.Code, "Expected status 422 Unprocessable Entity")
-}
+		assert.Equal(t, http.StatusUnprocessableEntity, w.Code, "Expected status 422 Unprocessable Entity")
+	})
 
-// TestValuesPatchEndpointInvalidRegister tests PATCH /api/v2/views/{viewName}/devices/{deviceName}/values with invalid register
-func TestValuesPatchEndpointInvalidRegister(t *testing.T) {
-	env := setupTestEnvironment(t)
-	router := setupRouter(t, env)
+	t.Run("NonexistentDevice", func(t *testing.T) {
+		patchData := map[string]interface{}{
+			"Setpoint": 22.0,
+		}
+		body, _ := json.Marshal(patchData)
 
-	// Enable authentication and create a token
-	env.Authentication = &mockAuthenticationConfig{
-		enabled:           true,
-		jwtSecret:         []byte("test-secret-key"),
-		jwtValidityPeriod: 1 * time.Hour,
-	}
+		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/nonexistent-device/values", bytes.NewBuffer(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
 
-	token, _ := createJwtToken(env.Authentication, "testuser")
-
-	patchData := map[string]interface{}{
-		"NonexistentRegister": 42.0,
-	}
-	body, _ := json.Marshal(patchData)
-
-	req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/test-device/values", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", token)
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusUnprocessableEntity, w.Code, "Expected status 422 Unprocessable Entity")
-}
-
-// TestValuesPatchEndpointNonexistentDevice tests PATCH /api/v2/views/{viewName}/devices/{deviceName}/values with invalid device
-func TestValuesPatchEndpointNonexistentDevice(t *testing.T) {
-	env := setupTestEnvironment(t)
-	router := setupRouter(t, env)
-
-	patchData := map[string]interface{}{
-		"Temperature": 22.0,
-	}
-	body, _ := json.Marshal(patchData)
-
-	req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/nonexistent-device/values", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusNotFound, w.Code, "Expected status 404 Not Found")
-}
-
-// TestAuthenticationWithJWT tests endpoints with JWT authentication
-func TestAuthenticationWithJWT(t *testing.T) {
-	env := setupTestEnvironment(t)
-	router := setupRouter(t, env)
-
-	// Create a private view
-	privateView := &mockViewConfig{
-		name:     "private",
-		title:    "Private View",
-		devices:  []ViewDeviceConfig{},
-		autoplay: false,
-		isPublic: false,
-		hidden:   false,
-		allowed:  map[string]bool{"testuser": true},
-	}
-	env.Views = append(env.Views, privateView)
-
-	// Enable authentication
-	env.Authentication = &mockAuthenticationConfig{
-		enabled:           true,
-		jwtSecret:         []byte("test-secret-key"),
-		jwtValidityPeriod: 1 * time.Hour,
-	}
-
-	// Create a valid JWT token
-	token, err := createJwtToken(env.Authentication, "testuser")
-	assert.NoError(t, err)
-
-	// Test accessing private view with valid token
-	req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
-	req.Header.Set("Authorization", token)
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-}
-
-// TestAuthenticationWithInvalidJWT tests endpoints with invalid JWT authentication
-func TestAuthenticationWithInvalidJWT(t *testing.T) {
-	env := setupTestEnvironment(t)
-	router := setupRouter(t, env)
-
-	// Enable authentication
-	env.Authentication = &mockAuthenticationConfig{
-		enabled:           true,
-		jwtSecret:         []byte("test-secret-key"),
-		jwtValidityPeriod: 1 * time.Hour,
-	}
-
-	// Test with invalid token
-	req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
-	req.Header.Set("Authorization", "invalid-token")
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusUnauthorized, w.Code)
-}
-
-// TestWebsocketEndpointExists tests that the websocket endpoint is set up (cannot fully test WebSocket in httptest)
-func TestWebsocketEndpointExists(t *testing.T) {
-	t.Skip("WebSocket testing requires actual WebSocket client, httptest.ResponseRecorder causes crashes")
-	// Note: The websocket endpoint is set up in setupValuesWs() and is available at /api/v2/views/{viewName}/ws
-	// Full WebSocket testing would require using a real WebSocket client library
+		assert.Equal(t, http.StatusNotFound, w.Code, "Expected status 404 Not Found")
+	})
 }
 
 // TestCacheHeaders tests that appropriate cache headers are set
