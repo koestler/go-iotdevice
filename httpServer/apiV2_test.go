@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/stretchr/testify/assert"
 )
@@ -107,7 +106,6 @@ func (m *mockAuthenticationConfig) HtaccessFile() string             { return m.
 // setupTestEnvironment creates a test environment with router
 func setupTestEnvironment(t *testing.T) *Environment {
 	t.Helper()
-	gin.SetMode(gin.TestMode)
 
 	config := &mockConfig{
 		buildVersion:    "v0.0.0-test",
@@ -220,14 +218,15 @@ func setupTestEnvironment(t *testing.T) *Environment {
 	return env
 }
 
-func setupRouter(t *testing.T, env *Environment) *gin.Engine {
+func setupRouter(t *testing.T, env *Environment) http.Handler {
 	t.Helper()
 
-	router := gin.New()
-	router.Use(authJwtMiddleware(env))
-	addApiV2Routes(router, env)
+	mux := http.NewServeMux()
+	addApiV2Routes(mux, env)
 
-	return router
+	handler := middlewares(mux, env)
+
+	return handler
 }
 
 const testUser = "testuser"

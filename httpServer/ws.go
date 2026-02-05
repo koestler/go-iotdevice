@@ -3,10 +3,10 @@ package httpServer
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/mileusna/useragent"
 	"log"
+	"net/http"
 	"sync"
 	"time"
 
@@ -35,22 +35,22 @@ type authMessage struct {
 // @Failure 404 {object} ErrorResponse
 // @Router /views/{viewName}/ws [get]
 // @Security ApiKeyAuth
-func setupValuesWs(r *gin.RouterGroup, env *Environment) {
+func setupValuesWs(mux *http.ServeMux, env *Environment) {
 	// add dynamic routes
 	for _, view := range env.Views {
-		relativePath := "views/" + view.Name() + "/ws"
-		logPrefix := fmt.Sprintf("httpServer: %s%s", r.BasePath(), relativePath)
+		pattern := "GET /api/v2/views/" + view.Name() + "/ws"
+		logPrefix := fmt.Sprintf("httpServer: %s", pattern)
 		viewFilter := getViewValueFilter(view.Devices())
 
 		// the follow line uses a loop variable; it must be outside the closure
-		r.GET(relativePath, func(c *gin.Context) {
+		mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 			var websocketAcceptOptions = websocket.AcceptOptions{
 				CompressionMode: websocket.CompressionContextTakeover,
 			}
 
-			ua := useragent.Parse(c.GetHeader("User-Agent"))
+			ua := useragent.Parse(r.Header.Get("User-Agent"))
 			if env.Config.LogDebug() {
-				log.Printf("%s: User-Agent: %s", logPrefix, c.GetHeader("User-Agent"))
+				log.Printf("%s: User-Agent: %s", logPrefix, r.Header.Get("User-Agent"))
 			}
 			if ua.IsIOS() || ua.IsSafari() {
 				// Safari is know to not work with fragmented compressed websockets
@@ -63,7 +63,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 				}
 			}
 
-			conn, err := websocket.Accept(c.Writer, c.Request, &websocketAcceptOptions)
+			conn, err := websocket.Accept(w, r, &websocketAcceptOptions)
 			defer func() {
 				err := conn.CloseNow()
 				if env.Config.LogDebug() {
@@ -74,10 +74,10 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 				log.Printf("%s: error during upgrade: %s", logPrefix, err)
 				return
 			} else if env.Config.LogDebug() {
-				log.Printf("%s: connection established to %s", logPrefix, c.ClientIP())
+				log.Printf("%s: connection established to %s", logPrefix, r.RemoteAddr)
 			}
 
-			senderCtx, senderCancel := context.WithCancel(c)
+			senderCtx, senderCancel := context.WithCancel(r.Context())
 			defer senderCancel()
 
 			startValueSenderOnce := sync.OnceFunc(func() {
@@ -90,7 +90,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 			}
 
 			for {
-				mt, msg, err := conn.Read(c)
+				mt, msg, err := conn.Read(r.Context())
 				if err != nil {
 					if env.Config.LogDebug() {
 						log.Printf("%s: read error: %s", logPrefix, err)
@@ -104,7 +104,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 					var authMsg authMessage
 					if err := json.Unmarshal(msg, &authMsg); err == nil {
 						if user, err := checkToken(authMsg.AuthToken, env.Authentication.JwtSecret()); err == nil {
-							log.Printf("httpServer: %s%s: user=%s authenticated", r.BasePath(), relativePath, user)
+							log.Printf("httpServer: %s: user=%s authenticated", pattern, user)
 							if isViewAuthenticatedByUser(view, user, true) {
 								startValueSenderOnce()
 							}
@@ -115,7 +115,7 @@ func setupValuesWs(r *gin.RouterGroup, env *Environment) {
 			}
 		})
 		if env.Config.LogConfig() {
-			log.Printf("httpServer: GET %s%s -> setup websocket for view", r.BasePath(), relativePath)
+			log.Printf("httpServer: %s -> setup websocket for view", pattern)
 		}
 	}
 }

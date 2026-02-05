@@ -1,8 +1,8 @@
 package httpServer
 
 import (
-	"github.com/gin-gonic/gin"
 	"log"
+	"net/http"
 )
 
 type configResponse struct {
@@ -35,8 +35,8 @@ type deviceViewResponse struct {
 // @Success 200 {object} configResponse
 // @Failure 500 {object} ErrorResponse
 // @Router /config/frontend [get]
-func setupConfig(r *gin.RouterGroup, env *Environment) {
-	r.GET("config/frontend", func(c *gin.Context) {
+func setupConfig(mux *http.ServeMux, env *Environment) {
+	mux.HandleFunc("GET /api/v2/config/frontend", func(w http.ResponseWriter, r *http.Request) {
 		response := configResponse{
 			ProjectTitle:   env.ProjectTitle,
 			BackendVersion: env.Config.BuildVersion(),
@@ -63,10 +63,10 @@ func setupConfig(r *gin.RouterGroup, env *Environment) {
 			})
 		}
 
-		setCacheControlPublic(c, env.Config.ConfigExpires())
-		jsonGetResponse(c, response)
+		setCacheControlPublic(w, env.Config.ConfigExpires())
+		jsonGetResponse(w, r, response)
 	})
 	if env.Config.LogConfig() {
-		log.Printf("httpServer: GET %sconfig -> serve config", r.BasePath())
+		log.Printf("httpServer: GET /api/v2/config/frontend -> serve config")
 	}
 }

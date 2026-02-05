@@ -8,19 +8,16 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 )
 
-func setupFrontend(engine *gin.Engine, config Config, views []ViewConfig) {
+func setupFrontend(mux *http.ServeMux, config Config, views []ViewConfig) {
 	frontendUrl := config.FrontendProxy()
 
-	r := engine.Group("/")
-
 	if frontendUrl != nil {
-		engine.NoRoute(func(c *gin.Context) {
-			proxy := httputil.NewSingleHostReverseProxy(frontendUrl)
-			proxy.ServeHTTP(c.Writer, c.Request)
+		proxy := httputil.NewSingleHostReverseProxy(frontendUrl)
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			proxy.ServeHTTP(w, r)
 		})
 		if config.LogConfig() {
 			log.Printf("httpServer: GET /* -> proxy %s*", frontendUrl)
@@ -34,7 +31,7 @@ func setupFrontend(engine *gin.Engine, config Config, views []ViewConfig) {
 			} else if !frontendPathInfo.IsDir() {
 				log.Printf("httpServer: given frontend path is not a directory")
 			} else {
-				err := filepath.Walk(frontendPath, func(path string, info os.FileInfo, err error) error {
+				err := filepath.Walk(frontendPath, func(filePath string, info os.FileInfo, err error) error {
 					if err != nil {
 						return err
 					}
@@ -42,14 +39,24 @@ func setupFrontend(engine *gin.Engine, config Config, views []ViewConfig) {
 						return nil
 					}
 
-					route := path[len(frontendPath)+1:] // +1 removes the leading /
-					serveStatic(r, config, route, path)
+					route := filePath[len(frontendPath):] // remove frontendPath prefix
+					if len(route) == 0 || route[0] != '/' {
+						route = "/" + route
+					}
+					serveStatic(mux, config, route, filePath)
 					return nil
 				})
 
-				// load index file single page frontend application
-				for _, route := range append(getNames(views), "", "login") {
-					serveStatic(r, config, route, frontendPath+"/index.html")
+				// load index file for single page frontend application
+				indexPath := frontendPath + "/index.html"
+				spaRoutes := append(getNames(views), "", "login")
+				for _, route := range spaRoutes {
+					if route == "" {
+						route = "/"
+					} else {
+						route = "/" + route
+					}
+					serveStatic(mux, config, route, indexPath)
 				}
 
 				if err != nil {
@@ -59,21 +66,26 @@ func setupFrontend(engine *gin.Engine, config Config, views []ViewConfig) {
 		} else {
 			log.Print("httpServer: no frontend configured")
 		}
-		engine.NoRoute(func(c *gin.Context) {
-			setCacheControlPublic(c, config.FrontendExpires())
-			jsonErrorResponse(c, http.StatusNotFound, errors.New("route not found"))
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			setCacheControlPublic(w, config.FrontendExpires())
+			jsonErrorResponse(w, http.StatusNotFound, errors.New("route not found"))
 		})
 	}
 }
 
-func serveStatic(r *gin.RouterGroup, config Config, relativePath, filePath string) {
-	r.GET(relativePath, func(c *gin.Context) {
-		setCacheControlPublic(c, config.FrontendExpires())
-		// c.File calls http.serveContent which sets / checks Last-Modified / If-Modified-Since
-		c.File(filePath)
+func serveStatic(mux *http.ServeMux, config Config, route, filePath string) {
+	// In Go 1.22+, paths ending without "/" are exact matches by default
+	// Only "/" matches as prefix; to make "/" exact, we need "/{$}"
+	pattern := "GET " + route
+	if route == "/" {
+		pattern = "GET /{$}"
+	}
+	mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		setCacheControlPublic(w, config.FrontendExpires())
+		http.ServeFile(w, r, filePath)
 	})
 	if config.LogConfig() {
-		log.Printf("httpServer: GET %s -> serve static %s", r.BasePath()+relativePath, filePath)
+		log.Printf("httpServer: GET %s -> serve static %s", route, filePath)
 	}
 }
 

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 	"github.com/pkg/errors"
 )
@@ -38,7 +37,7 @@ const RegistersExpires = 10 * time.Second
 // @Failure 404 {object} ErrorResponse
 // @Router /views/{viewName}/devices/{deviceName}/registers [get]
 // @Security ApiKeyAuth
-func setupRegisters(r *gin.RouterGroup, env *Environment) {
+func setupRegisters(mux *http.ServeMux, env *Environment) {
 	// add dynamic routes
 	for _, v := range env.Views {
 		view := v
@@ -47,11 +46,11 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 
 			deviceName := viewDevice.Name()
 
-			relativePath := "views/" + view.Name() + "/devices/" + viewDevice.Name() + "/registers"
-			r.GET(relativePath, func(c *gin.Context) {
+			pattern := "GET /api/v2/views/" + view.Name() + "/devices/" + viewDevice.Name() + "/registers"
+			mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 				// check authorization
-				if !isViewAuthenticated(view, c, true) {
-					jsonErrorResponse(c, http.StatusForbidden, errors.New("User is not allowed here"))
+				if !isViewAuthenticated(view, r, true) {
+					jsonErrorResponse(w, http.StatusForbidden, errors.New("User is not allowed here"))
 					return
 				}
 
@@ -59,11 +58,11 @@ func setupRegisters(r *gin.RouterGroup, env *Environment) {
 				registers = dataflow.FilterRegisters(registers, viewDevice.Filter())
 				dataflow.SortRegisterStructs(registers)
 
-				setCacheControlPublic(c, RegistersExpires)
-				jsonGetResponse(c, compile1DRegisterResponse(registers))
+				setCacheControlPublic(w, RegistersExpires)
+				jsonGetResponse(w, r, compile1DRegisterResponse(registers))
 			})
 			if env.Config.LogConfig() {
-				log.Printf("httpServer: GET %s%s -> serve registers", r.BasePath(), relativePath)
+				log.Printf("httpServer: %s -> serve registers", pattern)
 			}
 		}
 	}

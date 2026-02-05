@@ -1,13 +1,13 @@
 package httpServer
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
-	"github.com/tg123/go-htpasswd"
-	"golang.org/x/sync/semaphore"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/tg123/go-htpasswd"
+	"golang.org/x/sync/semaphore"
 )
 
 type loginRequest struct {
@@ -33,9 +33,9 @@ type loginResponse struct {
 // @Failure 500 {object} ErrorResponse
 // @Failure 503 {object} ErrorResponse
 // @Router /authentication/login [post]
-func setupLogin(r *gin.RouterGroup, env *Environment) {
+func setupLogin(mux *http.ServeMux, env *Environment) {
 	if !env.Authentication.Enabled() {
-		disableLogin(r, env.Config)
+		disableLogin(mux, env.Config)
 		return
 	}
 
@@ -43,26 +43,26 @@ func setupLogin(r *gin.RouterGroup, env *Environment) {
 	authChecker, err := htpasswd.New(env.Authentication.HtaccessFile(), htpasswd.DefaultSystems, nil)
 	if err != nil {
 		log.Printf("httpServer: cannot load htaccess file: %s", err)
-		disableLogin(r, env.Config)
+		disableLogin(mux, env.Config)
 		return
 	}
 
-	r.POST("auth/login", func(c *gin.Context) {
+	mux.HandleFunc("POST /api/v2/auth/login", func(w http.ResponseWriter, r *http.Request) {
 		var req loginRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
-			jsonErrorResponse(c, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
 			return
 		}
 
 		reloadAuthChecker(authChecker, env.Config)
 		if !authChecker.Match(req.User, req.Password) {
-			jsonErrorResponse(c, http.StatusUnauthorized, errors.New("Invalid credentials"))
+			jsonErrorResponse(w, http.StatusUnauthorized, errors.New("Invalid credentials"))
 			return
 		}
 
 		tokenStr, err := createJwtToken(env.Authentication, req.User)
 		if err != nil {
-			jsonErrorResponse(c, http.StatusInternalServerError, errors.New("Cannot create token"))
+			jsonErrorResponse(w, http.StatusInternalServerError, errors.New("Cannot create token"))
 			return
 		}
 
@@ -74,19 +74,23 @@ func setupLogin(r *gin.RouterGroup, env *Environment) {
 			}
 		}
 
-		c.JSON(http.StatusOK, loginResponse{Token: tokenStr, User: req.User, AllowedViews: allowedViews})
+		response := loginResponse{Token: tokenStr, User: req.User, AllowedViews: allowedViews}
+		jsonBytes, _ := json.Marshal(response)
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		w.Write(jsonBytes)
 	})
 	if env.Config.LogConfig() {
-		log.Printf("httpServer: POST %slogin -> serve login", r.BasePath())
+		log.Printf("httpServer: POST /api/v2/auth/login -> serve login")
 	}
 }
 
-func disableLogin(r *gin.RouterGroup, config Config) {
-	r.POST("auth/login", func(c *gin.Context) {
-		jsonErrorResponse(c, http.StatusServiceUnavailable, errors.New("Authentication module is disabled"))
+func disableLogin(mux *http.ServeMux, config Config) {
+	mux.HandleFunc("POST /api/v2/auth/login", func(w http.ResponseWriter, r *http.Request) {
+		jsonErrorResponse(w, http.StatusServiceUnavailable, errors.New("Authentication module is disabled"))
 	})
 	if config.LogConfig() {
-		log.Printf("httpServer: POST %slogin -> login disabled", r.BasePath())
+		log.Printf("httpServer: POST /api/v2/auth/login -> login disabled")
 	}
 }
 

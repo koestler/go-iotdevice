@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,8 +17,6 @@ const (
 )
 
 func TestSetupFrontend(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-
 	tempDir := t.TempDir()
 
 	// Create test files
@@ -65,13 +62,13 @@ func TestSetupFrontend(t *testing.T) {
 		},
 	}
 
-	engine := gin.New()
-	setupFrontend(engine, config, views)
+	mux := http.NewServeMux()
+	setupFrontend(mux, config, views)
 
 	t.Run("ServeStyleCSS", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/style.css", nil)
-		engine.ServeHTTP(w, req)
+		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Contains(t, w.Body.String(), testStyleCSSContent)
@@ -80,7 +77,7 @@ func TestSetupFrontend(t *testing.T) {
 	t.Run("ServeRootAsIndex", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/", nil)
-		engine.ServeHTTP(w, req)
+		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Contains(t, w.Body.String(), testIndexHTMLContent)
@@ -89,7 +86,7 @@ func TestSetupFrontend(t *testing.T) {
 	t.Run("ServePrivateViewRouteAsIndex", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/private", nil)
-		engine.ServeHTTP(w, req)
+		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Contains(t, w.Body.String(), testIndexHTMLContent)
@@ -98,7 +95,7 @@ func TestSetupFrontend(t *testing.T) {
 	t.Run("ServePublicViewRouteAsIndex", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/public", nil)
-		engine.ServeHTTP(w, req)
+		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Contains(t, w.Body.String(), testIndexHTMLContent)
@@ -107,7 +104,7 @@ func TestSetupFrontend(t *testing.T) {
 	t.Run("ServeLoginRouteAsIndex", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/login", nil)
-		engine.ServeHTTP(w, req)
+		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Contains(t, w.Body.String(), testIndexHTMLContent)
@@ -116,7 +113,7 @@ func TestSetupFrontend(t *testing.T) {
 	t.Run("NotFoundRoute", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/nonexistent", nil)
-		engine.ServeHTTP(w, req)
+		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 		assert.Contains(t, w.Body.String(), "route not found")
@@ -124,7 +121,6 @@ func TestSetupFrontend(t *testing.T) {
 }
 
 func TestSetupFrontendEmptyPath(t *testing.T) {
-	gin.SetMode(gin.TestMode)
 
 	// Create mock config with empty frontend path
 	config := &mockConfig{
@@ -142,13 +138,13 @@ func TestSetupFrontendEmptyPath(t *testing.T) {
 
 	views := []ViewConfig{}
 
-	engine := gin.New()
-	setupFrontend(engine, config, views)
+	mux := http.NewServeMux()
+	setupFrontend(mux, config, views)
 
 	t.Run("NotFoundWhenNoFrontend", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/", nil)
-		engine.ServeHTTP(w, req)
+		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})

@@ -1,15 +1,17 @@
 package httpServer
 
 import (
+	"compress/gzip"
 	"context"
 	"errors"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 )
 
@@ -69,20 +71,15 @@ type AuthenticationConfig interface {
 func Run(env *Environment) (httpServer *HttpServer) {
 	cfg := env.Config
 
-	gin.SetMode("release")
-	engine := gin.New()
-	if cfg.LogRequests() {
-		engine.Use(gin.Logger())
-	}
-	engine.Use(gin.Recovery())
-	engine.Use(authJwtMiddleware(env))
+	mux := http.NewServeMux()
 
-	addApiV2Routes(engine, env)
-	setupFrontend(engine, env.Config, env.Views)
+	addApiV2Routes(mux, env)
+	setupFrontend(mux, env.Config, env.Views)
 
+	handler := middlewares(mux, env)
 	server := &http.Server{
 		Addr:    cfg.Bind() + ":" + strconv.Itoa(cfg.Port()),
-		Handler: engine,
+		Handler: handler,
 	}
 
 	go func() {
@@ -107,4 +104,62 @@ func (s *HttpServer) Shutdown() {
 	if err != nil {
 		log.Printf("httpServer: graceful shutdown failed: %s", err)
 	}
+}
+
+// middlewares creates the chain: logging -> auth -> gzip -> mux
+func middlewares(handler http.Handler, env *Environment) http.Handler {
+	handler = gzipMiddleware(handler)
+	handler = authJwtMiddleware(env)(handler)
+	if env.Config.LogRequests() {
+		handler = loggingMiddleware(handler)
+	}
+	return handler
+}
+
+// loggingMiddleware logs HTTP requests
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+		next.ServeHTTP(wrapped, r)
+		log.Printf("httpServer: %s %s %d %v", r.Method, r.URL.Path, wrapped.statusCode, time.Since(start))
+	})
+}
+
+// responseWriter is a wrapper around http.ResponseWriter to capture the status code
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
+// gzipMiddleware provides gzip compression for responses
+func gzipMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Create gzip writer
+		w.Header().Set("Content-Encoding", "gzip")
+		gz := gzip.NewWriter(w)
+		defer gz.Close()
+
+		gzw := &gzipResponseWriter{ResponseWriter: w, Writer: gz}
+		next.ServeHTTP(gzw, r)
+	})
+}
+
+type gzipResponseWriter struct {
+	http.ResponseWriter
+	Writer io.Writer
+}
+
+func (w *gzipResponseWriter) Write(b []byte) (int, error) {
+	return w.Writer.Write(b)
 }

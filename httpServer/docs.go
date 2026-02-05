@@ -1,7 +1,7 @@
 package httpServer
 
 import (
-	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 // @title go-iotdevice http API v2
@@ -19,10 +19,10 @@ import (
 // @in header
 // @name Authorization
 
-func setupDocs(r *gin.RouterGroup, env *Environment) {
+func setupDocs(mux *http.ServeMux, env *Environment) {
 	config := env.Config
 
-	serveStatic(r, config, "docs", "docs/swagger.html")
-	serveStatic(r, config, "docs/swagger.json", "docs/swagger.json")
-	serveStatic(r, config, "docs/swagger.yaml", "docs/swagger.yaml")
+	serveStatic(mux, config, "/api/v2/docs", "docs/swagger.html")
+	serveStatic(mux, config, "/api/v2/docs/swagger.json", "docs/swagger.json")
+	serveStatic(mux, config, "/api/v2/docs/swagger.yaml", "docs/swagger.yaml")
 }

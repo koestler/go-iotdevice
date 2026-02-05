@@ -1,10 +1,10 @@
 package httpServer
 
 import (
+	"context"
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 )
@@ -26,23 +26,23 @@ func createJwtToken(config AuthenticationConfig, user string) (tokenStr string, 
 	return jwtToken.SignedString(config.JwtSecret())
 }
 
-func authJwtMiddleware(env *Environment) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// extract jwt token from authorization header if present
-		tokenStr := c.GetHeader("Authorization")
-		if len(tokenStr) < 1 {
-			c.Next()
-			return
-		}
+func authJwtMiddleware(env *Environment) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			tokenStr := r.Header.Get("Authorization")
+			if len(tokenStr) < 1 {
+				next.ServeHTTP(w, r)
+				return
+			}
 
-		if user, err := checkToken(tokenStr, env.Authentication.JwtSecret()); err != nil {
-			jsonErrorResponse(c, http.StatusForbidden, errors.New("invalid jwt token"))
-			c.Abort()
-		} else {
-			// continue; if user is set this means a valid token is present
-			c.Set("AuthUser", user)
-			c.Next()
-		}
+			if user, err := checkToken(tokenStr, env.Authentication.JwtSecret()); err != nil {
+				jsonErrorResponse(w, http.StatusForbidden, errors.New("invalid jwt token"))
+			} else {
+				// continue; if user is set this means a valid token is present
+				ctx := context.WithValue(r.Context(), authUserKey, user)
+				next.ServeHTTP(w, r.WithContext(ctx))
+			}
+		})
 	}
 }
 
@@ -61,8 +61,16 @@ func checkToken(tokenStr string, jwtSecret []byte) (user string, err error) {
 	return claims.User, nil
 }
 
-func isViewAuthenticated(view ViewConfig, c *gin.Context, allowAnonymous bool) bool {
-	return isViewAuthenticatedByUser(view, c.GetString("AuthUser"), allowAnonymous)
+type contextKey string
+
+const authUserKey contextKey = "AuthUser"
+
+func isViewAuthenticated(view ViewConfig, r *http.Request, allowAnonymous bool) bool {
+	user := ""
+	if val := r.Context().Value(authUserKey); val != nil {
+		user = val.(string)
+	}
+	return isViewAuthenticatedByUser(view, user, allowAnonymous)
 }
 
 func isViewAuthenticatedByUser(view ViewConfig, user string, allowAnonymous bool) bool {
