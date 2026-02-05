@@ -76,7 +76,7 @@ func setupLogin(mux *http.ServeMux, env *Environment) {
 
 		response := loginResponse{Token: tokenStr, User: req.User, AllowedViews: allowedViews}
 		jsonBytes, _ := json.Marshal(response)
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		setContentTypeJsonHeader(w)
 		w.WriteHeader(http.StatusOK)
 		w.Write(jsonBytes)
 	})

@@ -13,12 +13,16 @@ type ErrorResponse struct {
 	Message string `json:"message" example:"status bad request"`
 }
 
+func setContentTypeJsonHeader(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+}
+
 func jsonErrorResponse(w http.ResponseWriter, status int, err error) {
 	er := ErrorResponse{
 		Message: err.Error(),
 	}
 	jsonBytes, _ := json.Marshal(er)
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	setContentTypeJsonHeader(w)
 	w.WriteHeader(status)
 	w.Write(jsonBytes)
 }
@@ -51,7 +55,7 @@ func jsonGetResponse(w http.ResponseWriter, r *http.Request, obj interface{}) {
 	}
 
 	w.Header().Set("ETag", "W/"+etag)
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	setContentTypeJsonHeader(w)
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonBytes)
 }
