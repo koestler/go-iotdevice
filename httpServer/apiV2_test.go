@@ -348,7 +348,6 @@ func TestLoginEndpoint(t *testing.T) {
 		body, _ := json.Marshal(loginReq)
 
 		req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -375,7 +374,6 @@ func TestLoginEndpoint(t *testing.T) {
 		body, _ := json.Marshal(loginReq)
 
 		req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -404,7 +402,6 @@ func TestLoginEndpoint(t *testing.T) {
 		body, _ := json.Marshal(loginReq)
 
 		req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -421,7 +418,6 @@ func TestLoginEndpoint(t *testing.T) {
 		router := setupRouter(t, env)
 
 		req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer([]byte("invalid json")))
-		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -448,7 +444,6 @@ func TestLoginEndpoint(t *testing.T) {
 		body, _ := json.Marshal(loginReq)
 
 		req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -620,7 +615,6 @@ func TestValuesPatchEndpoint(t *testing.T) {
 		body, _ := json.Marshal(patchData)
 
 		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", token)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -635,7 +629,6 @@ func TestValuesPatchEndpoint(t *testing.T) {
 		body, _ := json.Marshal(patchData)
 
 		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -649,7 +642,6 @@ func TestValuesPatchEndpoint(t *testing.T) {
 		body, _ := json.Marshal(patchData)
 
 		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", token)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -659,7 +651,6 @@ func TestValuesPatchEndpoint(t *testing.T) {
 
 	t.Run("InvalidJSON", func(t *testing.T) {
 		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer([]byte("invalid json")))
-		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", token)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -674,7 +665,6 @@ func TestValuesPatchEndpoint(t *testing.T) {
 		body, _ := json.Marshal(patchData)
 
 		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", token)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -689,7 +679,6 @@ func TestValuesPatchEndpoint(t *testing.T) {
 		body, _ := json.Marshal(patchData)
 
 		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/nonexistent-device/values", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
