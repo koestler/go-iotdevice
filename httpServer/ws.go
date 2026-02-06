@@ -42,18 +42,18 @@ func setupValuesWs(mux *http.ServeMux, env *Environment) {
 		pattern := "GET /api/v2/views/" + view.Name() + "/ws"
 
 		// the follow line uses a loop variable; it must be outside the closure
-		mux.HandleFunc(pattern, wsHandleFunc(env, view, pattern))
+		mux.Handle(pattern, wsHandler(env, view, pattern))
 		if env.Config.LogConfig() {
 			log.Printf("httpServer: %s -> setup websocket for view", pattern)
 		}
 	}
 }
 
-func wsHandleFunc(env *Environment, view ViewConfig, pattern string) http.HandlerFunc {
+func wsHandler(env *Environment, view ViewConfig, pattern string) http.HandlerFunc {
 	logPrefix := fmt.Sprintf("httpServer: %s", pattern)
 	viewFilter := getViewValueFilter(view.Devices())
 
-	return func(w http.ResponseWriter, r *http.Request) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
 		var websocketAcceptOptions = websocket.AcceptOptions{
 			CompressionMode: websocket.CompressionContextTakeover,
 		}
@@ -74,16 +74,17 @@ func wsHandleFunc(env *Environment, view ViewConfig, pattern string) http.Handle
 		}
 
 		conn, err := websocket.Accept(w, r, &websocketAcceptOptions)
+		if err != nil {
+			log.Printf("%s: error during upgrade: %s", logPrefix, err)
+			return
+		}
 		defer func() {
 			err := conn.CloseNow()
 			if env.Config.LogDebug() {
 				log.Printf("%s: error during close: %s", logPrefix, err)
 			}
 		}()
-		if err != nil {
-			log.Printf("%s: error during upgrade: %s", logPrefix, err)
-			return
-		} else if env.Config.LogDebug() {
+		if env.Config.LogDebug() {
 			log.Printf("%s: connection established to %s", logPrefix, r.RemoteAddr)
 		}
 
@@ -123,6 +124,12 @@ func wsHandleFunc(env *Environment, view ViewConfig, pattern string) http.Handle
 			}
 		}
 	}
+
+	if env.Config.LogRequests() {
+		handler = loggingMiddleware(handler)
+	}
+
+	return handler
 }
 
 func startValuesSender(

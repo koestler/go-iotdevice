@@ -1,11 +1,13 @@
 package httpServer
 
 import (
+	"bufio"
 	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -75,7 +77,7 @@ func Run(env *Environment) (httpServer *HttpServer) {
 	setupFrontend(apiMux, env.Config, env.Views)
 
 	rootMux := http.NewServeMux()
-	rootMux.Handle("/", middlewares(apiMux, env))
+	rootMux.HandleFunc("/", middlewares(apiMux.ServeHTTP, env))
 	setupValuesWs(rootMux, env)
 
 	server := &http.Server{
@@ -108,7 +110,7 @@ func (s *HttpServer) Shutdown() {
 }
 
 // middlewares creates the chain: logging -> auth -> gzip -> mux
-func middlewares(handler http.Handler, env *Environment) http.Handler {
+func middlewares(handler http.HandlerFunc, env *Environment) http.HandlerFunc {
 	handler = gzipMiddleware(handler)
 	handler = authJwtMiddleware(handler, env)
 	if env.Config.LogRequests() {
@@ -118,19 +120,35 @@ func middlewares(handler http.Handler, env *Environment) http.Handler {
 }
 
 // loggingMiddleware logs HTTP requests
-func loggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
-		next.ServeHTTP(wrapped, r)
-		log.Printf("httpServer: %s %s %d %v", r.Method, r.URL.Path, wrapped.statusCode, time.Since(start))
-	})
+		next(wrapped, r)
+		log.Printf(
+			"httpServer: %s %s %d %v %dB",
+			r.Method,
+			r.URL.Path,
+			wrapped.statusCode,
+			time.Since(start),
+			wrapped.written,
+		)
+	}
 }
 
 // responseWriter is a wrapper around http.ResponseWriter to capture the status code
 type responseWriter struct {
 	http.ResponseWriter
 	statusCode int
+	written    int
+}
+
+func (rw *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hj, ok := rw.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, fmt.Errorf("httpServer: response writer does not support hijacking")
+	}
+	return hj.Hijack()
 }
 
 func (rw *responseWriter) WriteHeader(code int) {
@@ -138,9 +156,15 @@ func (rw *responseWriter) WriteHeader(code int) {
 	rw.ResponseWriter.WriteHeader(code)
 }
 
+func (rw *responseWriter) Write(b []byte) (int, error) {
+	n, err := rw.ResponseWriter.Write(b)
+	rw.written += n
+	return n, err
+}
+
 // gzipMiddleware provides gzip compression for responses
-func gzipMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func gzipMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 			next.ServeHTTP(w, r)
 			return
@@ -150,7 +174,7 @@ func gzipMiddleware(next http.Handler) http.Handler {
 		gzw := &gzipResponseWriter{ResponseWriter: w}
 
 		// serve the request. the gzip writer is lazily initialized on the first write
-		next.ServeHTTP(gzw, r)
+		next(gzw, r)
 
 		if gzw.gz != nil {
 			err := gzw.gz.Close()
@@ -158,7 +182,7 @@ func gzipMiddleware(next http.Handler) http.Handler {
 				log.Printf("httpServer: error closing gzip writer: %s", err)
 			}
 		}
-	})
+	}
 }
 
 type gzipResponseWriter struct {
