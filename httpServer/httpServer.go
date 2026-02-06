@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -147,26 +146,29 @@ func gzipMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Create gzip writer
 		w.Header().Set("Content-Encoding", "gzip")
-		gz := gzip.NewWriter(w)
-		defer func() {
-			err := gz.Close()
+		gzw := &gzipResponseWriter{ResponseWriter: w}
+
+		// serve the request. the gzip writer is lazily initialized on the first write
+		next.ServeHTTP(gzw, r)
+
+		if gzw.gz != nil {
+			err := gzw.gz.Close()
 			if err != nil {
 				log.Printf("httpServer: error closing gzip writer: %s", err)
 			}
-		}()
-
-		gzw := &gzipResponseWriter{ResponseWriter: w, Writer: gz}
-		next.ServeHTTP(gzw, r)
+		}
 	})
 }
 
 type gzipResponseWriter struct {
 	http.ResponseWriter
-	Writer io.Writer
+	gz *gzip.Writer
 }
 
-func (w *gzipResponseWriter) Write(b []byte) (int, error) {
-	return w.Writer.Write(b)
+func (gzw *gzipResponseWriter) Write(b []byte) (int, error) {
+	if gzw.gz == nil {
+		gzw.gz = gzip.NewWriter(gzw.ResponseWriter)
+	}
+	return gzw.gz.Write(b)
 }
