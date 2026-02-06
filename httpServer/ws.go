@@ -3,12 +3,13 @@ package httpServer
 import (
 	"context"
 	"fmt"
-	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/mileusna/useragent"
 	"log"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/mileusna/useragent"
 
 	"github.com/coder/websocket"
 )
@@ -39,83 +40,88 @@ func setupValuesWs(mux *http.ServeMux, env *Environment) {
 	// add dynamic routes
 	for _, view := range env.Views {
 		pattern := "GET /api/v2/views/" + view.Name() + "/ws"
-		logPrefix := fmt.Sprintf("httpServer: %s", pattern)
-		viewFilter := getViewValueFilter(view.Devices())
 
 		// the follow line uses a loop variable; it must be outside the closure
-		mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-			var websocketAcceptOptions = websocket.AcceptOptions{
-				CompressionMode: websocket.CompressionContextTakeover,
-			}
+		mux.HandleFunc(pattern, wsHandleFunc(env, view, pattern))
+		if env.Config.LogConfig() {
+			log.Printf("httpServer: %s -> setup websocket for view", pattern)
+		}
+	}
+}
 
-			ua := useragent.Parse(r.Header.Get("User-Agent"))
+func wsHandleFunc(env *Environment, view ViewConfig, pattern string) http.HandlerFunc {
+	logPrefix := fmt.Sprintf("httpServer: %s", pattern)
+	viewFilter := getViewValueFilter(view.Devices())
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		var websocketAcceptOptions = websocket.AcceptOptions{
+			CompressionMode: websocket.CompressionContextTakeover,
+		}
+
+		ua := useragent.Parse(r.Header.Get("User-Agent"))
+		if env.Config.LogDebug() {
+			log.Printf("%s: User-Agent: %s", logPrefix, r.Header.Get("User-Agent"))
+		}
+		if ua.IsIOS() || ua.IsSafari() {
+			// Safari is know to not work with fragmented compressed websockets
+			// disable context takeover as a work around
 			if env.Config.LogDebug() {
-				log.Printf("%s: User-Agent: %s", logPrefix, r.Header.Get("User-Agent"))
+				log.Printf("%s: ios/safari detected, disable compression", logPrefix)
 			}
-			if ua.IsIOS() || ua.IsSafari() {
-				// Safari is know to not work with fragmented compressed websockets
-				// disable context takeover as a work around
-				if env.Config.LogDebug() {
-					log.Printf("%s: ios/safari detected, disable compression", logPrefix)
-				}
-				websocketAcceptOptions = websocket.AcceptOptions{
-					CompressionMode: websocket.CompressionDisabled,
-				}
+			websocketAcceptOptions = websocket.AcceptOptions{
+				CompressionMode: websocket.CompressionDisabled,
 			}
+		}
 
-			conn, err := websocket.Accept(w, r, &websocketAcceptOptions)
-			defer func() {
-				err := conn.CloseNow()
-				if env.Config.LogDebug() {
-					log.Printf("%s: error during close: %s", logPrefix, err)
-				}
-			}()
+		conn, err := websocket.Accept(w, r, &websocketAcceptOptions)
+		defer func() {
+			err := conn.CloseNow()
+			if env.Config.LogDebug() {
+				log.Printf("%s: error during close: %s", logPrefix, err)
+			}
+		}()
+		if err != nil {
+			log.Printf("%s: error during upgrade: %s", logPrefix, err)
+			return
+		} else if env.Config.LogDebug() {
+			log.Printf("%s: connection established to %s", logPrefix, r.RemoteAddr)
+		}
+
+		senderCtx, senderCancel := context.WithCancel(r.Context())
+		defer senderCancel()
+
+		startValueSenderOnce := sync.OnceFunc(func() {
+			startValuesSender(senderCtx, env, viewFilter, conn, logPrefix)
+		})
+
+		if view.IsPublic() {
+			// do not wait for auth message, start sender immediately
+			startValueSenderOnce()
+		}
+
+		for {
+			mt, msg, err := conn.Read(r.Context())
 			if err != nil {
-				log.Printf("%s: error during upgrade: %s", logPrefix, err)
+				if env.Config.LogDebug() {
+					log.Printf("%s: read error: %s", logPrefix, err)
+				}
 				return
 			} else if env.Config.LogDebug() {
-				log.Printf("%s: connection established to %s", logPrefix, r.RemoteAddr)
+				log.Printf("%s: message received: mt=%d, msg=%s", logPrefix, mt, msg)
 			}
 
-			senderCtx, senderCancel := context.WithCancel(r.Context())
-			defer senderCancel()
-
-			startValueSenderOnce := sync.OnceFunc(func() {
-				startValuesSender(senderCtx, env, viewFilter, conn, logPrefix)
-			})
-
-			if view.IsPublic() {
-				// do not wait for auth message, start sender immediately
-				startValueSenderOnce()
-			}
-
-			for {
-				mt, msg, err := conn.Read(r.Context())
-				if err != nil {
-					if env.Config.LogDebug() {
-						log.Printf("%s: read error: %s", logPrefix, err)
-					}
-					return
-				} else if env.Config.LogDebug() {
-					log.Printf("%s: message received: mt=%d, msg=%s", logPrefix, mt, msg)
-				}
-
-				if mt == websocket.MessageText {
-					var authMsg authMessage
-					if err := json.Unmarshal(msg, &authMsg); err == nil {
-						if user, err := checkToken(authMsg.AuthToken, env.Authentication.JwtSecret()); err == nil {
-							log.Printf("httpServer: %s: user=%s authenticated", pattern, user)
-							if isViewAuthenticatedByUser(view, user, true) {
-								startValueSenderOnce()
-							}
+			if mt == websocket.MessageText {
+				var authMsg authMessage
+				if err := json.Unmarshal(msg, &authMsg); err == nil {
+					if user, err := checkToken(authMsg.AuthToken, env.Authentication.JwtSecret()); err == nil {
+						log.Printf("httpServer: %s: user=%s authenticated", pattern, user)
+						if isViewAuthenticatedByUser(view, user, true) {
+							startValueSenderOnce()
 						}
 					}
 				}
-
 			}
-		})
-		if env.Config.LogConfig() {
-			log.Printf("httpServer: %s -> setup websocket for view", pattern)
+
 		}
 	}
 }
