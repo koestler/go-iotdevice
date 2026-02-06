@@ -121,7 +121,6 @@ func wsHandleFunc(env *Environment, view ViewConfig, pattern string) http.Handle
 					}
 				}
 			}
-
 		}
 	}
 }

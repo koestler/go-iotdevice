@@ -26,24 +26,22 @@ func createJwtToken(config AuthenticationConfig, user string) (tokenStr string, 
 	return jwtToken.SignedString(config.JwtSecret())
 }
 
-func authJwtMiddleware(env *Environment) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			tokenStr := r.Header.Get("Authorization")
-			if len(tokenStr) < 1 {
-				next.ServeHTTP(w, r)
-				return
-			}
+func authJwtMiddleware(next http.Handler, env *Environment) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tokenStr := r.Header.Get("Authorization")
+		if len(tokenStr) < 1 {
+			next.ServeHTTP(w, r)
+			return
+		}
 
-			if user, err := checkToken(tokenStr, env.Authentication.JwtSecret()); err != nil {
-				jsonErrorResponse(w, http.StatusForbidden, errors.New("invalid jwt token"))
-			} else {
-				// continue; if user is set this means a valid token is present
-				ctx := context.WithValue(r.Context(), authUserKey, user)
-				next.ServeHTTP(w, r.WithContext(ctx))
-			}
-		})
-	}
+		if user, err := checkToken(tokenStr, env.Authentication.JwtSecret()); err != nil {
+			jsonErrorResponse(w, http.StatusForbidden, errors.New("invalid jwt token"))
+		} else {
+			// continue; if user is set this means a valid token is present
+			ctx := context.WithValue(r.Context(), authUserKey, user)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		}
+	})
 }
 
 func checkToken(tokenStr string, jwtSecret []byte) (user string, err error) {

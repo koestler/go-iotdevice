@@ -4,11 +4,11 @@ import (
 	"compress/gzip"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -71,15 +71,17 @@ type AuthenticationConfig interface {
 func Run(env *Environment) (httpServer *HttpServer) {
 	cfg := env.Config
 
-	mux := http.NewServeMux()
+	apiMux := http.NewServeMux()
+	addApiV2Routes(apiMux, env)
+	setupFrontend(apiMux, env.Config, env.Views)
 
-	addApiV2Routes(mux, env)
-	setupFrontend(mux, env.Config, env.Views)
+	rootMux := http.NewServeMux()
+	rootMux.Handle("/", middlewares(apiMux, env))
+	setupValuesWs(rootMux, env)
 
-	handler := middlewares(mux, env)
 	server := &http.Server{
-		Addr:    cfg.Bind() + ":" + strconv.Itoa(cfg.Port()),
-		Handler: handler,
+		Addr:    fmt.Sprintf("%s:%d", cfg.Bind(), cfg.Port()),
+		Handler: rootMux,
 	}
 
 	go func() {
@@ -109,7 +111,7 @@ func (s *HttpServer) Shutdown() {
 // middlewares creates the chain: logging -> auth -> gzip -> mux
 func middlewares(handler http.Handler, env *Environment) http.Handler {
 	handler = gzipMiddleware(handler)
-	handler = authJwtMiddleware(env)(handler)
+	handler = authJwtMiddleware(handler, env)
 	if env.Config.LogRequests() {
 		handler = loggingMiddleware(handler)
 	}
