@@ -3,6 +3,7 @@ package httpServer
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -120,9 +121,33 @@ func TestSetupFrontend(t *testing.T) {
 	})
 }
 
-func TestSetupFrontendEmptyPath(t *testing.T) {
+func TestSetupFrontendInvalidPath(t *testing.T) {
+	config := &mockConfig{
+		buildVersion:    "test-version",
+		bind:            "localhost",
+		port:            8080,
+		logRequests:     false,
+		logDebug:        false,
+		logConfig:       false,
+		frontendProxy:   nil,
+		frontendPath:    "./does-not-exist",
+		frontendExpires: time.Hour,
+		configExpires:   time.Minute,
+	}
 
-	// Create mock config with empty frontend path
+	mux := http.NewServeMux()
+	setupFrontend(mux, config, []ViewConfig{})
+
+	t.Run("NotFoundWhenNoFrontend", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/", nil)
+		mux.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+}
+
+func TestSetupFrontendEmptyPath(t *testing.T) {
 	config := &mockConfig{
 		buildVersion:    "test-version",
 		bind:            "localhost",
@@ -136,10 +161,8 @@ func TestSetupFrontendEmptyPath(t *testing.T) {
 		configExpires:   time.Minute,
 	}
 
-	views := []ViewConfig{}
-
 	mux := http.NewServeMux()
-	setupFrontend(mux, config, views)
+	setupFrontend(mux, config, []ViewConfig{})
 
 	t.Run("NotFoundWhenNoFrontend", func(t *testing.T) {
 		w := httptest.NewRecorder()
@@ -148,4 +171,90 @@ func TestSetupFrontendEmptyPath(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
+}
+
+func TestSetupFrontendProxy(t *testing.T) {
+	backendServer := setupFrontendMockServer()
+	defer backendServer.Close()
+	backendURL, err := url.Parse(backendServer.URL)
+	assert.NoError(t, err)
+
+	config := &mockConfig{
+		buildVersion:    "test-version",
+		bind:            "localhost",
+		port:            8080,
+		logRequests:     true,
+		logDebug:        true,
+		logConfig:       true,
+		frontendProxy:   backendURL,
+		frontendPath:    "",
+		frontendExpires: time.Hour,
+		configExpires:   time.Minute,
+	}
+
+	mux := http.NewServeMux()
+	setupFrontend(mux, config, []ViewConfig{})
+	setupConfig(mux, &Environment{
+		Config: config,
+	})
+
+	t.Run("ProxyServeRoot", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/", nil)
+		mux.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Contains(t, w.Body.String(), testIndexHTMLContent)
+	})
+
+	t.Run("ProxyServeStyleCSS", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/style.css", nil)
+		mux.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Contains(t, w.Body.String(), testStyleCSSContent)
+	})
+
+	t.Run("ProxyNonexistentFile", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/nonexistent.js", nil)
+		mux.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		assert.Contains(t, w.Body.String(), "backend 404")
+	})
+
+	t.Run("ProxyCanAccessiApiV2", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
+		mux.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Contains(t, w.Body.String(), "test-version")
+	})
+}
+
+// setupFrontendMockServer creates a test HTTP server that serves index.html and style.css
+func setupFrontendMockServer() *httptest.Server {
+	backendMux := http.NewServeMux()
+
+	backendMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			w.Header().Set("Content-Type", "text/html")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(testIndexHTMLContent))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+			_, _ = w.Write([]byte("backend 404"))
+		}
+	})
+
+	backendMux.HandleFunc("/style.css", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/css")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(testStyleCSSContent))
+	})
+
+	return httptest.NewServer(backendMux)
 }

@@ -8,7 +8,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"path"
+	"path/filepath"
 )
 
 func setupFrontend(mux *http.ServeMux, config Config, views []ViewConfig) {
@@ -16,24 +16,23 @@ func setupFrontend(mux *http.ServeMux, config Config, views []ViewConfig) {
 
 	if frontendUrl != nil {
 		setupFrontendReverseProxy(mux, config, frontendUrl)
-	} else {
-		frontendPath := path.Clean(config.FrontendPath())
-		if len(frontendPath) > 0 {
-			if frontendPathInfo, err := os.Lstat(frontendPath); err != nil {
-				log.Printf("httpServer: given frontend path is not accessible: %s", err)
-			} else if !frontendPathInfo.IsDir() {
-				log.Printf("httpServer: given frontend path is not a directory")
-			} else {
-				setupFrontendStatic(mux, os.DirFS(frontendPath), config, views)
-			}
-		} else {
-			log.Print("httpServer: no frontend configured")
-		}
-		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			setCacheControlPublic(w, config.FrontendExpires())
-			jsonErrorResponse(w, http.StatusNotFound, errors.New("route not found"))
-		})
+		return
 	}
+
+	frontendPath := config.FrontendPath()
+	if frontendPath != "" {
+		frontendPath = filepath.Clean(frontendPath)
+		err := setupFrontendStatic(mux, os.DirFS(frontendPath), config, views)
+		if err != nil {
+			log.Printf("httpServer: failed to serve from local folder: %s", err)
+		}
+	} else {
+		log.Print("httpServer: no frontend configured")
+	}
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		setCacheControlPublic(w, config.FrontendExpires())
+		jsonErrorResponse(w, http.StatusNotFound, errors.New("route not found"))
+	})
 }
 
 func setupFrontendReverseProxy(mux *http.ServeMux, config Config, frontendUrl *url.URL) {
@@ -46,7 +45,7 @@ func setupFrontendReverseProxy(mux *http.ServeMux, config Config, frontendUrl *u
 	}
 }
 
-func setupFrontendStatic(mux *http.ServeMux, srcFSys fs.FS, config Config, views []ViewConfig) {
+func setupFrontendStatic(mux *http.ServeMux, srcFSys fs.FS, config Config, views []ViewConfig) error {
 	err := fs.WalkDir(srcFSys, ".", func(filePath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -58,6 +57,9 @@ func setupFrontendStatic(mux *http.ServeMux, srcFSys fs.FS, config Config, views
 		serveStatic(mux, config, srcFSys, filePath, "/"+filePath)
 		return nil
 	})
+	if err != nil {
+		return err
+	}
 
 	// load index file for single page frontend application
 	indexRoutes := append(getViewNames(views), "", "login")
@@ -65,9 +67,7 @@ func setupFrontendStatic(mux *http.ServeMux, srcFSys fs.FS, config Config, views
 		serveStatic(mux, config, srcFSys, "index.html", "/"+route)
 	}
 
-	if err != nil {
-		log.Printf("httpServer: failed to serve from local folder: %s", err)
-	}
+	return nil
 }
 
 func serveStatic(mux *http.ServeMux, config Config, fSys fs.FS, fileName, route string) {
