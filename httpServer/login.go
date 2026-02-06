@@ -78,7 +78,7 @@ func setupLogin(mux *http.ServeMux, env *Environment) {
 		jsonBytes, _ := json.Marshal(response)
 		setContentTypeJsonHeader(w)
 		w.WriteHeader(http.StatusOK)
-		w.Write(jsonBytes)
+		writeLogError(w, jsonBytes)
 	})
 	if env.Config.LogConfig() {
 		log.Printf("httpServer: POST /api/v2/auth/login -> serve login")

@@ -148,7 +148,12 @@ func gzipMiddleware(next http.Handler) http.Handler {
 		// Create gzip writer
 		w.Header().Set("Content-Encoding", "gzip")
 		gz := gzip.NewWriter(w)
-		defer gz.Close()
+		defer func() {
+			err := gz.Close()
+			if err != nil {
+				log.Printf("httpServer: error closing gzip writer: %s", err)
+			}
+		}()
 
 		gzw := &gzipResponseWriter{ResponseWriter: w, Writer: gz}
 		next.ServeHTTP(gzw, r)

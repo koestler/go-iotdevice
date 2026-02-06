@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -24,7 +25,8 @@ func jsonErrorResponse(w http.ResponseWriter, status int, err error) {
 	jsonBytes, _ := json.Marshal(er)
 	setContentTypeJsonHeader(w)
 	w.WriteHeader(status)
-	w.Write(jsonBytes)
+	writeLogError(w, jsonBytes)
+
 }
 
 func sendNotModified(w http.ResponseWriter, r *http.Request, etag string) (sent bool) {
@@ -57,7 +59,7 @@ func jsonGetResponse(w http.ResponseWriter, r *http.Request, obj interface{}) {
 	w.Header().Set("ETag", "W/"+etag)
 	setContentTypeJsonHeader(w)
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonBytes)
+	writeLogError(w, jsonBytes)
 }
 
 func setCacheControlPublic(w http.ResponseWriter, maxAge time.Duration) {
@@ -66,4 +68,11 @@ func setCacheControlPublic(w http.ResponseWriter, maxAge time.Duration) {
 	}
 	maxAgeSeconds := int(maxAge.Seconds()) // floor given duration to next lower second
 	w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", maxAgeSeconds))
+}
+
+func writeLogError(w http.ResponseWriter, data []byte) {
+	_, err := w.Write(data)
+	if err != nil {
+		log.Printf("httpServer: error writing response: %s", err)
+	}
 }
