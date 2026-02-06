@@ -2,6 +2,7 @@ package httpServer
 
 import (
 	"net/http"
+	"os"
 )
 
 // @title go-iotdevice http API v2
@@ -22,7 +23,9 @@ import (
 func setupDocs(mux *http.ServeMux, env *Environment) {
 	config := env.Config
 
-	serveStatic(mux, config, "/api/v2/docs", "docs/swagger.html")
-	serveStatic(mux, config, "/api/v2/docs/swagger.json", "docs/swagger.json")
-	serveStatic(mux, config, "/api/v2/docs/swagger.yaml", "docs/swagger.yaml")
+	docsFS := os.DirFS("docs")
+
+	serveStatic(mux, config, docsFS, "swagger.html", "/api/v2/docs/swagger.html")
+	serveStatic(mux, config, docsFS, "swagger.json", "/api/v2/docs/swagger.json")
+	serveStatic(mux, config, docsFS, "swagger.yaml", "/api/v2/docs/swagger.yaml")
 }
