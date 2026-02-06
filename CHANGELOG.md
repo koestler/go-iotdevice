@@ -1,12 +1,18 @@
 # Changelog
 
+## 3.9.0
+* httpServer:
+  * remove dependency on gin and use http.ServeMux instead.
+    This reduced the binary size from 34M to 14M. 
+  * add extensive tests
+
 ## 3.8.0
-- genset: add stabilizing state between cranking and warm up.
+* genset: add stabilizing state between cranking and warm up.
   This allows the frequency / voltage to go out of the defined tolerance for a short time after cranking.
-- Genset: add ErrTrigger state variable
+* Genset: add ErrTrigger state variable
 
 ## 3.7.2
-- bump go-victron to v0.2.1:
+* bump go-victron to v0.2.1:
   veregister: filter unavailable ProductRevision and Description registers for BMV700,BMV702,BMV700H
 
 ## 3.7.1
