@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.9.1
+* httpServer: fix gzip middleware: do not gzip if content-type is already set 
+
 ## 3.9.0
 * httpServer:
   * remove dependency on gin and use http.ServeMux instead.

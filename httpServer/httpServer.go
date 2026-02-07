@@ -127,7 +127,7 @@ func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 		next(wrapped, r)
 		log.Printf(
-			"httpServer: %s %s %d %v %dB",
+			"httpServer: %s %s %d %v %s",
 			r.Method,
 			r.URL.Path,
 			wrapped.statusCode,
@@ -171,7 +171,6 @@ func gzipMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Encoding", "gzip")
 		gzw := &gzipResponseWriter{ResponseWriter: w}
 
 		// serve the request. the gzip writer is lazily initialized on the first write
@@ -188,12 +187,48 @@ func gzipMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 type gzipResponseWriter struct {
 	http.ResponseWriter
-	gz *gzip.Writer
+	initialized bool
+	active      bool
+	gz          *gzip.Writer
+}
+
+func (gzw *gzipResponseWriter) Initialize() {
+	if gzw.initialized {
+		return
+	}
+	gzw.initialized = true
+
+	header := gzw.Header()
+	if checkHeaderAllowsGzip(header) {
+		header.Set("Content-Encoding", "gzip")
+		gzw.active = true
+	}
+}
+
+func (gzw *gzipResponseWriter) WriteHeader(code int) {
+	gzw.Initialize()
+	gzw.ResponseWriter.WriteHeader(code)
 }
 
 func (gzw *gzipResponseWriter) Write(b []byte) (int, error) {
+	gzw.Initialize()
+	if !gzw.active {
+		return gzw.ResponseWriter.Write(b)
+	}
+
 	if gzw.gz == nil {
 		gzw.gz = gzip.NewWriter(gzw.ResponseWriter)
 	}
+
 	return gzw.gz.Write(b)
+}
+
+func checkHeaderAllowsGzip(header http.Header) bool {
+	if header.Get("Content-Length") != "" {
+		return false
+	}
+	if header.Get("Content-Encoding") != "" {
+		return false
+	}
+	return true
 }
