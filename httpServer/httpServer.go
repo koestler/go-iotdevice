@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 )
 
@@ -131,7 +132,7 @@ func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			r.URL.Path,
 			wrapped.statusCode,
 			time.Since(start),
-			wrapped.written,
+			humanize.IBytes(uint64(wrapped.written)),
 		)
 	}
 }
