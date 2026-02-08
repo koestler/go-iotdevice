@@ -1,7 +1,7 @@
 # Changelog
 
 ## 3.9.1
-* httpServer: fix gzip middleware: do not gzip if content-type is already set 
+* httpServer: refactoring, fix gzip middleware: do not gzip everything 
 * httpServer: print size in log in human-readable format
 
 ## 3.9.0

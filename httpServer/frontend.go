@@ -36,10 +36,7 @@ func setupFrontend(mux *http.ServeMux, config Config, views []ViewConfig) {
 }
 
 func setupFrontendReverseProxy(mux *http.ServeMux, config Config, frontendUrl *url.URL) {
-	proxy := httputil.NewSingleHostReverseProxy(frontendUrl)
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		proxy.ServeHTTP(w, r)
-	})
+	mux.Handle("/", httputil.NewSingleHostReverseProxy(frontendUrl))
 	if config.LogConfig() {
 		log.Printf("httpServer: GET /* -> proxy %s*", frontendUrl)
 	}
@@ -79,10 +76,11 @@ func serveStatic(mux *http.ServeMux, config Config, fSys fs.FS, fileName, route 
 	if config.LogConfig() {
 		log.Printf("httpServer: %s -> serve static %s", pattern, fileName)
 	}
-	mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
 		setCacheControlPublic(w, config.FrontendExpires())
 		http.ServeFileFS(w, r, fSys, fileName)
-	})
+	}
+	mux.HandleFunc(pattern, gzipMiddleware(handler))
 }
 
 func getViewNames(views []ViewConfig) []string {

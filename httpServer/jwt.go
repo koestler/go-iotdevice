@@ -26,7 +26,7 @@ func createJwtToken(config AuthenticationConfig, user string) (tokenStr string, 
 	return jwtToken.SignedString(config.JwtSecret())
 }
 
-func authJwtMiddleware(next http.HandlerFunc, env *Environment) http.HandlerFunc {
+func authJwtMiddleware(env *Environment, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenStr := r.Header.Get("Authorization")
 		if len(tokenStr) < 1 {

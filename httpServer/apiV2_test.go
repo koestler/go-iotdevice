@@ -224,9 +224,7 @@ func setupRouter(t *testing.T, env *Environment) http.Handler {
 	mux := http.NewServeMux()
 	addApiV2Routes(mux, env)
 
-	handler := middlewares(mux.ServeHTTP, env)
-
-	return handler
+	return mux
 }
 
 const testUser = "testuser"

@@ -47,7 +47,14 @@ func setupLogin(mux *http.ServeMux, env *Environment) {
 		return
 	}
 
-	mux.HandleFunc("POST /api/v2/auth/login", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("POST /api/v2/auth/login", gzipMiddleware(loginHandler(env, authChecker)))
+	if env.Config.LogConfig() {
+		log.Printf("httpServer: POST /api/v2/auth/login -> serve login")
+	}
+}
+
+func loginHandler(env *Environment, authChecker *htpasswd.File) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		var req loginRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
@@ -79,9 +86,6 @@ func setupLogin(mux *http.ServeMux, env *Environment) {
 		setContentTypeJsonHeader(w)
 		w.WriteHeader(http.StatusOK)
 		writeLogError(w, jsonBytes)
-	})
-	if env.Config.LogConfig() {
-		log.Printf("httpServer: POST /api/v2/auth/login -> serve login")
 	}
 }
 

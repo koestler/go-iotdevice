@@ -27,24 +27,27 @@ func setupValuesGetJson(mux *http.ServeMux, env *Environment) {
 	for _, v := range env.Views {
 		view := v
 		for _, vd := range view.Devices() {
-			viewDevice := vd
+			pattern := "GET /api/v2/views/" + view.Name() + "/devices/" + vd.Name() + "/values"
+			filter := getViewValueFilter([]ViewDeviceConfig{vd})
+			handler := valuesGetJsonHandler(env, view, filter)
 
-			pattern := "GET /api/v2/views/" + view.Name() + "/devices/" + viewDevice.Name() + "/values"
-
-			filter := getViewValueFilter([]ViewDeviceConfig{viewDevice})
-			mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-				// check authorization
-				if !isViewAuthenticated(view, r, true) {
-					jsonErrorResponse(w, http.StatusForbidden, errors.New("User is not allowed here"))
-					return
-				}
-				values := env.StateStorage.GetStateFiltered(filter)
-				jsonGetResponse(w, r, compile1DValueResponse(values))
-			})
+			mux.HandleFunc(pattern, authJwtMiddleware(env, gzipMiddleware(handler)))
 			if env.Config.LogConfig() {
 				log.Printf("httpServer: %s -> serve values as json", pattern)
 			}
 		}
+	}
+}
+
+func valuesGetJsonHandler(env *Environment, view ViewConfig, filter dataflow.ValueFilterFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// check authorization
+		if !isViewAuthenticated(view, r, true) {
+			jsonErrorResponse(w, http.StatusForbidden, errors.New("User is not allowed here"))
+			return
+		}
+		values := env.StateStorage.GetStateFiltered(filter)
+		jsonGetResponse(w, r, compile1DValueResponse(values))
 	}
 }
 
@@ -59,82 +62,83 @@ func setupValuesGetJson(mux *http.ServeMux, env *Environment) {
 // @Router /views/{viewName}/devices/{deviceName}/values [patch]
 // @Security ApiKeyAuth
 func setupValuesPatch(mux *http.ServeMux, env *Environment) {
-	// add dynamic routes
-	for _, v := range env.Views {
-		view := v
+	for _, view := range env.Views {
 		for _, dn := range view.Devices() {
-			// the following line uses a loop variable; it must be outside the closure
-			deviceName := dn.Name()
+			pattern := "PATCH /api/v2/views/" + view.Name() + "/devices/" + dn.Name() + "/values"
+			handler := valuesPatchHandler(env, view, dn.Name())
 
-			pattern := "PATCH /api/v2/views/" + view.Name() + "/devices/" + deviceName + "/values"
-			mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-				// check authorization
-				if !isViewAuthenticated(view, r, false) {
-					jsonErrorResponse(w, http.StatusForbidden, errors.New("User is not allowed here"))
-					return
-				}
-
-				var req map[string]interface{}
-				if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-					jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
-					return
-				}
-
-				// check all inputs
-				inputs := make([]dataflow.Value, 0, len(req))
-				for registerName, value := range req {
-					register, ok := env.RegisterDbOfDevice(deviceName).GetByName(registerName)
-					if !ok {
-						jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
-						return
-					}
-
-					if !register.Writable() {
-						jsonErrorResponse(w, http.StatusForbidden, fmt.Errorf("register %s is not writable", registerName))
-						return
-					}
-
-					invalidType := func(t string) {
-						jsonErrorResponse(w, http.StatusUnprocessableEntity, fmt.Errorf("expect type of %s to be a %s", registerName, t))
-					}
-
-					switch register.RegisterType() {
-					case dataflow.TextRegister:
-						if v, ok := value.(string); ok {
-							inputs = append(inputs, dataflow.NewTextRegisterValue(deviceName, register, v))
-						} else {
-							invalidType("string")
-							return
-						}
-					case dataflow.NumberRegister:
-						if v, ok := value.(float64); ok {
-							inputs = append(inputs, dataflow.NewNumericRegisterValue(deviceName, register, v))
-						} else {
-							invalidType("float")
-							return
-						}
-
-					case dataflow.EnumRegister:
-						if v, ok := value.(float64); ok {
-							inputs = append(inputs, dataflow.NewEnumRegisterValue(deviceName, register, int(v)))
-						} else {
-							invalidType("float")
-							return
-						}
-					}
-				}
-
-				// all ok, send inputs to storage
-				for _, inp := range inputs {
-					env.CommandStorage.Fill(inp)
-				}
-
-				w.WriteHeader(http.StatusOK)
-			})
+			mux.HandleFunc(pattern, authJwtMiddleware(env, handler))
 			if env.Config.LogConfig() {
 				log.Printf("httpServer: %s -> setup value dispatcher", pattern)
 			}
 		}
+	}
+}
+
+func valuesPatchHandler(env *Environment, view ViewConfig, deviceName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// check authorization
+		if !isViewAuthenticated(view, r, false) {
+			jsonErrorResponse(w, http.StatusForbidden, errors.New("User is not allowed here"))
+			return
+		}
+
+		var req map[string]interface{}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
+			return
+		}
+
+		// check all inputs
+		inputs := make([]dataflow.Value, 0, len(req))
+		for registerName, value := range req {
+			register, ok := env.RegisterDbOfDevice(deviceName).GetByName(registerName)
+			if !ok {
+				jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
+				return
+			}
+
+			if !register.Writable() {
+				jsonErrorResponse(w, http.StatusForbidden, fmt.Errorf("register %s is not writable", registerName))
+				return
+			}
+
+			invalidType := func(t string) {
+				jsonErrorResponse(w, http.StatusUnprocessableEntity, fmt.Errorf("expect type of %s to be a %s", registerName, t))
+			}
+
+			switch register.RegisterType() {
+			case dataflow.TextRegister:
+				if v, ok := value.(string); ok {
+					inputs = append(inputs, dataflow.NewTextRegisterValue(deviceName, register, v))
+				} else {
+					invalidType("string")
+					return
+				}
+			case dataflow.NumberRegister:
+				if v, ok := value.(float64); ok {
+					inputs = append(inputs, dataflow.NewNumericRegisterValue(deviceName, register, v))
+				} else {
+					invalidType("float")
+					return
+				}
+
+			case dataflow.EnumRegister:
+				if v, ok := value.(float64); ok {
+					inputs = append(inputs, dataflow.NewEnumRegisterValue(deviceName, register, int(v)))
+				} else {
+					invalidType("float")
+					return
+				}
+			}
+		}
+
+		// all ok, send inputs to storage
+		for _, inp := range inputs {
+			env.CommandStorage.Fill(inp)
+		}
+
+		w.WriteHeader(http.StatusOK)
 	}
 }
 

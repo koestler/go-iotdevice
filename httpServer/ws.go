@@ -53,7 +53,7 @@ func wsHandler(env *Environment, view ViewConfig, pattern string) http.HandlerFu
 	logPrefix := fmt.Sprintf("httpServer: %s", pattern)
 	viewFilter := getViewValueFilter(view.Devices())
 
-	handler := func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		var websocketAcceptOptions = websocket.AcceptOptions{
 			CompressionMode: websocket.CompressionContextTakeover,
 		}
@@ -124,12 +124,6 @@ func wsHandler(env *Environment, view ViewConfig, pattern string) http.HandlerFu
 			}
 		}
 	}
-
-	if env.Config.LogRequests() {
-		handler = loggingMiddleware(handler)
-	}
-
-	return handler
 }
 
 func startValuesSender(

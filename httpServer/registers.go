@@ -38,33 +38,33 @@ const RegistersExpires = 10 * time.Second
 // @Router /views/{viewName}/devices/{deviceName}/registers [get]
 // @Security ApiKeyAuth
 func setupRegisters(mux *http.ServeMux, env *Environment) {
-	// add dynamic routes
-	for _, v := range env.Views {
-		view := v
+	for _, view := range env.Views {
 		for _, vd := range view.Devices() {
-			viewDevice := vd
+			pattern := "GET /api/v2/views/" + view.Name() + "/devices/" + vd.Name() + "/registers"
+			handler := registersHandler(env, view, vd.Name(), vd.Filter())
 
-			deviceName := viewDevice.Name()
-
-			pattern := "GET /api/v2/views/" + view.Name() + "/devices/" + viewDevice.Name() + "/registers"
-			mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-				// check authorization
-				if !isViewAuthenticated(view, r, true) {
-					jsonErrorResponse(w, http.StatusForbidden, errors.New("User is not allowed here"))
-					return
-				}
-
-				registers := env.RegisterDbOfDevice(deviceName).GetAll()
-				registers = dataflow.FilterRegisters(registers, viewDevice.Filter())
-				dataflow.SortRegisterStructs(registers)
-
-				setCacheControlPublic(w, RegistersExpires)
-				jsonGetResponse(w, r, compile1DRegisterResponse(registers))
-			})
+			mux.HandleFunc(pattern, authJwtMiddleware(env, gzipMiddleware(handler)))
 			if env.Config.LogConfig() {
 				log.Printf("httpServer: %s -> serve registers", pattern)
 			}
 		}
+	}
+}
+
+func registersHandler(env *Environment, view ViewConfig, deviceName string, filter dataflow.RegisterFilterConf) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// check authorization
+		if !isViewAuthenticated(view, r, true) {
+			jsonErrorResponse(w, http.StatusForbidden, errors.New("User is not allowed here"))
+			return
+		}
+
+		registers := env.RegisterDbOfDevice(deviceName).GetAll()
+		registers = dataflow.FilterRegisters(registers, filter)
+		dataflow.SortRegisterStructs(registers)
+
+		setCacheControlPublic(w, RegistersExpires)
+		jsonGetResponse(w, r, compile1DRegisterResponse(registers))
 	}
 }
 

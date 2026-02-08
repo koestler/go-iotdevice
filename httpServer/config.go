@@ -36,7 +36,14 @@ type deviceViewResponse struct {
 // @Failure 500 {object} ErrorResponse
 // @Router /config/frontend [get]
 func setupConfig(mux *http.ServeMux, env *Environment) {
-	mux.HandleFunc("GET /api/v2/config/frontend", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /api/v2/config/frontend", gzipMiddleware(configHandler(env)))
+	if env.Config.LogConfig() {
+		log.Printf("httpServer: GET /api/v2/config/frontend -> serve config")
+	}
+}
+
+func configHandler(env *Environment) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		response := configResponse{
 			ProjectTitle:   env.ProjectTitle,
 			BackendVersion: env.Config.BuildVersion(),
@@ -65,8 +72,5 @@ func setupConfig(mux *http.ServeMux, env *Environment) {
 
 		setCacheControlPublic(w, env.Config.ConfigExpires())
 		jsonGetResponse(w, r, response)
-	})
-	if env.Config.LogConfig() {
-		log.Printf("httpServer: GET /api/v2/config/frontend -> serve config")
 	}
 }

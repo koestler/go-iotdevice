@@ -1,19 +1,14 @@
 package httpServer
 
 import (
-	"bufio"
-	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
-	"github.com/dustin/go-humanize"
 	"github.com/koestler/go-iotdevice/v3/dataflow"
 )
 
@@ -73,17 +68,14 @@ type AuthenticationConfig interface {
 func Run(env *Environment) (httpServer *HttpServer) {
 	cfg := env.Config
 
-	apiMux := http.NewServeMux()
-	addApiV2Routes(apiMux, env)
-	setupFrontend(apiMux, env.Config, env.Views)
-
 	rootMux := http.NewServeMux()
-	rootMux.HandleFunc("/", middlewares(apiMux.ServeHTTP, env))
+	addApiV2Routes(rootMux, env)
+	setupFrontend(rootMux, env.Config, env.Views)
 	setupValuesWs(rootMux, env)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", cfg.Bind(), cfg.Port()),
-		Handler: rootMux,
+		Handler: loggingMiddleware(rootMux),
 	}
 
 	go func() {
@@ -108,127 +100,4 @@ func (s *HttpServer) Shutdown() {
 	if err != nil {
 		log.Printf("httpServer: graceful shutdown failed: %s", err)
 	}
-}
-
-// middlewares creates the chain: logging -> auth -> gzip -> mux
-func middlewares(handler http.HandlerFunc, env *Environment) http.HandlerFunc {
-	handler = gzipMiddleware(handler)
-	handler = authJwtMiddleware(handler, env)
-	if env.Config.LogRequests() {
-		handler = loggingMiddleware(handler)
-	}
-	return handler
-}
-
-// loggingMiddleware logs HTTP requests
-func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
-		next(wrapped, r)
-		log.Printf(
-			"httpServer: %s %s %d %v %s",
-			r.Method,
-			r.URL.Path,
-			wrapped.statusCode,
-			time.Since(start),
-			humanize.IBytes(uint64(wrapped.written)),
-		)
-	}
-}
-
-// responseWriter is a wrapper around http.ResponseWriter to capture the status code
-type responseWriter struct {
-	http.ResponseWriter
-	statusCode int
-	written    int
-}
-
-func (rw *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	hj, ok := rw.ResponseWriter.(http.Hijacker)
-	if !ok {
-		return nil, nil, fmt.Errorf("httpServer: response writer does not support hijacking")
-	}
-	return hj.Hijack()
-}
-
-func (rw *responseWriter) WriteHeader(code int) {
-	rw.statusCode = code
-	rw.ResponseWriter.WriteHeader(code)
-}
-
-func (rw *responseWriter) Write(b []byte) (int, error) {
-	n, err := rw.ResponseWriter.Write(b)
-	rw.written += n
-	return n, err
-}
-
-// gzipMiddleware provides gzip compression for responses
-func gzipMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		gzw := &gzipResponseWriter{ResponseWriter: w}
-
-		// serve the request. the gzip writer is lazily initialized on the first write
-		next(gzw, r)
-
-		if gzw.gz != nil {
-			err := gzw.gz.Close()
-			if err != nil {
-				log.Printf("httpServer: error closing gzip writer: %s", err)
-			}
-		}
-	}
-}
-
-type gzipResponseWriter struct {
-	http.ResponseWriter
-	initialized bool
-	active      bool
-	gz          *gzip.Writer
-}
-
-func (gzw *gzipResponseWriter) Initialize() {
-	if gzw.initialized {
-		return
-	}
-	gzw.initialized = true
-
-	header := gzw.Header()
-	if checkHeaderAllowsGzip(header) {
-		header.Set("Content-Encoding", "gzip")
-		gzw.active = true
-	}
-}
-
-func (gzw *gzipResponseWriter) WriteHeader(code int) {
-	gzw.Initialize()
-	gzw.ResponseWriter.WriteHeader(code)
-}
-
-func (gzw *gzipResponseWriter) Write(b []byte) (int, error) {
-	gzw.Initialize()
-	if !gzw.active {
-		return gzw.ResponseWriter.Write(b)
-	}
-
-	if gzw.gz == nil {
-		gzw.gz = gzip.NewWriter(gzw.ResponseWriter)
-	}
-
-	return gzw.gz.Write(b)
-}
-
-func checkHeaderAllowsGzip(header http.Header) bool {
-	if header.Get("Content-Length") != "" {
-		return false
-	}
-	if header.Get("Content-Encoding") != "" {
-		return false
-	}
-	return true
 }
