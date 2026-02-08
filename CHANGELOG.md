@@ -1,7 +1,8 @@
 # Changelog
 
 ## 3.9.1
-* httpServer: refactoring, fix gzip middleware: do not gzip everything 
+* httpServer: refactor middlewares
+* httpServer: fix gzip middleware: do not gzip when in frontend proxy mode
 * httpServer: print size in log in human-readable format
 
 ## 3.9.0
