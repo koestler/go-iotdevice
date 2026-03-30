@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.9.2
+* httpServer: expired / invalid token must return 401 not 403
+
 ## 3.9.1
 * httpServer: refactor middlewares
 * httpServer: fix gzip middleware: do not gzip when in frontend proxy mode

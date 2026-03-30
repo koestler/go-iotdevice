@@ -35,7 +35,7 @@ func authJwtMiddleware(env *Environment, next http.HandlerFunc) http.HandlerFunc
 		}
 
 		if user, err := checkToken(tokenStr, env.Authentication.JwtSecret()); err != nil {
-			jsonErrorResponse(w, http.StatusForbidden, errors.New("invalid jwt token"))
+			jsonErrorResponse(w, http.StatusUnauthorized, errors.New("invalid jwt token"))
 		} else {
 			// continue; if user is set this means a valid token is present
 			ctx := context.WithValue(r.Context(), authUserKey, user)

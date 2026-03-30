@@ -579,7 +579,7 @@ func TestValuesGetEndpoint(t *testing.T) {
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden for invalid token")
+		assert.Equal(t, http.StatusUnauthorized, w.Code, "Expected status 401 Unauthorized for an invalid token")
 	})
 
 	t.Run("UnauthorizedPrivate", func(t *testing.T) {
