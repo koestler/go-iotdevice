@@ -1,7 +1,8 @@
 # Changelog
 
-## 3.9.2
+## 3.10.0
 * httpServer: expired / invalid token must return 401 not 403
+* bump frontend to v2.2.0
 
 ## 3.9.1
 * httpServer: refactor middlewares
