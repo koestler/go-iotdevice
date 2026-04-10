@@ -192,12 +192,10 @@ func (d *DeviceStruct) inpSetter(name string) (func(*genset.Controller, dataflow
 		}), nil
 	case "F":
 		avg := NewAverage(d.gensetConfig.FAvgWindow())
-		log.Printf("newAverage F input window=%d", d.gensetConfig.FAvgWindow())
 		return d.numberSetter(name, FRegister, func(v float64) func(genset.Inputs) genset.Inputs {
 			return func(i genset.Inputs) genset.Inputs {
 				avg.Add(v)
 				i.F = avg.Value()
-				log.Printf("gensetDevice: F input add=%f, value=%f", v, i.F)
 				return i
 			}
 		}), nil
