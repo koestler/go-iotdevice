@@ -13,7 +13,7 @@ func (dk HttpDeviceKind) String() string {
 	case HttpTeracomKind:
 		return "Teracom"
 	case HttpShellyEm3Kind:
-		return "Shelly3m"
+		return "ShellyEm3"
 	default:
 		return "Undefined"
 	}

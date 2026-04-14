@@ -249,7 +249,7 @@ HttpDevices:                                               # optional, a list of
     LogDebug: false                                      # optional, default false, enable debug log output
     LogComDebug: false                                   # optional, default false, enable a verbose log of the communication with the device
     Url: http://control0/                                  # mandatory, URL to the device; supported protocol is http/https; e.g. http://device0.local/
-    Kind: Teracom                                          # mandatory, type/model of the device; possibilities: Teracom, Shelly3m
+    Kind: Teracom                                          # mandatory, type/model of the device; possibilities: Teracom, ShellyEm3
     Username: admin                                        # optional, username used to log in
     Password: my-secret                                    # optional, password used to log in
     PollInterval: 5s                                       # optional, default 1s, how often to fetch the device status
@@ -383,7 +383,7 @@ GpioDevices:                                               # optional, a list of
 HttpDevices:                                               # optional, a list of devices controlled via http
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Url: http://control0/                                  # mandatory, URL to the device; supported protocol is http/https; e.g. http://device0.local/
-    Kind: Teracom                                          # mandatory, type/model of the device; possibilities: Teracom, Shelly3m
+    Kind: Teracom                                          # mandatory, type/model of the device; possibilities: Teracom, ShellyEm3
 
 MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
