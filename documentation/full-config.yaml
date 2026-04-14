@@ -11,7 +11,7 @@ HttpServer:                                                # optional, when miss
   LogRequests: true                                        # optional, default true, enable the http access log to stdout
   # configure FrontendProxy xor FrontendPath
   #FrontendProxy: "http://127.0.0.1:3000/"                 # optional, default deactivated; proxies the frontend to another server; useful for development
-  FrontendPath: ./frontend-build/                          # optional, default "./frontend-build/": path to a static frontend build
+  FrontendPath: ./frontend-build/                          # optional, default "./frontend-build/", path to a static frontend build
   FrontendExpires: 5m                                      # optional, default 5min, what cache-control header to send for static frontend files
   ConfigExpires: 1m                                        # optional, default 1min, what cache-control header to send for configuration endpoints
   LogDebug: false                                          # optional, default false, output debug messages related to the http server
@@ -32,11 +32,11 @@ MqttClients:                                               # optional, when empt
     #ClientId: go-iotdevice                                # optional, default go-iotdevice-UUID (-> random on each startup), mqtt client id, make sure it is unique per mqtt-server
 
     KeepAlive: 1m                                          # optional, default 60s, how often a ping is sent to keep the connection alive
-    ConnectRetryDelay: 10s                                 # optional, default 10s, when disconnected: after what delay shall a connection attempt is made
+    ConnectRetryDelay: 10s                                 # optional, default 10s, when disconnected: delay before a connection attempt is made
     ConnectTimeout: 5s                                     # optional, default 5s, how long to wait for the SYN+ACK packet, increase on slow networks
-    TopicPrefix: go-iotdevice/                             # optional, %Prefix% is replaced with this string
-    ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overriding MaxBacklogSize, AvailabilityEnable, StructureEnable, TelemetryEnable, RealtimeEnable)
-    MaxBacklogSize: 256                                    # optional, default 256, max number of mqtt messages to store when tconnection is offline
+    TopicPrefix: go-iotdevice/                             # optional, default go-iotdevice/, %Prefix% is replaced with this string
+    ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overrides all section Enabled flags and MaxBacklogSize)
+    MaxBacklogSize: 256                                    # optional, default 256, max number of mqtt messages to store when connection is offline
 
     MqttDevices:                                           # optional, default empty, which mqtt devices shall receive messages from this client
       bmv1:                                                # mandatory, the identifier of the MqttDevice
@@ -45,13 +45,13 @@ MqttClients:                                               # optional, when empt
 
     AvailabilityClient:
       Enabled: true                                        # optional, default true, whether to send online messages and register an offline message as will
-      TopicTemplate: '%Prefix%avail/%ClientId%'            # optional, what topic to use for online/offline messages of the go-iotdevice instance
+      TopicTemplate: '%Prefix%avail/%ClientId%'            # optional, default as shown, what topic to use for online/offline messages of the go-iotdevice instance
       Retain: true                                         # optional, default true, the mqtt retain flag for availability messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
 
     AvailabilityDevice:
       Enabled: true                                        # optional, default true, whether to send online messages and register an offline message as will
-      TopicTemplate: '%Prefix%avail/%DeviceName%'          # optional, what topic to use for online/offline messages of a specific device
+      TopicTemplate: '%Prefix%avail/%DeviceName%'          # optional, default as shown, what topic to use for online/offline messages of a specific device
       Retain: true                                         # optional, default true, the mqtt retain flag for availability messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
@@ -59,7 +59,7 @@ MqttClients:                                               # optional, when empt
 
     Structure:
       Enabled: true                                        # optional, default false, whether to send messages containing the list of registers/types
-      TopicTemplate: '%Prefix%struct/%DeviceName%'         # optional, what topic to use for structure messages
+      TopicTemplate: '%Prefix%struct/%DeviceName%'         # optional, default as shown, what topic to use for structure messages
       Interval: 0s                                         # optional, default 0, 0 means disabled only send initially, otherwise the structure is repeated after this interval (useful when retain is false)
       Retain: true                                         # optional, default true, the mqtt retain flag for structure messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
@@ -71,49 +71,15 @@ MqttClients:                                               # optional, when empt
             SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
             IncludeCategories:                             # optional, default empty, all registers of the given category that are not explicitly skipped are returned
             SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
-            DefaultInclude: True                           # optional, default true,  whether to return the registers that do not match any include/skip rule
+            DefaultInclude: True                           # optional, default true, whether to return the registers that do not match any include/skip rule
 
 
     Telemetry:
       Enabled: true                                        # optional, default false, whether to send telemetry messages (one per device)
-      TopicTemplate: '%Prefix%tele/%DeviceName%'           # optional, what topic to use for telemetry messages
-      Interval: 1s                                         # optional, default 1s, how often to sent telemetry mqtt messages
+      TopicTemplate: '%Prefix%tele/%DeviceName%'           # optional, default as shown, what topic to use for telemetry messages
+      Interval: 1s                                         # optional, default 1s, how often to send telemetry mqtt messages
       Retain: false                                        # optional, default false, the mqtt retain flag for telemetry messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
-      Devices:                                             # optional, default all, a list of devices to match
-        bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices, etc. sections
-          Filter:                                          # optional, default include all, defines which registers are show in the view,
-            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
-            IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
-            SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
-            IncludeCategories:                             # optional, default empty, all registers of the given category that are not explicitly skipped are returned
-            SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
-            DefaultInclude: True                           # optional, default true,  whether to return the registers that do not match any include/skip rule
-
-    Realtime:
-      Enabled: true                                        # optional, default false, whether to enable sending real-time messages
-      TopicTemplate: '%Prefix%real/%DeviceName%/%RegisterName%' # optional, what topic to use for real-time messages
-      Interval: 0s                                         # optional, default 0; 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
-      Retain: false                                        # optional, default false, the mqtt retain flag for real-time messages
-      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
-      Devices:                                             # optional, default all, a list of devices to match
-        bmv0:                                              # messages are only sent for this device
-          Filter:                                          # optional, default include all, defines which registers are show in the view,
-                                                           # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
-            IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
-              - BatteryVoltage                             # the BatteryVoltage register is sent no matter if it's category is listed unter categories
-              - Power
-            SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
-            IncludeCategories:                             # optional, default empty, all registers of the given category that are not explicitly skipped are returned
-              - Essential                                  # all registers of the category essential are sent; no matter if thy are listed in registers
-            SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
-            DefaultInclude: False                          # optional, default true,  whether to return the registers that do not match any include/skip rule
-
-    HomeassistantDiscovery:
-      Enabled: true                                        # optional, default false, whether to enable sending homeassistant auto-disovery messages
-      TopicTemplate: 'homeassistant/%Component%/%NodeId%/%ObjectId%/config' # optional, topic to use for homeassistant discovery messages
-      Interval: 0s                                         # optional, default 0, 0 means disabled only send initially, otherwise the disovery messages are repeated after this interval (useful when retain is false)
-      Retain: false                                        # optional, default false, the mqtt retain flag for homeassistant disovery messages
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices, etc. sections
           Filter:                                          # optional, default include all, defines which registers are shown in the view,
@@ -122,15 +88,50 @@ MqttClients:                                               # optional, when empt
             SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
             IncludeCategories:                             # optional, default empty, all registers of the given category that are not explicitly skipped are returned
             SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
-            DefaultInclude: True                           # optional, default true,  whether to return the registers that do not match any include/skip rule
+            DefaultInclude: True                           # optional, default true, whether to return the registers that do not match any include/skip rule
 
-    Command:
-      Enabled: true                                        # optional, default false, whether to receive and execute command messages
-      TopicTemplate: '%Prefix%cmnd/%DeviceName%/%RegisterName%' # optional, what topic to use for real-time messages
+    Realtime:
+      Enabled: true                                        # optional, default false, whether to enable sending real-time messages
+      TopicTemplate: '%Prefix%real/%DeviceName%/%RegisterName%' # optional, default as shown, what topic to use for real-time messages
+      Interval: 0s                                         # optional, default 0; 0 means send immediately when a value changes, otherwise only changed values are sent once per interval
+      Retain: false                                        # optional, default false, the mqtt retain flag for real-time messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # messages are only sent for this device
-          Filter:                                          # optional, default include all, defines which registers are show in the view,
+          Filter:                                          # optional, default include all, defines which registers are shown in the view,
+                                                           # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
+            IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
+              - BatteryVoltage                             # the BatteryVoltage register is sent no matter if its category is listed under categories
+              - Power
+            SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
+            IncludeCategories:                             # optional, default empty, all registers of the given category that are not explicitly skipped are returned
+              - Essential                                  # all registers of the category essential are sent; no matter if they are listed in registers
+            SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
+            DefaultInclude: False                          # optional, default true, whether to return the registers that do not match any include/skip rule
+
+    HomeassistantDiscovery:
+      Enabled: true                                        # optional, default false, whether to enable sending homeassistant auto-discovery messages
+      TopicTemplate: 'homeassistant/%Component%/%NodeId%/%ObjectId%/config' # optional, default as shown, topic to use for homeassistant discovery messages
+      Interval: 0s                                         # optional, default 0, 0 means only send initially, otherwise the discovery messages are repeated after this interval (useful when retain is false)
+      Retain: false                                        # optional, default false, the mqtt retain flag for homeassistant discovery messages
+      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
+      Devices:                                             # optional, default all, a list of devices to match
+        bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices, etc. sections
+          Filter:                                          # optional, default include all, defines which registers are shown in the view,
+            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
+            IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
+            SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
+            IncludeCategories:                             # optional, default empty, all registers of the given category that are not explicitly skipped are returned
+            SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
+            DefaultInclude: True                           # optional, default true, whether to return the registers that do not match any include/skip rule
+
+    Command:
+      Enabled: true                                        # optional, default false, whether to receive and execute command messages
+      TopicTemplate: '%Prefix%cmnd/%DeviceName%/%RegisterName%' # optional, default as shown, what topic to use for command messages
+      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
+      Devices:                                             # optional, default all, a list of devices to match
+        bmv0:                                              # messages are only sent for this device
+          Filter:                                          # optional, default include all, defines which registers are shown in the view,
             # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
               - BatteryVoltage                             # the BatteryVoltage register is sent no matter if its category is listed under categories
@@ -154,10 +155,10 @@ Modbus:                                                    # optional, when empt
 VictronDevices:                                            # optional, a list of Victron Energy devices to connect to
   bmv0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Device: /dev/serial/by-id/usb-VictronEnergy_BV_VE_Direct_cable_VEHTVQT-if00-port0 # mandatory except if Kind: Random*, the path to the usb-to-serial converter
-    Kind: Vedirect                                         # mandatory, possibilities: Vedirect, RandomBmv, RandomSolar, always set to Vedirect expect for development
+    Kind: Vedirect                                         # mandatory, possibilities: Vedirect, RandomBmv, RandomSolar, always set to Vedirect except for development
     PollInterval: 500ms                                    # optional, default 0.5s, how often to fetch the registers
     IoLog:                                                 # optional, default empty, path to a file where the raw io is logged
-    Filter:                                                # optional, default include all, defines which registers are show in the view,
+    Filter:                                                # optional, default include all, defines which registers are shown in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
       IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
       SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
@@ -166,9 +167,9 @@ VictronDevices:                                            # optional, a list of
       IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
       SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
         - Settings                                         # for solar devices it might make sense to not fetch/output the settings
-      DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
+      DefaultInclude: True                                 # optional, default true, whether to return the registers that do not match any include/skip rule
     RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
-    RestartIntervalMaxBackoff: 1m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    RestartIntervalMaxBackoff: 1m                          # optional, default 1m, when it fails, the restart interval is exponentially increased up to this maximum
     LogDebug: false                                        # optional, default false, enable debug log output
     LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
 
@@ -177,42 +178,43 @@ ModbusDevices:                                             # optional, a list of
     Bus: bus0                                              # mandatory, the identifier of the modbus to use
     Kind: WaveshareRtuRelay8                               # mandatory, type/model of the device; possibilities: WaveshareRtuRelay8, Finder7M38
     Address: 0x01                                          # mandatory, the modbus address of the device in hex as a string, e.g. 0x0A
-    Relays:                                                # optional: a map of custom labels for the relays
+    Relays:                                                # optional, default empty, a map of custom labels for the relays
       CH1:
-        Description: Lamp                                  # optional: show the CH1 relay as "Lamp" in the frontend
+        Description: Lamp                                  # optional, default name, a nice title displayed in the frontend
         OpenLabel: Off                                     # optional, default "open", a label for the open state
         ClosedLabel: On                                    # optional, default "closed", a label for the closed state
     PollInterval: 1s                                       # optional, default 1s, how often to fetch the device status
 
-    Filter:                                                # optional, default include all, defines which registers are show in the view,
+    Filter:                                                # optional, default include all, defines which registers are shown in the view,
       # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
       IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
       SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
       IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
       SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
-      DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
+      DefaultInclude: True                                 # optional, default true, whether to return the registers that do not match any include/skip rule
     RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
-    RestartIntervalMaxBackoff: 1m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    RestartIntervalMaxBackoff: 1m                          # optional, default 1m, when it fails, the restart interval is exponentially increased up to this maximum
     LogDebug: false                                        # optional, default false, enable debug log output
     LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
 
   modbus-finder:                                           # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Bus: bus0                                              # mandatory, the identifier of the modbus to use
     Kind: Finder7M38                                       # mandatory, type/model of the device; possibilities: WaveshareRtuRelay8, Finder7M38
-    Address: 33                                            # mandatory, the modbus address of the device in hex as a string, e.g. 0x0A
+    Address: 33                                            # mandatory, the modbus address of the device, either decimal (e.g. 33) or hex string (e.g. 0x0A)
 
 GpioDevices:                                               # optional, a list of devices controlled via gpio
   gpio0:                                                   # mandatory, an arbitrary name used for logging and for referencing in other config sections
-    Filter:                                                # optional, default include all, defines which registers are show in the view,
+    Filter:                                                # optional, default include all, defines which registers are shown in the view,
       # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
       IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
       SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
       IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
       SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
-      DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
+      DefaultInclude: True                                 # optional, default true, whether to return the registers that do not match any include/skip rule
     RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
-    RestartIntervalMaxBackoff: 1m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    RestartIntervalMaxBackoff: 1m                          # optional, default 1m, when it fails, the restart interval is exponentially increased up to this maximum
     LogDebug: false                                        # optional, default false, enable debug log output
+    LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
     Chip: gpiochip0                                        # optional, default gpiochip0, the gpiochip to use. See output of gpioinfo
     InputDebounce: 100ms                                   # optional, default 100ms, debounce the input signal, 0 to disable
     InputOptions: []                                       # optional, default unchanged, valid options: WithBiasDisabled, WithPullDown, WithPullUp
@@ -226,13 +228,13 @@ GpioDevices:                                               # optional, a list of
       Switch1:                                             # mandatory, a technical name used for the register
         Pin: GPIO3                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
         Description: Switch 1                              # optional, default name, a nice title displayed in the frontend
-    Outputs:
-      Relay0:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+    Outputs:                                               # optional, a list of outputs
+      Relay0:                                              # mandatory, a technical name used for the register
         Pin: GPIO4                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
         Description: Relay 0                               # optional, default name, a nice title displayed in the frontend
         LowLabel: Off                                      # optional, default "low", a label for the low state
         HighLabel: On                                      # optional, default "high", a label for the high state
-      Relay1:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+      Relay1:                                              # mandatory, a technical name used for the register
         Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
         Description: Relay 1                               # optional, default name, a nice title displayed in the frontend
 
@@ -240,47 +242,47 @@ HttpDevices:                                               # optional, a list of
   tcw241:                                                  # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Url: http://control0/                                  # mandatory, URL to the device; supported protocol is http/https; e.g. http://device0.local/
     Kind: Teracom                                          # mandatory, type/model of the device; possibilities: Teracom, Shelly3m
-    Username: admin                                        # optional, username used to log in
-    Password: my-secret                                    # optional, password used to log in
+    Username: admin                                        # optional, default empty, username used to log in
+    Password: my-secret                                    # optional, default empty, password used to log in
     PollInterval: 1s                                       # optional, default 1s, how often to fetch the device status
-    Filter:                                                # optional, default include all, defines which registers are show in the view,
+    Filter:                                                # optional, default include all, defines which registers are shown in the view,
       # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
       IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
       SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
       IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
       SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
-      DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
+      DefaultInclude: True                                 # optional, default true, whether to return the registers that do not match any include/skip rule
     RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
-    RestartIntervalMaxBackoff: 1m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    RestartIntervalMaxBackoff: 1m                          # optional, default 1m, when it fails, the restart interval is exponentially increased up to this maximum
     LogDebug: false                                        # optional, default false, enable debug log output
     LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
 
 MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Kind: GoIotdeviceV3                                    # mandatory, only GoIotdevice is supported at the moment
-    Filter:                                                # optional, default include all, defines which registers are show in the view,
+    Filter:                                                # optional, default include all, defines which registers are shown in the view,
       # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
       IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
       SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
       IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
       SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
-      DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
+      DefaultInclude: True                                 # optional, default true, whether to return the registers that do not match any include/skip rule
     RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
-    RestartIntervalMaxBackoff: 1m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    RestartIntervalMaxBackoff: 1m                          # optional, default 1m, when it fails, the restart interval is exponentially increased up to this maximum
     LogDebug: false                                        # optional, default false, enable debug log output
     LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
 
-GensetDevices:                                             # optional, a list generator set control devices
+GensetDevices:                                             # optional, a list of generator set control devices
   genset0:                                                 # mandatory, an arbitrary name used for logging and for referencing in other config sections
-    Filter:                                                # optional, default include all, defines which registers are show in the view,
+    Filter:                                                # optional, default include all, defines which registers are shown in the view,
       # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
       IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
       SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
       IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
       SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
-      DefaultInclude: True                                 # optional, default true,  whether to return the registers that do not match any include/skip rule
+      DefaultInclude: True                                 # optional, default true, whether to return the registers that do not match any include/skip rule
     RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
-    RestartIntervalMaxBackoff: 1m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
+    RestartIntervalMaxBackoff: 1m                          # optional, default 1m, when it fails, the restart interval is exponentially increased up to this maximum
     LogDebug: false                                        # optional, default false, enable debug log output
     LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
 
@@ -322,7 +324,7 @@ GensetDevices:                                             # optional, a list ge
     EnclosureCoolDownMinTime: 2m                           # optional, default 2m, minimum time in enclosure cool-down state
     EnclosureCoolDownTemp: 30                              # optional, default 30, maximum temperature to transition from enclosure cool-down to ready state
 
-    EngineTempMin: -20                                     # optional, default -10, minimum temperature the engine must have to not trigger the error state
+    EngineTempMin: -20                                     # optional, default -20, minimum temperature the engine must have to not trigger the error state
     EngineTempMax: 90                                      # optional, default 90, maximum temperature the engine must have to not trigger the error state
     AuxTemp0Min: -20                                       # optional, default -20, minimum temperature the aux temperature sensor 0 must have to not trigger the error state
     AuxTemp0Max: 120                                       # optional, default 120, maximum temperature the aux temperature sensor 0 must have to not trigger the error state
@@ -342,16 +344,16 @@ GensetDevices:                                             # optional, a list ge
 Views:                                                     # optional, a list of views (=categories in the frontend / paths in the api URLs)
   - Name: victron                                          # mandatory, a technical name used in the URLs
     Title: Victron                                         # mandatory, a nice title displayed in the frontend
-    Devices:                                               # mandatory, a list of devices using
+    Devices:                                               # mandatory, a list of devices to show
       - Name: bmv0                                         # mandatory, the arbitrary names defined above
         Title: Battery Monitor                             # mandatory, a nice title displayed in the frontend
-        Filter:                                            # optional, default include all, defines which registers are show in the view,
+        Filter:                                            # optional, default include all, defines which registers are shown in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
           IncludeRegisters:                                # optional, default empty, if a register is on this list, it is returned
           SkipRegisters:                                   # optional, default empty, if a register is on this list, it is not returned
           IncludeCategories:                               # optional, default empty, all registers of the given category that are not explicitly skipped are returned
           SkipCategories:                                  # optional, default empty, all registers of the given category that are not explicitly included are not returned
-          DefaultInclude: True                             # optional, default true,  whether to return the registers that do not match any include/skip rule
+          DefaultInclude: True                             # optional, default true, whether to return the registers that do not match any include/skip rule
       - Name: modbus-rtu0                                  # mandatory, the arbitrary names defined above
         Title: Relay Board                                 # mandatory, a nice title displayed in the frontend
     Autoplay: true                                         # optional, default true, when true, live updates are enabled automatically when the view is open in the frontend
