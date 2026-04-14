@@ -19,6 +19,7 @@ func runCpuProfile(fileName string) (started bool) {
 	}
 	if err := pprof.StartCPUProfile(f); err != nil {
 		log.Printf("pprof: could not start CPU profile: %s", err)
+		_ = f.Close()
 		return false
 	}
 	log.Printf("pprof: started CPU profile, save data to: %s", fileName)
@@ -34,6 +35,7 @@ func writeMemProfile(fileName string) {
 	f, err := os.Create(fileName)
 	if err != nil {
 		log.Printf("pprof: could not create memory profile: %s", err)
+		return
 	}
 	runtime.GC() // get up-to-date statistics
 	if err := pprof.WriteHeapProfile(f); err != nil {

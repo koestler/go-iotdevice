@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/jessevdk/go-flags"
-	"github.com/koestler/go-iotdevice/v3/config"
 	"log"
 	"os"
 	"os/signal"
 	"runtime/pprof"
 	"syscall"
+
+	"github.com/jessevdk/go-flags"
+	"github.com/koestler/go-iotdevice/v3/config"
 )
 
 // is set through linker by build.sh
@@ -158,7 +159,7 @@ func main() {
 	}()
 
 	if cfg.LogWorkerStart() {
-		log.Printf("main: stutdown completed; exit %d", exitCode)
+		log.Printf("main: shutdown completed; exit %d", exitCode)
 	}
 	os.Exit(exitCode)
 }
