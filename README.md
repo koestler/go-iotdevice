@@ -323,6 +323,18 @@ MqttDevices:
     Kind: GoIotdeviceV3
 ```
 
+### Cameras
+
+#### Extract secrets from Unifi Cameras
+If you have a Unifi Camera, you can extract the RTSP credentials using the following command on the Unifi Controller host:
+
+```bash
+# copy the cameras.json file containing the credentials from the Unifi Protect Controller host to the current directory
+scp root@192.168.0.11:/etc/unifi-protect/jsonDb/cameras.json .
+# extract the host name, address and password and convert it to our configuration format
+jq '{Cameras: ([sort_by(.host)[] | {(.name): {Address: .host, User: "ubnt", Password: .password, RefreshInterval: "1s"}}] | add)}' cameras.json | yq -P
+```
+
 ## Http Interface
 There is a stable REST-API to fetch the views, devices, registers, and values.
 Additionally, patch requests are implemented to set a controllable register (e.g. an output of a relay board).
