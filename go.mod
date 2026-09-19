@@ -1,10 +1,10 @@
 module github.com/koestler/go-iotdevice/v3
 
-go 1.25.0
+go 1.26.0
 
 require (
-	github.com/coder/websocket v1.8.14
-	github.com/dustin/go-humanize v1.0.1
+	github.com/coder/websocket v1.8.15
+	github.com/dustin/go-humanize v1.1.0
 	github.com/eclipse/paho.golang v0.23.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
@@ -17,11 +17,11 @@ require (
 	github.com/sigurn/crc16 v0.0.0-20240131213347-83fcde1e29d1
 	github.com/stretchr/testify v1.11.1
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07
-	github.com/tg123/go-htpasswd v1.2.4
+	github.com/tg123/go-htpasswd v1.2.5
 	github.com/warthog618/go-gpiocdev v0.9.1
 	go.uber.org/mock v0.6.0
-	golang.org/x/exp v0.0.0-20260603202125-055de637280b
-	golang.org/x/sync v0.20.0
+	golang.org/x/exp v0.0.0-20260908205506-85c1c2202aba
+	golang.org/x/sync v0.23.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -34,8 +34,8 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
-	golang.org/x/crypto v0.52.0 // indirect
-	golang.org/x/net v0.55.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/crypto v0.57.0 // indirect
+	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
