@@ -28,11 +28,11 @@ func NewV5(
 
 	// configure mqtt library
 	client.cliCfg = autopaho.ClientConfig{
-		BrokerUrls:        []*url.URL{cfg.Broker()},
-		KeepAlive:         uint16(cfg.KeepAlive().Seconds()),
-		ConnectRetryDelay: cfg.ConnectRetryDelay(),
-		ConnectTimeout:    cfg.ConnectTimeout(),
-		OnConnectionUp:    client.onConnectionUp(),
+		BrokerUrls:       []*url.URL{cfg.Broker()},
+		KeepAlive:        uint16(cfg.KeepAlive().Seconds()),
+		ReconnectBackoff: autopaho.NewConstantBackoff(cfg.ConnectRetryDelay()),
+		ConnectTimeout:   cfg.ConnectTimeout(),
+		OnConnectionUp:   client.onConnectionUp(),
 		OnConnectError: func(err error) {
 			log.Printf("mqttClientV5[%s]: connection error: %s", cfg.Name(), err)
 		},

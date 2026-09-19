@@ -2,6 +2,7 @@
 
 ## 3.10.1
 * bump go version, bump various libs
+* mqttClient: replace deprecated reconnect delay configuration
 
 ## 3.10.0
 * httpServer: expired / invalid token must return 401 not 403
