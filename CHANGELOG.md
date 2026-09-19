@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.10.1
+* bump go version, bump various libs
+
 ## 3.10.0
 * httpServer: expired / invalid token must return 401 not 403
 * bump frontend to v2.2.0

@@ -44,7 +44,7 @@ func (p *Pool[I]) Remove(item I) {
 func (p *Pool[I]) GetAll() map[string]I {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
-	return maps.Clone(p.items)
+	return maps.Clone(p.items) //nolint:govet // inline: generic type inference not supported
 }
 
 func (p *Pool[I]) GetByName(name string) I {
