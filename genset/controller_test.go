@@ -626,7 +626,11 @@ func TestController3P(t *testing.T) {
 
 			stateTracker.Assert(t, []genset.State{
 				{Node: genset.Producing, Changed: t0},
-				{Node: genset.Error, Changed: t1, ErrorTrigger: genset.ErrFrequencyHigh},
+				{
+					Node:         genset.Error,
+					Changed:      t1,
+					ErrorTrigger: fmt.Errorf("%w: %f > %f", genset.ErrFrequencyHigh, params.FMax+1, params.FMax),
+				},
 			})
 
 			// check ignition is off
@@ -1017,7 +1021,11 @@ func TestController1P(t *testing.T) {
 
 			stateTracker.Assert(t, []genset.State{
 				{Node: genset.Producing, Changed: t0},
-				{Node: genset.Error, Changed: t1, ErrorTrigger: genset.ErrU1High},
+				{
+					Node:         genset.Error,
+					Changed:      t1,
+					ErrorTrigger: fmt.Errorf("%w: %f > %f", genset.ErrU1High, params.UMax+1, params.UMax),
+				},
 			})
 
 			// check ignition is off

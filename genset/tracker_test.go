@@ -1,6 +1,7 @@
 package genset_test
 
 import (
+	"reflect"
 	"sync"
 	"testing"
 )
@@ -19,6 +20,10 @@ func newTracker[T comparable](logger logger) *tracker[T] {
 	return &tracker[T]{
 		logger: logger,
 	}
+}
+
+func equal[T comparable](got, expect T) bool {
+	return got == expect || reflect.DeepEqual(got, expect)
 }
 
 func (tr *tracker[T]) OnUpdateFunc() func(T) {
@@ -52,7 +57,7 @@ func (tr *tracker[T]) AssertLatest(t *testing.T, expect T) {
 	t.Helper()
 	if got, ok := tr.Latest(); !ok {
 		t.Errorf("track empty, expect %v", expect)
-	} else if got != expect {
+	} else if !equal(got, expect) {
 		t.Errorf("AssertLatest failed\ngot\t\t%v,\nexpect\t%v", got, expect)
 	}
 }
@@ -66,7 +71,7 @@ func (tr *tracker[T]) Assert(t *testing.T, expect []T) {
 		return
 	}
 	for i, got := range track {
-		if got != expect[i] {
+		if !equal(got, expect[i]) {
 			t.Errorf("Assert failed\ngot\t\t%v,\nexpect\t%v", tr.track, expect)
 			return
 		}
