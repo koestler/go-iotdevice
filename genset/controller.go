@@ -2,6 +2,7 @@ package genset
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -414,56 +415,57 @@ var ErrPTotHigh = errors.New("total power too high")
 
 func outputError(p Params, i Inputs) error {
 	if !i.OutputAvailable {
-		return ErrOutputUnavailable
+		return fmt.Errorf("%w: output available = %t", ErrOutputUnavailable, i.OutputAvailable)
 	}
 
 	if i.F < p.FMin {
-		return ErrFrequencyLow
+		return fmt.Errorf("%w: %f < %f", ErrFrequencyLow, i.F, p.FMin)
 	}
 	if i.F > p.FMax {
-		return ErrFrequencyHigh
+		return fmt.Errorf("%w: %f > %f", ErrFrequencyHigh, i.F, p.FMax)
 	}
 
 	if i.U1 < p.UMin {
-		return ErrU1Low
+		return fmt.Errorf("%w: %f < %f", ErrU1Low, i.U1, p.UMin)
 	}
 	if i.U1 > p.UMax {
-		return ErrU1High
+		return fmt.Errorf("%w: %f > %f", ErrU1High, i.U1, p.UMax)
 	}
 
 	if i.P1 > p.PMax {
-		return ErrP1High
+		return fmt.Errorf("%w: %f > %f", ErrP1High, i.P1, p.PMax)
 	}
 
 	if p.SinglePhase {
 		if i.P1 > p.PTotMax {
-			return ErrPTotHigh
+			return fmt.Errorf("%w: %f > %f", ErrPTotHigh, i.P1, p.PTotMax)
 		}
 	} else {
 		if i.U2 < p.UMin {
-			return ErrU2Low
+			return fmt.Errorf("%w: %f < %f", ErrU2Low, i.U2, p.UMin)
 		}
 		if i.U2 > p.UMax {
-			return ErrU2High
+			return fmt.Errorf("%w: %f > %f", ErrU2High, i.U2, p.UMax)
 		}
 
 		if i.U3 < p.UMin {
-			return ErrU3Low
+			return fmt.Errorf("%w: %f < %f", ErrU3Low, i.U3, p.UMin)
 		}
 		if i.U3 > p.UMax {
-			return ErrU3High
+			return fmt.Errorf("%w: %f > %f", ErrU3High, i.U3, p.UMax)
 		}
 
 		if i.P2 > p.PMax {
-			return ErrP2High
+			return fmt.Errorf("%w: %f > %f", ErrP2High, i.P2, p.PMax)
 		}
 
 		if i.P3 > p.PMax {
-			return ErrP3High
+			return fmt.Errorf("%w: %f > %f", ErrP3High, i.P3, p.PMax)
 		}
 
-		if i.P1+i.P2+i.P3 > p.PTotMax {
-			return ErrPTotHigh
+		pTotal := i.P1 + i.P2 + i.P3
+		if pTotal > p.PTotMax {
+			return fmt.Errorf("%w: %f > %f", ErrPTotHigh, pTotal, p.PTotMax)
 		}
 	}
 

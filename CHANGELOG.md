@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.11.0
+* genset: more verbose error reason
+
 ## 3.10.1
 * bump go version, bump various libs
 * mqttClient: replace deprecated reconnect delay configuration
