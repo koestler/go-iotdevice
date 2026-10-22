@@ -1,0 +1,29 @@
+[Unit]
+Description=go-iotdevice - IoT device data collection and distribution
+Documentation=https://github.com/koestler/go-iotdevice
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/usr/share/go-iotdevice
+User=go-iotdevice
+Group=go-iotdevice
+SupplementaryGroups=dialout gpio
+ExecStartPre=/usr/bin/go-iotdevice --dry-run -c /etc/go-iotdevice/config.yaml
+ExecStart=/usr/bin/go-iotdevice -c /etc/go-iotdevice/config.yaml
+Restart=on-failure
+RestartSec=5s
+
+# hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+# DevicePolicy is intentionally not set: serial / gpio / USB devices must stay reachable
+
+[Install]
+WantedBy=multi-user.target

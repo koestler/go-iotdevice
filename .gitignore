@@ -4,3 +4,4 @@ config.yaml
 *_mock.go
 docs/
 frontend-build/
+dist/

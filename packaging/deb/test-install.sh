@@ -1,0 +1,69 @@
+#!/bin/bash
+# Installs a .deb into a debian:trixie container running systemd as PID 1 and verifies the service.
+# Usage: packaging/deb/test-install.sh <path-to.deb>
+set -euo pipefail
+
+DEB="$(cd "$(dirname "${1:?usage: $0 <path-to.deb>}")" && pwd)/$(basename "$1")"
+IMAGE="${IMAGE:-jrei/systemd-debian:13}"
+NAME="go-iotdevice-deb-test-$$"
+
+cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; }
+trap cleanup EXIT
+
+docker run -d --name "$NAME" --privileged --cgroupns=host \
+    -v /sys/fs/cgroup:/sys/fs/cgroup:rw -v "$DEB:/tmp/test.deb:ro" "$IMAGE" >/dev/null
+run() { docker exec "$NAME" bash -euxc "$1"; }
+
+# wait for systemd
+for _ in $(seq 1 30); do
+    state=$(docker exec "$NAME" systemctl is-system-running 2>/dev/null || true)
+    case "$state" in running|degraded) break ;; esac
+    sleep 1
+done
+
+run 'apt-get update -qq && apt-get install -y -qq curl ca-certificates >/dev/null'
+
+echo "== install"
+run 'apt-get install -y /tmp/test.deb'
+run 'getent passwd go-iotdevice && id go-iotdevice | grep -q dialout && id go-iotdevice | grep -q gpio'
+run '[ "$(stat -c "%a %U:%G" /etc/go-iotdevice/config.yaml)" = "640 root:go-iotdevice" ]'
+run 'systemctl is-enabled go-iotdevice'
+run 'systemctl is-active go-iotdevice'
+
+echo "== http"
+run 'for i in $(seq 1 30); do curl -fs http://127.0.0.1:8000/ >/dev/null && break; sleep 1; done
+curl -fs http://127.0.0.1:8000/ | grep -qi "<html"
+curl -fs http://127.0.0.1:8000/api/v2/docs/swagger.yaml | grep -q swagger
+curl -fs http://127.0.0.1:8000/api/v2/config.json | grep -q ProjectTitle'
+
+echo "== dry-run as service user"
+run 'runuser -u go-iotdevice -- /usr/bin/go-iotdevice --dry-run -c /etc/go-iotdevice/config.yaml'
+
+echo "== authentication block can be enabled"
+run 'cp /etc/go-iotdevice/config.yaml /tmp/auth.yaml
+sed -i -E "/^# Authentication:/,/^$/ s/^# ?//" /tmp/auth.yaml
+grep -q "^Authentication:" /tmp/auth.yaml
+echo "user:\$apr1\$x\$x" > /tmp/auth.passwd
+sed -i "s#/etc/go-iotdevice/auth.passwd#/tmp/auth.passwd#" /tmp/auth.yaml
+/usr/bin/go-iotdevice --dry-run -c /tmp/auth.yaml'
+
+echo "== modified conffile is preserved on reinstall"
+run 'echo "# local change" >> /etc/go-iotdevice/config.yaml
+apt-get install -y --reinstall -o Dpkg::Options::=--force-confold /tmp/test.deb
+grep -q "# local change" /etc/go-iotdevice/config.yaml
+systemctl is-active go-iotdevice'
+
+echo "== remove"
+run 'apt-get remove -y go-iotdevice
+[ ! -e /usr/bin/go-iotdevice ]
+[ -f /etc/go-iotdevice/config.yaml ]
+getent passwd go-iotdevice
+! systemctl is-active go-iotdevice'
+
+echo "== purge"
+run 'apt-get purge -y go-iotdevice
+[ ! -e /etc/go-iotdevice ]
+! getent passwd go-iotdevice
+! getent group go-iotdevice'
+
+echo "OK"

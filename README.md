@@ -1,6 +1,7 @@
 # go-iotdevice
 [![Audit & Test](https://github.com/koestler/go-iotdevice/actions/workflows/audit.yml/badge.svg)](https://github.com/koestler/go-iotdevice/actions/workflows/audit.yml)
-[![Docker Image CI](https://github.com/koestler/js-iotsensor/actions/workflows/docker-image.yml/badge.svg?branch=main)](https://github.com/koestler/js-iotsensor/actions/workflows/docker-image.yml)
+[![Docker Image CI](https://github.com/koestler/go-iotdevice/actions/workflows/docker-image.yml/badge.svg?branch=main)](https://github.com/koestler/go-iotdevice/actions/workflows/docker-image.yml)
+[![Debian Package](https://github.com/koestler/go-iotdevice/actions/workflows/deb-package.yml/badge.svg)](https://github.com/koestler/go-iotdevice/actions/workflows/deb-package.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/koestler/go-iotdevice/v3.svg)](https://pkg.go.dev/github.com/koestler/go-iotdevice/v3)
 
 This tool reads values from various IoT devices like solar charges directly connected by USB
@@ -155,6 +156,48 @@ docker compose restart
 # upgrade to the newest tag
 docker compose pull
 docker compose up -d
+```
+
+### Debian / Raspberry Pi OS with systemd
+
+`.deb` packages for `amd64`, `arm64` and `armhf` are attached to every
+[GitHub Release](https://github.com/koestler/go-iotdevice/releases). They require Debian 13 (trixie) with systemd.
+
+```bash
+# replace <version> and <arch> (amd64, arm64 or armhf)
+curl -LO https://github.com/koestler/go-iotdevice/releases/download/v<version>/go-iotdevice_<version>_<arch>.deb
+curl -LO https://github.com/koestler/go-iotdevice/releases/download/v<version>/SHA256SUMS
+sha256sum -c --ignore-missing SHA256SUMS
+sudo apt install ./go-iotdevice_<version>_<arch>.deb
+```
+
+After the installation the service is enabled and running with a demo configuration (a simulated solar charger),
+the web interface is available at <http://127.0.0.1:8000/>.
+The service runs as the system user `go-iotdevice` which is member of the groups `dialout` (serial devices) and `gpio`.
+
+Edit `/etc/go-iotdevice/config.yaml` (see `/usr/share/doc/go-iotdevice/full-config.yaml` for all options),
+validate and apply it:
+
+```bash
+sudo -u go-iotdevice go-iotdevice --dry-run -c /etc/go-iotdevice/config.yaml
+sudo systemctl restart go-iotdevice
+```
+
+Manage the service:
+
+```bash
+systemctl status go-iotdevice
+journalctl -u go-iotdevice -f
+sudo systemctl disable --now go-iotdevice   # turn it off
+```
+
+If [authentication](#authentication) is enabled, the user database must be readable by the service user:
+
+```bash
+sudo apt install apache2-utils
+sudo htpasswd -c /etc/go-iotdevice/auth.passwd <user>
+sudo chown root:go-iotdevice /etc/go-iotdevice/auth.passwd
+sudo chmod 640 /etc/go-iotdevice/auth.passwd
 ```
 
 ## Devices
@@ -575,6 +618,12 @@ docker build -f docker/Dockerfile -t go-iotdevice .
 docker run --rm --name go-iotdevice -p 127.0.0.1:8000:8000 \
   -v "$(pwd)"/documentation/config.yaml:/config.yaml:ro \
   go-iotdevice
+```
+
+### Build the Debian package locally
+```bash
+go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+packaging/deb/build-deb.sh amd64   # or arm64 / armhf; result is in dist/
 ```
 
 ### Generate swagger documentation
