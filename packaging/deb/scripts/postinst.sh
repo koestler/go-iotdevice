@@ -12,11 +12,6 @@ for g in dialout gpio; do
     fi
 done
 
-# the conffile may have been deleted by the administrator
-if [ -f /etc/go-iotdevice/config.yaml ]; then
-    chown root:go-iotdevice /etc/go-iotdevice/config.yaml
-fi
-
 if command -v systemctl >/dev/null 2>&1; then
     # works without a running systemd as well (chroot, image builds): only creates the symlink
     if [ -z "$2" ]; then
