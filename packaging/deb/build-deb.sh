@@ -22,7 +22,7 @@ esac
 
 echo "building go-iotdevice $VERSION for $ARCH (frontend $FRONTEND_VERSION)"
 
-# swagger documentation (host independent), always regenerated to never package stale docs
+# swagger documentation
 go install "github.com/swaggo/swag/cmd/swag@$SWAG_VERSION"
 PATH="$(go env GOPATH)/bin:$PATH" go generate docs.go
 
@@ -33,18 +33,16 @@ CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" GOARM="$GOARM" go build \
     -tags=jsoniter -o "dist/$ARCH/go-iotdevice"
 
 # frontend
-if [ ! -f "dist/frontend-$FRONTEND_VERSION.stamp" ]; then
-    rm -rf dist/frontend-build dist/frontend-*.stamp
-    mkdir -p dist/frontend-build dist/frontend-download
-    base="https://github.com/koestler/js-iotdevice/releases/download/$FRONTEND_VERSION"
-    tarball="js-iotdevice-$FRONTEND_VERSION.tar.gz"
-    curl -fsSL -o "dist/frontend-download/$tarball" "$base/$tarball"
-    curl -fsSL -o dist/frontend-download/SHA256SUMS "$base/SHA256SUMS"
-    (cd dist/frontend-download && sha256sum -c --ignore-missing SHA256SUMS)
-    tar -xzf "dist/frontend-download/$tarball" -C dist/frontend-build
-    test -f dist/frontend-build/index.html
-    touch "dist/frontend-$FRONTEND_VERSION.stamp"
-fi
+rm -rf dist/frontend-build dist/frontend-*.stamp
+mkdir -p dist/frontend-build dist/frontend-download
+base="https://github.com/koestler/js-iotdevice/releases/download/$FRONTEND_VERSION"
+tarball="js-iotdevice-$FRONTEND_VERSION.tar.gz"
+curl -fsSL -o "dist/frontend-download/$tarball" "$base/$tarball"
+curl -fsSL -o dist/frontend-download/SHA256SUMS "$base/SHA256SUMS"
+(cd dist/frontend-download && sha256sum -c --ignore-missing SHA256SUMS)
+tar -xzf "dist/frontend-download/$tarball" -C dist/frontend-build
+test -f dist/frontend-build/index.html
+
 # independent of the umask / tar modes: readable by the unprivileged service user
 chmod -R u=rwX,go=rX dist/frontend-build
 
