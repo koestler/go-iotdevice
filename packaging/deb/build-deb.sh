@@ -22,11 +22,9 @@ esac
 
 echo "building go-iotdevice $VERSION for $ARCH (frontend $FRONTEND_VERSION)"
 
-# swagger documentation (host independent)
-if [ ! -f docs/swagger.html ] || [ ! -f docs/swagger.json ] || [ ! -f docs/swagger.yaml ]; then
-    go install "github.com/swaggo/swag/cmd/swag@$SWAG_VERSION"
-    PATH="$(go env GOPATH)/bin:$PATH" go generate docs.go
-fi
+# swagger documentation (host independent), always regenerated to never package stale docs
+go install "github.com/swaggo/swag/cmd/swag@$SWAG_VERSION"
+PATH="$(go env GOPATH)/bin:$PATH" go generate docs.go
 
 # binary
 mkdir -p "dist/$ARCH"
@@ -47,6 +45,8 @@ if [ ! -f "dist/frontend-$FRONTEND_VERSION.stamp" ]; then
     test -f dist/frontend-build/index.html
     touch "dist/frontend-$FRONTEND_VERSION.stamp"
 fi
+# independent of the umask / tar modes: readable by the unprivileged service user
+chmod -R u=rwX,go=rX dist/frontend-build
 
 # Debian expects a compressed changelog (-n: reproducible, no timestamp)
 gzip -9n -c CHANGELOG.md > dist/changelog.gz

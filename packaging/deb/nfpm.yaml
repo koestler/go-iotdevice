@@ -23,10 +23,16 @@ contents:
     type: tree
   - src: docs/swagger.html
     dst: /usr/share/go-iotdevice/docs/swagger.html
+    file_info:
+      mode: 0644
   - src: docs/swagger.json
     dst: /usr/share/go-iotdevice/docs/swagger.json
+    file_info:
+      mode: 0644
   - src: docs/swagger.yaml
     dst: /usr/share/go-iotdevice/docs/swagger.yaml
+    file_info:
+      mode: 0644
   - src: packaging/deb/config.yaml
     dst: /etc/go-iotdevice/config.yaml
     type: config|noreplace
@@ -40,12 +46,20 @@ contents:
       mode: 0644
   - src: documentation/full-config.yaml
     dst: /usr/share/doc/go-iotdevice/full-config.yaml
+    file_info:
+      mode: 0644
   - src: documentation/config.yaml
     dst: /usr/share/doc/go-iotdevice/config.yaml.example
+    file_info:
+      mode: 0644
   - src: LICENSE
     dst: /usr/share/doc/go-iotdevice/copyright
+    file_info:
+      mode: 0644
   - src: dist/changelog.gz
     dst: /usr/share/doc/go-iotdevice/changelog.gz
+    file_info:
+      mode: 0644
 scripts:
   preinstall: packaging/deb/scripts/preinst.sh
   postinstall: packaging/deb/scripts/postinst.sh
