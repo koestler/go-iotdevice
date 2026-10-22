@@ -6,6 +6,9 @@ on:
       - '*'
     tags:
       - '*'
+  pull_request:
+    branches:
+      - 'main'
 
 env:
   GO_VERSION: 1.27.3
@@ -28,7 +31,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          go install go.uber.org/mock/mockgen@latest
+          go install go.uber.org/mock/mockgen@v0.6.0
           go install github.com/swaggo/swag/cmd/swag@${SWAG_VERSION}
 
       - name: Generate mocks

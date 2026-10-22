@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installs a .deb into a debian:trixie container (built locally with systemd) as PID 1 and verifies the service.
+# Installs a .deb into an architecture-matched debian:trixie container (built locally with systemd) as PID 1 and verifies the service.
 # Usage: packaging/deb/test-install.sh <path-to.deb>
 # shellcheck disable=SC2016 # commands are intentionally expanded inside the container
 set -euo pipefail
@@ -8,10 +8,17 @@ DEB="$(cd "$(dirname "${1:?usage: $0 <path-to.deb>}")" && pwd)/$(basename "$1")"
 IMAGE="go-iotdevice-systemd-test:trixie"
 NAME="go-iotdevice-deb-test-$$"
 
+case "$DEB" in
+*_amd64.deb) PLATFORM=linux/amd64 ;;
+*_arm64.deb) PLATFORM=linux/arm64 ;;
+*_armhf.deb) PLATFORM=linux/arm/v7 ;;
+*) echo "unsupported Debian package architecture: $DEB" >&2; exit 1 ;;
+esac
+
 cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
-docker build -q -t "$IMAGE" - >/dev/null <<'DOCKERFILE'
+docker build --platform="$PLATFORM" -q -t "$IMAGE" - >/dev/null <<'DOCKERFILE'
 FROM debian:trixie
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -qq && apt-get install -y -qq systemd systemd-sysv dbus \
@@ -20,7 +27,7 @@ STOPSIGNAL SIGRTMIN+3
 CMD ["/sbin/init"]
 DOCKERFILE
 
-docker run -d --name "$NAME" --privileged --cgroupns=host \
+docker run --platform="$PLATFORM" -d --name "$NAME" --privileged --cgroupns=host \
     -v /sys/fs/cgroup:/sys/fs/cgroup:rw -v "$DEB:/opt/test.deb:ro" "$IMAGE" >/dev/null
 run() { docker exec "$NAME" bash -euxc "$1"; }
 
@@ -40,7 +47,7 @@ id -nG go-iotdevice | tr " " "\n" | grep -qx dialout
 [ -f /usr/share/doc/go-iotdevice/changelog.gz ]'
 run '[ "$(stat -c "%a %U:%G" /etc/go-iotdevice/config.yaml)" = "640 root:go-iotdevice" ]'
 run 'systemctl is-enabled go-iotdevice'
-run 'systemctl is-active go-iotdevice'
+run 'for i in $(seq 1 30); do systemctl is-active --quiet go-iotdevice && exit 0; sleep 1; done; systemctl status go-iotdevice --no-pager || true; journalctl -u go-iotdevice --no-pager || true; exit 1'
 
 echo "== http"
 run 'for i in $(seq 1 30); do curl -fs http://127.0.0.1:8000/ >/dev/null && break; sleep 1; done

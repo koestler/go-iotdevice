@@ -65,13 +65,18 @@ jobs:
   verify:
     needs: build
     runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        arch: [amd64, arm64, armhf]
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/download-artifact@v8
         with:
-          name: deb-amd64
+          name: deb-${{ matrix.arch }}
           path: dist
+
+      - uses: docker/setup-qemu-action@v4
 
       - name: Lintian
         run: |
