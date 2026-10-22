@@ -2,6 +2,7 @@
 # Installs a .deb into a debian:trixie container running systemd as PID 1 and verifies the service.
 # Usage: packaging/deb/test-install.sh <path-to.deb>
 set -euo pipefail
+# shellcheck disable=SC2016 # commands are intentionally expanded inside the container
 
 DEB="$(cd "$(dirname "${1:?usage: $0 <path-to.deb>}")" && pwd)/$(basename "$1")"
 IMAGE="${IMAGE:-jrei/systemd-debian:13}"

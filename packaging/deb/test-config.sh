@@ -17,6 +17,7 @@ awk -v p="$tmp/frontend" '{print} /^  Port: 8000/{print "  FrontendPath: " p}' c
 "$BIN" --dry-run -c "$tmp/default.yaml"
 
 # the commented Authentication block must work when uncommented
+# shellcheck disable=SC2016
 echo 'user:$apr1$x$x' > "$tmp/auth.passwd"
 sed -E '/^# Authentication:/,/^$/ s/^# ?//' "$tmp/default.yaml" \
     | sed "s#/etc/go-iotdevice/auth.passwd#$tmp/auth.passwd#" > "$tmp/auth.yaml"

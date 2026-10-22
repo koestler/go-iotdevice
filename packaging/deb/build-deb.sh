@@ -52,6 +52,7 @@ chmod -R u=rwX,go=rX dist/frontend-build
 gzip -9n -c CHANGELOG.md > dist/changelog.gz
 
 # package
-ARCH="$ARCH" VERSION="$VERSION" nfpm package -f packaging/deb/nfpm.yaml -p deb \
+export ARCH VERSION
+nfpm package -f packaging/deb/nfpm.yaml -p deb \
     -t "dist/go-iotdevice_${VERSION}_${ARCH}.deb"
 ls -l "dist/go-iotdevice_${VERSION}_${ARCH}.deb"
