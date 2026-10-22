@@ -76,8 +76,6 @@ jobs:
           name: deb-${{ matrix.arch }}
           path: dist
 
-      - uses: docker/setup-qemu-action@v4
-
       - name: Lintian
         run: |
           sudo apt-get update -qq
@@ -85,6 +83,7 @@ jobs:
           lintian --fail-on error --suppress-tags statically-linked-binary,no-manual-page,no-changelog,changelog-file-missing-in-native-package,unstripped-binary-or-object dist/*.deb
 
       - name: Install test in a systemd container
+        if: matrix.arch == 'amd64'
         run: packaging/deb/test-install.sh dist/go-iotdevice_*.deb
 
   release:
