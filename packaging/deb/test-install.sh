@@ -37,7 +37,7 @@ echo "== http"
 run 'for i in $(seq 1 30); do curl -fs http://127.0.0.1:8000/ >/dev/null && break; sleep 1; done
 curl -fs http://127.0.0.1:8000/ | grep -qi "<html"
 curl -fs http://127.0.0.1:8000/api/v2/docs/swagger.yaml | grep -q swagger
-curl -fs http://127.0.0.1:8000/api/v2/config.json | grep -q ProjectTitle'
+curl -fs http://127.0.0.1:8000/api/v2/config/frontend | grep -q projectTitle'
 
 echo "== dry-run as service user"
 run 'runuser -u go-iotdevice -- /usr/bin/go-iotdevice --dry-run -c /etc/go-iotdevice/config.yaml'
