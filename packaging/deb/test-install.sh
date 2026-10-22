@@ -1,15 +1,24 @@
 #!/bin/bash
-# Installs a .deb into a debian:trixie container running systemd as PID 1 and verifies the service.
+# Installs a .deb into a debian:trixie container (built locally with systemd) as PID 1 and verifies the service.
 # Usage: packaging/deb/test-install.sh <path-to.deb>
 # shellcheck disable=SC2016 # commands are intentionally expanded inside the container
 set -euo pipefail
 
 DEB="$(cd "$(dirname "${1:?usage: $0 <path-to.deb>}")" && pwd)/$(basename "$1")"
-IMAGE="${IMAGE:-jrei/systemd-debian:13}"
+IMAGE="go-iotdevice-systemd-test:trixie"
 NAME="go-iotdevice-deb-test-$$"
 
 cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
+
+docker build -q -t "$IMAGE" - >/dev/null <<'DOCKERFILE'
+FROM debian:trixie
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -qq && apt-get install -y -qq systemd systemd-sysv dbus \
+    && rm -rf /var/lib/apt/lists/*
+STOPSIGNAL SIGRTMIN+3
+CMD ["/sbin/init"]
+DOCKERFILE
 
 docker run -d --name "$NAME" --privileged --cgroupns=host \
     -v /sys/fs/cgroup:/sys/fs/cgroup:rw -v "$DEB:/opt/test.deb:ro" "$IMAGE" >/dev/null
