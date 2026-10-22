@@ -614,7 +614,9 @@ go build && ./go-iotdevice
 Alternatively, if you don't have Golang installed locally, you can compile and run 
 
 ```bash
-docker build -f docker/Dockerfile -t go-iotdevice .
+# versions are pinned in the env: section of .github/workflows/docker-image.yml
+docker build -f docker/Dockerfile -t go-iotdevice \
+  --build-arg GO_VERSION=1.27.2 --build-arg SWAG_VERSION=v1.16.4 --build-arg FRONTEND_VERSION=v2.4.1 .
 docker run --rm --name go-iotdevice -p 127.0.0.1:8000:8000 \
   -v "$(pwd)"/documentation/config.yaml:/config.yaml:ro \
   go-iotdevice
@@ -623,6 +625,8 @@ docker run --rm --name go-iotdevice -p 127.0.0.1:8000:8000 \
 ### Build the Debian package locally
 ```bash
 go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+# versions are pinned in the env: section of .github/workflows/deb-package.yml
+SWAG_VERSION=v1.16.4 FRONTEND_VERSION=v2.4.1 \
 packaging/deb/build-deb.sh amd64   # or arm64 / armhf; result is in dist/
 ```
 

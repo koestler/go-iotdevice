@@ -13,6 +13,9 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  GO_VERSION: 1.27.2
+  SWAG_VERSION: v1.16.4
+  FRONTEND_VERSION: v2.4.1
 
 jobs:
   docker:
@@ -54,3 +57,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GO_VERSION=${{ env.GO_VERSION }}
+            SWAG_VERSION=${{ env.SWAG_VERSION }}
+            FRONTEND_VERSION=${{ env.FRONTEND_VERSION }}

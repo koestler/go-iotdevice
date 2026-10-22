@@ -1,5 +1,11 @@
+# versions are passed as build args by the CI (see .github/workflows/docker-image.yml)
+ARG GO_VERSION
+ARG SWAG_VERSION
+ARG FRONTEND_VERSION
+
 # build backend
-FROM golang:1.27.2-alpine AS go-builder
+FROM golang:${GO_VERSION}-alpine AS go-builder
+ARG SWAG_VERSION
 
 RUN apk add build-base git npm
 
@@ -9,7 +15,7 @@ COPY . /app
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 
-RUN go install github.com/swaggo/swag/cmd/swag@latest
+RUN go install github.com/swaggo/swag/cmd/swag@${SWAG_VERSION}
 RUN go generate docs.go
 RUN  ./build.sh
 
@@ -21,7 +27,7 @@ RUN chown app:app /app/go-iotdevice
 RUN addgroup -g 993 gpio
 
 # use already compiled frontend
-FROM ghcr.io/koestler/js-iotdevice:v2.3.2 AS js-builder
+FROM ghcr.io/koestler/js-iotdevice:${FRONTEND_VERSION} AS js-builder
 
 # build final image
 FROM scratch

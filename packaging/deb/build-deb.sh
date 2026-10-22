@@ -1,13 +1,12 @@
 #!/bin/bash
 # Builds a .deb package.
 # Usage: packaging/deb/build-deb.sh <amd64|arm64|armhf> [version]
-# Requires: go, node (npx), curl, nfpm
+# Requires: go, node (npx), curl, nfpm; env: FRONTEND_VERSION, SWAG_VERSION
 set -euo pipefail
 
-# frontend release of github.com/koestler/js-iotdevice that is bundled
-FRONTEND_VERSION="${FRONTEND_VERSION:-v2.4.1}"
-
-SWAG_VERSION="${SWAG_VERSION:-v1.16.4}"
+# Requires FRONTEND_VERSION (release of github.com/koestler/js-iotdevice that is bundled)
+# and SWAG_VERSION in the environment
+: "${FRONTEND_VERSION:?must be set}" "${SWAG_VERSION:?must be set}"
 
 ARCH="${1:?usage: $0 <amd64|arm64|armhf> [version]}"
 cd "$(dirname "$0")/../.."
