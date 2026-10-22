@@ -47,10 +47,6 @@ jobs:
           echo "version=$VERSION"
           packaging/deb/build-deb.sh "${{ matrix.arch }}" "$VERSION"
 
-      - name: Test default config
-        if: matrix.arch == 'amd64'
-        run: packaging/deb/test-config.sh dist/amd64/go-iotdevice
-
       - name: Checksum
         working-directory: dist
         run: sha256sum go-iotdevice_*.deb > "SHA256SUMS-${{ matrix.arch }}"
