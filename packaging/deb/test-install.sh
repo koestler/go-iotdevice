@@ -25,7 +25,8 @@ run 'apt-get update -qq && apt-get install -y -qq curl ca-certificates >/dev/nul
 
 echo "== install"
 run 'apt-get install -y /tmp/test.deb'
-run 'getent passwd go-iotdevice && id go-iotdevice | grep -q dialout && id go-iotdevice | grep -q gpio'
+run 'getent passwd go-iotdevice && id -nG go-iotdevice | tr " " "\n" | grep -qx dialout
+[ -f /usr/share/doc/go-iotdevice/changelog.gz ]'
 run '[ "$(stat -c "%a %U:%G" /etc/go-iotdevice/config.yaml)" = "640 root:go-iotdevice" ]'
 run 'systemctl is-enabled go-iotdevice'
 run 'systemctl is-active go-iotdevice'
@@ -58,12 +59,12 @@ run 'apt-get remove -y go-iotdevice
 [ ! -e /usr/bin/go-iotdevice ]
 [ -f /etc/go-iotdevice/config.yaml ]
 getent passwd go-iotdevice
-! systemctl is-active go-iotdevice'
+if systemctl is-active go-iotdevice; then exit 1; fi'
 
 echo "== purge"
 run 'apt-get purge -y go-iotdevice
 [ ! -e /etc/go-iotdevice ]
-! getent passwd go-iotdevice
-! getent group go-iotdevice'
+if getent passwd go-iotdevice; then exit 1; fi
+if getent group go-iotdevice; then exit 1; fi'
 
 echo "OK"

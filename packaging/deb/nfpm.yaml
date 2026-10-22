@@ -44,8 +44,8 @@ contents:
     dst: /usr/share/doc/go-iotdevice/config.yaml.example
   - src: LICENSE
     dst: /usr/share/doc/go-iotdevice/copyright
-  - src: CHANGELOG.md
-    dst: /usr/share/doc/go-iotdevice/changelog
+  - src: dist/changelog.gz
+    dst: /usr/share/doc/go-iotdevice/changelog.gz
 scripts:
   preinstall: packaging/deb/scripts/preinst.sh
   postinstall: packaging/deb/scripts/postinst.sh

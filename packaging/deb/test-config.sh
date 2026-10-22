@@ -9,11 +9,11 @@ trap 'rm -rf "$tmp"' EXIT
 grep -q '/usr/share/doc/go-iotdevice/full-config.yaml' config.yaml
 grep -q '^# *JwtSecret:' config.yaml
 grep -q '^# *HtaccessFile: /etc/go-iotdevice/auth.passwd' config.yaml
-! grep -q '^Authentication:' config.yaml
+if grep -q '^Authentication:' config.yaml; then echo 'Authentication must be commented out' >&2; exit 1; fi
 
 # FrontendPath defaults to a relative path; point it to a temp dir
 mkdir "$tmp/frontend"
-sed 's#^  Port: 8000#  Port: 8000\n  FrontendPath: '"$tmp"'/frontend#' config.yaml > "$tmp/default.yaml"
+awk -v p="$tmp/frontend" '{print} /^  Port: 8000/{print "  FrontendPath: " p}' config.yaml > "$tmp/default.yaml"
 "$BIN" --dry-run -c "$tmp/default.yaml"
 
 # the commented Authentication block must work when uncommented

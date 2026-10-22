@@ -5,7 +5,9 @@
 set -euo pipefail
 
 # frontend release of github.com/koestler/js-iotdevice that is bundled
-FRONTEND_VERSION="${FRONTEND_VERSION:-v2.3.2}"
+FRONTEND_VERSION="${FRONTEND_VERSION:-v2.4.1}"
+
+SWAG_VERSION="${SWAG_VERSION:-v1.16.4}"
 
 ARCH="${1:?usage: $0 <amd64|arm64|armhf> [version]}"
 cd "$(dirname "$0")/../.."
@@ -22,14 +24,14 @@ echo "building go-iotdevice $VERSION for $ARCH (frontend $FRONTEND_VERSION)"
 
 # swagger documentation (host independent)
 if [ ! -f docs/swagger.html ] || [ ! -f docs/swagger.json ] || [ ! -f docs/swagger.yaml ]; then
-    go install github.com/swaggo/swag/cmd/swag@latest
+    go install "github.com/swaggo/swag/cmd/swag@$SWAG_VERSION"
     PATH="$(go env GOPATH)/bin:$PATH" go generate docs.go
 fi
 
 # binary
 mkdir -p "dist/$ARCH"
 CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" GOARM="$GOARM" go build \
-    -ldflags="-s -w -X main.buildVersion=$VERSION -X main.buildTime=$(date -Is)" \
+    -ldflags="-s -w -X main.buildVersion=$VERSION -X main.buildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     -tags=jsoniter -o "dist/$ARCH/go-iotdevice"
 
 # frontend
@@ -45,6 +47,9 @@ if [ ! -f "dist/frontend-$FRONTEND_VERSION.stamp" ]; then
     test -f dist/frontend-build/index.html
     touch "dist/frontend-$FRONTEND_VERSION.stamp"
 fi
+
+# Debian expects a compressed changelog (-n: reproducible, no timestamp)
+gzip -9n -c CHANGELOG.md > dist/changelog.gz
 
 # package
 ARCH="$ARCH" VERSION="$VERSION" nfpm package -f packaging/deb/nfpm.yaml -p deb \
