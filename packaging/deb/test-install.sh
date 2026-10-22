@@ -12,7 +12,7 @@ cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
 docker run -d --name "$NAME" --privileged --cgroupns=host \
-    -v /sys/fs/cgroup:/sys/fs/cgroup:rw -v "$DEB:/tmp/test.deb:ro" "$IMAGE" >/dev/null
+    -v /sys/fs/cgroup:/sys/fs/cgroup:rw -v "$DEB:/opt/test.deb:ro" "$IMAGE" >/dev/null
 run() { docker exec "$NAME" bash -euxc "$1"; }
 
 # wait for systemd
@@ -25,7 +25,7 @@ done
 run 'apt-get update -qq && apt-get install -y -qq curl ca-certificates >/dev/null'
 
 echo "== install"
-run 'apt-get install -y /tmp/test.deb'
+run 'apt-get install -y /opt/test.deb'
 run 'getent passwd go-iotdevice
 id -nG go-iotdevice | tr " " "\n" | grep -qx dialout
 [ -f /usr/share/doc/go-iotdevice/changelog.gz ]'
@@ -52,7 +52,7 @@ sed -i "s#/etc/go-iotdevice/auth.passwd#/tmp/auth.passwd#" /tmp/auth.yaml
 
 echo "== modified conffile is preserved on reinstall"
 run 'echo "# local change" >> /etc/go-iotdevice/config.yaml
-apt-get install -y --reinstall -o Dpkg::Options::=--force-confold /tmp/test.deb
+apt-get install -y --reinstall -o Dpkg::Options::=--force-confold /opt/test.deb
 grep -q "# local change" /etc/go-iotdevice/config.yaml
 systemctl is-active go-iotdevice'
 
