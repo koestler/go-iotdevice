@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 3.13.0 
 * config: make docs path configurable via `HttpServer->DocsPath`
+* add debian packaging
 
 ## 3.12.0
 * genset: more verbose error reason
