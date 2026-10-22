@@ -104,6 +104,10 @@ func (c HttpServerConfig) FrontendProxy() *url.URL {
 	return c.frontendProxy
 }
 
+func (c HttpServerConfig) DocsPath() string {
+	return c.docsPath
+}
+
 func (c HttpServerConfig) FrontendPath() string {
 	return c.frontendPath
 }

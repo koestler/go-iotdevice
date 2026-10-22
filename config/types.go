@@ -39,6 +39,7 @@ type HttpServerConfig struct {
 	logRequests     bool
 	frontendProxy   *url.URL
 	frontendPath    string
+	docsPath        string
 	frontendExpires time.Duration
 	configExpires   time.Duration
 	logDebug        bool

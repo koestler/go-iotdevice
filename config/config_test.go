@@ -34,6 +34,7 @@ HttpServer:                                                # optional, when miss
   # configure FrontendProxy xor FrontendPath
   FrontendProxy: "http://127.0.0.1:3000/"                  # optional, default deactivated; proxies the frontend to another server; useful for development
   FrontendPath: ./frontend-build/                          # optional, default "frontend-build": path to a static frontend build
+  DocsPath: /tmp/mydocs/                                   # optional, default "./docs/", path to the swagger documentation files
   FrontendExpires: 1m                                      # optional, default 5min, what cache-control header to send for static frontend files
   ConfigExpires: 2m                                        # optional, default 1min, what cache-control header to send for configuration endpoints
   LogDebug: true                                           # optional, default false, output debug messages related to the http server
@@ -500,6 +501,10 @@ func TestReadConfig_Complete(t *testing.T) {
 
 		if expect, got := "./frontend-build/", hs.FrontendPath(); expect != got {
 			t.Errorf("expect HttpServer->FrontendPath to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := "/tmp/mydocs/", hs.DocsPath(); expect != got {
+			t.Errorf("expect HttpServer->DocsPath to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := time.Minute, hs.FrontendExpires(); expect != got {
@@ -1750,6 +1755,10 @@ func TestReadConfig_Default(t *testing.T) {
 
 		if expect, got := "./frontend-build/", hs.FrontendPath(); expect != got {
 			t.Errorf("expect HttpServer->FrontendPath to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := "./docs/", hs.DocsPath(); expect != got {
+			t.Errorf("expect HttpServer->DocsPath to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := 5*time.Minute, hs.FrontendExpires(); expect != got {

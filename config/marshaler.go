@@ -81,6 +81,7 @@ func (c HttpServerConfig) convertToRead() httpServerConfigRead {
 		LogRequests:     &c.logRequests,
 		FrontendProxy:   frontendProxy,
 		FrontendPath:    c.frontendPath,
+		DocsPath:        c.docsPath,
 		FrontendExpires: c.frontendExpires.String(),
 		ConfigExpires:   c.configExpires.String(),
 		LogDebug:        &c.logDebug,

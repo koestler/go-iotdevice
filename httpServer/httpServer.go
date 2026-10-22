@@ -38,6 +38,7 @@ type Config interface {
 	LogConfig() bool
 	FrontendProxy() *url.URL
 	FrontendPath() string
+	DocsPath() string
 	FrontendExpires() time.Duration
 	ConfigExpires() time.Duration
 }

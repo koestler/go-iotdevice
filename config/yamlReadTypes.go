@@ -26,6 +26,7 @@ type httpServerConfigRead struct {
 	LogRequests     *bool  `yaml:"LogRequests"`
 	FrontendProxy   string `yaml:"FrontendProxy"`
 	FrontendPath    string `yaml:"FrontendPath"`
+	DocsPath        string `yaml:"DocsPath"`
 	FrontendExpires string `yaml:"FrontendExpires"`
 	ConfigExpires   string `yaml:"ConfigExpires"`
 	LogDebug        *bool  `yaml:"LogDebug"`

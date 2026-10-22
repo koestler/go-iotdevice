@@ -23,7 +23,7 @@ import (
 func setupDocs(mux *http.ServeMux, env *Environment) {
 	config := env.Config
 
-	docsFS := os.DirFS("docs")
+	docsFS := os.DirFS(config.DocsPath())
 
 	serveStatic(mux, config, docsFS, "swagger.html", "/api/v2/docs/swagger.html")
 	serveStatic(mux, config, docsFS, "swagger.json", "/api/v2/docs/swagger.json")

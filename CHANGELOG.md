@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+* config: make docs path configurable via `HttpServer->DocsPath`
+
 ## 3.12.0
 * genset: more verbose error reason
 

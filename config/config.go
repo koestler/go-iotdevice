@@ -259,6 +259,12 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 		ret.frontendPath = "./frontend-build/"
 	}
 
+	if len(c.DocsPath) > 0 {
+		ret.docsPath = c.DocsPath
+	} else {
+		ret.docsPath = "./docs/"
+	}
+
 	if len(c.FrontendExpires) < 1 {
 		// use default 5min
 		ret.frontendExpires = 5 * time.Minute

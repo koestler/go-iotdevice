@@ -25,6 +25,7 @@ type mockConfig struct {
 	logConfig       bool
 	frontendProxy   *url.URL
 	frontendPath    string
+	docsPath        string
 	frontendExpires time.Duration
 	configExpires   time.Duration
 }
@@ -37,6 +38,7 @@ func (m *mockConfig) LogDebug() bool                 { return m.logDebug }
 func (m *mockConfig) LogConfig() bool                { return m.logConfig }
 func (m *mockConfig) FrontendProxy() *url.URL        { return m.frontendProxy }
 func (m *mockConfig) FrontendPath() string           { return m.frontendPath }
+func (m *mockConfig) DocsPath() string               { return m.docsPath }
 func (m *mockConfig) FrontendExpires() time.Duration { return m.frontendExpires }
 func (m *mockConfig) ConfigExpires() time.Duration   { return m.configExpires }
 
