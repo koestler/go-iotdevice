@@ -22,7 +22,7 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v6
@@ -46,7 +46,7 @@ jobs:
         uses: docker/setup-buildx-action@v4
       - name: Build and push
         id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/Dockerfile
