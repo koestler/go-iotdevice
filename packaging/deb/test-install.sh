@@ -25,7 +25,8 @@ run 'apt-get update -qq && apt-get install -y -qq curl ca-certificates >/dev/nul
 
 echo "== install"
 run 'apt-get install -y /tmp/test.deb'
-run 'getent passwd go-iotdevice && id -nG go-iotdevice | tr " " "\n" | grep -qx dialout
+run 'getent passwd go-iotdevice
+id -nG go-iotdevice | tr " " "\n" | grep -qx dialout
 [ -f /usr/share/doc/go-iotdevice/changelog.gz ]'
 run '[ "$(stat -c "%a %U:%G" /etc/go-iotdevice/config.yaml)" = "640 root:go-iotdevice" ]'
 run 'systemctl is-enabled go-iotdevice'
