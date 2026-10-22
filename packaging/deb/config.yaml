@@ -1,0 +1,30 @@
+# go-iotdevice default configuration (demo, runs without any hardware).
+# The full and commented reference is available at
+#   /usr/share/doc/go-iotdevice/full-config.yaml
+#   https://github.com/koestler/go-iotdevice/blob/main/documentation/full-config.yaml
+# After changing this file run: sudo systemctl restart go-iotdevice
+
+Version: 2
+ProjectTitle: go-iotdevice
+
+HttpServer:
+  Bind: "[::]"
+  Port: 8000
+
+# Uncomment to enable login. Create the file with: sudo htpasswd -c /etc/go-iotdevice/auth.passwd <user>
+# and make it readable by the service: sudo chown root:go-iotdevice /etc/go-iotdevice/auth.passwd; sudo chmod 640 /etc/go-iotdevice/auth.passwd
+# Authentication:
+#   JwtSecret: 'insert-a-random-string-of-at-least-32-characters'  # generate with `pwgen -s 64 1`; a fixed value keeps users logged in across restarts
+#   JwtValidityPeriod: 1h
+#   HtaccessFile: /etc/go-iotdevice/auth.passwd
+
+VictronDevices:
+  bmv0:
+    Kind: RandomSolar
+
+Views:
+  - Name: Overview
+    Title: Overview
+    Devices:
+      - Name: bmv0
+        Title: Demo Solar Charger
