@@ -1,7 +1,7 @@
-# versions are passed as build args by the CI (see .github/workflows/docker-image.yml)
-ARG GO_VERSION
-ARG SWAG_VERSION
-ARG FRONTEND_VERSION
+# CI overrides these build-argument defaults (see .github/workflows/docker-image.yml).
+ARG GO_VERSION=1.27.3
+ARG SWAG_VERSION=v1.16.6
+ARG FRONTEND_VERSION=v2.4.1
 
 # build backend
 FROM golang:${GO_VERSION}-alpine AS go-builder
