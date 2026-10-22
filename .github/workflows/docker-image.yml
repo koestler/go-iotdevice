@@ -13,7 +13,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  GO_VERSION: 1.27.2
+  GO_VERSION: 1.27.3
   SWAG_VERSION: v1.16.4
   FRONTEND_VERSION: v2.4.1
 

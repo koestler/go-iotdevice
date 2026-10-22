@@ -616,7 +616,7 @@ Alternatively, if you don't have Golang installed locally, you can compile and r
 ```bash
 # versions are pinned in the env: section of .github/workflows/docker-image.yml
 docker build -f docker/Dockerfile -t go-iotdevice \
-  --build-arg GO_VERSION=1.27.2 --build-arg SWAG_VERSION=v1.16.4 --build-arg FRONTEND_VERSION=v2.4.1 .
+  --build-arg GO_VERSION=1.27.3 --build-arg SWAG_VERSION=v1.16.4 --build-arg FRONTEND_VERSION=v2.4.1 .
 docker run --rm --name go-iotdevice -p 127.0.0.1:8000:8000 \
   -v "$(pwd)"/documentation/config.yaml:/config.yaml:ro \
   go-iotdevice
