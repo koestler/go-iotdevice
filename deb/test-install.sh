@@ -1,6 +1,6 @@
 #!/bin/bash
 # Installs a .deb into an architecture-matched debian:trixie container (built locally with systemd) as PID 1 and verifies the service.
-# Usage: packaging/deb/test-install.sh <path-to.deb>
+# Usage: deb/test-install.sh <path-to.deb>
 # shellcheck disable=SC2016 # commands are intentionally expanded inside the container
 set -euo pipefail
 

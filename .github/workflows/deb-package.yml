@@ -43,13 +43,13 @@ jobs:
         run: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@${NFPM_VERSION}
 
       - name: Shellcheck
-        run: shellcheck packaging/deb/*.sh packaging/deb/scripts/*.sh
+        run: shellcheck deb/*.sh deb/scripts/*.sh
 
       - name: Build package
         run: |
-          VERSION=$(packaging/deb/version.sh)
+          VERSION=$(deb/version.sh)
           echo "version=$VERSION"
-          packaging/deb/build-deb.sh "${{ matrix.arch }}" "$VERSION"
+          deb/build-deb.sh "${{ matrix.arch }}" "$VERSION"
 
       - name: Checksum
         working-directory: dist
@@ -84,7 +84,7 @@ jobs:
 
       - name: Install test in a systemd container
         if: matrix.arch == 'amd64'
-        run: packaging/deb/test-install.sh dist/go-iotdevice_*.deb
+        run: deb/test-install.sh dist/go-iotdevice_*.deb
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')

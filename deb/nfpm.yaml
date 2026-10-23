@@ -36,14 +36,14 @@ contents:
     dst: /usr/share/go-iotdevice/docs/swagger.yaml
     file_info:
       mode: 0644
-  - src: packaging/deb/config.yaml
+  - src: deb/config.yaml
     dst: /etc/go-iotdevice/config.yaml
     type: config|noreplace
     file_info:
       mode: 0640
       owner: root
       group: go-iotdevice
-  - src: packaging/deb/go-iotdevice.service
+  - src: deb/go-iotdevice.service
     dst: /usr/lib/systemd/system/go-iotdevice.service
     file_info:
       mode: 0644
@@ -64,7 +64,7 @@ contents:
     file_info:
       mode: 0644
 scripts:
-  preinstall: packaging/deb/scripts/preinst.sh
-  postinstall: packaging/deb/scripts/postinst.sh
-  preremove: packaging/deb/scripts/prerm.sh
-  postremove: packaging/deb/scripts/postrm.sh
+  preinstall: deb/scripts/preinst.sh
+  postinstall: deb/scripts/postinst.sh
+  preremove: deb/scripts/prerm.sh
+  postremove: deb/scripts/postrm.sh

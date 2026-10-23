@@ -1,6 +1,6 @@
 #!/bin/bash
 # Builds a .deb package.
-# Usage: packaging/deb/build-deb.sh <amd64|arm64|armhf> [version]
+# Usage: deb/build-deb.sh <amd64|arm64|armhf> [version]
 # Requires: go, node (npx), curl, nfpm; env: FRONTEND_VERSION, SWAG_VERSION
 set -euo pipefail
 
@@ -9,8 +9,8 @@ set -euo pipefail
 : "${FRONTEND_VERSION:?must be set}" "${SWAG_VERSION:?must be set}"
 
 ARCH="${1:?usage: $0 <amd64|arm64|armhf> [version]}"
-cd "$(dirname "$0")/../.."
-VERSION="${2:-$(packaging/deb/version.sh)}"
+cd "$(dirname "$0")/.."
+VERSION="${2:-$(deb/version.sh)}"
 
 case "$ARCH" in
 amd64) GOARCH=amd64; GOARM="" ;;
@@ -50,6 +50,6 @@ gzip -9n -c CHANGELOG.md > dist/changelog.gz
 
 # package
 export ARCH VERSION
-nfpm package -f packaging/deb/nfpm.yaml -p deb \
+nfpm package -f deb/nfpm.yaml -p deb \
     -t "dist/go-iotdevice_${VERSION}_${ARCH}.deb"
 ls -l "dist/go-iotdevice_${VERSION}_${ARCH}.deb"
