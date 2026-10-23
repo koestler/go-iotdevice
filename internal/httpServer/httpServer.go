@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
 type HttpServer struct {

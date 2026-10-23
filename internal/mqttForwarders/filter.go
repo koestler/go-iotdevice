@@ -1,8 +1,8 @@
 package mqttForwarders
 
 import (
-	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-iotdevice/v3/device"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
+	"github.com/koestler/go-iotdevice/v3/internal/device"
 )
 
 var availabilityRegisterFilter = func(r dataflow.Filterable) bool {

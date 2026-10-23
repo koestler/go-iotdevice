@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
-	"github.com/koestler/go-iotdevice/v3/queue"
+	"github.com/koestler/go-iotdevice/v3/internal/queue"
 	"log"
 	"net/url"
 	"time"

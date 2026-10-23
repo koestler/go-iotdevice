@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-iotdevice/v3/genset"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
+	"github.com/koestler/go-iotdevice/v3/pkg/genset"
 )
 
 var ErrUnknownInputName = errors.New("unknown input name")

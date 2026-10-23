@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-iotdevice/v3/device"
-	"github.com/koestler/go-iotdevice/v3/genset"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
+	"github.com/koestler/go-iotdevice/v3/internal/device"
+	"github.com/koestler/go-iotdevice/v3/pkg/genset"
 )
 
 const clockUpdateInterval = 500 * time.Millisecond

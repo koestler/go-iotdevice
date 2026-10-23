@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/pkg/errors"
 )
 

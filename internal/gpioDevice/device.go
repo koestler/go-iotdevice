@@ -5,8 +5,8 @@ package gpioDevice
 import (
 	"context"
 	"errors"
-	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-iotdevice/v3/device"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
+	"github.com/koestler/go-iotdevice/v3/internal/device"
 )
 
 type DeviceStruct struct {

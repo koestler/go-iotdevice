@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
 func runStorage(logPrefix string) *dataflow.ValueStorage {

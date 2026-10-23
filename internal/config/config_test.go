@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/koestler/go-iotdevice/v3/types"
+	"github.com/koestler/go-iotdevice/v3/internal/types"
 )
 
 const (
@@ -2644,14 +2644,14 @@ func TestReadConfig_Default(t *testing.T) {
 
 // check that configuration file in the documentation do not contain any errors
 func TestReadConfig_DocumentationFullConfig(t *testing.T) {
-	_, err := ReadConfigFile("", "../documentation/full-config.yaml", true)
+	_, err := ReadConfigFile("", "../../documentation/full-config.yaml", true)
 	if len(err) > 0 {
 		t.Errorf("did not expect any error, got %v", err)
 	}
 }
 
 func TestReadConfig_DocumentationConfig(t *testing.T) {
-	_, err := ReadConfigFile("", "../documentation/config.yaml", true)
+	_, err := ReadConfigFile("", "../../documentation/config.yaml", true)
 	if len(err) > 0 {
 		t.Errorf("did not expect any error, got %v", err)
 	}

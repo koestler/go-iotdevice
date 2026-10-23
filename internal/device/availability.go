@@ -1,6 +1,6 @@
 package device
 
-import "github.com/koestler/go-iotdevice/v3/dataflow"
+import "github.com/koestler/go-iotdevice/v3/internal/dataflow"
 
 const AvailabilityRegisterName = "Available"
 const AvailabilityOfflineValue = "offline"

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/koestler/go-iotdevice/v3/types"
+	"github.com/koestler/go-iotdevice/v3/internal/types"
 )
 
 // Getters for Config struct

@@ -2,7 +2,7 @@ package victronDevice
 
 import (
 	"context"
-	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-victron/veregister"
 	"log"
 	"math/rand"

@@ -2,7 +2,7 @@ package device
 
 import (
 	"context"
-	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
 type Config interface {

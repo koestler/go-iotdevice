@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/warthog618/go-gpiocdev"
 )
 

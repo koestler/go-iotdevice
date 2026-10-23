@@ -2,8 +2,8 @@ package mqttForwarders
 
 import (
 	"context"
-	"github.com/koestler/go-iotdevice/v3/device"
-	"github.com/koestler/go-iotdevice/v3/mqttClient"
+	"github.com/koestler/go-iotdevice/v3/internal/device"
+	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"
 )
 
 func runAvailabilityForwarder(

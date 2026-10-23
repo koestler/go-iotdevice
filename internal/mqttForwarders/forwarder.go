@@ -1,11 +1,11 @@
 package mqttForwarders
 
 import (
-	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-iotdevice/v3/device"
-	"github.com/koestler/go-iotdevice/v3/mqttClient"
-	"github.com/koestler/go-iotdevice/v3/pool"
-	"github.com/koestler/go-iotdevice/v3/restarter"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
+	"github.com/koestler/go-iotdevice/v3/internal/device"
+	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"
+	"github.com/koestler/go-iotdevice/v3/internal/pool"
+	"github.com/koestler/go-iotdevice/v3/internal/restarter"
 	"log"
 	"time"
 )

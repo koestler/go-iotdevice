@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-victron/vedirect"
 	"github.com/koestler/go-victron/vedirectapi"
 	"github.com/koestler/go-victron/veregister"

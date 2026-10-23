@@ -1,8 +1,8 @@
 package gensetDevice
 
 import (
-	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-iotdevice/v3/genset"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
+	"github.com/koestler/go-iotdevice/v3/pkg/genset"
 )
 
 func boolToOnOff(b bool) int {

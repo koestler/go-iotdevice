@@ -9,7 +9,7 @@ import (
 	"syscall"
 
 	"github.com/jessevdk/go-flags"
-	"github.com/koestler/go-iotdevice/v3/config"
+	"github.com/koestler/go-iotdevice/v3/internal/config"
 )
 
 // is set through linker by build.sh

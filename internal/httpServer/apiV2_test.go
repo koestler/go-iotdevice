@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/koestler/go-iotdevice/v3/dataflow"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/stretchr/testify/assert"
 )
 

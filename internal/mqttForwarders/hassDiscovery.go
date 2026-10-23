@@ -3,9 +3,9 @@ package mqttForwarders
 import (
 	"context"
 	"fmt"
-	"github.com/koestler/go-iotdevice/v3/dataflow"
-	"github.com/koestler/go-iotdevice/v3/device"
-	"github.com/koestler/go-iotdevice/v3/mqttClient"
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
+	"github.com/koestler/go-iotdevice/v3/internal/device"
+	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"
 	"golang.org/x/exp/maps"
 	"log"
 	"slices"

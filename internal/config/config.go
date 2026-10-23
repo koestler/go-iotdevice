@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/koestler/go-iotdevice/v3/types"
+	"github.com/koestler/go-iotdevice/v3/internal/types"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/maps"
 	"gopkg.in/yaml.v3"
