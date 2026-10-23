@@ -3,7 +3,7 @@
 ## 4.0.0
 * update install docs
 * restructure go code in the repository, be explicit what package are internal
-* drop mem / cpu profile to disk options (will be added via http server)
+* drop mem / cpu profile to disk options
 
 ## 3.13.0 
 * config: make docs path configurable via `HttpServer->DocsPath`
