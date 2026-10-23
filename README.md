@@ -71,27 +71,62 @@ This project uses the following terminology:
 
 ## Deployment
 
-<details>
-<summary>
-Deployment without docker
-</summary>
-I use docker to deploy this tool.
-Alternatively, you can use `go install` to build binary locally.
-If you need the [front-end](https://github.com/koestler/js-iotdevice), you have to manually `npm run build` it and copy the files to the correct location.
-Also, the swagger documentation will be missing. See [Local Development](#Local-development) for more details.
+There are three ways to deploy this tool:
+
+- [Debian / Raspberry Pi OS](#debian--raspberry-pi-os-with-systemd): `.deb` package
+- [Docker](#docker)
+- [Manual build](#manual-build)
+
+### Debian / Raspberry Pi OS with systemd
+
+`.deb` packages for `amd64`, `arm64` and `armhf` are available. They require Debian 13 (trixie) with systemd.
+
+The easiest way is to install the [koestler/apt](https://github.com/koestler/apt) repository
+(follow the instructions in its README) and then install the package:
 
 ```bash
-go install github.com/koestler/go-iotdevice/v3@latest
-curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/config.yaml -o config.yaml
-
-# optional download the full and commented configuration file for reference 
-curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/full-config.yaml -o full-config.yaml
-# adapt config.yaml and configure devices
-
-# start the tool
-go-iotdevice --config=config.yaml
+sudo apt install go-iotdevice
 ```
-</details>
+
+Alternatively, the `.deb` package can be downloaded directly from the
+[GitHub Releases](https://github.com/koestler/go-iotdevice/releases) and installed:
+
+```bash
+# replace <version> and <arch> (amd64, arm64 or armhf)
+curl -LO https://github.com/koestler/go-iotdevice/releases/download/v<version>/go-iotdevice_<version>_<arch>.deb
+curl -LO https://github.com/koestler/go-iotdevice/releases/download/v<version>/SHA256SUMS
+sha256sum -c --ignore-missing SHA256SUMS
+sudo apt install ./go-iotdevice_<version>_<arch>.deb
+```
+
+After the installation the service is enabled and running with a demo configuration (a simulated solar charger),
+the web interface is available at <http://127.0.0.1:8000/>.
+The service runs as the system user `go-iotdevice` which is member of the groups `dialout` (serial devices) and `gpio`.
+
+Edit `/etc/go-iotdevice/config.yaml` (see `/usr/share/doc/go-iotdevice/full-config.yaml` for all options),
+validate and apply it:
+
+```bash
+sudo -u go-iotdevice go-iotdevice --dry-run -c /etc/go-iotdevice/config.yaml
+sudo systemctl restart go-iotdevice
+```
+
+Manage the service:
+
+```bash
+systemctl status go-iotdevice             # check service is running
+journalctl -u go-iotdevice -f             # follow the log output
+sudo systemctl disable --now go-iotdevice # turn it off
+```
+
+If [authentication](#authentication) is enabled, the user database must be readable by the service user:
+
+```bash
+sudo apt install apache2-utils
+sudo htpasswd -c /etc/go-iotdevice/auth.passwd <user>
+sudo chown root:go-iotdevice /etc/go-iotdevice/auth.passwd
+sudo chmod 640 /etc/go-iotdevice/auth.passwd
+```
 
 ### Docker
 
@@ -122,15 +157,7 @@ services:
 
 ```
 
-### Configuration
-The configuration is stored in a single yaml file. By default, it is read from `./config.yaml`.
-This can be changed using the `--config=another-config.yaml` command line option.
-
-There are mandatory fields and there are optional fields which have reasonable default values.
-
-See [Explained Full Configuration](#explained-full-configuration) for a complete list of all available configuration options.
-
-### Quick setup
+#### Setup
 [Install Docker](https://docs.docker.com/engine/install/) first.
 
 ```bash
@@ -158,47 +185,31 @@ docker compose pull
 docker compose up -d
 ```
 
-### Debian / Raspberry Pi OS with systemd
+### Manual build
 
-`.deb` packages for `amd64`, `arm64` and `armhf` are attached to every
-[GitHub Release](https://github.com/koestler/go-iotdevice/releases). They require Debian 13 (trixie) with systemd.
-
-```bash
-# replace <version> and <arch> (amd64, arm64 or armhf)
-curl -LO https://github.com/koestler/go-iotdevice/releases/download/v<version>/go-iotdevice_<version>_<arch>.deb
-curl -LO https://github.com/koestler/go-iotdevice/releases/download/v<version>/SHA256SUMS
-sha256sum -c --ignore-missing SHA256SUMS
-sudo apt install ./go-iotdevice_<version>_<arch>.deb
-```
-
-After the installation the service is enabled and running with a demo configuration (a simulated solar charger),
-the web interface is available at <http://127.0.0.1:8000/>.
-The service runs as the system user `go-iotdevice` which is member of the groups `dialout` (serial devices) and `gpio`.
-
-Edit `/etc/go-iotdevice/config.yaml` (see `/usr/share/doc/go-iotdevice/full-config.yaml` for all options),
-validate and apply it:
+You can use `go install` to build the binary locally.
+If you need the [frontend](https://github.com/koestler/js-iotdevice), you have to manually `npm run build` it and copy the files to the correct location.
+Also, the swagger documentation will be missing. See [Local Development](#Local-development) for more details.
 
 ```bash
-sudo -u go-iotdevice go-iotdevice --dry-run -c /etc/go-iotdevice/config.yaml
-sudo systemctl restart go-iotdevice
+go install github.com/koestler/go-iotdevice/v3@latest
+curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/config.yaml -o config.yaml
+
+# optional download the full and commented configuration file for reference 
+curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/full-config.yaml -o full-config.yaml
+# adapt config.yaml and configure devices
+
+# start the tool
+go-iotdevice --config=config.yaml
 ```
 
-Manage the service:
+### Configuration
+The configuration is stored in a single yaml file. By default, it is read from `./config.yaml`.
+This can be changed using the `--config=another-config.yaml` command line option.
 
-```bash
-systemctl status go-iotdevice
-journalctl -u go-iotdevice -f
-sudo systemctl disable --now go-iotdevice   # turn it off
-```
+There are mandatory fields and there are optional fields which have reasonable default values.
 
-If [authentication](#authentication) is enabled, the user database must be readable by the service user:
-
-```bash
-sudo apt install apache2-utils
-sudo htpasswd -c /etc/go-iotdevice/auth.passwd <user>
-sudo chown root:go-iotdevice /etc/go-iotdevice/auth.passwd
-sudo chmod 640 /etc/go-iotdevice/auth.passwd
-```
+See [Explained Full Configuration](#explained-full-configuration) for a complete list of all available configuration options.
 
 ## Devices
 All devices have in common that this software extracts a relatively static set of registers

@@ -1,5 +1,8 @@
 # Changelog
 
+## 3.14.0
+* update install docs
+
 ## 3.13.0 
 * config: make docs path configurable via `HttpServer->DocsPath`
 * add debian packaging
