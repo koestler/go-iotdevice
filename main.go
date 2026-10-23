@@ -10,6 +10,7 @@ import (
 
 	"github.com/jessevdk/go-flags"
 	"github.com/koestler/go-iotdevice/v3/internal/config"
+	"github.com/koestler/go-iotdevice/v3/internal/run"
 )
 
 // is set through linker by build.sh
@@ -90,7 +91,7 @@ func main() {
 		}
 
 		// start cpu profiling if enabled
-		if runCpuProfile(string(cmdOptions.CpuProfile)) {
+		if run.CpuProfile(string(cmdOptions.CpuProfile)) {
 			defer pprof.StopCPUProfile()
 		}
 
@@ -99,42 +100,42 @@ func main() {
 		if cfg.LogStateStorageDebug() {
 			stateStorageLogPrefix = "stateStorage"
 		}
-		stateStorage := runStorage(stateStorageLogPrefix)
+		stateStorage := run.Storage(stateStorageLogPrefix)
 		defer stateStorage.Shutdown()
 
 		commandStorageLogPrefix := ""
 		if cfg.LogCommandStorageDebug() {
 			commandStorageLogPrefix = "commandStorage"
 		}
-		commandStorage := runStorage(commandStorageLogPrefix)
+		commandStorage := run.Storage(commandStorageLogPrefix)
 		defer commandStorage.Shutdown()
 
 		// start modbus device handlers
-		modbusPool := runModbus(cfg)
+		modbusPool := run.Modbus(cfg)
 		defer modbusPool.Shutdown()
 
 		// start device pool
-		devicePool := runDevicePool()
+		devicePool := run.DevicePool()
 		defer devicePool.Shutdown()
 
 		// start non mqtt devices
-		runNonMqttGensetDevices(cfg, devicePool, modbusPool, stateStorage, commandStorage)
+		run.NonMqttGensetDevices(cfg, devicePool, modbusPool, stateStorage, commandStorage)
 
 		// start mqtt client pool
-		mqttClientPool := runMqttClient(cfg)
+		mqttClientPool := run.MqttClient(cfg)
 		defer mqttClientPool.Shutdown()
 
 		// start mqtt clients
-		runMqttDevices(cfg, devicePool, mqttClientPool, stateStorage, commandStorage)
+		run.MqttDevices(cfg, devicePool, mqttClientPool, stateStorage, commandStorage)
 
 		// start mqtt forwarders
-		runMqttForwarders(cfg, devicePool, mqttClientPool, stateStorage, commandStorage)
+		run.MqttForwarders(cfg, devicePool, mqttClientPool, stateStorage, commandStorage)
 
 		// start genset devices
-		runGensetDevices(cfg, devicePool, stateStorage, commandStorage)
+		run.GensetDevices(cfg, devicePool, stateStorage, commandStorage)
 
 		// start http server
-		httpServer := runHttpServer(cfg, devicePool, stateStorage, commandStorage)
+		httpServer := run.HttpServer(cfg, devicePool, stateStorage, commandStorage, buildVersion)
 		if httpServer != nil {
 			defer httpServer.Shutdown()
 		}
@@ -153,7 +154,7 @@ func main() {
 		exitCode = ExitSuccess
 
 		// write memory profile; after that defer will run the shutdown methods
-		writeMemProfile(string(cmdOptions.MemProfile))
+		run.WriteMemProfile(string(cmdOptions.MemProfile))
 
 		return
 	}()

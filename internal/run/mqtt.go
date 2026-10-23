@@ -1,15 +1,16 @@
-package main
+package run
 
 import (
+	"log"
+
 	"github.com/koestler/go-iotdevice/v3/internal/config"
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"
 	"github.com/koestler/go-iotdevice/v3/internal/mqttForwarders"
 	"github.com/koestler/go-iotdevice/v3/internal/pool"
-	"log"
 )
 
-func runMqttClient(
+func MqttClient(
 	cfg *config.Config,
 ) (mqttClientPool *pool.Pool[mqttClient.Client]) {
 	// run pool

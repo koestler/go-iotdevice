@@ -1,20 +1,22 @@
-package main
+package run
 
 import (
+	"log"
+
 	"github.com/koestler/go-iotdevice/v3/internal/config"
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/device"
 	"github.com/koestler/go-iotdevice/v3/internal/httpServer"
 	"github.com/koestler/go-iotdevice/v3/internal/pool"
 	"github.com/koestler/go-iotdevice/v3/internal/restarter"
-	"log"
 )
 
-func runHttpServer(
+func HttpServer(
 	cfg *config.Config,
 	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
 	stateStorage *dataflow.ValueStorage,
 	commandStorage *dataflow.ValueStorage,
+	buildVersion string,
 ) *httpServer.HttpServer {
 	httpServerCfg := cfg.HttpServer()
 	if !httpServerCfg.Enabled() {
@@ -30,6 +32,7 @@ func runHttpServer(
 			Config: httpServerConfig{
 				cfg.HttpServer(),
 				cfg.LogConfig(),
+				buildVersion,
 			},
 			ProjectTitle: cfg.ProjectTitle(),
 			Views: func(inp []config.ViewConfig) (oup []httpServer.ViewConfig) {
@@ -51,7 +54,8 @@ func runHttpServer(
 
 type httpServerConfig struct {
 	config.HttpServerConfig
-	logConfig bool
+	logConfig    bool
+	buildVersion string
 }
 
 func (c httpServerConfig) LogConfig() bool {
@@ -59,7 +63,7 @@ func (c httpServerConfig) LogConfig() bool {
 }
 
 func (c httpServerConfig) BuildVersion() string {
-	return buildVersion
+	return c.buildVersion
 }
 
 type viewConfig struct {

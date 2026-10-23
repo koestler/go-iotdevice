@@ -1,21 +1,22 @@
-package main
+package run
 
 import (
+	"log"
+	"time"
+
 	"github.com/koestler/go-iotdevice/v3/internal/config"
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/device"
 	"github.com/koestler/go-iotdevice/v3/internal/gensetDevice"
 	"github.com/koestler/go-iotdevice/v3/internal/gpioDevice"
 	"github.com/koestler/go-iotdevice/v3/internal/httpDevice"
-	"github.com/koestler/go-iotdevice/v3/pkg/modbus"
 	"github.com/koestler/go-iotdevice/v3/internal/modbusDevice"
 	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"
 	"github.com/koestler/go-iotdevice/v3/internal/mqttDevice"
 	"github.com/koestler/go-iotdevice/v3/internal/pool"
 	"github.com/koestler/go-iotdevice/v3/internal/restarter"
 	"github.com/koestler/go-iotdevice/v3/internal/victronDevice"
-	"log"
-	"time"
+	"github.com/koestler/go-iotdevice/v3/pkg/modbus"
 )
 
 // gensetRunDelay is the delay before starting genset devices.
@@ -23,11 +24,11 @@ import (
 // the genset device sets up its bindings.
 const gensetRunDelay = 2 * time.Second
 
-func runDevicePool() *pool.Pool[*restarter.Restarter[device.Device]] {
+func DevicePool() *pool.Pool[*restarter.Restarter[device.Device]] {
 	return pool.RunPool[*restarter.Restarter[device.Device]]()
 }
 
-func runNonMqttGensetDevices(
+func NonMqttGensetDevices(
 	cfg *config.Config,
 	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
 	modbusPool *pool.Pool[*modbus.ModbusStruct],
@@ -94,7 +95,7 @@ func runNonMqttGensetDevices(
 	}
 }
 
-func runMqttDevices(
+func MqttDevices(
 	cfg *config.Config,
 	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
 	mqttClientPool *pool.Pool[mqttClient.Client],
@@ -114,7 +115,7 @@ func runMqttDevices(
 	}
 }
 
-func runGensetDevices(
+func GensetDevices(
 	cfg *config.Config,
 	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
 	stateStorage *dataflow.ValueStorage,

@@ -1,13 +1,14 @@
-package main
+package run
 
 import (
-	"github.com/koestler/go-iotdevice/v3/internal/config"
-	"github.com/koestler/go-iotdevice/v3/pkg/modbus"
-	"github.com/koestler/go-iotdevice/v3/internal/pool"
 	"log"
+
+	"github.com/koestler/go-iotdevice/v3/internal/config"
+	"github.com/koestler/go-iotdevice/v3/internal/pool"
+	"github.com/koestler/go-iotdevice/v3/pkg/modbus"
 )
 
-func runModbus(
+func Modbus(
 	cfg *config.Config,
 ) (modbusPool *pool.Pool[*modbus.ModbusStruct]) {
 	// run pool

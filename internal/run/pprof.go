@@ -1,4 +1,4 @@
-package main
+package run
 
 import (
 	"log"
@@ -7,7 +7,7 @@ import (
 	"runtime/pprof"
 )
 
-func runCpuProfile(fileName string) (started bool) {
+func CpuProfile(fileName string) (started bool) {
 	if fileName == "" {
 		return false
 	}
@@ -27,7 +27,7 @@ func runCpuProfile(fileName string) (started bool) {
 	return true
 }
 
-func writeMemProfile(fileName string) {
+func WriteMemProfile(fileName string) {
 	if fileName == "" {
 		return
 	}

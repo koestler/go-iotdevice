@@ -1,4 +1,4 @@
-package main
+package run
 
 import (
 	"github.com/koestler/go-iotdevice/v3/internal/config"
@@ -10,7 +10,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/internal/restarter"
 )
 
-func runMqttForwarders(
+func MqttForwarders(
 	cfg *config.Config,
 	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
 	mqttClientPool *pool.Pool[mqttClient.Client],

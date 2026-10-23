@@ -1,11 +1,12 @@
-package main
+package run
 
 import (
 	"context"
+
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
-func runStorage(logPrefix string) *dataflow.ValueStorage {
+func Storage(logPrefix string) *dataflow.ValueStorage {
 	valueStorage := dataflow.NewValueStorage()
 
 	if len(logPrefix) > 0 {
