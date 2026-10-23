@@ -110,3 +110,13 @@ jobs:
         run: |
           gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
           gh release upload "$GITHUB_REF_NAME" dist/*.deb dist/SHA256SUMS --clobber
+
+      - name: Notify apt repository
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.APT_DISPATCH_TOKEN }}
+        run: |
+          gh api repos/koestler/apt/dispatches \
+            -f event_type=package-released \
+            -f 'client_payload[repo]=${{ github.repository }}' \
+            -f 'client_payload[tag]=${{ github.ref_name }}'
