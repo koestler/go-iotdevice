@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"runtime/pprof"
 	"syscall"
 
 	"github.com/jessevdk/go-flags"
@@ -18,11 +17,9 @@ var buildVersion string
 var buildTime string
 
 type CmdOptions struct {
-	Version    bool           `long:"version" description:"Print the build version and timestamp"`
-	Config     flags.Filename `short:"c" long:"config" description:"Config File in yaml format" default:"./config.yaml"`
-	DryRun     bool           `short:"d" long:"dry-run" description:"Read and check the config and exit."`
-	CpuProfile flags.Filename `long:"cpuprofile" description:"write cpu profile to <file>"`
-	MemProfile flags.Filename `long:"memprofile" description:"write memory profile to <file>"`
+	Version bool           `long:"version" description:"Print the build version and timestamp"`
+	Config  flags.Filename `short:"c" long:"config" description:"Config File in yaml format" default:"./config.yaml"`
+	DryRun  bool           `short:"d" long:"dry-run" description:"Read and check the config and exit."`
 }
 
 const (
@@ -90,11 +87,6 @@ func main() {
 			log.Printf("main: start go-iotdevice version=%s", buildVersion)
 		}
 
-		// start cpu profiling if enabled
-		if run.CpuProfile(string(cmdOptions.CpuProfile)) {
-			defer pprof.StopCPUProfile()
-		}
-
 		// start storage
 		stateStorageLogPrefix := ""
 		if cfg.LogStateStorageDebug() {
@@ -152,9 +144,6 @@ func main() {
 			log.Printf("main: graceful shutdown; caught signal: %+v", sig)
 		}
 		exitCode = ExitSuccess
-
-		// write memory profile; after that defer will run the shutdown methods
-		run.WriteMemProfile(string(cmdOptions.MemProfile))
 
 		return
 	}()
