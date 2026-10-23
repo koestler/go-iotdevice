@@ -2,6 +2,7 @@
 
 ## 3.14.0
 * update install docs
+* restructure go code in the repository
 
 ## 3.13.0 
 * config: make docs path configurable via `HttpServer->DocsPath`
