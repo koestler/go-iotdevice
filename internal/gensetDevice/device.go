@@ -55,7 +55,7 @@ type Binding interface {
 	RegisterName() string
 }
 
-type RegisterDbOfDeviceFunc func(deviceName string) *dataflow.RegisterDb
+type RegisterDbOfDeviceFunc func(deviceName string) (*dataflow.RegisterDb, bool)
 
 type DeviceStruct struct {
 	device.State
@@ -252,7 +252,11 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 			return v.DeviceName() == dName && v.Register().Name() == bindingName
 		})
 		getRegister := func() (reg dataflow.RegisterStruct, ok bool) {
-			return d.registerDbOfDevice(deviceName).GetByName(registerName)
+			rdb, ok := d.registerDbOfDevice(deviceName)
+			if !ok {
+				return reg, false
+			}
+			return rdb.GetByName(registerName)
 		}
 
 		shutdownWg.Add(1)

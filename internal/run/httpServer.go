@@ -43,8 +43,12 @@ func HttpServer(
 				return oup
 			}(cfg.Views()),
 			Authentication: cfg.Authentication(),
-			RegisterDbOfDevice: func(deviceName string) *dataflow.RegisterDb {
-				return devicePool.GetByName(deviceName).Service().RegisterDb()
+			RegisterDbOfDevice: func(deviceName string) (*dataflow.RegisterDb, bool) {
+				dev, ok := devicePool.GetByName(deviceName)
+				if !ok {
+					return nil, false
+				}
+				return dev.Service().RegisterDb(), true
 			},
 			StateStorage:   stateStorage,
 			CommandStorage: commandStorage,

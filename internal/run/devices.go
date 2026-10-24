@@ -53,8 +53,8 @@ func NonMqttGensetDevices(
 		}
 
 		deviceConfig := modbusDeviceConfig{deviceConfig}
-		modbusInstance := modbusPool.GetByName(deviceConfig.Bus())
-		if modbusInstance == nil {
+		modbusInstance, ok := modbusPool.GetByName(deviceConfig.Bus())
+		if !ok {
 			log.Printf("device[%s]: start failed: bus=%s unavailable", deviceConfig.Name(), deviceConfig.Bus())
 			continue
 		}
@@ -132,8 +132,12 @@ func GensetDevices(
 			deviceConfig,
 			stateStorage,
 			commandStorage,
-			func(deviceName string) *dataflow.RegisterDb {
-				return devicePool.GetByName(deviceName).Service().RegisterDb()
+			func(deviceName string) (*dataflow.RegisterDb, bool) {
+				dev, ok := devicePool.GetByName(deviceName)
+				if !ok {
+					return nil, false
+				}
+				return dev.Service().RegisterDb(), true
 			},
 		)
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)

@@ -8,6 +8,7 @@
   * config: do not panic when an MQTT device is referenced that does not exist
   * genset: fix bug that caused to many registers to be controllable
   * genset: fix bug that the state register was not updated when returning to the off state
+  * fix nil pointer panics when a referenced device or mqtt client is not available
 
 ## 3.13.0 
 * config: make docs path configurable via `HttpServer->DocsPath`

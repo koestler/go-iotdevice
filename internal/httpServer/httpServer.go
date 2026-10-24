@@ -17,7 +17,7 @@ type HttpServer struct {
 	server *http.Server
 }
 
-type RegisterDbOfDeviceFunc func(deviceName string) *dataflow.RegisterDb
+type RegisterDbOfDeviceFunc func(deviceName string) (*dataflow.RegisterDb, bool)
 
 type Environment struct {
 	Config             Config

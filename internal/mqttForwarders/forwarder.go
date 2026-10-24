@@ -59,7 +59,7 @@ func RunMqttForwarders(
 ) {
 	if sCfg := cfg.HomeassistantDiscovery(); sCfg.Enabled() {
 		for _, deviceConfig := range cfg.HomeassistantDiscovery().Devices() {
-			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
+			if dev, ok := devicePool.GetByName(deviceConfig.Name()); ok {
 				runHomeassistantDiscoveryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.Filter())
 			} else {
 				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
@@ -73,7 +73,7 @@ func RunMqttForwarders(
 
 	if sCfg := cfg.AvailabilityDevice(); sCfg.Enabled() {
 		for _, deviceConfig := range sCfg.Devices() {
-			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
+			if dev, ok := devicePool.GetByName(deviceConfig.Name()); ok {
 				runAvailabilityForwarder(mc.GetCtx(), cfg, dev.Service(), mc)
 			} else {
 				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
@@ -83,7 +83,7 @@ func RunMqttForwarders(
 
 	if sCfg := cfg.Structure(); sCfg.Enabled() {
 		for _, deviceConfig := range sCfg.Devices() {
-			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
+			if dev, ok := devicePool.GetByName(deviceConfig.Name()); ok {
 				runStructureForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.Filter())
 			} else {
 				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
@@ -93,7 +93,7 @@ func RunMqttForwarders(
 
 	if sCfg := cfg.Telemetry(); sCfg.Enabled() {
 		for _, deviceConfig := range sCfg.Devices() {
-			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
+			if dev, ok := devicePool.GetByName(deviceConfig.Name()); ok {
 				runTelemetryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, stateStorage, deviceConfig.Filter())
 			} else {
 				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
@@ -103,7 +103,7 @@ func RunMqttForwarders(
 
 	if sCfg := cfg.Realtime(); sCfg.Enabled() {
 		for _, deviceConfig := range sCfg.Devices() {
-			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
+			if dev, ok := devicePool.GetByName(deviceConfig.Name()); ok {
 				runRealtimeForwarder(mc.GetCtx(), cfg, dev.Service(), mc, stateStorage, deviceConfig.Filter())
 			} else {
 				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())
@@ -113,7 +113,7 @@ func RunMqttForwarders(
 
 	if sCfg := cfg.Command(); sCfg.Enabled() {
 		for _, deviceConfig := range cfg.Command().Devices() {
-			if dev := devicePool.GetByName(deviceConfig.Name()); dev != nil {
+			if dev, ok := devicePool.GetByName(deviceConfig.Name()); ok {
 				runCommandForwarder(mc.GetCtx(), cfg, dev.Service(), mc, commandStorage, deviceConfig.Filter())
 			} else {
 				log.Printf("RunMqttForwarders: dev=%s not found", deviceConfig.Name())

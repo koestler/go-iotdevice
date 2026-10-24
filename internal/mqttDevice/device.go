@@ -67,8 +67,8 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	}
 
 	for mqttClientName, topics := range mCfg.MqttClientTopics() {
-		mc := c.mqttClientPool.GetByName(mqttClientName)
-		if mc == nil {
+		mc, ok := c.mqttClientPool.GetByName(mqttClientName)
+		if !ok {
 			continue
 		}
 

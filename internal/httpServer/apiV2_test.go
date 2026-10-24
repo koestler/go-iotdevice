@@ -210,8 +210,8 @@ func setupTestEnvironment(t *testing.T) *Environment {
 		ProjectTitle:   "Test Project",
 		Views:          []ViewConfig{publicView, privateView, forbiddenView},
 		Authentication: authConfig,
-		RegisterDbOfDevice: func(deviceName string) *dataflow.RegisterDb {
-			return registerDb
+		RegisterDbOfDevice: func(deviceName string) (*dataflow.RegisterDb, bool) {
+			return registerDb, true
 		},
 		StateStorage:   dataflow.NewValueStorage(),
 		CommandStorage: dataflow.NewValueStorage(),
@@ -542,7 +542,7 @@ func TestValuesGetEndpoint(t *testing.T) {
 
 	// Add a value to the state storage
 	devName := "dev0"
-	registerDb := env.RegisterDbOfDevice(devName)
+	registerDb, _ := env.RegisterDbOfDevice(devName)
 	registers := registerDb.GetAll()
 	for _, reg := range registers {
 		value := dataflow.NewNumericRegisterValue(devName, reg, 25.5)

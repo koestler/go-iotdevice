@@ -47,10 +47,11 @@ func (p *Pool[I]) GetAll() map[string]I {
 	return maps.Clone(p.items) //nolint:govet // inline: generic type inference not supported
 }
 
-func (p *Pool[I]) GetByName(name string) I {
+func (p *Pool[I]) GetByName(name string) (item I, ok bool) {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
-	return p.items[name]
+	item, ok = p.items[name]
+	return
 }
 
 func (p *Pool[I]) GetByNames(names []string) []I {

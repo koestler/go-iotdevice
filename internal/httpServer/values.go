@@ -83,6 +83,12 @@ func valuesPatchHandler(env *Environment, view ViewConfig, deviceName string) ht
 			return
 		}
 
+		registerDb, ok := env.RegisterDbOfDevice(deviceName)
+		if !ok {
+			jsonErrorResponse(w, http.StatusNotFound, errors.New("Device not found"))
+			return
+		}
+
 		var req map[string]interface{}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
@@ -92,7 +98,7 @@ func valuesPatchHandler(env *Environment, view ViewConfig, deviceName string) ht
 		// check all inputs
 		inputs := make([]dataflow.Value, 0, len(req))
 		for registerName, value := range req {
-			register, ok := env.RegisterDbOfDevice(deviceName).GetByName(registerName)
+			register, ok := registerDb.GetByName(registerName)
 			if !ok {
 				jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
 				return

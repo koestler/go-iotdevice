@@ -59,7 +59,13 @@ func registersHandler(env *Environment, view ViewConfig, deviceName string, filt
 			return
 		}
 
-		registers := env.RegisterDbOfDevice(deviceName).GetAll()
+		registerDb, ok := env.RegisterDbOfDevice(deviceName)
+		if !ok {
+			jsonErrorResponse(w, http.StatusNotFound, errors.New("Device not found"))
+			return
+		}
+
+		registers := registerDb.GetAll()
 		registers = dataflow.FilterRegisters(registers, filter)
 		dataflow.SortRegisterStructs(registers)
 

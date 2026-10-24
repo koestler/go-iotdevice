@@ -1,6 +1,8 @@
 package run
 
 import (
+	"log"
+
 	"github.com/koestler/go-iotdevice/v3/internal/config"
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/device"
@@ -19,7 +21,11 @@ func MqttForwarders(
 ) {
 	for _, c := range cfg.MqttClients() {
 		forwarderCfg := forwarderConfig{c}
-		client := mqttClientPool.GetByName(c.Name())
+		client, ok := mqttClientPool.GetByName(c.Name())
+		if !ok {
+			log.Printf("mqttForwarders: mqttClient=%s not found", c.Name())
+			continue
+		}
 		go mqttForwarders.RunMqttForwarders(forwarderCfg, client, devicePool, stateStorage, commandStorage)
 	}
 }
