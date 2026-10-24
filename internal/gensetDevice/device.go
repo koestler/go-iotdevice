@@ -212,8 +212,11 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 
 	// handle state updates
 	lastState := initialState
+	stateSent := false
 	d.controller.OnStateUpdate = func(s genset.State) {
-		if lastState != s.Node {
+		if !stateSent || lastState != s.Node {
+			stateSent = true
+			lastState = s.Node
 			log.Printf("gensetDevice[%s]: state changed: %s", dName, s.Node)
 			ss.Fill(dataflow.NewEnumRegisterValue(dName, StateRegister, int(s.Node)))
 		}
