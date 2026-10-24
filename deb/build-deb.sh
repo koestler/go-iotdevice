@@ -27,7 +27,7 @@ PATH="$(go env GOPATH)/bin:$PATH" go generate docs.go
 
 # binary
 mkdir -p "dist/$ARCH"
-CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" GOARM="$GOARM" go build \
+CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" GOARM="$GOARM" go build -trimpath \
     -ldflags="-s -w -X main.buildVersion=$VERSION -X main.buildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     -tags=jsoniter -o "dist/$ARCH/go-iotdevice"
 
