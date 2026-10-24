@@ -282,6 +282,9 @@ func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioR
 func (d *DeviceStruct) execCommand(chip *gpiocdev.Chip, oupRegisters map[string]GpioRegister, value dataflow.Value) {
 	dName := d.Config().Name()
 
+	// reset the command (also on failure); this allows the same command (e.g. toggle) to be sent again
+	defer d.commandStorage.Fill(dataflow.NewNullRegisterValue(dName, value.Register()))
+
 	if d.Config().LogDebug() {
 		log.Printf("gpioDevice[%s]: value command: %s", dName, value.String())
 	}
@@ -331,9 +334,6 @@ func (d *DeviceStruct) execCommand(chip *gpiocdev.Chip, oupRegisters map[string]
 		value.Register(),
 		enumValue.EnumIdx(),
 	))
-
-	// reset the command; this allows the same command (e.g. toggle) to be sent again
-	d.commandStorage.Fill(dataflow.NewNullRegisterValue(dName, value.Register()))
 }
 
 func offsetList(regList []GpioRegister) []int {

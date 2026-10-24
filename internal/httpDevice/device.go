@@ -100,6 +100,9 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 	_, commandSubscription := ds.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullValueFilter(ds.Config().Name()))
 
 	execCommand := func(value dataflow.Value) {
+		// reset the command (also on failure); this allows the same command (e.g. toggle) to be sent again
+		defer ds.commandStorage.Fill(dataflow.NewNullRegisterValue(ds.Config().Name(), value.Register()))
+
 		if ds.Config().LogDebug() {
 			log.Printf(
 				"httpDevice[%s]: command: %s",
@@ -145,9 +148,6 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 				onSuccess()
 			}
 		}
-
-		// reset the command; this allows the same command (e.g. toggle) to be sent again
-		ds.commandStorage.Fill(dataflow.NewNullRegisterValue(ds.Config().Name(), value.Register()))
 	}
 
 	pollTicker := time.NewTicker(ds.httpConfig.PollInterval())
