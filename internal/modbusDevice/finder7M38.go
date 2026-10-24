@@ -9,9 +9,10 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"log"
 	"time"
+
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
 const (
@@ -119,8 +120,6 @@ var RegisterList7M38FloatRegisters = []struct {
 	{32486, 1, "Essential", "UAvgPP", "Uavg (phase to phase)", "V"},
 	{32488, 100, "Current", "SI", "S I", "A"},
 	{32490, 25, "Essential", "Pt", "Active Power Total", "W"},
-	{32492, 200, "Power", "Qt", "Reactive Power Total", "var"},
-	{32494, 201, "Power", "St", "Apparent Power Total", "VA"},
 	{32496, 21, "Essential", "PFt", "Power Factor Total", ""},
 	{32498, 5, "Essential", "F", "Frequency", "Hz"},
 	{32500, 10, "Essential", "U1", "U1", "V"},
@@ -149,11 +148,10 @@ var RegisterList7M38FloatRegisters = []struct {
 	{32554, 210, "Power", "PF1", "Power Factor Phase 1", ""},
 	{32556, 211, "Power", "PF2", "Power Factor Phase 2", ""},
 	{32558, 212, "Power", "PF3", "Power Factor Phase 3", ""},
-	{32560, 213, "Power", "PFt", "Power Factor Total", ""},
-	{32562, 214, "Power", "PF1", "CAP/IND P. F. Phase 1", ""},
-	{32564, 215, "Power", "PF2", "CAP/IND P. F. Phase 2", ""},
-	{32566, 216, "Power", "PF3", "CAP/IND P. F. Phase 3", ""},
-	{32568, 217, "Power", "PFt", "CAP/IND P. F. Total", ""},
+	{32562, 214, "Power", "CIPF1", "CAP/IND P. F. Phase 1", ""},
+	{32564, 215, "Power", "CIPF2", "CAP/IND P. F. Phase 2", ""},
+	{32566, 216, "Power", "CIPF3", "CAP/IND P. F. Phase 3", ""},
+	{32568, 217, "Power", "CIPFt", "CAP/IND P. F. Total", ""},
 	{32570, 310, "Phase Geometry", "J1", "j1 (angle between U1 and I1)", "°"},
 	{32572, 311, "Phase Geometry", "J2", "j2 (angle between U2 and I2)", "°"},
 	{32574, 312, "Phase Geometry", "J3", "j3 (angle between U3 and I3) ", "°"},

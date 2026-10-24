@@ -11,6 +11,7 @@
   * fix nil pointer panics when a referenced device or mqtt client is not available
   * fix race conditions in shutdown mechanism
   * mqtt client: fix panic when logging messages with payload < 80 bytes
+  * 7M38: remove duplicate registers, rename CAP/IND P.F. registers to CIPF[1-3] and CIPFt
 
 ## 3.13.0 
 * config: make docs path configurable via `HttpServer->DocsPath`
