@@ -19,6 +19,12 @@ type DeviceStruct struct {
 	commandStorage *dataflow.ValueStorage
 }
 
+type outputLines struct {
+	lines   *gpiocdev.Lines
+	offsets []int
+	values  []int
+}
+
 func (d *DeviceStruct) Model() string {
 	return "Gpio Device"
 }
@@ -81,12 +87,19 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		}()
 	}
 
+	var oupLines *outputLines
+
 	// initial read output registers and configure them as outputs
 	if len(oupRegisters) > 0 {
-		err = d.setupOutputs(chip, oupRegisters)
+		oupLines, err = d.setupOutputs(chip, oupRegisters)
 		if err != nil {
 			return fmt.Errorf("gpioDevice[%s]: setup outputs failed: %w", dName, err), true
 		}
+		defer func() {
+			if err := oupLines.lines.Close(); err != nil {
+				log.Printf("gpioDevice[%s]: error while closing output lines: %s", dName, err)
+			}
+		}()
 	}
 
 	// send connected now, disconnected when this routine stops
@@ -100,7 +113,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		_, commandSubscription := d.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullValueFilter(dName))
 
 		for value := range commandSubscription.Drain() {
-			d.execCommand(chip, oupRegisters, value)
+			d.execCommand(oupLines, oupRegisters, value)
 		}
 		return nil, false
 	}
@@ -210,7 +223,9 @@ func (d *DeviceStruct) eventHandler(regList []GpioRegister) func(e gpiocdev.Line
 	}
 }
 
-func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioRegister) error {
+// setupOutputs reads the current values and configures the registers as outputs keeping their value.
+// if no error is returned, the caller shall close the returned lines.
+func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioRegister) (*outputLines, error) {
 	// generate ordered list of registers and offsets
 	regList := maps.Values(regMap)
 	offsets := offsetList(regList)
@@ -218,9 +233,13 @@ func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioR
 	// fetch the line values
 	lines, err := chip.RequestLines(offsets)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	ok := false
 	defer func() {
+		if ok { // close the lines in case we return an error
+			return
+		}
 		if err := lines.Close(); err != nil {
 			log.Printf("gpioDevice[%s]: error while closing lines: %s", d.Name(), err)
 		}
@@ -229,7 +248,7 @@ func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioR
 	values := make([]int, len(offsets))
 	err = lines.Values(values)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// send initial state to the state storage
@@ -273,13 +292,14 @@ func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioR
 
 	err = lines.Reconfigure(opts...)
 	if err != nil {
-		return fmt.Errorf("reconfigure as output failed: %w", err)
+		return nil, fmt.Errorf("reconfigure as output failed: %w", err)
 	}
 
-	return nil
+	ok = true
+	return &outputLines{lines: lines, offsets: offsets, values: values}, nil
 }
 
-func (d *DeviceStruct) execCommand(chip *gpiocdev.Chip, oupRegisters map[string]GpioRegister, value dataflow.Value) {
+func (d *DeviceStruct) execCommand(out *outputLines, oupRegisters map[string]GpioRegister, value dataflow.Value) {
 	dName := d.Config().Name()
 
 	// reset the command (also on failure); this allows the same command (e.g. toggle) to be sent again
@@ -311,22 +331,19 @@ func (d *DeviceStruct) execCommand(chip *gpiocdev.Chip, oupRegisters map[string]
 		log.Printf("gpioDevice[%s]: write register %s, value=%d", dName, reg, v)
 	}
 
-	l, err := chip.RequestLine(reg.offset, gpiocdev.AsOutput(0))
-	if err != nil {
-		log.Printf("gpioDevice[%s]: request line failed: %s", dName, err)
+	idx := slices.Index(out.offsets, reg.offset)
+	if idx < 0 {
+		log.Printf("gpioDevice[%s]: line for register %s not found", dName, reg)
 		return
 	}
-	defer func() {
-		if err := l.Close(); err != nil {
-			log.Printf("gpioDevice[%s]: error while closing line: %s", dName, err)
-		}
-	}()
 
-	err = l.SetValue(v)
-	if err != nil {
+	newValues := slices.Clone(out.values)
+	newValues[idx] = v
+	if err := out.lines.SetValues(newValues); err != nil {
 		log.Printf("gpioDevice[%s]: set register %s, value=%d failed: %s", dName, reg, v, err)
 		return
 	}
+	out.values = newValues
 
 	// set the current state immediately after a successful write
 	d.StateStorage().Fill(dataflow.NewEnumRegisterValue(
