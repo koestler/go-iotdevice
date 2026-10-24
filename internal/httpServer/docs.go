@@ -7,7 +7,7 @@ import (
 
 // @title go-iotdevice http API v2
 // @version 2.0
-// @description Reads parameters from Victron Energy Battery Monitor, Solar Chargers and other devices and exposed them via a REST api.
+// @description Reads parameters from Victron Energy Battery Monitor, Solar Chargers and other devices and exposes them via a REST API.
 // @externalDocs.url https://github.com/koestler/go-iotdevice/
 
 // @license.name MIT

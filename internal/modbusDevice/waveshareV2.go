@@ -17,7 +17,7 @@ const (
 type Command uint16
 
 // Open / closed is reversed compared to the documentation of Waveshare.
-// However, I opened the unit and found that sending a FF00 energize the relay and the LED.
+// However, I opened the unit and found that sending a FF00 energizes the relay and the LED.
 const (
 	RelayOpen  Command = 0x0000
 	RelayClose Command = 0xFF00
@@ -71,7 +71,7 @@ func WaveshareReadSoftwareRevision(writeRead WriteReadBusFunc, deviceAddress byt
 	}
 
 	// extract version
-	// Convert it to DEX and multiply by 0.01 is the value of software revision.
+	// Convert it to DEC and multiply by 0.01 is the value of software revision.
 	version = fmt.Sprintf("V%d.%02d", response[1]/100, response[1]%100)
 
 	return
@@ -90,7 +90,7 @@ func WaveshareReadRelays(writeRead WriteReadBusFunc, deviceAddress byte) (state 
 	)
 
 	if err != nil {
-		return state, fmt.Errorf("cannot read state of realys: %s", err)
+		return state, fmt.Errorf("cannot read state of relays: %s", err)
 	}
 
 	// extract bits of response into boolean state

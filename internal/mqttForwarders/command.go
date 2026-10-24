@@ -73,7 +73,7 @@ func setupCommandSubscription(
 	mc.AddRoute(topic, func(m mqttClient.Message) {
 		msg, err := parseCommandMessagePayload(m.Payload())
 		if err != nil {
-			log.Printf("mqttDevice[%s]->mqttClient[%s]->command: cannod parse message: %s", mc.Name(), dev.Name(), err)
+			log.Printf("mqttDevice[%s]->mqttClient[%s]->command: cannot parse message: %s", mc.Name(), dev.Name(), err)
 			return
 		}
 

@@ -22,7 +22,7 @@ func (s State) String() string {
 
 func (o Outputs) String() string {
 	return fmt.Sprintf(
-		"Outputs{Ignition: %v, Starter: %v, Fan: %v, Pump: %v, Load: %v "+
+		"Outputs{Ignition: %v, Starter: %v, Fan: %v, Pump: %v, Load: %v, "+
 			"TimeInState: %v, IoCheck: %v, OutputCheck: %v}",
 		o.Ignition, o.Starter, o.Fan, o.Pump, o.Load,
 		o.TimeInState, o.IoCheck, o.OutputCheck,

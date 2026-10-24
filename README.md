@@ -4,7 +4,7 @@
 [![Debian Package](https://github.com/koestler/go-iotdevice/actions/workflows/deb-package.yml/badge.svg)](https://github.com/koestler/go-iotdevice/actions/workflows/deb-package.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/koestler/go-iotdevice/v3.svg)](https://pkg.go.dev/github.com/koestler/go-iotdevice/v3)
 
-This tool reads values from various IoT devices like solar charges directly connected by USB
+This tool reads values from various IoT devices like solar chargers directly connected by USB
 or relay boards connected by ethernet and publishes those on [MQTT](http://mqtt.org/) servers.
 
 Additionally, a REST- and websocket-API and a [web frontend](https://github.com/koestler/js-iotdevice)
@@ -13,7 +13,7 @@ is made available via an internal http server.
 ![Device overview](https://raw.githubusercontent.com/koestler/go-iotdevice-docs/main/external-overview.png)
 
 The tool does not store any historical data. Instead,
-[go-mqtt-to-influx](https://github.com/koestler/go-mqtt-to-influx) is can be used to write
+[go-mqtt-to-influx](https://github.com/koestler/go-mqtt-to-influx) can be used to write
 to an [Influx Database](https://github.com/influxdata/influxdb). [Grafana](https://grafana.com/)
 can be used to easily create custom dashboards showing the data.
 
@@ -24,7 +24,7 @@ The tool was written with the following two scenarios in mind:
  and a [Shelly 3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) for generator power monitoring.
  The tool runs on a single [Raspberry Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/).
 * Remote control of a generator set using a [Teracom TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/)
-  for start/stop and temperature monitoring. Control is integrated into [Homea Assistant](https://www.home-assistant.io/)
+  for start/stop and temperature monitoring. Control is integrated into [Home Assistant](https://www.home-assistant.io/)
   via MQTT.
 
 ## Supported protocols and devices
@@ -35,20 +35,20 @@ However, it is made to be extended. Feel free to send pull requests or
 
 | Configuration section              | Kind=              | Name                                                                                                                                                                                                                                               | State                              | 
 |------------------------------------|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------|
-| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [BlueSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/mppt7510) (different versions)                                                                                                                              | production ready                   |
-| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [SmartSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/smartsolar-150-35) (different versions)                                                                                                                    | production ready                   |
-| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 700](https://www.victronenergy.com/battery-monitors/bmv-700)                                                                                                                                                   | production ready                   |
-| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 702](https://www.victronenergy.com/battery-monitors/bmv-702)                                                                                                                                                   | production ready                   |
-| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV-712 Smart](https://www.victronenergy.com/battery-monitors/bmv-712-smart)                                                                                                                                       | production ready                   |
-| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt)                                                                                                                                                    | production ready                   |
-| [VictronDevcies](#Victron-devices) | Vedirect           | Victron Energy [Phoenix Inverter](https://www.victronenergy.com/inverters)                                                                                                                                                                         | production ready                   |
-| [VictronDevcies](#Victron-devices) | Vebus              | Victron Energy [Multiplus](https://www.victronenergy.com/inverters-chargers/multiplus-12v-24v-48v-800va-3kva)                                                                                                                                      | in development, see v3vebus branch |
+| [VictronDevices](#Victron-devices) | Vedirect           | Victron Energy [BlueSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/mppt7510) (different versions)                                                                                                                              | production ready                   |
+| [VictronDevices](#Victron-devices) | Vedirect           | Victron Energy [SmartSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/smartsolar-150-35) (different versions)                                                                                                                    | production ready                   |
+| [VictronDevices](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 700](https://www.victronenergy.com/battery-monitors/bmv-700)                                                                                                                                                   | production ready                   |
+| [VictronDevices](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 702](https://www.victronenergy.com/battery-monitors/bmv-702)                                                                                                                                                   | production ready                   |
+| [VictronDevices](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV-712 Smart](https://www.victronenergy.com/battery-monitors/bmv-712-smart)                                                                                                                                       | production ready                   |
+| [VictronDevices](#Victron-devices) | Vedirect           | Victron Energy [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt)                                                                                                                                                    | production ready                   |
+| [VictronDevices](#Victron-devices) | Vedirect           | Victron Energy [Phoenix Inverter](https://www.victronenergy.com/inverters)                                                                                                                                                                         | production ready                   |
+| [VictronDevices](#Victron-devices) | Vebus              | Victron Energy [Multiplus](https://www.victronenergy.com/inverters-chargers/multiplus-12v-24v-48v-800va-3kva)                                                                                                                                      | in development, see v3vebus branch |
 | [ModbusDevices](#Modbus-devices)   | WaveshareRtuRelay8 | [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay.htm)                                                                                                                                                | production ready                   |
 | [ModbusDevices](#Modbus-devices)   | Finder7M38         | [Finder TYPE 7M.38 - bi-directional multi-functional energy meters](https://www.findernet.com/en/uk/series/7m-series-smart-energy-meters/type/type-7m-38-three-phase-multi-function-bi-directional-energy-meters-with-backlit-matrix-lcd-display/) | production ready                   |
 | [GpioDevices](#gpio-devices)       |                    | Raspberry Pi General Purpose IO Pins. E.g. used for [Waveshare Industrial 6-ch Relay Module for Raspberry Pi Zero](https://www.waveshare.com/rpi-zero-relay.htm)                                                                                   | beta testing                       |
-| [HttpDevcies](#http-devices)       | Teracom            | Teracom [TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/) industrial relay/sensor board                                                                                                                                 | production ready                   | 
-| [HttpDevcies](#http-devices)       | ShellyEm3          | Shelly [3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) 3-phase energy power monitor                                                                                                                                    | production ready                   |
-| [MqttDevcies](#mqtt-devices)       | GoIotdeviceV3      | Another go-iotdevice instance connected to the same MQTT server                                                                                                                                                                                    | production ready                   |
+| [HttpDevices](#http-devices)       | Teracom            | Teracom [TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/) industrial relay/sensor board                                                                                                                                 | production ready                   | 
+| [HttpDevices](#http-devices)       | ShellyEm3          | Shelly [3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) 3-phase energy power monitor                                                                                                                                    | production ready                   |
+| [MqttDevices](#mqtt-devices)       | GoIotdeviceV3      | Another go-iotdevice instance connected to the same MQTT server                                                                                                                                                                                    | production ready                   |
 
 
 See [Devices](#devices) section on how to configure each.
@@ -62,10 +62,10 @@ This project uses the following terminology:
   E.g. "Battery Voltage" or "Relay 0". Each device can have multiple registers. For some devices the list
   of registers is simply defined by the type of device (e.g. Victron Energy MPPT 100 | 50) and for others it is configurable
   on the device (e.g. the TCW241).
-  A Register has a technical name (alphanumeric, no spaces, used as the key is various JSON objects, e.g. "BatteryVoltage"),
+  A Register has a technical name (alphanumeric, no spaces, used as the key in various JSON objects, e.g. "BatteryVoltage"),
   a description (shown in the frontend, e.g. "Battery Voltage"), a Unit (e.g. "mV"), and a type (string, float, enum).
 * A **value** is a reference to a register plus a number/string/enum-index depending on the type of register.
-  E.g.: A value can be 13.80 and reference to the register "BatteryVoltage".
+  E.g.: A value can be 13.80 and references the register "BatteryVoltage".
 * A **view** is used in the HTTP server and the front-end.
   The front-end shows different subsets of devices/registers on different routes. A view defines such a subset.
 
@@ -161,7 +161,7 @@ services:
 [Install Docker](https://docs.docker.com/engine/install/) first.
 
 ```bash
-# create a directory for the docker-composer project and config file
+# create a directory for the docker compose project and config file
 mkdir -p /srv/dc/go-iotdevice # or wherever you want to put docker-compose files
 cd /srv/dc/go-iotdevice
 curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/docker-compose.yml -o docker-compose.yml
@@ -224,7 +224,7 @@ It is a binary protocol and requires the user to know the addresses of registers
 The easiest way of connection is to use a [VE.Direct to USB interface](https://www.victronenergy.com/accessories/ve-direct-to-usb-interface).
 
 This tool reads the deviceId, which is present in all devices, and then uses this id to determine if it is a
-solar charger, an inverter or a battery monitor. A hardcoded list of known registers for this device is than used.
+solar charger, an inverter or a battery monitor. A hardcoded list of known registers for this device is then used.
 
 Configuration:
 
@@ -289,7 +289,7 @@ ModbusDevices:
 ```
 
 ### Gpio devices
-General Purpose Devices uses the GPIO pins of e.g. a Raspberry Pi to read and set individual pins.
+GPIO devices use the GPIO pins of e.g. a Raspberry Pi to read and set individual pins.
 The pins are controlled using the [periph.io library](https://periph.io/). Check [supported platforms](https://periph.io/platform/).
 
 An example configuration for the [Waveshare Industrial 6-ch Relay Module for Raspberry Pi Zero](https://www.waveshare.com/rpi-zero-relay.htm):
@@ -331,7 +331,7 @@ Configuration:
 ```yaml
 HttpDevices:
   control0:
-    Url: http://control0/ # howto reach the device; can also be http://192.168.0.42/
+    Url: http://control0/ # how to reach the device; can also be http://192.168.0.42/
     Kind: Teracom
     Username: admin # optionally, if you have a login configured, add the cleartext user/password here
     Password: letMeIn
@@ -351,7 +351,7 @@ HttpDevices:
 MQTT devices receive values from an MQTT broker. E.g. if you have multiple computers running go-iotdevice,
 and you want to have all the devices in the same front-end.
 
-For this to work, you need to define a MqttDevice and then configure a MqttClient to connect to a broker and send data
+For this to work, you need to define an MqttDevice and then configure an MqttClient to connect to a broker and send data
 to this MQTT device. To allow for redundant setups, you can have multiple MqttClients sending data to the same
 MqttDevice.
 
@@ -380,7 +380,7 @@ MqttDevices:
 ## Http Interface
 There is a stable REST-API to fetch the views, devices, registers, and values.
 Additionally, patch requests are implemented to set a controllable register (e.g. an output of a relay board).
-This API is used by the build-in front-end and can also be used for custom integrations.
+This API is used by the built-in front-end and can also be used for custom integrations.
 See /api/v2/docs and /api/v2/docs/swagger.json for built-in swagger documentation.
 
 ## Authentication
@@ -445,7 +445,7 @@ service nginx reload
 ```
 
 ## MQTT Interface
-This tool can connect to one or multiple MQTT servers and provide publish messages regarding the availability
+This tool can connect to one or multiple MQTT servers and publish messages regarding the availability
 (whether a device is online), available registers, and current values.
 There are 5 different kinds of outgoing messages
 (**Availability**, **Structure**, **Telemetry**, **Realtime**, **HomeassistantDiscovery**)
@@ -468,7 +468,7 @@ go-iotdevice/avail/go-iotdevice offline
 ### Availability of a device
 Whenever a device becomes connected/disconnected (serial connection established/lost) an `online`/`offline`
 message per device can be sent. However, MQTT only allows for one last will message. Therefore to reliably check if
-a device is available, both, the availability message of the client and the device must be checked.
+a device is available, both the availability message of the client and the device must be checked.
 
 Examples:
 ```
@@ -532,7 +532,7 @@ dev0/tele/teracom {
 }
 ```
 
-For easy parsing, values are separated by type. To make the telemetry without the struct message, it also
+For easy parsing, values are separated by type. To make telemetry usable without the structure message, it also
 includes Cat=Category, Desc=Description, and Unit fields.
 
 ### Realtime
@@ -559,7 +559,7 @@ go-iotdevice/cmnd/my-device/R1 {"EnumIdx": 0}
 go-iotdevice/cmnd/my-device/R1 {"EnumIdx": 1}
 ```
 
-Example of howto switch Relay 1 of a device called dev0 into the on position via mosquitto:
+Example of how to switch Relay 1 of a device called dev0 into the on position via mosquitto:
 
 ```bash
 mosquitto_pub -h 172.19.0.4 -t dev1/cmnd/dev0/R1 -m "{\"EnumIdx\": 1}"
@@ -669,8 +669,8 @@ Version: 2                                                 # mandatory, configur
 ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice, title is shown in the http frontend
 LogConfig: true                                            # optional, default true, outputs the full configuration structure including used defaults on startup
 LogWorkerStart: true                                       # optional, default true, outputs what devices and mqtt clients are started
-LogStateStorageDebug: false                                # optional, default false, outputs all write to the internal state value storage
-LogCommandStorageDebug: false                              # optional, default false, outputs all write to the internal command value storage
+LogStateStorageDebug: false                                # optional, default false, logs all writes to the internal state value storage
+LogCommandStorageDebug: false                              # optional, default false, logs all writes to the internal command value storage
 
 HttpServer:                                                # optional, when missing: http server is not started
   Bind: "[::1]"                                            # mandatory, use [::1] (ipv6 loopback) to enable on both ipv4 and 6 and 0.0.0.0 to only enable ipv4
@@ -889,21 +889,21 @@ GpioDevices:                                               # optional, a list of
     OutputOptions: []                                      # optional, default unchanged, valid options: AsOpenDrain, AsOpenSource, AsPushPull
     Inputs:                                                # optional, a list of inputs
       Switch0:                                             # mandatory, a technical name used for the register
-        Pin: GPIO2                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO2                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
         Description: Switch 0                              # optional, default name, a nice title displayed in the frontend
         LowLabel: Pressed                                  # optional, default "low", a label for the low state
         HighLabel: Released                                # optional, default "high", a label for the high state
       Switch1:                                             # mandatory, a technical name used for the register
-        Pin: GPIO3                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO3                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
         Description: Switch 1                              # optional, default name, a nice title displayed in the frontend
     Outputs:                                               # optional, a list of outputs
       Relay0:                                              # mandatory, a technical name used for the register
-        Pin: GPIO4                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO4                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
         Description: Relay 0                               # optional, default name, a nice title displayed in the frontend
         LowLabel: Off                                      # optional, default "low", a label for the low state
         HighLabel: On                                      # optional, default "high", a label for the high state
       Relay1:                                              # mandatory, a technical name used for the register
-        Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
         Description: Relay 1                               # optional, default name, a nice title displayed in the frontend
 
 HttpDevices:                                               # optional, a list of devices controlled via http
@@ -925,7 +925,7 @@ HttpDevices:                                               # optional, a list of
     LogDebug: false                                        # optional, default false, enable debug log output
     LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
 
-MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
+MqttDevices:                                               # optional, a list of devices receiving their values via an MQTT server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Kind: GoIotdeviceV3                                    # mandatory, only GoIotdevice is supported at the moment
     Filter:                                                # optional, default include all, defines which registers are shown in the view,

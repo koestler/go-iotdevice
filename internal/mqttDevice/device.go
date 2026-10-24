@@ -63,7 +63,7 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	mCfg := c.mqttConfig
 
 	if mCfg.Kind() != types.MqttDeviceGoIotdeviceV3Kind {
-		log.Printf("mqttDevice[%s]: unsuported type: %s", c.Name(), mCfg.Kind().String())
+		log.Printf("mqttDevice[%s]: unsupported type: %s", c.Name(), mCfg.Kind().String())
 		return
 	}
 
@@ -82,7 +82,7 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 				// parse struct message
 				structMessage, err := parseStructPayload(m.Payload())
 				if err != nil {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse realtime payload: %s", c.Name(), mc.Name(), err)
+					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse structure payload: %s", c.Name(), mc.Name(), err)
 					return
 				}
 

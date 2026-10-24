@@ -404,7 +404,7 @@ func TestController3P(t *testing.T) {
 		})
 	})
 
-	t.Run("wamUp", func(t *testing.T) {
+	t.Run("warmUp", func(t *testing.T) {
 		initialState := genset.WarmUp
 		initialInputs := genset.Inputs{
 			Time:          t0,
@@ -489,7 +489,7 @@ func TestController3P(t *testing.T) {
 				return i
 			})
 
-			// go to enclose cool down and directly to ready due to low temperature
+			// go to enclosure cool down and directly to ready due to low temperature
 
 			stateTracker.Assert(t, []genset.State{
 				{Node: genset.WarmUp, Changed: t0},

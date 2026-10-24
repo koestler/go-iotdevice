@@ -15,7 +15,7 @@ func CreateMatcherSingleVariable(topicTemplate, variablePlaceholder string) (mat
 	regNameExpr := "([^\\/]+)"
 
 	if !strings.Contains(topicTemplate, variablePlaceholder) {
-		err = fmt.Errorf("cannot find variablePlacholder='%s' in topic='%s'", variablePlaceholder, topicTemplate)
+		err = fmt.Errorf("cannot find variablePlaceholder='%s' in topic='%s'", variablePlaceholder, topicTemplate)
 		return
 	}
 

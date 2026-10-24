@@ -42,10 +42,10 @@ func getCmdOptions() (cmdOptions CmdOptions, cmdName string) {
 
 	if cmdOptions.Version {
 		if buildVersion == "" {
-			fmt.Println("github.com/koestler/go-iotdevice/v3 locally build version")
+			fmt.Println("github.com/koestler/go-iotdevice/v3 locally built version")
 		} else {
 			fmt.Println("github.com/koestler/go-iotdevice/v3 version:", buildVersion)
-			fmt.Println("build at:", buildTime)
+			fmt.Println("built at:", buildTime)
 		}
 		os.Exit(ExitSuccess)
 	}

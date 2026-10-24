@@ -77,7 +77,7 @@ func (md *ModbusStruct) WriteRead(request []byte, responseBuf []byte) error {
 func (md *ModbusStruct) Read(b []byte) (n int, err error) {
 	n, err = md.ioPort.Read(b)
 	if err != nil {
-		md.debugPrintf("Read error: %v\n", err)
+		md.debugPrintf("Read error: %v", err)
 	} else {
 		md.debugPrintf("Read b=%x len=%v", b, len(b))
 	}
@@ -88,8 +88,8 @@ func (md *ModbusStruct) Write(b []byte) (n int, err error) {
 	md.debugPrintf("Write b=%x len=%v", b, len(b))
 	n, err = md.ioPort.Write(b)
 	if err != nil {
-		log.Printf("Write error: %v\n", err)
-		return 0, err
+		log.Printf("modbus[%s]: Write error: %v", md.cfg.Name(), err)
+		return n, err
 	}
 	return
 }

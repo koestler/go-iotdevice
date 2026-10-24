@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	FinderFunctionReadHoldingResgisters FunctionCode = 0x03
-	FinderFunctionReadInputRegisters    FunctionCode = 0x04
+	FinderFunctionReadHoldingRegisters FunctionCode = 0x03
+	FinderFunctionReadInputRegisters   FunctionCode = 0x04
 )
 
 const InputRegisterAddressOffset = 30000
@@ -101,7 +101,7 @@ func execPoll(ctx context.Context, c *DeviceStruct, registers []FinderRegister, 
 
 	if c.Config().LogDebug() {
 		log.Printf(
-			"finder7N38Device[%s]: registers fetched, took=%.3fs",
+			"finder7M38Device[%s]: registers fetched, took=%.3fs",
 			c.Name(),
 			time.Since(start).Seconds(),
 		)
@@ -298,7 +298,7 @@ var RegisterList7M38 = func() []FinderRegister {
 
 func FinderReadRegister(c *DeviceStruct, reg FinderRegister) (v dataflow.Value, err error) {
 	if c.Config().LogComDebug() {
-		log.Printf("finder7N38Device[%s]: FinderReadRegister, registerName=%s, addressBegin=%d, addressEnd=%d",
+		log.Printf("finder7M38Device[%s]: FinderReadRegister, registerName=%s, addressBegin=%d, addressEnd=%d",
 			c.Name(), reg.Name(), reg.addressBegin, reg.addressEnd,
 		)
 	}

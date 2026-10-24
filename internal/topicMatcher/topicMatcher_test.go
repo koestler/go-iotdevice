@@ -55,7 +55,7 @@ func TestMatcher(t *testing.T) {
 
 		_, err1 := m.ParseTopic("prefix/cmnd/control0/my-reg")
 		if err1 == nil {
-			t.Errorf("expecxted an error")
+			t.Errorf("expected an error")
 		}
 	})
 }

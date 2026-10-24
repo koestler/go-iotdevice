@@ -26,7 +26,7 @@ var nameMatcher = regexp.MustCompile(NameRegexp)
 func ReadConfigFile(exe, source string, bypassFileCheck bool) (config Config, err []error) {
 	yamlStr, e := os.ReadFile(source)
 	if e != nil {
-		return config, []error{fmt.Errorf("cannot read configuration: %v; use see `%s --help`", e, exe)}
+		return config, []error{fmt.Errorf("cannot read configuration: %v; see `%s --help`", e, exe)}
 	}
 
 	return ReadConfig(yamlStr, bypassFileCheck)
@@ -476,7 +476,7 @@ func (c mqttClientConfigRead) TransformAndValidate(
 
 	nonLoopMqttDevices := make([]DeviceConfig, 0, len(devices))
 	for _, d := range devices {
-		// do not allow to send mqtt messages for any de
+		// do not allow to send mqtt messages for any device that is itself an mqtt device (avoids loops)
 		if existsByName(d.Name(), ret.mqttDevices) {
 			continue
 		}
@@ -652,7 +652,7 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 	if c.TopicTemplate == nil {
 		ret.topicTemplate = defaultTopicTemplate
 	} else if len(*c.TopicTemplate) < 1 {
-		err = append(err, fmt.Errorf("%sTopicTemplate must no be empty", logPrefix))
+		err = append(err, fmt.Errorf("%sTopicTemplate must not be empty", logPrefix))
 	} else {
 		ret.topicTemplate = *c.TopicTemplate
 	}
@@ -766,7 +766,7 @@ func (c modbusConfigRead) TransformAndValidate(name string) (ret ModbusConfig, e
 	}
 
 	if c.BaudRate < 1 {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->BaudRate must be positiv", name))
+		err = append(err, fmt.Errorf("ModbusDevices->%s->BaudRate must be positive", name))
 	}
 
 	if len(c.ReadTimeout) < 1 {
@@ -902,16 +902,16 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 	}
 
 	if !existsByName(c.Bus, modbus) {
-		err = append(err, fmt.Errorf("ModbusDevices->%s: Bus='%s' is not defidnedd", name, c.Bus))
+		err = append(err, fmt.Errorf("ModbusDevices->%s: Bus='%s' is not defined", name, c.Bus))
 	}
 
 	if strings.Contains(c.Address, "0x") {
 		if n, e := fmt.Sscanf(c.Address, "0x%x", &ret.address); n != 1 || e != nil {
-			err = append(err, fmt.Errorf("ModbusDevices->%s: hex Adress=%s is invalid: %s", name, c.Address, e))
+			err = append(err, fmt.Errorf("ModbusDevices->%s: hex Address=%s is invalid: %s", name, c.Address, e))
 		}
 	} else {
 		if n, e := fmt.Sscanf(c.Address, "%d", &ret.address); n != 1 || e != nil {
-			err = append(err, fmt.Errorf("ModbusDevices->%s: decimal Adress=%s is invalid: %s", name, c.Address, e))
+			err = append(err, fmt.Errorf("ModbusDevices->%s: decimal Address=%s is invalid: %s", name, c.Address, e))
 		}
 	}
 
@@ -1186,7 +1186,7 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 	}
 
 	if ret.warmUpMinTime > ret.warmUpTimeout {
-		err = append(err, fmt.Errorf("GensetDevices->%s->WarmUpMinTime='%s' must be less or equal than WarmUpTimeout='%s'",
+		err = append(err, fmt.Errorf("GensetDevices->%s->WarmUpMinTime='%s' must be less than or equal to WarmUpTimeout='%s'",
 			name, c.WarmUpMinTime, c.WarmUpTimeout,
 		))
 	}
@@ -1220,7 +1220,7 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 	}
 
 	if ret.engineCoolDownMinTime > ret.engineCoolDownTimeout {
-		err = append(err, fmt.Errorf("GensetDevices->%s->EngineCoolDownMinTime='%s' must be less or equal than EngineCoolDownTimeout='%s'",
+		err = append(err, fmt.Errorf("GensetDevices->%s->EngineCoolDownMinTime='%s' must be less than or equal to EngineCoolDownTimeout='%s'",
 			name, c.EngineCoolDownMinTime, c.EngineCoolDownTimeout,
 		))
 	}
@@ -1254,7 +1254,7 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 	}
 
 	if ret.enclosureCoolDownMinTime > ret.enclosureCoolDownTimeout {
-		err = append(err, fmt.Errorf("GensetDevices->%s->EnclosureCoolDownMinTime='%s' must be less or equal than EnclosureCoolDownTimeout='%s'",
+		err = append(err, fmt.Errorf("GensetDevices->%s->EnclosureCoolDownMinTime='%s' must be less than or equal to EnclosureCoolDownTimeout='%s'",
 			name, c.EnclosureCoolDownMinTime, c.EnclosureCoolDownTimeout,
 		))
 	}

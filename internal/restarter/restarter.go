@@ -1,4 +1,4 @@
-// Package restarter implements a watchdog for long-running go routines. Whenever the routine stops and return an error,
+// Package restarter implements a watchdog for long-running go routines. Whenever the routine stops and returns an error,
 // it is restarted periodically.
 package restarter
 
@@ -76,7 +76,7 @@ func (w *Restarter[S]) Run() {
 
 				retryIn := w.getRestartInterval(immediateErrorsInARow)
 
-				log.Printf("restarter[%s]: error after %s, expoential backoff, retry in %s", w.service.Name(), runningFor, retryIn)
+				log.Printf("restarter[%s]: error after %s, exponential backoff, retry in %s", w.service.Name(), runningFor, retryIn)
 
 				select {
 				case <-w.ctx.Done():

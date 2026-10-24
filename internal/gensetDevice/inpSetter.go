@@ -25,12 +25,12 @@ func (d *DeviceStruct) enumSetter(
 				ev.EnumIdx(),
 			))
 		} else if _, isNull := v.(dataflow.NullRegisterValue); isNull {
-			log.Printf("gensetDevice: %s: got a null value, set to false", name)
+			log.Printf("gensetDevice[%s]: %s: got a null value, set to false", d.Config().Name(), name)
 			// input unavailable: fall back to the safe value (false)
 			c.UpdateInputs(f(false))
 			d.StateStorage().Fill(dataflow.NewNullRegisterValue(d.Config().Name(), reg))
 		} else {
-			log.Printf("gensetDevice: %s: expected an enum, got %s", name, v.Register().RegisterType())
+			log.Printf("gensetDevice[%s]: %s: expected an enum, got %s", d.Config().Name(), name, v.Register().RegisterType())
 		}
 	}
 }
@@ -49,9 +49,9 @@ func (d *DeviceStruct) numberSetter(
 				nv.Value(),
 			))
 		} else if _, isNull := v.(dataflow.NullRegisterValue); isNull {
-			log.Printf("gensetDevice: %s: got a null value, ignoring", name)
+			log.Printf("gensetDevice[%s]: %s: got a null value, ignoring", d.Config().Name(), name)
 		} else {
-			log.Printf("gensetDevice: %s: expected a number, got %s", name, v.Register().RegisterType())
+			log.Printf("gensetDevice[%s]: %s: expected a number, got %s", d.Config().Name(), name, v.Register().RegisterType())
 		}
 	}
 }

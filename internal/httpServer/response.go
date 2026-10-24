@@ -31,12 +31,12 @@ func jsonErrorResponse(w http.ResponseWriter, status int, err error) {
 }
 
 func sendNotModified(w http.ResponseWriter, r *http.Request, etag string) (sent bool) {
-	ifNonMatch := r.Header.Get("If-None-Match")
-	if len(ifNonMatch) < 1 {
+	ifNoneMatch := r.Header.Get("If-None-Match")
+	if len(ifNoneMatch) < 1 {
 		return false
 	}
 
-	for _, candidate := range strings.Split(ifNonMatch, ",") {
+	for _, candidate := range strings.Split(ifNoneMatch, ",") {
 		candidate = strings.TrimPrefix(strings.TrimSpace(candidate), "W/")
 		if candidate == etag {
 			w.WriteHeader(http.StatusNotModified)

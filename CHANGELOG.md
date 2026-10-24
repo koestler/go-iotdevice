@@ -2,17 +2,18 @@
 
 ## 4.0.0
 * update install docs
-* restructure go code in the repository, be explicit what package are internal
+* fixed various spelling and grammer issues in docs and code
+* restructure go code in the repository, be explicit which packages are internal
 * drop mem / cpu profile to disk options (should be served via an http metric endpoint instead)
 * bugfixes:
   * fix various error messages and logging
   * config: do not panic when an MQTT device is referenced that does not exist
-  * genset: fix bug that caused to many registers to be controllable
+  * genset: fix bug that caused too many registers to be controllable
   * genset: improve handling of unavailable devices, NaN values
   * fix nil pointer panics when a referenced device or mqtt client is not available
   * fix race conditions in shutdown mechanism
   * mqtt client: fix panic when logging messages with payload < 80 bytes
-  * Homeassistant discovery: fix bug in some enum templates
+  * Home Assistant discovery: fix bug in some enum templates
   * ShellyEM3: fix register type mismatch for boolean registers
   * http patch: reject requests for registers that are not in the view's register filter
   * http server: correctly escape etag, handle lists of etags

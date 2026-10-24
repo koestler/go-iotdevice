@@ -83,7 +83,7 @@ func (vs *ValueStorage) updateState(newValue Value) (updated bool) {
 	}
 
 	if _, ok := newValue.(NullRegisterValue); ok {
-		// null values means -> remove from state
+		// a null value means -> remove from state
 		delete(vs.state, k)
 	} else {
 		// update value

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-var ErrFireDirected = errors.New("fire detected")
+var ErrFireDetected = errors.New("fire detected")
 var ErrIOUnavailable = errors.New("I/O controller unavailable")
 var ErrEngineTempLow = errors.New("engine temperature too low")
 var ErrEngineTempHigh = errors.New("engine temperature too high")
@@ -17,7 +17,7 @@ var ErrAuxTemp1High = errors.New("auxiliary temperature 1 too high")
 // Comparisons are written negated so that NaN fails the checks.
 func ioError(p Params, i Inputs) error {
 	if i.FireDetected {
-		return ErrFireDirected
+		return ErrFireDetected
 	}
 
 	if !i.IOAvailable {

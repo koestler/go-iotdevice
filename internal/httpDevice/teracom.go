@@ -199,8 +199,8 @@ type teracomStatusStruct struct {
 		Hwerr   string `json:"hwerr"`
 		Alarmed string `json:"Alarmed"`
 
-		Scannig string `json:"Scannig"`
-		Time    struct {
+		Scanning string `json:"Scannig"`
+		Time     struct {
 			Date string `json:"Date"`
 			Time string `json:"Time"`
 		} `json:"Time"`
@@ -306,7 +306,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 	c.text(cat, "DeviceName", "Device Name", m.DeviceInfo.DeviceName)
 	c.text(cat, "HostName", "Host Name", m.DeviceInfo.HostName)
 	c.text(cat, "Id", "Id", m.DeviceInfo.ID)
-	c.text(cat, "FWVer", "Firmware Vesion", m.DeviceInfo.FwVer)
+	c.text(cat, "FWVer", "Firmware Version", m.DeviceInfo.FwVer)
 	c.text(cat, "SysContact", "System Contact", m.DeviceInfo.SysContact)
 	c.text(cat, "SysName", "System Name", m.DeviceInfo.SysName)
 	c.text(cat, "SysLocation", "System Location", m.DeviceInfo.SysLocation)

@@ -140,7 +140,7 @@ func (c *DeviceStruct) execCommand(value dataflow.Value) {
 
 	if err := WaveshareWriteRelay(c.modbus.WriteRead, c.modbusConfig.Address(), relayNr, command); err != nil {
 		log.Printf(
-			"waveshareDevice[%s]: command request genration failed: %s",
+			"waveshareDevice[%s]: command write failed: %s",
 			c.Config().Name(), err,
 		)
 	} else {

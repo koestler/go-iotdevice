@@ -53,7 +53,7 @@ func NewDevice(
 
 		httpClient: &http.Client{
 			// this tool is designed to serve devices running on the local network
-			// -> us a relatively short timeout
+			// -> use a relatively short timeout
 			Timeout: time.Second,
 		},
 
@@ -111,7 +111,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 		}
 		if request, onSuccess, err := ds.impl.CommandValueRequest(value); err != nil {
 			log.Printf(
-				"httpDevice[%s]: command request genration failed: %s",
+				"httpDevice[%s]: command request generation failed: %s",
 				ds.Name(), err,
 			)
 		} else {
@@ -123,7 +123,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 					ds.Name(), err,
 				)
 			} else {
-				// ready and discard response body
+				// read and discard response body
 				defer resp.Body.Close() //nolint:errcheck
 
 				if resp.StatusCode != http.StatusOK {

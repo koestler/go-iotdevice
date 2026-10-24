@@ -18,7 +18,7 @@ type registerResponse struct {
 	Unit        string         `json:"unit,omitempty" example:"W"`
 	Sort        int            `json:"sort" example:"100"`
 	Writable    bool           `json:"commandable" example:"false"` // json is kept at commandable for compatibility reasons
-	// consider changing when going to majer version 4
+	// consider changing when going to major version 4
 }
 
 const RegistersExpires = 10 * time.Second

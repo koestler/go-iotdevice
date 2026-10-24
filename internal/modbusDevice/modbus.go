@@ -61,7 +61,7 @@ func callFunction(
 	received := checksumByteOrder.Uint16(response[len(response)-2:])
 	computed := computeChecksum(response[:len(response)-2])
 	if received != computed {
-		return nil, fmt.Errorf("computeChecksum missmatch received != computed : %x != %x", received, computed)
+		return nil, fmt.Errorf("computeChecksum mismatch received != computed : %x != %x", received, computed)
 	}
 
 	// check slave address

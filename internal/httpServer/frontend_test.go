@@ -225,7 +225,7 @@ func TestSetupFrontendProxy(t *testing.T) {
 		assert.Contains(t, w.Body.String(), "backend 404")
 	})
 
-	t.Run("ProxyCanAccessiApiV2", func(t *testing.T) {
+	t.Run("ProxyCanAccessApiV2", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
 		mux.ServeHTTP(w, req)

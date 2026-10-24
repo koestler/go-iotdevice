@@ -158,7 +158,7 @@ func (c *ShellyEm3Device) extractRegistersAndValues(s ShellyEm3StatusStruct) {
 			c.number("Essential", regName+"Voltage", desc+" Voltage", "V", e.Voltage)
 			c.boolean(cat, regName+"IsValid", desc+" Is Valid", e.IsValid)
 			c.number(cat, regName+"Total", desc+" Total", "Wh", e.Total)
-			c.number(cat, regName+"TotalReturned", desc+" TotalReturned", "Wh", e.TotalReturned)
+			c.number(cat, regName+"TotalReturned", desc+" Total Returned", "Wh", e.TotalReturned)
 		}
 
 		e := s.EmeterN

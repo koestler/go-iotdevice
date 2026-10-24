@@ -2,8 +2,8 @@ Version: 2                                                 # mandatory, configur
 ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice, title is shown in the http frontend
 LogConfig: true                                            # optional, default true, outputs the full configuration structure including used defaults on startup
 LogWorkerStart: true                                       # optional, default true, outputs what devices and mqtt clients are started
-LogStateStorageDebug: false                                # optional, default false, outputs all write to the internal state value storage
-LogCommandStorageDebug: false                              # optional, default false, outputs all write to the internal command value storage
+LogStateStorageDebug: false                                # optional, default false, logs all writes to the internal state value storage
+LogCommandStorageDebug: false                              # optional, default false, logs all writes to the internal command value storage
 
 HttpServer:                                                # optional, when missing: http server is not started
   Bind: "[::1]"                                            # mandatory, use [::1] (ipv6 loopback) to enable on both ipv4 and 6 and 0.0.0.0 to only enable ipv4
@@ -222,21 +222,21 @@ GpioDevices:                                               # optional, a list of
     OutputOptions: []                                      # optional, default unchanged, valid options: AsOpenDrain, AsOpenSource, AsPushPull
     Inputs:                                                # optional, a list of inputs
       Switch0:                                             # mandatory, a technical name used for the register
-        Pin: GPIO2                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO2                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
         Description: Switch 0                              # optional, default name, a nice title displayed in the frontend
         LowLabel: Pressed                                  # optional, default "low", a label for the low state
         HighLabel: Released                                # optional, default "high", a label for the high state
       Switch1:                                             # mandatory, a technical name used for the register
-        Pin: GPIO3                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO3                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
         Description: Switch 1                              # optional, default name, a nice title displayed in the frontend
     Outputs:                                               # optional, a list of outputs
       Relay0:                                              # mandatory, a technical name used for the register
-        Pin: GPIO4                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO4                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
         Description: Relay 0                               # optional, default name, a nice title displayed in the frontend
         LowLabel: Off                                      # optional, default "low", a label for the low state
         HighLabel: On                                      # optional, default "high", a label for the high state
       Relay1:                                              # mandatory, a technical name used for the register
-        Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
         Description: Relay 1                               # optional, default name, a nice title displayed in the frontend
 
 HttpDevices:                                               # optional, a list of devices controlled via http
@@ -258,7 +258,7 @@ HttpDevices:                                               # optional, a list of
     LogDebug: false                                        # optional, default false, enable debug log output
     LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
 
-MqttDevices:                                               # optional, a list of devices receiving its values via a mqtt server from another instance
+MqttDevices:                                               # optional, a list of devices receiving their values via an MQTT server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Kind: GoIotdeviceV3                                    # mandatory, only GoIotdevice is supported at the moment
     Filter:                                                # optional, default include all, defines which registers are shown in the view,

@@ -20,7 +20,7 @@ import (
 )
 
 // gensetRunDelay is the delay before starting genset devices.
-// This is used so that input/output devices have a change to start up and fetch their register list before
+// This is used so that input/output devices have a chance to start up and fetch their register list before
 // the genset device sets up its bindings.
 const gensetRunDelay = 2 * time.Second
 
@@ -84,7 +84,7 @@ func NonMqttGensetDevices(
 
 	for _, deviceConfig := range cfg.HttpDevices() {
 		if cfg.LogWorkerStart() {
-			log.Printf("device[%s]: start tearacom type", deviceConfig.Name())
+			log.Printf("device[%s]: start teracom type", deviceConfig.Name())
 		}
 
 		deviceConfig := httpDeviceConfig{deviceConfig}
