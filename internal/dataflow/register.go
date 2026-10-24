@@ -107,7 +107,16 @@ func FilterRegisters[R Register](input []R, filterConf RegisterFilterConf) (outp
 }
 
 func SortRegisterStructs(input []RegisterStruct) {
-	slices.SortFunc(input, func(a, b RegisterStruct) int { return cmp.Compare(a.Sort(), b.Sort()) })
+	slices.SortStableFunc(input, func(a, b RegisterStruct) int {
+		return cmp.Or(
+			cmp.Compare(a.sort, b.sort),
+			cmp.Compare(a.category, b.category),
+			cmp.Compare(a.name, b.name),
+			cmp.Compare(a.description, b.description),
+			cmp.Compare(a.unit, b.unit),
+			cmp.Compare(a.registerType, b.registerType),
+		)
+	})
 }
 
 func (r RegisterStruct) Equals(b RegisterStruct) bool {
