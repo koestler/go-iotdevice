@@ -14,6 +14,7 @@
   * mqtt client: fix panic when logging messages with payload < 80 bytes
   * Homeassistant discovery: fix bug in some enum templates
   * ShellyEM3: fix register type mismatch for boolean registers
+  * http patch: reject requests for registers that are not in the view's register filter
 * Finder 7M38: update and slightly fix register definitions using the newest datasheet
 
 ## 3.13.0 

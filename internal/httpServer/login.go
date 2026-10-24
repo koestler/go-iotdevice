@@ -56,8 +56,8 @@ func setupLogin(mux *http.ServeMux, env *Environment) {
 func loginHandler(env *Environment, authChecker *htpasswd.File) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req loginRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
+		if err := decodeJsonBody(w, r, &req); err != nil {
+			respondInvalidBody(w, err)
 			return
 		}
 

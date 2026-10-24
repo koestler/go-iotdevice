@@ -65,7 +65,7 @@ func setupValuesPatch(mux *http.ServeMux, env *Environment) {
 	for _, view := range env.Views {
 		for _, dn := range view.Devices() {
 			pattern := "PATCH /api/v2/views/" + view.Name() + "/devices/" + dn.Name() + "/values"
-			handler := valuesPatchHandler(env, view, dn.Name())
+			handler := valuesPatchHandler(env, view, dn.Name(), dataflow.RegisterFilter(dn.Filter()))
 
 			mux.HandleFunc(pattern, authJwtMiddleware(env, handler))
 			if env.Config.LogConfig() {
@@ -75,7 +75,7 @@ func setupValuesPatch(mux *http.ServeMux, env *Environment) {
 	}
 }
 
-func valuesPatchHandler(env *Environment, view ViewConfig, deviceName string) http.HandlerFunc {
+func valuesPatchHandler(env *Environment, view ViewConfig, deviceName string, filter dataflow.RegisterFilterFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// check authorization
 		if !isViewAuthenticated(view, r, false) {
@@ -90,8 +90,8 @@ func valuesPatchHandler(env *Environment, view ViewConfig, deviceName string) ht
 		}
 
 		var req map[string]interface{}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
+		if err := decodeJsonBody(w, r, &req); err != nil {
+			respondInvalidBody(w, err)
 			return
 		}
 
@@ -99,7 +99,7 @@ func valuesPatchHandler(env *Environment, view ViewConfig, deviceName string) ht
 		inputs := make([]dataflow.Value, 0, len(req))
 		for registerName, value := range req {
 			register, ok := registerDb.GetByName(registerName)
-			if !ok {
+			if !ok || !filter(register) {
 				jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
 				return
 			}
