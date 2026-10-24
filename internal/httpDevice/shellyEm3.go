@@ -124,7 +124,7 @@ func (c *ShellyEm3Device) number(category, registerName, description, unit strin
 func (c *ShellyEm3Device) boolean(category, registerName, description string, value bool) {
 	register := c.ds.addIgnoreRegister(
 		category, registerName, description, "",
-		dataflow.NumberRegister,
+		dataflow.EnumRegister,
 		map[int]string{
 			0: "false",
 			1: "true",

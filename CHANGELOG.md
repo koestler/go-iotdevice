@@ -5,15 +5,16 @@
 * restructure go code in the repository, be explicit what package are internal
 * drop mem / cpu profile to disk options (should be served via an http metric endpoint instead)
 * bugfixes:
+  * fix various error messages and logging
   * config: do not panic when an MQTT device is referenced that does not exist
   * genset: fix bug that caused to many registers to be controllable
   * genset: improve handling of unavailable devices, NaN values
   * fix nil pointer panics when a referenced device or mqtt client is not available
   * fix race conditions in shutdown mechanism
   * mqtt client: fix panic when logging messages with payload < 80 bytes
+  * Homeassistant discovery: fix bug in some enum templates
+  * ShellyEM3: fix register type mismatch for boolean registers
 * Finder 7M38: update and slightly fix register definitions using the newest datasheet
-* Homeassistant discovery: fix bug in some enum templates
-* fix various error messages and logging
 
 ## 3.13.0 
 * config: make docs path configurable via `HttpServer->DocsPath`
