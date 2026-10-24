@@ -9,7 +9,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/device"
 	"github.com/warthog618/go-gpiocdev"
-	"golang.org/x/exp/maps"
+	"maps"
 )
 
 type DeviceStruct struct {
@@ -126,7 +126,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 // setupInputs configures the given registers as inputs and registers an event listener.
 // The caller shall close the returned lines whenever there is no error returned.
 func (d *DeviceStruct) setupInputs(chip *gpiocdev.Chip, regMap map[string]GpioRegister) (*gpiocdev.Lines, error) {
-	regList := maps.Values(regMap)
+	regList := slices.Collect(maps.Values(regMap))
 	offsets := offsetList(regList)
 
 	if d.Config().LogDebug() {
@@ -140,25 +140,18 @@ func (d *DeviceStruct) setupInputs(chip *gpiocdev.Chip, regMap map[string]GpioRe
 		gpiocdev.WithBothEdges,
 		gpiocdev.WithEventHandler(d.eventHandler(regList)),
 	}
-	if d := d.gpioConfig.InputDebounce(); d > 0 {
-		opts = append(opts, gpiocdev.WithDebounce(d))
+	if debounce := d.gpioConfig.InputDebounce(); debounce > 0 {
+		opts = append(opts, gpiocdev.WithDebounce(debounce))
 	}
-	{
-		inputOpts := d.gpioConfig.InputOptions()
-		slices.Sort(inputOpts)
-	loop:
-		for _, o := range slices.Compact(inputOpts) {
-			switch o {
-			case "WithBiasDisabled":
-				opts = append(opts, gpiocdev.WithBiasDisabled)
-				break loop
-			case "WithPullDown":
-				opts = append(opts, gpiocdev.WithPullDown)
-				break loop
-			case "WithPullUp":
-				opts = append(opts, gpiocdev.WithPullUp)
-				break loop
-			}
+	// config validation allows at most one option
+	for _, o := range d.gpioConfig.InputOptions() {
+		switch o {
+		case "WithBiasDisabled":
+			opts = append(opts, gpiocdev.WithBiasDisabled)
+		case "WithPullDown":
+			opts = append(opts, gpiocdev.WithPullDown)
+		case "WithPullUp":
+			opts = append(opts, gpiocdev.WithPullUp)
 		}
 	}
 
@@ -227,7 +220,7 @@ func (d *DeviceStruct) eventHandler(regList []GpioRegister) func(e gpiocdev.Line
 // if no error is returned, the caller shall close the returned lines.
 func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioRegister) (*outputLines, error) {
 	// generate ordered list of registers and offsets
-	regList := maps.Values(regMap)
+	regList := slices.Collect(maps.Values(regMap))
 	offsets := offsetList(regList)
 
 	// fetch the line values
@@ -271,22 +264,15 @@ func (d *DeviceStruct) setupOutputs(chip *gpiocdev.Chip, regMap map[string]GpioR
 	opts := []gpiocdev.LineConfigOption{
 		gpiocdev.AsOutput(values...),
 	}
-	{
-		outputOpts := d.gpioConfig.OutputOptions()
-		slices.Sort(outputOpts)
-	loop:
-		for _, o := range slices.Compact(outputOpts) {
-			switch o {
-			case "AsOpenDrain":
-				opts = append(opts, gpiocdev.AsOpenDrain)
-				break loop
-			case "AsOpenSource":
-				opts = append(opts, gpiocdev.AsOpenSource)
-				break loop
-			case "AsPushPull":
-				opts = append(opts, gpiocdev.AsPushPull)
-				break loop
-			}
+	// config validation allows at most one option
+	for _, o := range d.gpioConfig.OutputOptions() {
+		switch o {
+		case "AsOpenDrain":
+			opts = append(opts, gpiocdev.AsOpenDrain)
+		case "AsOpenSource":
+			opts = append(opts, gpiocdev.AsOpenSource)
+		case "AsPushPull":
+			opts = append(opts, gpiocdev.AsPushPull)
 		}
 	}
 

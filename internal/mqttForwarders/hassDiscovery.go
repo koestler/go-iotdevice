@@ -7,8 +7,8 @@ import (
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/device"
 	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"
-	"golang.org/x/exp/maps"
 	"log"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -190,8 +190,7 @@ func publishHomeassistantDiscoveryMessage(
 	case dataflow.EnumRegister:
 		// generate Jinja2 template to translate enumIdx to string
 		enum := register.Enum()
-		keys := maps.Keys(enum)
-		slices.Sort(keys)
+		keys := slices.Sorted(maps.Keys(enum))
 
 		if commandFilter(register) && len(keys) >= 2 {
 			offIdx := keys[0]

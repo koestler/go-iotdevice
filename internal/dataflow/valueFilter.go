@@ -2,8 +2,6 @@ package dataflow
 
 type ValueFilterFunc func(Value) bool
 
-var EmptyFilter = func(Value) bool { return true }
-
 func DeviceNameValueFilter(deviceName string) ValueFilterFunc {
 	return func(value Value) bool {
 		return value.DeviceName() == deviceName

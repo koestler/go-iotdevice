@@ -246,8 +246,6 @@ func (ds *DeviceStruct) addIgnoreRegister(
 		return nil
 	}
 
-	ds.Config().Filter()
-
 	// add the register into the list
 	ds.RegisterDb().Add(r)
 

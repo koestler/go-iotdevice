@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
+	"errors"
 	"github.com/tg123/go-htpasswd"
 	"golang.org/x/sync/semaphore"
 )

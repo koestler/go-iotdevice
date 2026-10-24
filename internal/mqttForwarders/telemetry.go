@@ -54,7 +54,7 @@ func runTelemetryForwarder(
 
 	filter := createDeviceAndRegisterValueFilter(dev, filterConf)
 
-	go func(mc mqttClient.Client) {
+	go func() {
 		if cfg.LogDebug() {
 			log.Printf(
 				"mqttClient[%s]->device[%s]->telemetry: start sending messages every %s",
@@ -121,7 +121,7 @@ func runTelemetryForwarder(
 				}
 			}
 		}
-	}(mc)
+	}()
 }
 
 func convertValuesToNumericTelemetryValues(values []dataflow.Value) (ret map[string]NumericTelemetryValue) {

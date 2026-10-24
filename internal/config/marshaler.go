@@ -3,7 +3,8 @@ package config
 import (
 	"fmt"
 
-	"golang.org/x/exp/maps"
+	"maps"
+	"slices"
 )
 
 func (c Config) MarshalYAML() (interface{}, error) {
@@ -60,10 +61,8 @@ func convertMapToRead[I mappable[O], O any](inp []I) (oup map[string]O) {
 
 func convertListToRead[I convertable[O], O any](inp []I) (oup []O) {
 	oup = make([]O, len(inp))
-	i := 0
-	for _, c := range inp {
+	for i, c := range inp {
 		oup[i] = c.convertToRead()
-		i++
 	}
 	return
 }
@@ -315,7 +314,7 @@ func (c ViewConfig) convertToRead() viewConfigRead {
 		Title:        c.title,
 		Devices:      convertListToRead[ViewDeviceConfig, viewDeviceConfigRead](c.devices),
 		Autoplay:     &c.autoplay,
-		AllowedUsers: maps.Keys(c.allowedUsers),
+		AllowedUsers: slices.Collect(maps.Keys(c.allowedUsers)),
 		Hidden:       &c.hidden,
 	}
 }

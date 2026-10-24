@@ -2674,3 +2674,11 @@ func TestPrintConfig(t *testing.T) {
 	}
 	t.Log(buf.String())
 }
+
+func getNames[N Nameable](list []N) (ret []string) {
+	ret = make([]string, len(list))
+	for i, t := range list {
+		ret[i] = t.Name()
+	}
+	return
+}

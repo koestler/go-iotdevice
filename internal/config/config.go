@@ -12,11 +12,11 @@ import (
 	"strings"
 	"time"
 
+	"errors"
 	"github.com/google/uuid"
 	"github.com/koestler/go-iotdevice/v3/internal/types"
-	"github.com/pkg/errors"
-	"golang.org/x/exp/maps"
 	"gopkg.in/yaml.v3"
+	"maps"
 )
 
 const NameRegexp = "^[a-zA-Z0-9\\-]{1,32}$"
@@ -375,8 +375,6 @@ func (c mqttClientConfigRead) TransformAndValidate(
 	} else {
 		if broker, e := url.ParseRequestURI(c.Broker); e != nil {
 			err = append(err, fmt.Errorf("%s->Broker invalid url: %s", errPrefix, e))
-		} else if broker == nil {
-			err = append(err, fmt.Errorf("%s->Broker cannot parse broker", errPrefix))
 		} else {
 			ret.broker = broker
 		}
@@ -1074,8 +1072,6 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string) (ret HttpDeviceC
 	} else {
 		if u, e := url.ParseRequestURI(c.Url); e != nil {
 			err = append(err, fmt.Errorf("HttpDevices->%s->Url invalid url: %s", name, e))
-		} else if u == nil {
-			err = append(err, fmt.Errorf("HttpDevices->%s->Url cannot parse url", name))
 		} else {
 			ret.url = u
 		}
@@ -1130,60 +1126,20 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 	ret.outputBindings, e = c.OutputBindings.TransformAndValidate(devices)
 	err = append(err, e...)
 
-	if len(c.PrimingTimeout) < 1 {
-		// use default 10s
-		ret.primingTimeout = 10 * time.Second
-	} else if primingTimeout, e := time.ParseDuration(c.PrimingTimeout); e != nil {
-		err = append(err, fmt.Errorf("GensetDevices->%s->PrimingTimeout='%s' parse error: %s",
-			name, c.PrimingTimeout, e,
-		))
-	} else {
-		ret.primingTimeout = primingTimeout
-	}
+	ret.primingTimeout, e = parseGensetDuration(name, "PrimingTimeout", c.PrimingTimeout, 10*time.Second)
+	err = append(err, e...)
 
-	if len(c.CrankingTimeout) < 1 {
-		// use default 10s
-		ret.crankingTimeout = 10 * time.Second
-	} else if crankingTimeout, e := time.ParseDuration(c.CrankingTimeout); e != nil {
-		err = append(err, fmt.Errorf("GensetDevices->%s->CrankingTimeout='%s' parse error: %s",
-			name, c.CrankingTimeout, e,
-		))
-	} else {
-		ret.crankingTimeout = crankingTimeout
-	}
+	ret.crankingTimeout, e = parseGensetDuration(name, "CrankingTimeout", c.CrankingTimeout, 10*time.Second)
+	err = append(err, e...)
 
-	if len(c.StabilizingTimeout) < 1 {
-		// use default 3s
-		ret.stabilizingTimeout = 3 * time.Second
-	} else if stabilizingTimeout, e := time.ParseDuration(c.StabilizingTimeout); e != nil {
-		err = append(err, fmt.Errorf("GensetDevices->%s->StabilizingTimeout='%s' parse error: %s",
-			name, c.StabilizingTimeout, e,
-		))
-	} else {
-		ret.stabilizingTimeout = stabilizingTimeout
-	}
+	ret.stabilizingTimeout, e = parseGensetDuration(name, "StabilizingTimeout", c.StabilizingTimeout, 3*time.Second)
+	err = append(err, e...)
 
-	if len(c.WarmUpTimeout) < 1 {
-		// use default 10m
-		ret.warmUpTimeout = 10 * time.Minute
-	} else if warmUpTimeout, e := time.ParseDuration(c.WarmUpTimeout); e != nil {
-		err = append(err, fmt.Errorf("GensetDevices->%s->WarmUpTimeout='%s' parse error: %s",
-			name, c.WarmUpTimeout, e,
-		))
-	} else {
-		ret.warmUpTimeout = warmUpTimeout
-	}
+	ret.warmUpTimeout, e = parseGensetDuration(name, "WarmUpTimeout", c.WarmUpTimeout, 10*time.Minute)
+	err = append(err, e...)
 
-	if len(c.WarmUpMinTime) < 1 {
-		// use default 2m
-		ret.warmUpMinTime = 2 * time.Minute
-	} else if warmUpMinTime, e := time.ParseDuration(c.WarmUpMinTime); e != nil {
-		err = append(err, fmt.Errorf("GensetDevices->%s->WarmUpMinTime='%s' parse error: %s",
-			name, c.WarmUpMinTime, e,
-		))
-	} else {
-		ret.warmUpMinTime = warmUpMinTime
-	}
+	ret.warmUpMinTime, e = parseGensetDuration(name, "WarmUpMinTime", c.WarmUpMinTime, 2*time.Minute)
+	err = append(err, e...)
 
 	if ret.warmUpMinTime > ret.warmUpTimeout {
 		err = append(err, fmt.Errorf("GensetDevices->%s->WarmUpMinTime='%s' must be less than or equal to WarmUpTimeout='%s'",
@@ -1197,27 +1153,11 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 		ret.warmUpTemp = *c.WarmUpTemp
 	}
 
-	if len(c.EngineCoolDownTimeout) < 1 {
-		// use default 5m
-		ret.engineCoolDownTimeout = 5 * time.Minute
-	} else if engineCoolDownTimeout, e := time.ParseDuration(c.EngineCoolDownTimeout); e != nil {
-		err = append(err, fmt.Errorf("GensetDevices->%s->EngineCoolDownTimeout='%s' parse error: %s",
-			name, c.EngineCoolDownTimeout, e,
-		))
-	} else {
-		ret.engineCoolDownTimeout = engineCoolDownTimeout
-	}
+	ret.engineCoolDownTimeout, e = parseGensetDuration(name, "EngineCoolDownTimeout", c.EngineCoolDownTimeout, 5*time.Minute)
+	err = append(err, e...)
 
-	if len(c.EngineCoolDownMinTime) < 1 {
-		// use default 2m
-		ret.engineCoolDownMinTime = 2 * time.Minute
-	} else if engineCoolDownMinTime, e := time.ParseDuration(c.EngineCoolDownMinTime); e != nil {
-		err = append(err, fmt.Errorf("GensetDevices->%s->EngineCoolDownMinTime='%s' parse error: %s",
-			name, c.EngineCoolDownMinTime, e,
-		))
-	} else {
-		ret.engineCoolDownMinTime = engineCoolDownMinTime
-	}
+	ret.engineCoolDownMinTime, e = parseGensetDuration(name, "EngineCoolDownMinTime", c.EngineCoolDownMinTime, 2*time.Minute)
+	err = append(err, e...)
 
 	if ret.engineCoolDownMinTime > ret.engineCoolDownTimeout {
 		err = append(err, fmt.Errorf("GensetDevices->%s->EngineCoolDownMinTime='%s' must be less than or equal to EngineCoolDownTimeout='%s'",
@@ -1231,27 +1171,11 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 		ret.engineCoolDownTemp = *c.EngineCoolDownTemp
 	}
 
-	if len(c.EnclosureCoolDownTimeout) < 1 {
-		// use default 10m
-		ret.enclosureCoolDownTimeout = 10 * time.Minute
-	} else if enclosureCoolDownTimeout, e := time.ParseDuration(c.EnclosureCoolDownTimeout); e != nil {
-		err = append(err, fmt.Errorf("GensetDevices->%s->EnclosureCoolDownTimeout='%s' parse error: %s",
-			name, c.EnclosureCoolDownTimeout, e,
-		))
-	} else {
-		ret.enclosureCoolDownTimeout = enclosureCoolDownTimeout
-	}
+	ret.enclosureCoolDownTimeout, e = parseGensetDuration(name, "EnclosureCoolDownTimeout", c.EnclosureCoolDownTimeout, 10*time.Minute)
+	err = append(err, e...)
 
-	if len(c.EnclosureCoolDownMinTime) < 1 {
-		// use default 2m
-		ret.enclosureCoolDownMinTime = 2 * time.Minute
-	} else if enclosureCoolDownMinTime, e := time.ParseDuration(c.EnclosureCoolDownMinTime); e != nil {
-		err = append(err, fmt.Errorf("GensetDevices->%s->EnclosureCoolDownMinTime='%s' parse error: %s",
-			name, c.EnclosureCoolDownMinTime, e,
-		))
-	} else {
-		ret.enclosureCoolDownMinTime = enclosureCoolDownMinTime
-	}
+	ret.enclosureCoolDownMinTime, e = parseGensetDuration(name, "EnclosureCoolDownMinTime", c.EnclosureCoolDownMinTime, 2*time.Minute)
+	err = append(err, e...)
 
 	if ret.enclosureCoolDownMinTime > ret.enclosureCoolDownTimeout {
 		err = append(err, fmt.Errorf("GensetDevices->%s->EnclosureCoolDownMinTime='%s' must be less than or equal to EnclosureCoolDownTimeout='%s'",
@@ -1489,8 +1413,7 @@ func TransformAndValidateMapToList[I any, O any](
 	inp map[string]I,
 	transformer func(inp I, name string) (ret O, err []error),
 ) (ret []O, err []error) {
-	keys := maps.Keys(inp)
-	slices.Sort(keys)
+	keys := slices.Sorted(maps.Keys(inp))
 
 	ret = make([]O, len(inp))
 	for i, name := range keys {
@@ -1543,10 +1466,13 @@ func existsByName[N Nameable](needle string, haystack []N) bool {
 	return false
 }
 
-func getNames[N Nameable](list []N) (ret []string) {
-	ret = make([]string, len(list))
-	for i, t := range list {
-		ret[i] = t.Name()
+func parseGensetDuration(name, field, raw string, def time.Duration) (time.Duration, []error) {
+	if len(raw) < 1 {
+		return def, nil
 	}
-	return
+	d, e := time.ParseDuration(raw)
+	if e != nil {
+		return 0, []error{fmt.Errorf("GensetDevices->%s->%s='%s' parse error: %s", name, field, raw, e)}
+	}
+	return d, nil
 }

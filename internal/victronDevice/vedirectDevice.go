@@ -6,11 +6,11 @@ import (
 	"log"
 	"time"
 
+	"errors"
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-victron/vedirect"
 	"github.com/koestler/go-victron/vedirectapi"
 	"github.com/koestler/go-victron/veregister"
-	"github.com/pkg/errors"
 )
 
 func runVedirect(ctx context.Context, c *DeviceStruct, output dataflow.Fillable) (err error, immediateError bool) {

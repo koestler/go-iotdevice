@@ -1,9 +1,6 @@
 package pool
 
-import (
-	"golang.org/x/exp/maps"
-	"sync"
-)
+import "sync"
 
 type Poolable interface {
 	Name() string
@@ -35,35 +32,9 @@ func (p *Pool[I]) Add(item I) {
 	p.items[item.Name()] = item
 }
 
-func (p *Pool[I]) Remove(item I) {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	delete(p.items, item.Name())
-}
-
-func (p *Pool[I]) GetAll() map[string]I {
-	p.mutex.RLock()
-	defer p.mutex.RUnlock()
-	return maps.Clone(p.items) //nolint:govet // inline: generic type inference not supported
-}
-
 func (p *Pool[I]) GetByName(name string) (item I, ok bool) {
 	p.mutex.RLock()
 	defer p.mutex.RUnlock()
 	item, ok = p.items[name]
 	return
-}
-
-func (p *Pool[I]) GetByNames(names []string) []I {
-	p.mutex.RLock()
-	defer p.mutex.RUnlock()
-
-	// copy only those in the names list
-	ret := make([]I, 0, len(names))
-	for _, name := range names {
-		if i, ok := p.items[name]; ok {
-			ret = append(ret, i)
-		}
-	}
-	return ret
 }

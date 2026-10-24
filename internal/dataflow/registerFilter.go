@@ -48,10 +48,6 @@ func RegisterFilter(registerFilter RegisterFilterConf) RegisterFilterFunc {
 	}
 }
 
-var AllRegisterFilter RegisterFilterFunc = func(Filterable) bool {
-	return true
-}
-
 func sliceToMap[T comparable](inp []T) map[T]struct{} {
 	oup := make(map[T]struct{}, len(inp))
 	for _, v := range inp {

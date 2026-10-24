@@ -93,10 +93,6 @@ func (w *Restarter[S]) Shutdown() {
 	w.wg.Wait()
 }
 
-func (w *Restarter[S]) GetCtx() context.Context {
-	return w.ctx
-}
-
 func (w *Restarter[S]) Name() string {
 	return w.service.Name()
 }
@@ -111,9 +107,5 @@ func (w *Restarter[S]) getRestartInterval(errorsInARow int) time.Duration {
 	}
 	var backoffFactor uint64 = 1 << errorsInARow // 2^errorsInARow
 	interval := w.config.RestartInterval() * time.Duration(backoffFactor)
-	max := w.config.RestartIntervalMaxBackoff()
-	if interval > max {
-		return max
-	}
-	return interval
+	return min(interval, w.config.RestartIntervalMaxBackoff())
 }

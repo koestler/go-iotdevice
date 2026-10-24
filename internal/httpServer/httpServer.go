@@ -13,7 +13,6 @@ import (
 )
 
 type HttpServer struct {
-	config Config
 	server *http.Server
 }
 
@@ -89,7 +88,6 @@ func Run(env *Environment) (httpServer *HttpServer) {
 	}()
 
 	return &HttpServer{
-		config: cfg,
 		server: server,
 	}
 }

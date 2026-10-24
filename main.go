@@ -78,11 +78,10 @@ func main() {
 	cfg := getConfig(cmdOptions, cmdName)
 	if cmdOptions.DryRun {
 		os.Exit(ExitSuccess)
-		return
 	}
 
 	// call defer statements before os.Exit
-	exitCode := func() (exitCode int) {
+	func() {
 		if cfg.LogWorkerStart() {
 			log.Printf("main: start go-iotdevice version=%s", buildVersion)
 		}
@@ -143,13 +142,10 @@ func main() {
 		if cfg.LogWorkerStart() {
 			log.Printf("main: graceful shutdown; caught signal: %+v", sig)
 		}
-		exitCode = ExitSuccess
-
-		return
 	}()
 
 	if cfg.LogWorkerStart() {
-		log.Printf("main: shutdown completed; exit %d", exitCode)
+		log.Printf("main: shutdown completed; exit %d", ExitSuccess)
 	}
-	os.Exit(exitCode)
+	os.Exit(ExitSuccess)
 }

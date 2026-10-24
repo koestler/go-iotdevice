@@ -37,7 +37,6 @@ func TestRegisterDb(t *testing.T) {
 	wgPopulate := sync.WaitGroup{}
 	wgPopulate.Add(numbPopulate)
 	for i := 0; i < numbPopulate; i++ {
-		i := i
 		go func() {
 			defer wgPopulate.Done()
 			rdb.Add(
@@ -68,8 +67,7 @@ func TestRegisterDb(t *testing.T) {
 	wgSubscribe := sync.WaitGroup{}
 	wgSubscribe.Add(numbSubscriptions)
 	for i := 0; i < numbSubscriptions; i++ {
-		i := i
-		s := rdb.Subscribe(subscribeCtx, dataflow.AllRegisterFilter)
+		s := rdb.Subscribe(subscribeCtx, func(dataflow.Filterable) bool { return true })
 		go func() {
 			defer wgSubscribe.Done()
 			got := make([]string, 0)

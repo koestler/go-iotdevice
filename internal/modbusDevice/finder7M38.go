@@ -15,10 +15,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
-const (
-	FinderFunctionReadHoldingRegisters FunctionCode = 0x03
-	FinderFunctionReadInputRegisters   FunctionCode = 0x04
-)
+const FinderFunctionReadInputRegisters FunctionCode = 0x04
 
 const InputRegisterAddressOffset = 30000
 

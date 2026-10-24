@@ -50,10 +50,6 @@ func (c Config) Modbus() []ModbusConfig {
 	return c.modbus
 }
 
-func (c Config) Devices() []DeviceConfig {
-	return c.devices
-}
-
 func (c Config) VictronDevices() []VictronDeviceConfig {
 	return c.victronDevices
 }
@@ -500,10 +496,6 @@ func (c HttpDeviceConfig) Password() string {
 
 func (c HttpDeviceConfig) PollInterval() time.Duration {
 	return c.pollInterval
-}
-
-func (c HttpDeviceConfig) LogDebug() bool {
-	return c.logDebug
 }
 
 // Getters for MqttDeviceConfig struct

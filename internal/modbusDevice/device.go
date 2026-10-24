@@ -20,8 +20,6 @@ type Config interface {
 }
 
 type Modbus interface {
-	Name() string
-	Shutdown()
 	WriteRead(request []byte, responseBuf []byte) error
 }
 

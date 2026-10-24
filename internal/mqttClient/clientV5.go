@@ -16,8 +16,7 @@ func NewV5(
 ) (client *ClientStruct) {
 	ctx, cancel := context.WithCancel(context.Background())
 	client = &ClientStruct{
-		cfg:      cfg,
-		shutdown: make(chan struct{}),
+		cfg: cfg,
 
 		router:         paho.NewStandardRouter(),
 		publishBacklog: queue.NewFifo[*paho.Publish](cfg.MaxBacklogSize()),
@@ -129,7 +128,6 @@ func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.
 }
 
 func (c *ClientStruct) Shutdown() {
-	close(c.shutdown)
 
 	// publish availability offline
 	if c.cfg.AvailabilityClient().Enabled() {

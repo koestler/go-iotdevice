@@ -2,9 +2,9 @@ package httpDevice
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
-	"github.com/pkg/errors"
 	"net/http"
 )
 

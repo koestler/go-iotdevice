@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
+	"errors"
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
-	"github.com/pkg/errors"
 )
 
 type valueResponse interface{}
@@ -24,8 +24,7 @@ type values1DResponse map[string]valueResponse
 // @Security ApiKeyAuth
 func setupValuesGetJson(mux *http.ServeMux, env *Environment) {
 	// add dynamic routes
-	for _, v := range env.Views {
-		view := v
+	for _, view := range env.Views {
 		for _, vd := range view.Devices() {
 			pattern := "GET /api/v2/views/" + view.Name() + "/devices/" + vd.Name() + "/values"
 			filter := getViewValueFilter([]ViewDeviceConfig{vd})

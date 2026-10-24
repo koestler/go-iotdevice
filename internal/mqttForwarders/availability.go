@@ -15,7 +15,7 @@ func runAvailabilityForwarder(
 	mCfg := cfg.AvailabilityDevice()
 	topic := cfg.AvailabilityDeviceTopic(dev.Name())
 
-	go func(mc mqttClient.Client) {
+	go func() {
 		availChan := dev.SubscribeAvailableSendInitial(ctx)
 		for {
 			select {
@@ -34,5 +34,5 @@ func runAvailabilityForwarder(
 				)
 			}
 		}
-	}(mc)
+	}()
 }

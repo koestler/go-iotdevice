@@ -12,14 +12,12 @@ require (
 	github.com/koestler/go-list v1.0.0
 	github.com/koestler/go-victron v0.3.0
 	github.com/mileusna/useragent v1.3.5
-	github.com/pkg/errors v0.9.1
 	github.com/sigurn/crc16 v0.0.0-20240131213347-83fcde1e29d1
 	github.com/stretchr/testify v1.11.1
 	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07
 	github.com/tg123/go-htpasswd v1.2.5
 	github.com/warthog618/go-gpiocdev v0.10.0
 	go.uber.org/mock v0.6.0
-	golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e
 	golang.org/x/sync v0.24.0
 	gopkg.in/yaml.v3 v3.0.1
 )

@@ -2,6 +2,7 @@ package dataflow
 
 import (
 	"cmp"
+	"maps"
 	"slices"
 )
 
@@ -127,21 +128,5 @@ func (r RegisterStruct) Equals(b RegisterStruct) bool {
 		r.unit == b.unit &&
 		r.sort == b.sort &&
 		r.writable == b.writable &&
-		mapEquals(r.enum, b.enum)
-}
-
-func mapEquals(a, b map[int]string) bool {
-	if a == nil && b == nil {
-		return true
-	}
-
-	if len(a) != len(b) {
-		return false
-	}
-	for k, v := range a {
-		if b[k] != v {
-			return false
-		}
-	}
-	return true
+		maps.Equal(r.enum, b.enum)
 }

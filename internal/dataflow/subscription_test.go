@@ -19,7 +19,7 @@ func TestValueStorageSubscribe(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(numberOfSubscriptions)
 	for i := 0; i < numberOfSubscriptions; i += 1 {
-		subscription := storage.SubscribeSendInitial(ctx, dataflow.EmptyFilter)
+		subscription := storage.SubscribeSendInitial(ctx, dataflow.AllValueFilter)
 		go func() {
 			counter := 0
 			defer wg.Done()

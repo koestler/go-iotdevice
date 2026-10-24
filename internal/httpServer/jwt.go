@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"errors"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/pkg/errors"
 )
 
 type jwtClaims struct {

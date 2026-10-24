@@ -19,15 +19,9 @@ func setupFrontend(mux *http.ServeMux, config Config, views []ViewConfig) {
 		return
 	}
 
-	frontendPath := config.FrontendPath()
-	if frontendPath != "" {
-		frontendPath = filepath.Clean(frontendPath)
-		err := setupFrontendStatic(mux, os.DirFS(frontendPath), config, views)
-		if err != nil {
-			log.Printf("httpServer: failed to serve from local folder: %s", err)
-		}
-	} else {
-		log.Print("httpServer: no frontend configured")
+	frontendPath := filepath.Clean(config.FrontendPath())
+	if err := setupFrontendStatic(mux, os.DirFS(frontendPath), config, views); err != nil {
+		log.Printf("httpServer: failed to serve from local folder: %s", err)
 	}
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		setCacheControlPublic(w, config.FrontendExpires())

@@ -13,8 +13,6 @@ import (
 type ClientStruct struct {
 	cfg Config
 
-	shutdown chan struct{}
-
 	subscriptionsMutex sync.RWMutex
 	subscriptions      []subscription
 

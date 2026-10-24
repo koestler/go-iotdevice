@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"errors"
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
-	"github.com/pkg/errors"
 )
 
 type registerResponse struct {

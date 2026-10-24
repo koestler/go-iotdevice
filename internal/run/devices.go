@@ -245,10 +245,6 @@ func (c mqttDeviceConfig) MqttClientTopics() map[string][]string {
 				continue
 			}
 
-			if _, ok := ret[mc.Name()]; !ok {
-				ret[mc.Name()] = make([]string, 0)
-			}
-
 			ret[mc.Name()] = append(ret[mc.Name()], d.MqttTopics()...)
 		}
 	}

@@ -17,7 +17,6 @@ type Config interface {
 	KeepAlive() time.Duration
 	ConnectRetryDelay() time.Duration
 	ConnectTimeout() time.Duration
-	TopicPrefix() string
 	ReadOnly() bool
 	MaxBacklogSize() int
 
@@ -30,7 +29,6 @@ type Config interface {
 
 type MqttSectionConfig interface {
 	Enabled() bool
-	Interval() time.Duration
 	Retain() bool
 	Qos() byte
 }

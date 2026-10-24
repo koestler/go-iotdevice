@@ -2,9 +2,9 @@ package modbusDevice
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
-	"github.com/pkg/errors"
 	"log"
 	"regexp"
 	"strconv"

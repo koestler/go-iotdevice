@@ -6,9 +6,10 @@ import (
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/device"
 	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"
-	"golang.org/x/exp/maps"
 	"log"
+	"maps"
 	"math"
+	"slices"
 	"time"
 )
 
@@ -93,7 +94,7 @@ func structureOnUpdateModeRoutine(
 		case <-ticker.C:
 			ticker.Stop()
 
-			publishStruct(cfg, mc, dev.Name(), structureTopic, maps.Values(registers))
+			publishStruct(cfg, mc, dev.Name(), structureTopic, slices.Collect(maps.Values(registers)))
 			clear(registers)
 		}
 	}

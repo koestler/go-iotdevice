@@ -1,7 +1,6 @@
 package modbus
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/tarm/serial"
 	"io"
@@ -13,7 +12,6 @@ type ModbusStruct struct {
 	cfg Config
 
 	ioPort *serial.Port
-	reader *bufio.Reader
 
 	mutex sync.Mutex
 }
@@ -41,7 +39,6 @@ func New(cfg Config) (*ModbusStruct, error) {
 	return &ModbusStruct{
 		cfg:    cfg,
 		ioPort: ioHandle,
-		reader: bufio.NewReader(ioHandle),
 	}, nil
 }
 
@@ -95,10 +92,6 @@ func (md *ModbusStruct) Write(b []byte) (n int, err error) {
 }
 
 func (md *ModbusStruct) RecvFlush() {
-	if err := md.ioPort.Flush(); err != nil {
-		md.debugPrintf("Flush err=%v", err)
-	} else {
-		md.debugPrintf("Flush err=%v", err)
-	}
-	md.reader.Reset(md.ioPort)
+	err := md.ioPort.Flush()
+	md.debugPrintf("Flush err=%v", err)
 }
