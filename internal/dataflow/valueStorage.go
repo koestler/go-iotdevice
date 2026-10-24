@@ -192,7 +192,7 @@ func (vs *ValueStorage) sendInitialAndCleanupValueSubscription(
 		close(subscription.outputChannel)
 	}()
 
-	// this never blocks since channel is always buffered, big enough and main routine is blocked
+	// the channel is buffered; this blocks if the initial values do not fit and the consumer is slow, until the context is done
 	for _, initialV := range initial {
 		select {
 		case subscription.outputChannel <- initialV:

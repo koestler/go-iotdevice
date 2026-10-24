@@ -101,7 +101,7 @@ type Controller struct {
 }
 
 // NewController creates a new controller with the given configuration, initial state and inputs.
-// It runs a goroutine that listens for input changes and recomputes the state and outputs.
+// Call Run to start listening for input changes and recomputing the state and outputs.
 // To terminate the controller, call the End method.
 func NewController(params Params, initialNode StateNode, initialInputs Inputs) *Controller {
 	initialState := State{
@@ -134,7 +134,7 @@ func (c *Controller) UpdateInputsSync(f func(Inputs) Inputs) {
 	<-done
 }
 
-// Run is the main loop of the controller. It will send the initial state and outputs to the respective channels
+// Run is the main loop of the controller. It will send the initial state and outputs via the OnStateUpdate and OnOutputUpdate callbacks
 func (c *Controller) Run() {
 	initDone := make(chan struct{})
 
@@ -222,7 +222,7 @@ func computeStateNode(p Params, i Inputs, prev State) (next StateNode, errorTrig
 		return Reset, nil
 	}
 
-	// in every state except reset, off and failed: a temperature or fire detection triggers the failed state
+	// in every state except reset, off and error: an I/O error (e.g. IOAvailable=false, temperature or fire detection) triggers the error state
 	if !(prev.Node == Reset || prev.Node == Off || prev.Node == Error) { //nolint:staticcheck
 		ioErr := ioError(p, i)
 		if ioErr != nil {
@@ -230,7 +230,7 @@ func computeStateNode(p Params, i Inputs, prev State) (next StateNode, errorTrig
 		}
 	}
 
-	// in warm up, producing and engine cool down: a negative output check triggers the failed state
+	// in warm up, producing and engine cool down: a negative output check triggers the error state
 	outCheck := outputCheck(p, i)
 	if prev.Node == WarmUp || prev.Node == Producing || prev.Node == EngineCoolDown {
 		outputErr := outputError(p, i)

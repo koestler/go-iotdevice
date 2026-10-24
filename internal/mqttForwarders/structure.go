@@ -3,14 +3,15 @@ package mqttForwarders
 import (
 	"context"
 	"encoding/json"
-	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
-	"github.com/koestler/go-iotdevice/v3/internal/device"
-	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"
 	"log"
 	"maps"
 	"math"
 	"slices"
 	"time"
+
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
+	"github.com/koestler/go-iotdevice/v3/internal/device"
+	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"
 )
 
 type StructRegister struct {
@@ -39,7 +40,7 @@ func runStructureForwarder(
 	mc mqttClient.Client,
 	filterConf dataflow.RegisterFilterConf,
 ) {
-	// start mqtt forwarder for realtime messages (send data as soon as it arrives) output
+	// start mqtt forwarder for the register structure messages
 	mCfg := cfg.Structure()
 
 	filter := createRegisterValueFilter(filterConf)
@@ -70,8 +71,6 @@ func structureOnUpdateModeRoutine(
 	regSubscription := dev.RegisterDb().Subscribe(ctx, filter)
 	structureTopic := cfg.StructureTopic(devCfg.Name())
 
-	// when a new register arrives, wait until no new register is received for 100ms
-	// and then send all updates together
 	ticker := time.NewTicker(math.MaxInt64)
 	defer ticker.Stop()
 

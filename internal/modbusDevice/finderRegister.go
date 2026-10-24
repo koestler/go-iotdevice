@@ -10,7 +10,7 @@ type FinderRegister struct {
 	registerType FinderRegisterType
 	addressBegin uint16
 	addressEnd   uint16
-	bit          int // only used for enums, when positive, only the given bit is used as 0/1
+	bit          int // only used for enums, when >= 0, only the given bit is used as 0/1
 }
 
 type FinderRegisterType int

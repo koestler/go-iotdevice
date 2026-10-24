@@ -30,7 +30,7 @@ func WaveshareWriteRelay(writeRead WriteReadBusFunc, deviceAddress byte, relayNr
 
 	// payload structure:
 	// 2 bytes for register address of controlled relay, 0x0000 - 0x0007
-	// 2 bytes for command: 0xFF00 open relay, 0x0000 close relay, 0x5500 flip relay
+	// 2 bytes for command: 0x0000 open relay, 0xFF00 close relay, 0x5500 flip relay
 	var payload bytes.Buffer
 
 	err = binary.Write(&payload, byteOrder, relayNr)
@@ -60,7 +60,7 @@ func WaveshareReadSoftwareRevision(writeRead WriteReadBusFunc, deviceAddress byt
 		deviceAddress,
 		WaveshareFunctionReadAddressAndVersion,
 		[]byte{
-			0x20, 0x00, // 0x0200 read software revision
+			0x20, 0x00, // 0x2000 read software revision
 			0x00, 0x01, // number of bytes, Fixed 0x0001
 		},
 		2, // number, revision of software

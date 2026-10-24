@@ -28,7 +28,7 @@ type authMessage struct {
 	AuthToken string `json:"authToken"`
 }
 
-// setupViewWs godoc
+// setupValuesWs godoc
 // @Summary Realtime values websocket
 // @Description Websocket that sends all registers and values initially and sends updates of changed values subsequently.
 // @Param viewName path string true "View name as provided by the config endpoint"
@@ -42,7 +42,6 @@ func setupValuesWs(mux *http.ServeMux, env *Environment) {
 	for _, view := range env.Views {
 		pattern := "GET /api/v2/views/" + view.Name() + "/ws"
 
-		// the following line uses a loop variable; it must be outside the closure
 		mux.Handle(pattern, wsHandler(env, view, pattern))
 		if env.Config.LogConfig() {
 			log.Printf("httpServer: %s -> setup websocket for view", pattern)
@@ -65,7 +64,7 @@ func wsHandler(env *Environment, view ViewConfig, pattern string) http.HandlerFu
 		}
 		if ua.IsIOS() || ua.IsSafari() {
 			// Safari is known to not work with fragmented compressed websockets
-			// disable context takeover as a workaround
+			// disable compression as a workaround
 			if env.Config.LogDebug() {
 				log.Printf("%s: ios/safari detected, disable compression", logPrefix)
 			}

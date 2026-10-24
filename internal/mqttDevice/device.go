@@ -211,7 +211,7 @@ func (c *DeviceStruct) setupTelemetrySubscription(mc mqttClient.Client, topic st
 				}
 			default:
 				if c.Config().LogDebug() {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]: register not found in telemetry message registerName=%v",
+					log.Printf("mqttDevice[%s]->mqttClient[%s]: unsupported register type in telemetry message registerName=%v",
 						c.Name(), mc.Name(), register.Name(),
 					)
 				}
