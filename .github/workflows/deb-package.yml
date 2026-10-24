@@ -80,7 +80,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq lintian
-          lintian --fail-on error --suppress-tags statically-linked-binary,no-manual-page,no-changelog,changelog-file-missing-in-native-package,unstripped-binary-or-object dist/*.deb
+          lintian --fail-on error --suppress-tags statically-linked-binary dist/*.deb
 
       - name: Install test in a systemd container
         if: matrix.arch == 'amd64'
