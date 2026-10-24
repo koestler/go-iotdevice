@@ -474,7 +474,7 @@ func (c mqttClientConfigRead) TransformAndValidate(
 	)
 	err = append(err, e...)
 
-	nonLoopMqttDevices := make([]DeviceConfig, 0, len(devices)-len(ret.mqttDevices))
+	nonLoopMqttDevices := make([]DeviceConfig, 0, len(devices))
 	for _, d := range devices {
 		// do not allow to send mqtt messages for any de
 		if existsByName(d.Name(), ret.mqttDevices) {
