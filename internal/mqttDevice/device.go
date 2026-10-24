@@ -2,6 +2,7 @@ package mqttDevice
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/device"
 	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"

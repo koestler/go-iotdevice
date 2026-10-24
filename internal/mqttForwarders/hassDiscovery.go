@@ -2,6 +2,7 @@ package mqttForwarders
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/device"

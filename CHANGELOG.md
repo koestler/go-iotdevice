@@ -17,6 +17,7 @@
   * http patch: reject requests for registers that are not in the view's register filter
   * http server: correctly escape etag, handle lists of etags
 * Finder 7M38: update and slightly fix register definitions using the newest datasheet
+* remove jsoniter and use stdlib (prefer smaller binary over slightly less cpu time)
 
 ## 3.13.0 
 * config: make docs path configurable via `HttpServer->DocsPath`
