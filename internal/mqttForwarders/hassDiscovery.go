@@ -211,7 +211,7 @@ func publishHomeassistantDiscoveryMessage(
 			// {% if value_json.EnumIdx == 0 %}OFF{% elif value_json.EnumIdx == 1 %}ON{% elif value_json.EnumIdx == 2 %}in pulse{% endif %}
 			var valueTemplate strings.Builder
 			op := "if"
-			for idx := range keys {
+			for _, idx := range keys {
 				value := enum[idx]
 				fmt.Fprintf(&valueTemplate, "{%% %s value_json.EnumIdx == %d %%}%s", op, idx, value)
 				op = "elif"
