@@ -64,13 +64,13 @@ func loginHandler(env *Environment, authChecker *htpasswd.File) http.HandlerFunc
 
 		reloadAuthChecker(authChecker, env.Config)
 		if !authChecker.Match(req.User, req.Password) {
-			jsonErrorResponse(w, http.StatusUnauthorized, errors.New("Invalid credentials"))
+			jsonErrorResponse(w, http.StatusUnauthorized, errors.New("invalid credentials"))
 			return
 		}
 
 		tokenStr, err := createJwtToken(env.Authentication, req.User)
 		if err != nil {
-			jsonErrorResponse(w, http.StatusInternalServerError, errors.New("Cannot create token"))
+			jsonErrorResponse(w, http.StatusInternalServerError, errors.New("cannot create token"))
 			return
 		}
 
@@ -92,7 +92,7 @@ func loginHandler(env *Environment, authChecker *htpasswd.File) http.HandlerFunc
 
 func disableLogin(mux *http.ServeMux, config Config) {
 	mux.HandleFunc("POST /api/v2/auth/login", func(w http.ResponseWriter, r *http.Request) {
-		jsonErrorResponse(w, http.StatusServiceUnavailable, errors.New("Authentication module is disabled"))
+		jsonErrorResponse(w, http.StatusServiceUnavailable, errors.New("authentication module is disabled"))
 	})
 	if config.LogConfig() {
 		log.Printf("httpServer: POST /api/v2/auth/login -> login disabled")

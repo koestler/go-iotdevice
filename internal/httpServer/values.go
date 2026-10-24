@@ -42,7 +42,7 @@ func valuesGetJsonHandler(env *Environment, view ViewConfig, filter dataflow.Val
 	return func(w http.ResponseWriter, r *http.Request) {
 		// check authorization
 		if !isViewAuthenticated(view, r, true) {
-			jsonErrorResponse(w, http.StatusForbidden, errors.New("User is not allowed here"))
+			jsonErrorResponse(w, http.StatusForbidden, errors.New("user is not allowed here"))
 			return
 		}
 		values := env.StateStorage.GetStateFiltered(filter)
@@ -78,13 +78,13 @@ func valuesPatchHandler(env *Environment, view ViewConfig, deviceName string, fi
 	return func(w http.ResponseWriter, r *http.Request) {
 		// check authorization
 		if !isViewAuthenticated(view, r, false) {
-			jsonErrorResponse(w, http.StatusForbidden, errors.New("User is not allowed here"))
+			jsonErrorResponse(w, http.StatusForbidden, errors.New("user is not allowed here"))
 			return
 		}
 
 		registerDb, ok := env.RegisterDbOfDevice(deviceName)
 		if !ok {
-			jsonErrorResponse(w, http.StatusNotFound, errors.New("Device not found"))
+			jsonErrorResponse(w, http.StatusNotFound, errors.New("device not found"))
 			return
 		}
 
@@ -99,7 +99,7 @@ func valuesPatchHandler(env *Environment, view ViewConfig, deviceName string, fi
 		for registerName, value := range req {
 			register, ok := registerDb.GetByName(registerName)
 			if !ok || !filter(register) {
-				jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("Invalid json body provided"))
+				jsonErrorResponse(w, http.StatusUnprocessableEntity, errors.New("invalid json body provided"))
 				return
 			}
 

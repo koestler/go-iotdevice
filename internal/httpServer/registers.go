@@ -55,13 +55,13 @@ func registersHandler(env *Environment, view ViewConfig, deviceName string, filt
 	return func(w http.ResponseWriter, r *http.Request) {
 		// check authorization
 		if !isViewAuthenticated(view, r, true) {
-			jsonErrorResponse(w, http.StatusForbidden, errors.New("User is not allowed here"))
+			jsonErrorResponse(w, http.StatusForbidden, errors.New("user is not allowed here"))
 			return
 		}
 
 		registerDb, ok := env.RegisterDbOfDevice(deviceName)
 		if !ok {
-			jsonErrorResponse(w, http.StatusNotFound, errors.New("Device not found"))
+			jsonErrorResponse(w, http.StatusNotFound, errors.New("device not found"))
 			return
 		}
 

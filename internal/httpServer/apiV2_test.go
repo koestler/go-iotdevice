@@ -383,7 +383,7 @@ func TestLoginEndpoint(t *testing.T) {
 		var response ErrorResponse
 		err := json.Unmarshal(w.Body.Bytes(), &response)
 		assert.NoError(t, err)
-		assert.Contains(t, response.Message, "Invalid credentials")
+		assert.Contains(t, response.Message, "invalid credentials")
 	})
 
 	t.Run("Disabled", func(t *testing.T) {
