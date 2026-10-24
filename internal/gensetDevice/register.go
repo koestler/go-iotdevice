@@ -24,19 +24,19 @@ func addToRegisterDb(
 ) {
 	commandRegisters = make([]dataflow.RegisterStruct, 0)
 
-	if isBindedInput("ArmSwitch", inputBindings) {
+	if isBoundInput("ArmSwitch", inputBindings) {
 		rdb.AddStruct(ArmSwitchRegisterRO)
 	} else {
 		commandRegisters = append(commandRegisters, ArmSwitchRegister)
 	}
 
-	if isBindedInput("CommandSwitch", inputBindings) {
+	if isBoundInput("CommandSwitch", inputBindings) {
 		rdb.AddStruct(CommandSwitchRegisterRO)
 	} else {
 		commandRegisters = append(commandRegisters, CommandSwitchRegister)
 	}
 
-	if isBindedInput("ResetSwitch", inputBindings) {
+	if isBoundInput("ResetSwitch", inputBindings) {
 		rdb.AddStruct(ResetSwitchRegisterRO)
 	} else {
 		commandRegisters = append(commandRegisters, ResetSwitchRegister)
@@ -55,9 +55,9 @@ func addToRegisterDb(
 	return commandRegisters
 }
 
-func isBindedInput(name string, inputBindings []Binding) bool {
+func isBoundInput(name string, inputBindings []Binding) bool {
 	for _, b := range inputBindings {
-		if b.RegisterName() == name {
+		if b.Name() == name {
 			return true
 		}
 	}

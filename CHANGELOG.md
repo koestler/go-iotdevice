@@ -3,7 +3,10 @@
 ## 4.0.0
 * update install docs
 * restructure go code in the repository, be explicit what package are internal
-* drop mem / cpu profile to disk options
+* drop mem / cpu profile to disk options (should be served via an http metric endpoint instead)
+* bugfixes:
+  * config: do not panic when an MQTT device is referenced that does not exist
+  * genset: fix bug that caused to many registers to be controllable
 
 ## 3.13.0 
 * config: make docs path configurable via `HttpServer->DocsPath`
