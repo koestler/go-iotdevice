@@ -2,7 +2,7 @@ package modbusDevice
 
 // protocol documentations:
 // - https://cdn.findernet.com/app/uploads/Benutzerhandbuch_Typ_7M38_DE.pdf
-// - https://cdn.findernet.com/app/uploads/2021/09/20090052/Modbus-7M24-7M38_v2_30062021.pdf
+// - https://cdn.findernet.com/app/uploads/Modbus-7M24-7M38_v2_30062021.pdf
 
 import (
 	"bytes"
@@ -120,7 +120,7 @@ var RegisterList7M38FloatRegisters = []struct {
 	{32486, 1, "Essential", "UAvgPP", "Uavg (phase to phase)", "V"},
 	{32488, 100, "Current", "SI", "S I", "A"},
 	{32490, 25, "Essential", "Pt", "Active Power Total", "W"},
-	{32496, 21, "Essential", "PFt", "Power Factor Total", ""},
+	{32496, 26, "Essential", "PFt", "Power Factor Total", ""},
 	{32498, 5, "Essential", "F", "Frequency", "Hz"},
 	{32500, 10, "Essential", "U1", "U1", "V"},
 	{32502, 11, "Essential", "U2", "U2", "V"},
@@ -131,8 +131,6 @@ var RegisterList7M38FloatRegisters = []struct {
 	{32516, 101, "Current", "I1", "I1", "A"},
 	{32518, 102, "Current", "I2", "I2", "A"},
 	{32520, 103, "Current", "I3", "I3", "A"},
-	{32524, 104, "Current", "INCalc", "I neutral (calculated)", "A"},
-	{32526, 105, "Current", "InMeas", "I neutral (measured)", "A"},
 	{32528, 106, "Current", "Iavg", "Iavg", "A"},
 	{32530, 20, "Essential", "P1", "Active Power Phase L1", "W"},
 	{32532, 21, "Essential", "P2", "Active Power Phase L2", "W"},
@@ -170,6 +168,23 @@ var RegisterList7M38FloatRegisters = []struct {
 	{32642, 502, "Energy Counter", "EcN3", "Energy Counter n3", "Wh"},
 	{32644, 503, "Energy Counter", "EcN4", "Energy Counter n4", "varh"},
 	{32658, 40, "Essential", "InternalTemp", "Internal Temperature", "°C"},
+	{32750, 510, "Energy Counter", "ActiveTariff", "Active Tariff", ""},
+	{32760, 520, "Energy Counter", "Ec1", "Energy Counter 1", ""},
+	{32762, 521, "Energy Counter", "Ec2", "Energy Counter 2", ""},
+	{32764, 522, "Energy Counter", "Ec3", "Energy Counter 3", ""},
+	{32766, 523, "Energy Counter", "Ec4", "Energy Counter 4", ""},
+	{32768, 524, "Energy Counter", "Ec5", "Energy Counter 5", ""},
+	{32770, 525, "Energy Counter", "Ec6", "Energy Counter 6", ""},
+	{32772, 526, "Energy Counter", "Ec7", "Energy Counter 7", ""},
+	{32774, 527, "Energy Counter", "Ec8", "Energy Counter 8", ""},
+	{32776, 528, "Energy Counter", "Ec9", "Energy Counter 9", ""},
+	{32778, 529, "Energy Counter", "Ec10", "Energy Counter 10", ""},
+	{32780, 530, "Energy Counter", "Ec11", "Energy Counter 11", ""},
+	{32782, 531, "Energy Counter", "Ec12", "Energy Counter 12", ""},
+	{32784, 532, "Energy Counter", "Ec13", "Energy Counter 13", ""},
+	{32786, 533, "Energy Counter", "Ec14", "Energy Counter 14", ""},
+	{32788, 534, "Energy Counter", "Ec15", "Energy Counter 15", ""},
+	{32790, 535, "Energy Counter", "Ec16", "Energy Counter 16", ""},
 	{32985, 610, "Device Info", "Unom", "nominal phase voltage", "V"},
 	{32987, 611, "Device Info", "Inom", "nominal phase current", "A"},
 	{32989, 612, "Device Info", "Pnom", "nominal phase power", "W"},
