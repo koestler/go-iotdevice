@@ -49,7 +49,10 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 			if err := c.execPoll(registers); err != nil {
 				return err, false
 			}
-		case value := <-commandSubscription.Drain():
+		case value, ok := <-commandSubscription.Drain():
+			if !ok {
+				return nil, false
+			}
 			c.execCommand(value)
 		}
 	}

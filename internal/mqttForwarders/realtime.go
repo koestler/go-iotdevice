@@ -88,9 +88,10 @@ func realtimeDelayedUpdateModeRoutine(
 	subscription := storage.SubscribeSendInitial(ctx, filter)
 	for {
 		select {
-		case <-ctx.Done():
-			return
-		case value := <-subscription.Drain():
+		case value, ok := <-subscription.Drain():
+			if !ok {
+				return
+			}
 			if value.Register().RegisterType() == dataflow.NumberRegister {
 				// new numeric value received, save the newest version per register name
 				updates[value.Register().Name()] = value

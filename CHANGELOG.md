@@ -9,6 +9,7 @@
   * genset: fix bug that caused to many registers to be controllable
   * genset: improve handling of unavailable devices, NaN values
   * fix nil pointer panics when a referenced device or mqtt client is not available
+  * fix race conditions in shutdown mechanism
 
 ## 3.13.0 
 * config: make docs path configurable via `HttpServer->DocsPath`

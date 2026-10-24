@@ -99,14 +99,10 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		// setup subscription to listen for updates of writable registers
 		_, commandSubscription := d.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullValueFilter(dName))
 
-		for {
-			select {
-			case <-ctx.Done():
-				return nil, false
-			case value := <-commandSubscription.Drain():
-				d.execCommand(chip, oupRegisters, value)
-			}
+		for value := range commandSubscription.Drain() {
+			d.execCommand(chip, oupRegisters, value)
 		}
+		return nil, false
 	}
 
 	// no writable registers, just wait for context to be done
