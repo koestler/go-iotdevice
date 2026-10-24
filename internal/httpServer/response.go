@@ -35,9 +35,12 @@ func sendNotModified(w http.ResponseWriter, r *http.Request, etag string) (sent 
 		return false
 	}
 
-	if strings.TrimPrefix(ifNonMatch, "W/") == etag {
-		w.WriteHeader(http.StatusNotModified)
-		return true
+	for _, candidate := range strings.Split(ifNonMatch, ",") {
+		candidate = strings.TrimPrefix(strings.TrimSpace(candidate), "W/")
+		if candidate == etag {
+			w.WriteHeader(http.StatusNotModified)
+			return true
+		}
 	}
 
 	return false
@@ -50,7 +53,7 @@ func jsonGetResponse(w http.ResponseWriter, r *http.Request, obj interface{}) {
 		return
 	}
 	hash := md5.Sum(jsonBytes)
-	etag := hex.EncodeToString(hash[:])
+	etag := `"` + hex.EncodeToString(hash[:]) + `"`
 
 	if sendNotModified(w, r, etag) {
 		return
