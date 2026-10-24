@@ -20,9 +20,8 @@ type Restartable interface {
 }
 
 type Restarter[S Restartable] struct {
-	config    Config
-	service   S
-	isRunning bool
+	config  Config
+	service S
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -104,10 +103,6 @@ func (w *Restarter[S]) Name() string {
 
 func (w *Restarter[S]) Service() S {
 	return w.service
-}
-
-func (w *Restarter[S]) IsRunning() bool {
-	return w.isRunning
 }
 
 func (w *Restarter[S]) getRestartInterval(errorsInARow int) time.Duration {
