@@ -26,7 +26,7 @@ var nameMatcher = regexp.MustCompile(NameRegexp)
 func ReadConfigFile(exe, source string, bypassFileCheck bool) (config Config, err []error) {
 	yamlStr, e := os.ReadFile(source)
 	if e != nil {
-		return config, []error{fmt.Errorf("cannot read configuration: %v; use see `%s --help`", err, exe)}
+		return config, []error{fmt.Errorf("cannot read configuration: %v; use see `%s --help`", e, exe)}
 	}
 
 	return ReadConfig(yamlStr, bypassFileCheck)
@@ -298,7 +298,7 @@ func (c *authenticationConfigRead) TransformAndValidate(bypassFileCheck bool) (r
 	ret.enabled = false
 	ret.jwtValidityPeriod = time.Hour
 
-	if randString, e := randomString(64); err == nil {
+	if randString, e := randomString(64); e == nil {
 		ret.jwtSecret = []byte(randString)
 	} else {
 		err = append(err, fmt.Errorf("Authentication->JwtSecret: error while generating random secret: %s", e))
@@ -1157,7 +1157,7 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 		ret.stabilizingTimeout = 3 * time.Second
 	} else if stabilizingTimeout, e := time.ParseDuration(c.StabilizingTimeout); e != nil {
 		err = append(err, fmt.Errorf("GensetDevices->%s->StabilizingTimeout='%s' parse error: %s",
-			name, c.CrankingTimeout, e,
+			name, c.StabilizingTimeout, e,
 		))
 	} else {
 		ret.stabilizingTimeout = stabilizingTimeout

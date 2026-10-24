@@ -13,6 +13,7 @@
   * mqtt client: fix panic when logging messages with payload < 80 bytes
 * Finder 7M38: update and slightly fix register definitions using the newest datasheet
 * Homeassistant discovery: fix bug in some enum templates
+* fix various error messages and logging
 
 ## 3.13.0 
 * config: make docs path configurable via `HttpServer->DocsPath`
