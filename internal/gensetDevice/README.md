@@ -2,8 +2,9 @@
 
 ## States
 
-The generator controller is a Moore machine, a finite-state machine where the outputs only depend on the current state and the inputs are only used
-to activate transitions.
+The generator controller is a Moore machine, a finite-state machine where the control outputs (Ignition, Starter, Fan, Pump, Load)
+only depend on the current state and the inputs are only used to activate transitions.
+The diagnostic outputs (*Time in state*, *I/O check*, *Output check*) are computed from the inputs and the time as well.
 
 There are the following states:
 
@@ -20,7 +21,7 @@ There are the following states:
  10) *Enclosure cool down*: Engine off, but enclosure still ventilated
 
 ## Inputs
-* *Master switch*: On/Off switch (X)
+* *Command switch*: On/Off switch (X). Together with the *Arm switch*, it forms the master switch: the generator runs only while both are on.
 * *Reset switch*: Emergency off and failure reset switch (X)
 
 * *Time in current state*: Timer reset by state changes.
@@ -29,31 +30,44 @@ There are the following states:
   * *Arm switch*: Local user enabled auto-start of generator. (X)
   * *Fire detected*: True, when fire or smoke is detected. (X)
   * *Engine block temperature*: Temperature measured on the aluminium block of the generator. (X)
-  * *Air intake temperature*: Temperature measured in the outside air blown into the enclosure. (X)
-  * *Air exhaust temperature*: Temperature measured in the air blown out of the enclosure. (X)
+  * *Aux temperature 0* (`AuxTemp0`): Generic auxiliary temperature, e.g. the outside air blown into the enclosure. (X)
+  * *Aux temperature 1* (`AuxTemp1`): Generic auxiliary temperature, e.g. the air blown out of the enclosure. (X)
 * Output measurement:
   * *Output measurement available*: True, when all devices providing measurements for the output checks are available.
   * *Phase Voltage U[1-3]*: Voltage output of the generator.
-  * *Phase Power L[1-3]*: Power measurement of the generator.
+  * *Phase Power P[1-3]*: Power measurement of the generator.
   * *Frequency*: Frequency measurement of the generator.
 
 ## Outputs
  * *Ignition*: Turns on the ignition of the generator or the command input of the generator's own engine management.
  * *Starter*: Turns on the starter motor.
  * *Fan*: Turns on the enclosure fan.
+ * *Pump*: Turns on the fuel pump.
  * *Load*: Connects the load to the generator output.
+ * *Time in state*, *I/O check*, *Output check*: Diagnostic values, not control outputs.
 
  ## Configuration Variables
+ * *Priming*
+   * *timeout*: after this time, cranking starts
+ * *Cranking*
+   * *timeout*: if the output check is not positive after this time, the controller goes to the error state
+ * *Stabilizing*
+   * *timeout*: after this time, the output is considered stable and warm up starts
  * *Warm up*
    * *timeout*: after this time, the warm up is completed
-   * *engine block temperature*: when the engine is warmer than this value, warm up is completed 
+   * *min time*: warm up is never completed before this time
+   * *engine block temperature*: when the engine is warmer than this value, warm up is completed
  * *Engine Cool down*
    * *timeout*: after this time, the engine cool down is completed
+   * *min time*: cool down is never completed before this time
    * *engine block temperature*: when the engine is colder than this value, cool down is completed
  * *Enclosure cool down*
    * *timeout*: after this time, the enclosure cool down is completed
-   * *temperature*: when the air exhaust temperature is colder than this value, cool down is completed.
+   * *min time*: cool down is never completed before this time
+   * *engine block temperature*: when the engine block temperature is colder than this value, cool down is completed.
+ * *I/O checks*: min / max range of the engine, aux 0 and aux 1 temperatures
  * *Output checks*:
    * UMin / UMax : tolerable voltage range
    * FMin / FMax : tolerable frequency range
-   * PMax: tolerable power range
+   * PMax: tolerable power per phase
+   * PTotMax: tolerable total power (the single phase P1 for single phase generators, otherwise P1 + P2 + P3)
