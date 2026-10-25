@@ -63,7 +63,7 @@ This project uses the following terminology:
   of registers is simply defined by the type of device (e.g. Victron Energy MPPT 100 | 50) and for others it is configurable
   on the device (e.g. the TCW241).
   A Register has a technical name (alphanumeric, no spaces, used as the key in various JSON objects, e.g. "BatteryVoltage"),
-  a description (shown in the frontend, e.g. "Battery Voltage"), a Unit (e.g. "mV"), and a type (string, float, enum).
+  a description (shown in the frontend, e.g. "Battery Voltage"), a Unit (e.g. "mV"), and a type (number, string, enum).
 * A **value** is a reference to a register plus a number/string/enum-index depending on the type of register.
   E.g.: A value can be 13.80 and references the register "BatteryVoltage".
 * A **view** is used in the HTTP server and the front-end.
@@ -364,7 +364,7 @@ Additionally, if the [Command](#command) topic is available, it is used to contr
 ```yaml
 MqttClients:
   local:
-    Broker: tcp://127.0.0.1:1833
+    Broker: tcp://127.0.0.1:1883
     User: user
     Password: 424242
 
@@ -483,7 +483,7 @@ what registers they have, a message containing the current structure of the devi
 of registers as well as the topics for the availability, telemetry, real-time, and command message such that the receiver
 knows where to subscribe to get current values/control the outputs.
 
-Structure messages are sent when the device comes online for the first time by default (Interval=0s) with the retain
+Structure messages are sent whenever a register is added or changed by default (Interval=0s, on-update mode) with the retain
 flags set (the broker stores those messages for new clients).
 Alternatively, it can also be sent repeatedly (Interval>0).
 
@@ -706,7 +706,7 @@ MqttClients:                                               # optional, when empt
     ConnectRetryDelay: 10s                                 # optional, default 10s, when disconnected: delay before a connection attempt is made
     ConnectTimeout: 5s                                     # optional, default 5s, timeout for establishing the connection (including the MQTT CONNECT/CONNACK handshake), increase on slow networks
     TopicPrefix: go-iotdevice/                             # optional, default go-iotdevice/, %Prefix% is replaced with this string
-    ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overrides all section Enabled flags and MaxBacklogSize)
+    ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overrides all section Enabled flags except Command, and MaxBacklogSize)
     MaxBacklogSize: 256                                    # optional, default 256, max number of mqtt messages to store when connection is offline
 
     MqttDevices:                                           # optional, default empty, which mqtt devices shall receive messages from this client
@@ -721,7 +721,7 @@ MqttClients:                                               # optional, when empt
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
 
     AvailabilityDevice:
-      Enabled: true                                        # optional, default true, whether to send online messages and register an offline message as will
+      Enabled: true                                        # optional, default true, whether to send online/offline messages (no will message is registered)
       TopicTemplate: '%Prefix%avail/%DeviceName%'          # optional, default as shown, what topic to use for online/offline messages of a specific device
       Retain: true                                         # optional, default true, the mqtt retain flag for availability messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
@@ -731,7 +731,7 @@ MqttClients:                                               # optional, when empt
     Structure:
       Enabled: true                                        # optional, default false, whether to send messages containing the list of registers/types
       TopicTemplate: '%Prefix%struct/%DeviceName%'         # optional, default as shown, what topic to use for structure messages
-      Interval: 0s                                         # optional, default 0, 0 means disabled only send initially, otherwise the structure is repeated after this interval (useful when retain is false)
+      Interval: 0s                                         # optional, default 0, 0 means on-update mode: sent whenever a register is added or changed, otherwise the full structure is repeated after this interval (useful when retain is false)
       Retain: true                                         # optional, default true, the mqtt retain flag for structure messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
@@ -783,7 +783,7 @@ MqttClients:                                               # optional, when empt
     HomeassistantDiscovery:
       Enabled: true                                        # optional, default false, whether to enable sending homeassistant auto-discovery messages
       TopicTemplate: 'homeassistant/%Component%/%NodeId%/%ObjectId%/config' # optional, default as shown, topic to use for homeassistant discovery messages
-      Interval: 0s                                         # optional, default 0, 0 means only send initially, otherwise the discovery messages are repeated after this interval (useful when retain is false)
+      Interval: 0s                                         # optional, default 0, 0 means on-update mode: sent whenever a register is added or changed, otherwise the discovery messages are repeated after this interval (useful when retain is false)
       Retain: false                                        # optional, default false, the mqtt retain flag for homeassistant discovery messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
@@ -930,7 +930,7 @@ HttpDevices:                                               # optional, a list of
 
 MqttDevices:                                               # optional, a list of devices receiving their values via an MQTT server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
-    Kind: GoIotdeviceV3                                    # mandatory, only GoIotdevice is supported at the moment
+    Kind: GoIotdeviceV3                                    # mandatory, only GoIotdeviceV3 is supported at the moment
     Filter:                                                # optional, default include all, defines which registers are included,
       # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
       IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned

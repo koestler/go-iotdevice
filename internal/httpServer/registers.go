@@ -13,7 +13,7 @@ type registerResponse struct {
 	Category    string         `json:"category" example:"Monitor"`
 	Name        string         `json:"name" example:"PanelPower"`
 	Description string         `json:"description" example:"Panel power"`
-	Type        string         `json:"type" example:"numeric"`
+	Type        string         `json:"type" example:"number"`
 	Enum        map[int]string `json:"enum,omitempty"`
 	Unit        string         `json:"unit,omitempty" example:"W"`
 	Sort        int            `json:"sort" example:"100"`
