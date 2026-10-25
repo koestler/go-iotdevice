@@ -1,1 +1,3 @@
-GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w"
+VERSION=`git describe --always --tags`
+BUILD_TIME=`date -Is`
+GOOS=linux GOARCH=arm GOARM=7 go build -trimpath -ldflags="-s -w -X main.buildVersion=$VERSION -X main.buildTime=$BUILD_TIME"
