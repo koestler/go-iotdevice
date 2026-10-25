@@ -90,7 +90,6 @@ type ShellyEm3StatusStruct struct {
 	TotalPower float64 `json:"total_power"`
 	EmeterN    struct {
 		Current  float64 `json:"current"`
-		Ixsum    float64 `json:"ixsum"`
 		Mismatch bool    `json:"mismatch"`
 		IsValid  bool    `json:"is_valid"`
 	} `json:"emeter_n"`

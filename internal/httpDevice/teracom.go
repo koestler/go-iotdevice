@@ -135,16 +135,12 @@ type teracomAnalogStruct struct {
 type teracomDigitalStruct struct {
 	Description string `json:"description"`
 	Value       string `json:"value"`
-	Valuebin    string `json:"valuebin"`
-	AlarmState  string `json:"alarmState"`
 	Alarm       string `json:"alarm"`
 }
 
 type teracomRelayStruct struct {
 	Description string `json:"description"`
 	Value       string `json:"value"`
-	Valuebin    string `json:"valuebin"`
-	PulseWidth  string `json:"pulseWidth"`
 	Control     string `json:"control"`
 }
 
@@ -193,15 +189,10 @@ type teracomStatusStruct struct {
 			R3 teracomRelayStruct `json:"R3"`
 			R4 teracomRelayStruct `json:"R4"`
 		} `json:"R"`
-		HTTPPush struct {
-			Key        string `json:"Key"`
-			PushPeriod string `json:"PushPeriod"`
-		} `json:"HTTPPush"`
 		Hwerr   string `json:"hwerr"`
 		Alarmed string `json:"Alarmed"`
 
-		Scanning string `json:"Scannig"`
-		Time     struct {
+		Time struct {
 			Date string `json:"Date"`
 			Time string `json:"Time"`
 		} `json:"Time"`
@@ -252,14 +243,13 @@ func (c *TeracomDevice) enum(
 		return
 	}
 
-	enumIdx := func(string) int {
-		for idx, v := range enum {
-			if v == strValue {
-				return idx
-			}
+	enumIdx := -1
+	for idx, v := range enum {
+		if v == strValue {
+			enumIdx = idx
+			break
 		}
-		return -1
-	}(strValue)
+	}
 
 	c.ds.StateStorage().Fill(dataflow.NewEnumRegisterValue(c.ds.Name(), register, enumIdx))
 }
