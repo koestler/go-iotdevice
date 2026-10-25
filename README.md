@@ -133,7 +133,7 @@ sudo chmod 640 /etc/go-iotdevice/auth.passwd
 There are [GitHub actions](https://github.com/koestler/go-iotdevice/actions/workflows/docker-image.yml)
 to automatically cross-compile amd64, arm64, and arm/v7
 publicly available [docker images](https://github.com/koestler/go-iotdevice/pkgs/container/go-iotdevice).
-The docker-container is built on top of Alpine, the binary is `/go-iotdevice` and the config is
+The docker-container is built `FROM scratch` (it contains no shell or other tools), the binary is `/go-iotdevice` and the config is
 expected to be at `/config.yaml`. The container runs as a non-root user `app`.
 
 The GitHub tags use semantic versioning and whenever a tag like v2.3.4 is built, it is pushed to docker tags
@@ -290,7 +290,8 @@ ModbusDevices:
 
 ### Gpio devices
 GPIO devices use the GPIO pins of e.g. a Raspberry Pi to read and set individual pins.
-The pins are controlled using the [periph.io library](https://periph.io/). Check [supported platforms](https://periph.io/platform/).
+The pins are controlled using the Linux GPIO character device via the [go-gpiocdev library](https://github.com/warthog618/go-gpiocdev).
+Pins are referenced by their kernel line name, as listed by `gpioinfo`.
 
 An example configuration for the [Waveshare Industrial 6-ch Relay Module for Raspberry Pi Zero](https://www.waveshare.com/rpi-zero-relay.htm):
 
@@ -889,21 +890,21 @@ GpioDevices:                                               # optional, a list of
     OutputOptions: []                                      # optional, default unchanged, valid options: AsOpenDrain, AsOpenSource, AsPushPull
     Inputs:                                                # optional, a list of inputs
       Switch0:                                             # mandatory, a technical name used for the register
-        Pin: GPIO2                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
+        Pin: GPIO2                                         # mandatory, the kernel line name of the gpio as shown by `gpioinfo`, e.g. "GPIO2".
         Description: Switch 0                              # optional, default name, a nice title displayed in the frontend
         LowLabel: Pressed                                  # optional, default "low", a label for the low state
         HighLabel: Released                                # optional, default "high", a label for the high state
       Switch1:                                             # mandatory, a technical name used for the register
-        Pin: GPIO3                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
+        Pin: GPIO3                                         # mandatory, the kernel line name of the gpio as shown by `gpioinfo`, e.g. "GPIO2".
         Description: Switch 1                              # optional, default name, a nice title displayed in the frontend
     Outputs:                                               # optional, a list of outputs
       Relay0:                                              # mandatory, a technical name used for the register
-        Pin: GPIO4                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
+        Pin: GPIO4                                         # mandatory, the kernel line name of the gpio as shown by `gpioinfo`, e.g. "GPIO2".
         Description: Relay 0                               # optional, default name, a nice title displayed in the frontend
         LowLabel: Off                                      # optional, default "low", a label for the low state
         HighLabel: On                                      # optional, default "high", a label for the high state
       Relay1:                                              # mandatory, a technical name used for the register
-        Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
+        Pin: GPIO5                                         # mandatory, the kernel line name of the gpio as shown by `gpioinfo`, e.g. "GPIO2".
         Description: Relay 1                               # optional, default name, a nice title displayed in the frontend
 
 HttpDevices:                                               # optional, a list of devices controlled via http

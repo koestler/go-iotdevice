@@ -222,21 +222,21 @@ GpioDevices:                                               # optional, a list of
     OutputOptions: []                                      # optional, default unchanged, valid options: AsOpenDrain, AsOpenSource, AsPushPull
     Inputs:                                                # optional, a list of inputs
       Switch0:                                             # mandatory, a technical name used for the register
-        Pin: GPIO2                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
+        Pin: GPIO2                                         # mandatory, the kernel line name of the gpio as shown by `gpioinfo`, e.g. "GPIO2".
         Description: Switch 0                              # optional, default name, a nice title displayed in the frontend
         LowLabel: Pressed                                  # optional, default "low", a label for the low state
         HighLabel: Released                                # optional, default "high", a label for the high state
       Switch1:                                             # mandatory, a technical name used for the register
-        Pin: GPIO3                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
+        Pin: GPIO3                                         # mandatory, the kernel line name of the gpio as shown by `gpioinfo`, e.g. "GPIO2".
         Description: Switch 1                              # optional, default name, a nice title displayed in the frontend
     Outputs:                                               # optional, a list of outputs
       Relay0:                                              # mandatory, a technical name used for the register
-        Pin: GPIO4                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
+        Pin: GPIO4                                         # mandatory, the kernel line name of the gpio as shown by `gpioinfo`, e.g. "GPIO2".
         Description: Relay 0                               # optional, default name, a nice title displayed in the frontend
         LowLabel: Off                                      # optional, default "low", a label for the low state
         HighLabel: On                                      # optional, default "high", a label for the high state
       Relay1:                                              # mandatory, a technical name used for the register
-        Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
+        Pin: GPIO5                                         # mandatory, the kernel line name of the gpio as shown by `gpioinfo`, e.g. "GPIO2".
         Description: Relay 1                               # optional, default name, a nice title displayed in the frontend
 
 HttpDevices:                                               # optional, a list of devices controlled via http
