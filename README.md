@@ -152,7 +152,7 @@ services:
       #- ${PWD}/auth.passwd:/auth.passwd:ro
       - /dev:/dev
     privileged: true # used to access serial devices
-    group_add: # add app user running to software to the dialout group
+    group_add: # add app user running the software to the dialout group
       - dialout
 
 ```
@@ -611,7 +611,7 @@ This tool can proxy requests to a local server serving the front-end. Use e.g.:
 
 ```yaml
 HttpServer:                                                # optional, when missing: http server is not started
-  Bind: "[::1]"                                            # mandatory, use [::1] (ipv6 loopback) to enable on both ipv4 and 6 and 0.0.0.0 to only enable ipv4
+  Bind: "[::1]"                                            # mandatory, use [::] to bind all interfaces (both IPv4 and IPv6), [::1] for the IPv6 loopback only and 0.0.0.0 to only enable IPv4
   Port: 8000                                               # optional, default 8000
   FrontendProxy: "http://127.0.0.1:3000/"
  ```  
@@ -674,7 +674,7 @@ LogStateStorageDebug: false                                # optional, default f
 LogCommandStorageDebug: false                              # optional, default false, logs all writes to the internal command value storage
 
 HttpServer:                                                # optional, when missing: http server is not started
-  Bind: "[::1]"                                            # mandatory, use [::1] (ipv6 loopback) to enable on both ipv4 and 6 and 0.0.0.0 to only enable ipv4
+  Bind: "[::]"                                             # mandatory, use [::1] to only enable the loopback and [::] to bind all interfaces (both IPv4 and IPv6)
   Port: 8000                                               # optional, default 8000, what tcp port to listen on, low-ports like 80 only work when started as root
   LogRequests: true                                        # optional, default true, enable the http access log to stdout
   # configure FrontendProxy xor FrontendPath

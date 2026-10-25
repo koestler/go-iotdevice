@@ -6,7 +6,7 @@ LogStateStorageDebug: false                                # optional, default f
 LogCommandStorageDebug: false                              # optional, default false, logs all writes to the internal command value storage
 
 HttpServer:                                                # optional, when missing: http server is not started
-  Bind: "[::1]"                                            # mandatory, use [::1] (ipv6 loopback) to enable on both ipv4 and 6 and 0.0.0.0 to only enable ipv4
+  Bind: "[::]"                                             # mandatory, use [::1] to only enable the loopback and [::] to bind all interfaces (both IPv4 and IPv6)
   Port: 8000                                               # optional, default 8000, what tcp port to listen on, low-ports like 80 only work when started as root
   LogRequests: true                                        # optional, default true, enable the http access log to stdout
   # configure FrontendProxy xor FrontendPath
