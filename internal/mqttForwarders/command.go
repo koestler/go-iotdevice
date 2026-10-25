@@ -61,14 +61,7 @@ func setupCommandSubscription(
 		log.Printf("mqttDevice[%s]->mqttClient[%s]->command: subscribe to topic=%s", mc.Name(), dev.Name(), topic)
 	}
 
-	registerDb := dev.RegisterDb()
 	deviceName := dev.Name()
-
-	register, ok := registerDb.GetByName(register.Name())
-	if !ok {
-		log.Printf("mqttDevice[%s]->mqttClient[%s]->command: unknown register, registerName=%s", mc.Name(), deviceName, register.Name())
-		return
-	}
 
 	mc.AddRoute(topic, func(m mqttClient.Message) {
 		msg, err := parseCommandMessagePayload(m.Payload())

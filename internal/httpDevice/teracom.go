@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
 type TeracomDevice struct {
