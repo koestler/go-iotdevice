@@ -33,7 +33,7 @@ type loginResponse struct {
 // @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse
 // @Failure 503 {object} ErrorResponse
-// @Router /authentication/login [post]
+// @Router /auth/login [post]
 func setupLogin(mux *http.ServeMux, env *Environment) {
 	if !env.Authentication.Enabled() {
 		disableLogin(mux, env.Config)
