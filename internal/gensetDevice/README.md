@@ -7,15 +7,17 @@ to activate transitions.
 
 There are the following states:
 
--2) *Failed*: A failure occurred, engine shut off immediately. Re-start only after manual reset.
--1) *Reset*: Reset button pressed
- 0) *Off*: Generator not running, sensors might be offline.
- 1) *Ready*: Generator not running, all sensors are online.
- 2) *Cranking*: Starter trying to start the engine
- 3) *Warm-Up*: Engine running but not producing power. Waiting for temperature to rise.
- 4) *Producing*: Engine producing power
- 5) *Engine cool down*: Engine not producing power, idling to cool down
- 6) *Enclosure cool down*: Engine off, but enclosure still ventilated
+ 0) *Error*: An error occurred (e.g. I/O unavailable, fire or temperature alarm, cranking or output check failed), engine shut off immediately. Re-start only after manual reset.
+ 1) *Reset*: Reset button pressed
+ 2) *Off*: Generator not running, sensors might be offline.
+ 3) *Ready*: Generator not running, all sensors are online.
+ 4) *Priming*: Fuel pump running, engine not yet cranking.
+ 5) *Cranking*: Starter trying to start the engine
+ 6) *Stabilizing*: Engine started, waiting for the output to stabilize.
+ 7) *Warm-Up*: Engine running but not producing power. Waiting for temperature to rise.
+ 8) *Producing*: Engine producing power
+ 9) *Engine cool down*: Engine not producing power, idling to cool down
+ 10) *Enclosure cool down*: Engine off, but enclosure still ventilated
 
 ## Inputs
 * *Master switch*: On/Off switch (X)

@@ -397,7 +397,7 @@ startup of the backend. This results in all users being logged out after each re
 It's therefore best to hardcode a random secret.
 
 2. Per `View`, you can define a list of `AllowedUsers`. When the list is present and has at least one entry, only
-usernames on that list can access this view. If the list is empty, all users in the user database can access it. 
+usernames on that list can access this view. If the list is empty, the view is public and can be accessed anonymously, without logging in.
 
 ### User database
 The only supported authentication backend at the moment is a simple Apache htaccess file. Set it up as follows:
@@ -957,9 +957,9 @@ GensetDevices:                                             # optional, a list of
     InputBindings:                                         # mandatory, a list of input bindings
       tcw241:                                              # the device name of the input device
         IOAvailable: Available                             # key: the target value of the genset controller; value: register name of input device
-        ArmSwitch: DI0
-        ResetSwitch: DI1
-        FireDetected: DI2
+        ArmSwitch: DI1
+        ResetSwitch: DI2
+        FireDetected: DI3
 
       modbus-finder:                                       # the device name of a second input device providing data
         OutputAvailable: Available
@@ -973,11 +973,11 @@ GensetDevices:                                             # optional, a list of
 
     OutputBindings:                                        # mandatory, a list of output bindings
       modbus-rtu0:                                         # the device name of the output device
-        CH0: Ignition                                      # key: register name of output device; value: the source value of the genset controller
-        CH1: Starter
-        CH2: Fan
-        CH3: Pump
-        CH4: Load
+        Ignition: CH1                                      # key: the source value of the genset controller; value: register name of output device
+        Starter: CH2
+        Fan: CH3
+        Pump: CH4
+        Load: CH5
 
     PrimingTimeout: 10s                                    # optional, default 10s, time in priming (only fuel pump on) state
     CrankingTimeout: 10s                                   # optional, default 10s, maximum time in cranking state
@@ -1025,7 +1025,7 @@ Views:                                                     # optional, a list of
       - Name: modbus-rtu0                                  # mandatory, the arbitrary names defined above
         Title: Relay Board                                 # mandatory, a nice title displayed in the frontend
     Autoplay: true                                         # optional, default true, when true, live updates are enabled automatically when the view is open in the frontend
-    AllowedUsers:                                          # optional, if empty, all users of the HtaccessFile are considered valid, otherwise only those listed here
+    AllowedUsers:                                          # optional, if empty, the view is public (accessible anonymously), otherwise only the users listed here can access it
       - test0                                              # username which is allowed to access this view
     Hidden: false                                          # optional, default false, if true, this view is not shown in the menu unless the user is logged in
 ```
