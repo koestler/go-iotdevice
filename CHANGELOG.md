@@ -6,7 +6,7 @@
 * restructure go code in the repository, be explicit which packages are internal
 * drop mem / cpu profile to disk options (should be served via an http metric endpoint instead)
 * bugfixes:
-  * fix command storage lock, when waveshare or http device restart due to errors
+  * fix two race two dead-lock conditions in the command and value storage, that happen when devices are closed
   * fix various error messages and logging
   * config: do not panic when an MQTT device is referenced that does not exist
   * genset: fix bug that caused too many registers to be controllable

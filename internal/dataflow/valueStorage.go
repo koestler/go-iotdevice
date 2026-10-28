@@ -27,6 +27,19 @@ type ValueSubscription struct {
 	ctx           context.Context
 	outputChannel chan Value
 	filter        ValueFilterFunc
+	sendMutex     *sync.Mutex // prevents sending on the channel while it is being closed
+}
+
+func (s *ValueSubscription) send(v Value) {
+	s.sendMutex.Lock()
+	defer s.sendMutex.Unlock()
+	if s.ctx.Err() != nil {
+		return
+	}
+	select {
+	case s.outputChannel <- v:
+	case <-s.ctx.Done():
+	}
 }
 
 func (s *ValueSubscription) Drain() <-chan Value {
@@ -61,10 +74,14 @@ func (vs *ValueStorage) mainStorageRoutine() {
 			return
 		case newValue := <-vs.inputChannel:
 			vs.mutex.Lock()
+			var subscriptions []ValueSubscription
 			if vs.updateState(newValue) {
-				vs.forwardToSubscriptions(newValue)
+				subscriptions = vs.snapshotSubscriptions()
 			}
 			vs.mutex.Unlock()
+
+			// send outside the lock so a slow subscriber cannot block subscription cleanup
+			forwardToSubscriptions(subscriptions, newValue)
 			vs.inputWaitGroup.Done()
 		}
 	}
@@ -93,12 +110,20 @@ func (vs *ValueStorage) updateState(newValue Value) (updated bool) {
 	return true
 }
 
-// copy the input value to all subscribed output channels
-func (vs *ValueStorage) forwardToSubscriptions(newValue Value) {
+// must be called with vs.mutex held
+func (vs *ValueStorage) snapshotSubscriptions() (result []ValueSubscription) {
+	result = make([]ValueSubscription, 0, vs.subscriptions.Len())
 	for e := vs.subscriptions.Front(); e != nil; e = e.Next() {
-		s := e.Value
+		result = append(result, e.Value)
+	}
+	return
+}
+
+// copy the input value to all subscribed output channels
+func forwardToSubscriptions(subscriptions []ValueSubscription, newValue Value) {
+	for _, s := range subscriptions {
 		if s.filter(newValue) {
-			s.outputChannel <- newValue
+			s.send(newValue)
 		}
 	}
 }
@@ -158,6 +183,7 @@ func (vs *ValueStorage) newSubscription(ctx context.Context, filter ValueFilterF
 		ctx:           ctx,
 		outputChannel: make(chan Value, subscriptionDefaultCap),
 		filter:        filter,
+		sendMutex:     &sync.Mutex{},
 	}
 	elem = vs.subscriptions.PushBack(subscription)
 
@@ -188,8 +214,10 @@ func (vs *ValueStorage) sendInitialAndCleanupValueSubscription(
 		vs.subscriptions.Remove(elem)
 		vs.mutex.Unlock()
 
-		// close output channel
+		// close output channel; wait for in-flight sends (they abort as the context is done)
+		subscription.sendMutex.Lock()
 		close(subscription.outputChannel)
+		subscription.sendMutex.Unlock()
 	}()
 
 	// the channel is buffered; this blocks if the initial values do not fit and the consumer is slow, until the context is done
