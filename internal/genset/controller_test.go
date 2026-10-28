@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/koestler/go-iotdevice/v3/pkg/genset"
+	"github.com/koestler/go-iotdevice/v3/internal/genset"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -10,13 +10,13 @@ import (
 	"github.com/koestler/go-iotdevice/v3/internal/gensetDevice"
 	"github.com/koestler/go-iotdevice/v3/internal/gpioDevice"
 	"github.com/koestler/go-iotdevice/v3/internal/httpDevice"
+	"github.com/koestler/go-iotdevice/v3/internal/modbus"
 	"github.com/koestler/go-iotdevice/v3/internal/modbusDevice"
 	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"
 	"github.com/koestler/go-iotdevice/v3/internal/mqttDevice"
 	"github.com/koestler/go-iotdevice/v3/internal/pool"
 	"github.com/koestler/go-iotdevice/v3/internal/restarter"
 	"github.com/koestler/go-iotdevice/v3/internal/victronDevice"
-	"github.com/koestler/go-iotdevice/v3/pkg/modbus"
 )
 
 // gensetRunDelay is the delay before starting genset devices.

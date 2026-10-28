@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/koestler/go-iotdevice/v3/internal/config"
+	"github.com/koestler/go-iotdevice/v3/internal/modbus"
 	"github.com/koestler/go-iotdevice/v3/internal/pool"
-	"github.com/koestler/go-iotdevice/v3/pkg/modbus"
 )
 
 func Modbus(
