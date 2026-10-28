@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"log"
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
 func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, immediateError bool) {
@@ -37,7 +38,9 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	}()
 
 	// setup subscription to listen for updates of writable registers
-	_, commandSubscription := c.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullValueFilter(c.Config().Name()))
+	commandCtx, commandCancel := context.WithCancel(ctx)
+	defer commandCancel()
+	_, commandSubscription := c.commandStorage.SubscribeReturnInitial(commandCtx, dataflow.DeviceNonNullValueFilter(c.Config().Name()))
 
 	ticker := time.NewTicker(c.modbusConfig.PollInterval())
 	defer ticker.Stop()
