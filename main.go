@@ -55,9 +55,9 @@ func getCmdOptions() (cmdOptions CmdOptions, cmdName string) {
 
 func getConfig(cmdOptions CmdOptions, cmdName string) *config.Config {
 	// read, transform and validate configuration
-	cfg, err := config.ReadConfigFile(cmdName, string(cmdOptions.Config), false)
-	if len(err) > 0 {
-		for _, e := range err {
+	cfg, errs := config.ReadConfigFile(cmdName, string(cmdOptions.Config), false)
+	if len(errs) > 0 {
+		for _, e := range errs {
 			log.Printf("config: error: %v", e)
 		}
 		os.Exit(ExitDueToConfig)
@@ -133,8 +133,7 @@ func main() {
 
 		// setup SIGTERM, SIGINT handlers
 		gracefulStop := make(chan os.Signal, 1)
-		signal.Notify(gracefulStop, syscall.SIGTERM)
-		signal.Notify(gracefulStop, syscall.SIGINT)
+		signal.Notify(gracefulStop, syscall.SIGTERM, syscall.SIGINT)
 
 		// wait for something to trigger a shutdown
 		sig := <-gracefulStop
@@ -147,5 +146,4 @@ func main() {
 	if cfg.LogWorkerStart() {
 		log.Printf("main: shutdown completed; exit %d", ExitSuccess)
 	}
-	os.Exit(ExitSuccess)
 }
