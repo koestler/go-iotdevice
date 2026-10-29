@@ -179,7 +179,7 @@ func (c *Controller) End() {
 func (c *Controller) compute() {
 	// compute new state
 	// assume we reach the final state in max 8 iterations
-	for i := 0; i < 8; i++ {
+	for range 8 {
 		nextState := computeState(c.Params, c.inputs, c.state)
 		if nextState == c.state {
 			break

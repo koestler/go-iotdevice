@@ -78,7 +78,7 @@ func TestValueStorageGetSlice(t *testing.T) {
 func BenchmarkValueStorageFill(b *testing.B) {
 	storage := dataflow.NewValueStorage()
 
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		storage.Fill(dataflow.NewNumericRegisterValue(
 			"device-0",
 			getSimpleTestRegister("categoryName", "registerName"),
@@ -94,7 +94,7 @@ func BenchmarkValueStorageGetState(b *testing.B) {
 	fillSetC(storage)
 	storage.Wait()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		storage.GetState()
 	}
 }
@@ -110,7 +110,7 @@ func BenchmarkValueStorageGetStateFiltered(b *testing.B) {
 		return value.DeviceName() == "device-0"
 	}
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		storage.GetStateFiltered(deviceFilter)
 	}
 }

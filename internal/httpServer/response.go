@@ -36,7 +36,7 @@ func sendNotModified(w http.ResponseWriter, r *http.Request, etag string) (sent 
 		return false
 	}
 
-	for _, candidate := range strings.Split(ifNoneMatch, ",") {
+	for candidate := range strings.SplitSeq(ifNoneMatch, ",") {
 		candidate = strings.TrimPrefix(strings.TrimSpace(candidate), "W/")
 		if candidate == etag {
 			w.WriteHeader(http.StatusNotModified)

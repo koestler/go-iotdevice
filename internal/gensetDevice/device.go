@@ -156,14 +156,12 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 			return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", dName, err), true
 		}
 
-		shutdownWg.Add(1)
-		go func() {
-			defer shutdownWg.Done()
+		shutdownWg.Go(func() {
 			// routine will return when ctx of the subscription is cancelled
 			for v := range sub.Drain() {
 				setter(d.controller, v)
 			}
-		}()
+		})
 	}
 
 	// setup command subscription
@@ -179,22 +177,18 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 				return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", d.Name(), err), true
 			}
 
-			shutdownWg.Add(1)
-			go func() {
-				defer shutdownWg.Done()
+			shutdownWg.Go(func() {
 				// routine will return when ctx of the subscription is cancelled
 				for v := range sub.Drain() {
 					log.Printf("gensetDevice[%s]: command %v", dName, v)
 					setter(d.controller, v)
 				}
-			}()
+			})
 		}
 	}
 
 	// update clock
-	shutdownWg.Add(1)
-	go func() {
-		defer shutdownWg.Done()
+	shutdownWg.Go(func() {
 		ticker := time.NewTicker(clockUpdateInterval)
 		defer ticker.Stop()
 		for {
@@ -208,7 +202,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 				})
 			}
 		}
-	}()
+	})
 
 	// handle state updates
 	lastState := initialState
@@ -259,10 +253,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 			return rdb.GetByName(registerName)
 		}
 
-		shutdownWg.Add(1)
-		go func() {
-			defer shutdownWg.Done()
-
+		shutdownWg.Go(func() {
 			for v := range sub.Drain() {
 				r, ok := getRegister()
 				if !ok {
@@ -273,7 +264,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 				log.Printf("gensetDevice[%s]: set output binding: %s -> %s", dName, v, newValue)
 				d.commandStorage.Fill(newValue)
 			}
-		}()
+		})
 	}
 
 	// start the controller

@@ -1138,7 +1138,7 @@ func TestSyncWg(t *testing.T) {
 		}
 	}()
 
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		syncFunc(i)
 	}
 

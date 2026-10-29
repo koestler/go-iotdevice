@@ -59,7 +59,7 @@ func runRandom(ctx context.Context, c *DeviceStruct, output dataflow.Fillable, r
 func randomString(n int) string {
 	const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
 	ret := make([]byte, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		num := rand.Intn(len(letters))
 		ret[i] = letters[num]
 	}

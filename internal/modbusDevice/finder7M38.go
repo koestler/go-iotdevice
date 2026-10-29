@@ -424,7 +424,7 @@ func FinderReadStringRegister(c *DeviceStruct, register FinderRegister) (v dataf
 }
 
 func FinderReadInputRegisters(c *DeviceStruct, register FinderRegister) (response []byte, err error) {
-	for retry := 0; retry < 8; retry++ {
+	for range 8 {
 		response, err = FinderReadInputRegistersRaw(c, register)
 		if err == nil {
 			return

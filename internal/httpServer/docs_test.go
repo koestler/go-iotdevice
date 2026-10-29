@@ -24,14 +24,14 @@ func TestSetupDocs(t *testing.T) {
 
 	t.Run("existing file", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		mux.ServeHTTP(w, httptest.NewRequest("GET", "/api/v2/docs/swagger.yaml", nil))
+		mux.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/v2/docs/swagger.yaml", nil))
 		assert.Equal(t, http.StatusOK, w.Code)
 		assert.Equal(t, content, w.Body.String())
 	})
 
 	t.Run("missing file", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		mux.ServeHTTP(w, httptest.NewRequest("GET", "/api/v2/docs/swagger.json", nil))
+		mux.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/v2/docs/swagger.json", nil))
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 }

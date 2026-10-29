@@ -22,7 +22,7 @@ func TestRegisterDb(t *testing.T) {
 
 	// compute expected output
 	expect := []string{"A0", "A1", "A2"}
-	for i := 0; i < numPopulate; i++ {
+	for i := range numPopulate {
 		expect = append(expect, []string{
 			fmt.Sprintf("B%d", i),
 			fmt.Sprintf("C%d", i),
@@ -35,7 +35,7 @@ func TestRegisterDb(t *testing.T) {
 	rdb.Add(mockRegister("A0"), mockRegister("A1"), mockRegister("A2"))
 	wgPopulate := sync.WaitGroup{}
 	wgPopulate.Add(numPopulate)
-	for i := 0; i < numPopulate; i++ {
+	for i := range numPopulate {
 		go func() {
 			defer wgPopulate.Done()
 			rdb.Add(
@@ -46,7 +46,7 @@ func TestRegisterDb(t *testing.T) {
 		}()
 	}
 
-	for i := 0; i < numGet; i++ {
+	for range numGet {
 		// call GetAll at the same time as populating
 		go func() {
 			for {
@@ -64,7 +64,7 @@ func TestRegisterDb(t *testing.T) {
 	subscribeCtx, subscribeCancel := context.WithCancel(context.Background())
 	wgSubscribe := sync.WaitGroup{}
 	wgSubscribe.Add(numSubscriptions)
-	for i := 0; i < numSubscriptions; i++ {
+	for i := range numSubscriptions {
 		s := rdb.Subscribe(subscribeCtx, func(dataflow.Filterable) bool { return true })
 		go func() {
 			defer wgSubscribe.Done()

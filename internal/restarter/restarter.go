@@ -46,10 +46,7 @@ func (w *Restarter[S]) Run() {
 		return
 	}
 
-	w.wg.Add(1)
-	go func() {
-		defer w.wg.Done()
-
+	w.wg.Go(func() {
 		immediateErrorsInARow := 0
 		first := true
 		for {
@@ -85,7 +82,7 @@ func (w *Restarter[S]) Run() {
 				}
 			}
 		}
-	}()
+	})
 }
 
 func (w *Restarter[S]) Shutdown() {

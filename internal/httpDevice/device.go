@@ -172,7 +172,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 
 func (ds *DeviceStruct) GetRequest(path string) (request *http.Request, err error) {
 	addr := ds.httpConfig.Url().JoinPath(path)
-	request, err = http.NewRequest("GET", addr.String(), nil)
+	request, err = http.NewRequest(http.MethodGet, addr.String(), nil)
 	if err != nil {
 		return
 	}

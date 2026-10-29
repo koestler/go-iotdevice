@@ -54,7 +54,7 @@ func (c Config) PrintConfig() (err error) {
 	}
 
 	log.Print("config: use the following config:")
-	for _, line := range strings.Split(string(newYamlStr), "\n") {
+	for line := range strings.SplitSeq(string(newYamlStr), "\n") {
 		log.Print("config: ", line)
 	}
 	return nil

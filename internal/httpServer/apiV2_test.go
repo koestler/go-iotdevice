@@ -258,7 +258,7 @@ func TestConfigFrontendEndpoint(t *testing.T) {
 	router := setupRouter(t, env)
 
 	t.Run("content", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/v2/config/frontend", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -310,7 +310,7 @@ func TestConfigFrontendEndpoint(t *testing.T) {
 
 	t.Run("ETag", func(t *testing.T) {
 		// First request
-		req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/v2/config/frontend", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -319,7 +319,7 @@ func TestConfigFrontendEndpoint(t *testing.T) {
 		assert.NotEmpty(t, etag, "ETag header should be present")
 
 		// Second request with If-None-Match header
-		req2, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
+		req2, _ := http.NewRequest(http.MethodGet, "/api/v2/config/frontend", nil)
 		req2.Header.Set("If-None-Match", etag)
 		w2 := httptest.NewRecorder()
 		router.ServeHTTP(w2, req2)
@@ -348,7 +348,7 @@ func TestLoginEndpoint(t *testing.T) {
 		}
 		body, _ := json.Marshal(loginReq)
 
-		req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPost, "/api/v2/auth/login", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -374,7 +374,7 @@ func TestLoginEndpoint(t *testing.T) {
 		}
 		body, _ := json.Marshal(loginReq)
 
-		req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPost, "/api/v2/auth/login", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -402,7 +402,7 @@ func TestLoginEndpoint(t *testing.T) {
 		}
 		body, _ := json.Marshal(loginReq)
 
-		req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPost, "/api/v2/auth/login", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -418,7 +418,7 @@ func TestLoginEndpoint(t *testing.T) {
 		env := setupTestEnvironment(t)
 		router := setupRouter(t, env)
 
-		req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer([]byte("invalid json")))
+		req, _ := http.NewRequest(http.MethodPost, "/api/v2/auth/login", bytes.NewBuffer([]byte("invalid json")))
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -444,7 +444,7 @@ func TestLoginEndpoint(t *testing.T) {
 		}
 		body, _ := json.Marshal(loginReq)
 
-		req, _ := http.NewRequest("POST", "/api/v2/auth/login", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPost, "/api/v2/auth/login", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -458,7 +458,7 @@ func TestRegistersEndpoint(t *testing.T) {
 	env := setupTestEnvironment(t)
 	router := setupRouter(t, env)
 	t.Run("okPublic", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/dev0/registers", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/v2/views/public/devices/dev0/registers", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -495,7 +495,7 @@ func TestRegistersEndpoint(t *testing.T) {
 
 	t.Run("okPrivate", func(t *testing.T) {
 		token := setupToken(t, env)
-		req, _ := http.NewRequest("GET", "/api/v2/views/private/devices/dev2/registers", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/v2/views/private/devices/dev2/registers", nil)
 		req.Header.Set("Authorization", token)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -509,7 +509,7 @@ func TestRegistersEndpoint(t *testing.T) {
 	})
 
 	t.Run("ForbiddenPrivateWithoutToken", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", "/api/v2/views/private/devices/dev2/registers", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/v2/views/private/devices/dev2/registers", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -518,7 +518,7 @@ func TestRegistersEndpoint(t *testing.T) {
 
 	t.Run("ForbiddenPrivate", func(t *testing.T) {
 		token := setupToken(t, env)
-		req, _ := http.NewRequest("GET", "/api/v2/views/forbidden/devices/dev1/registers", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/v2/views/forbidden/devices/dev1/registers", nil)
 		req.Header.Set("Authorization", token)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -527,7 +527,7 @@ func TestRegistersEndpoint(t *testing.T) {
 	})
 
 	t.Run("NonexistentDevice", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/nonexistent-device/registers", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/v2/views/public/devices/nonexistent-device/registers", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -552,7 +552,7 @@ func TestValuesGetEndpoint(t *testing.T) {
 	env.StateStorage.Wait()
 
 	t.Run("okPublic", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", "/api/v2/views/public/devices/dev0/values", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/v2/views/public/devices/dev0/values", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -568,7 +568,7 @@ func TestValuesGetEndpoint(t *testing.T) {
 	})
 
 	t.Run("okPrivate", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", "/api/v2/views/private/devices/dev2/values", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/v2/views/private/devices/dev2/values", nil)
 		req.Header.Set("Authorization", token)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -577,7 +577,7 @@ func TestValuesGetEndpoint(t *testing.T) {
 	})
 
 	t.Run("wrongToken", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", "/api/v2/views/private/devices/dev2/values", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/v2/views/private/devices/dev2/values", nil)
 		req.Header.Set("Authorization", "invalid")
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -586,7 +586,7 @@ func TestValuesGetEndpoint(t *testing.T) {
 	})
 
 	t.Run("ForbiddenPrivateWithoutToken", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", "/api/v2/views/private/devices/dev2/values", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/v2/views/private/devices/dev2/values", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -594,7 +594,7 @@ func TestValuesGetEndpoint(t *testing.T) {
 	})
 
 	t.Run("ForbiddenPrivate", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", "/api/v2/views/forbidden/devices/dev1/values", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/v2/views/forbidden/devices/dev1/values", nil)
 		req.Header.Set("Authorization", token)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -615,7 +615,7 @@ func TestValuesPatchEndpoint(t *testing.T) {
 		}
 		body, _ := json.Marshal(patchData)
 
-		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPatch, "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
 		req.Header.Set("Authorization", token)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -629,7 +629,7 @@ func TestValuesPatchEndpoint(t *testing.T) {
 		}
 		body, _ := json.Marshal(patchData)
 
-		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPatch, "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
@@ -642,7 +642,7 @@ func TestValuesPatchEndpoint(t *testing.T) {
 		}
 		body, _ := json.Marshal(patchData)
 
-		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPatch, "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
 		req.Header.Set("Authorization", token)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -651,7 +651,7 @@ func TestValuesPatchEndpoint(t *testing.T) {
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {
-		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer([]byte("invalid json")))
+		req, _ := http.NewRequest(http.MethodPatch, "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer([]byte("invalid json")))
 		req.Header.Set("Authorization", token)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -665,7 +665,7 @@ func TestValuesPatchEndpoint(t *testing.T) {
 		}
 		body, _ := json.Marshal(patchData)
 
-		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPatch, "/api/v2/views/public/devices/dev0/values", bytes.NewBuffer(body))
 		req.Header.Set("Authorization", token)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -679,7 +679,7 @@ func TestValuesPatchEndpoint(t *testing.T) {
 		}
 		body, _ := json.Marshal(patchData)
 
-		req, _ := http.NewRequest("PATCH", "/api/v2/views/public/devices/nonexistent-device/values", bytes.NewBuffer(body))
+		req, _ := http.NewRequest(http.MethodPatch, "/api/v2/views/public/devices/nonexistent-device/values", bytes.NewBuffer(body))
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 

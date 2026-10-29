@@ -68,7 +68,7 @@ func TestSetupFrontend(t *testing.T) {
 
 	t.Run("ServeStyleCSS", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/style.css", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/style.css", nil)
 		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -77,7 +77,7 @@ func TestSetupFrontend(t *testing.T) {
 
 	t.Run("ServeRootAsIndex", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/", nil)
 		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -86,7 +86,7 @@ func TestSetupFrontend(t *testing.T) {
 
 	t.Run("ServePrivateViewRouteAsIndex", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/private", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/private", nil)
 		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -95,7 +95,7 @@ func TestSetupFrontend(t *testing.T) {
 
 	t.Run("ServePublicViewRouteAsIndex", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/public", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/public", nil)
 		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -104,7 +104,7 @@ func TestSetupFrontend(t *testing.T) {
 
 	t.Run("ServeLoginRouteAsIndex", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/login", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/login", nil)
 		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -113,7 +113,7 @@ func TestSetupFrontend(t *testing.T) {
 
 	t.Run("NotFoundRoute", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/nonexistent", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/nonexistent", nil)
 		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
@@ -140,7 +140,7 @@ func TestSetupFrontendInvalidPath(t *testing.T) {
 
 	t.Run("NotFoundWhenNoFrontend", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/", nil)
 		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
@@ -166,7 +166,7 @@ func TestSetupFrontendEmptyPath(t *testing.T) {
 
 	t.Run("NotFoundWhenNoFrontend", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/", nil)
 		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
@@ -200,7 +200,7 @@ func TestSetupFrontendProxy(t *testing.T) {
 
 	t.Run("ProxyServeRoot", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/", nil)
 		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -209,7 +209,7 @@ func TestSetupFrontendProxy(t *testing.T) {
 
 	t.Run("ProxyServeStyleCSS", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/style.css", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/style.css", nil)
 		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -218,7 +218,7 @@ func TestSetupFrontendProxy(t *testing.T) {
 
 	t.Run("ProxyNonexistentFile", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/nonexistent.js", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/nonexistent.js", nil)
 		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
@@ -227,7 +227,7 @@ func TestSetupFrontendProxy(t *testing.T) {
 
 	t.Run("ProxyCanAccessApiV2", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/api/v2/config/frontend", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/api/v2/config/frontend", nil)
 		mux.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
