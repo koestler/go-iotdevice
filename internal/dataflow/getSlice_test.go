@@ -2,10 +2,10 @@ package dataflow_test
 
 import (
 	"fmt"
-	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
-	mock_dataflow "github.com/koestler/go-iotdevice/v3/internal/dataflow/mock"
 	"slices"
 	"testing"
+
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
 func TestValueStorageGetSlice(t *testing.T) {
@@ -61,7 +61,7 @@ func TestValueStorageGetSlice(t *testing.T) {
 			"device-0:register-a=1.000000",
 		}
 
-		fc := &mock_dataflow.MockRegisterFilterConf{
+		fc := &MockRegisterFilterConf{
 			SkipRegistersV:  []string{"register-b"},
 			SkipCategoriesV: []string{"set-b", "set-c"},
 			DefaultIncludeV: true,

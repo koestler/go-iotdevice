@@ -3,12 +3,12 @@ package dataflow_test
 import (
 	"context"
 	"fmt"
-	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
-	mock_dataflow "github.com/koestler/go-iotdevice/v3/internal/dataflow/mock"
 	"reflect"
 	"slices"
 	"sync"
 	"testing"
+
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
 func TestRegisterDb(t *testing.T) {
@@ -117,5 +117,5 @@ func nameSlice(list []dataflow.RegisterStruct) []string {
 }
 
 func mockRegister(name string) dataflow.Register {
-	return &mock_dataflow.MockRegister{NameV: name, RegisterTypeV: dataflow.NumberRegister}
+	return &MockRegister{NameV: name, RegisterTypeV: dataflow.NumberRegister}
 }

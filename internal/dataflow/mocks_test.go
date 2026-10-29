@@ -1,4 +1,4 @@
-package mock_dataflow
+package dataflow_test
 
 import "github.com/koestler/go-iotdevice/v3/internal/dataflow"
 

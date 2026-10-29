@@ -1,10 +1,10 @@
 package dataflow_test
 
 import (
-	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
-	mock_dataflow "github.com/koestler/go-iotdevice/v3/internal/dataflow/mock"
 	"reflect"
 	"testing"
+
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
 func getTestTextRegisterWithName(name string) dataflow.RegisterStruct {
@@ -146,7 +146,7 @@ func TestFilterRegisters(t *testing.T) {
 	}
 
 	t.Run("nothing", func(t *testing.T) {
-		fc := &mock_dataflow.MockRegisterFilterConf{DefaultIncludeV: true}
+		fc := &MockRegisterFilterConf{DefaultIncludeV: true}
 
 		got := dataflow.FilterRegisters(stimuliRegisters, fc)
 
@@ -163,7 +163,7 @@ func TestFilterRegisters(t *testing.T) {
 	})
 
 	t.Run("onlyIncludeRegisters", func(t *testing.T) {
-		fc := &mock_dataflow.MockRegisterFilterConf{IncludeRegistersV: []string{"a", "b"}}
+		fc := &MockRegisterFilterConf{IncludeRegistersV: []string{"a", "b"}}
 
 		got := dataflow.FilterRegisters(stimuliRegisters, fc)
 
@@ -178,7 +178,7 @@ func TestFilterRegisters(t *testing.T) {
 	})
 
 	t.Run("onlySkipRegisters", func(t *testing.T) {
-		fc := &mock_dataflow.MockRegisterFilterConf{SkipRegistersV: []string{"a"}, DefaultIncludeV: true}
+		fc := &MockRegisterFilterConf{SkipRegistersV: []string{"a"}, DefaultIncludeV: true}
 
 		got := dataflow.FilterRegisters(stimuliRegisters, fc)
 
@@ -194,7 +194,7 @@ func TestFilterRegisters(t *testing.T) {
 	})
 
 	t.Run("onlyIncludeCategories", func(t *testing.T) {
-		fc := &mock_dataflow.MockRegisterFilterConf{
+		fc := &MockRegisterFilterConf{
 			IncludeCategoriesV: []string{"test-number-register-category"},
 		}
 
@@ -210,7 +210,7 @@ func TestFilterRegisters(t *testing.T) {
 	})
 
 	t.Run("onlySkipCategories", func(t *testing.T) {
-		fc := &mock_dataflow.MockRegisterFilterConf{
+		fc := &MockRegisterFilterConf{
 			SkipCategoriesV: []string{"test-number-register-category"},
 			DefaultIncludeV: true,
 		}

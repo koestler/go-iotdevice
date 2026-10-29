@@ -2,10 +2,10 @@ package dataflow_test
 
 import (
 	"context"
-	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
-	mock_dataflow "github.com/koestler/go-iotdevice/v3/internal/dataflow/mock"
 	"sync"
 	"testing"
+
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
 func TestValueStorageSubscribe(t *testing.T) {
@@ -98,7 +98,7 @@ func TestValueStorageSubscribeWithFilter(t *testing.T) {
 	})
 
 	t.Run("filterSkipRegisterCategories", func(t *testing.T) {
-		fc := &mock_dataflow.MockRegisterFilterConf{
+		fc := &MockRegisterFilterConf{
 			SkipRegistersV:  []string{"register-b"},
 			SkipCategoriesV: []string{"set-c"},
 			DefaultIncludeV: true,
