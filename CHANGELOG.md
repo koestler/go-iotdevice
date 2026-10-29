@@ -7,6 +7,7 @@
 * drop mem / cpu profile to disk options (should be served via an http metric endpoint instead)
 * initial logging of config: redact secrets
 * bugfixes:
+  * httpServer: honor LogRequests config variable
   * fix two race two dead-lock conditions in the command and value storage, that happen when devices are closed
   * fix various error messages and logging
   * config: do not panic when an MQTT device is referenced that does not exist

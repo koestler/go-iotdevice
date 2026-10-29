@@ -73,9 +73,14 @@ func Run(env *Environment) (httpServer *HttpServer) {
 	setupFrontend(rootMux, env.Config, env.Views)
 	setupValuesWs(rootMux, env)
 
+	var handler http.Handler = rootMux
+	if cfg.LogRequests() {
+		handler = loggingMiddleware(rootMux)
+	}
+
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", cfg.Bind(), cfg.Port()),
-		Handler: loggingMiddleware(rootMux),
+		Handler: handler,
 	}
 
 	go func() {
