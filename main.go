@@ -119,11 +119,11 @@ func main() {
 		// start mqtt clients
 		run.MqttDevices(cfg, devicePool, mqttClientPool, stateStorage, commandStorage)
 
-		// start mqtt forwarders
-		run.MqttForwarders(cfg, devicePool, mqttClientPool, stateStorage, commandStorage)
-
 		// start genset devices
 		run.GensetDevices(cfg, devicePool, stateStorage, commandStorage)
+
+		// start mqtt forwarders
+		run.MqttForwarders(cfg, devicePool, mqttClientPool, stateStorage, commandStorage)
 
 		// start http server
 		httpServer := run.HttpServer(cfg, devicePool, stateStorage, commandStorage, buildVersion)
