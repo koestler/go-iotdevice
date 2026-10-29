@@ -2,6 +2,7 @@ package genset_test
 
 import (
 	"reflect"
+	"slices"
 	"sync"
 	"testing"
 )
@@ -40,7 +41,7 @@ func (tr *tracker[T]) OnUpdateFunc() func(T) {
 func (tr *tracker[T]) Track() []T {
 	tr.lock.RLock()
 	defer tr.lock.RUnlock()
-	return append([]T(nil), tr.track...)
+	return slices.Clone(tr.track)
 }
 
 func (tr *tracker[T]) Latest() (r T, ok bool) {

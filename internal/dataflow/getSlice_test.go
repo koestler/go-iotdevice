@@ -120,8 +120,8 @@ func equalIgnoreOrder(a, b []string) bool {
 		return false
 	}
 
-	aCpy := append([]string{}, a...)
-	bCpy := append([]string{}, b...)
+	aCpy := slices.Clone(a)
+	bCpy := slices.Clone(b)
 
 	slices.Sort(aCpy)
 	slices.Sort(bCpy)

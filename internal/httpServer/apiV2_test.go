@@ -117,7 +117,6 @@ func setupTestEnvironment(t *testing.T) *Environment {
 		logRequests:     true,
 		logDebug:        true,
 		logConfig:       true,
-		frontendPath:    "./frontend-build/",
 		frontendExpires: 5 * time.Minute,
 		configExpires:   1 * time.Minute,
 	}
@@ -247,7 +246,8 @@ func setupTestHtaccessFile(t *testing.T) string {
 }
 
 func setupToken(t *testing.T, env *Environment) string {
-	token, err := createJwtToken(env.Authentication, "testuser")
+	t.Helper()
+	token, err := createJwtToken(env.Authentication, testUser)
 	assert.NoError(t, err)
 	return token
 }
@@ -329,6 +329,7 @@ func TestConfigFrontendEndpoint(t *testing.T) {
 }
 
 func assertCacheControlHeader(t *testing.T, w *httptest.ResponseRecorder, expected time.Duration) {
+	t.Helper()
 	if expected > 0 {
 		expectedHeader := fmt.Sprintf("public, max-age=%.0f", expected.Seconds())
 		cacheControl := w.Header().Get("Cache-Control")
@@ -369,7 +370,7 @@ func TestLoginEndpoint(t *testing.T) {
 		router := setupRouter(t, env)
 
 		loginReq := loginRequest{
-			User:     "testuser",
+			User:     testUser,
 			Password: "wrongpassword",
 		}
 		body, _ := json.Marshal(loginReq)
@@ -397,7 +398,7 @@ func TestLoginEndpoint(t *testing.T) {
 		router := setupRouter(t, env)
 
 		loginReq := loginRequest{
-			User:     "testuser",
+			User:     testUser,
 			Password: "testpass",
 		}
 		body, _ := json.Marshal(loginReq)
@@ -433,14 +434,14 @@ func TestLoginEndpoint(t *testing.T) {
 			enabled:           true,
 			jwtSecret:         []byte("test-secret"),
 			jwtValidityPeriod: 1 * time.Hour,
-			htaccessFile:      "/tmp/nonexistent.passwd",
+			htaccessFile:      filepath.Join(t.TempDir(), "nonexistent.passwd"),
 		}
 
 		router := setupRouter(t, env)
 
 		loginReq := loginRequest{
-			User:     "testuser",
-			Password: "testpass123",
+			User:     testUser,
+			Password: testPassword,
 		}
 		body, _ := json.Marshal(loginReq)
 

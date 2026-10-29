@@ -2,8 +2,7 @@ package genset_test
 
 import (
 	"fmt"
-	"reflect"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -1068,7 +1067,7 @@ func BenchmarkUpdateInputs(b *testing.B) {
 		c.Run()
 		defer c.End()
 
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			c.UpdateInputs(func(i genset.Inputs) genset.Inputs {
 				i.Time = time.Now()
 				return i
@@ -1083,7 +1082,7 @@ func BenchmarkUpdateInputsSync(b *testing.B) {
 		c.Run()
 		defer c.End()
 
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			c.UpdateInputsSync(func(i genset.Inputs) genset.Inputs {
 				i.Time = time.Now()
 				return i
@@ -1145,12 +1144,8 @@ func TestSyncWg(t *testing.T) {
 	eventsLock.Lock()
 	defer eventsLock.Unlock()
 
-	sortedEvents := append([]string{}, events...)
-	sort.Strings(sortedEvents)
-
-	if !reflect.DeepEqual(events, sortedEvents) {
+	if !slices.IsSorted(events) {
 		t.Error("events not sorted")
 		t.Logf("events: %s", strings.Join(events, "\n"))
-		t.Logf("sortedEvents: %s", strings.Join(sortedEvents, "\n"))
 	}
 }

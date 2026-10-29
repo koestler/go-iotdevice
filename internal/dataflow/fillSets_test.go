@@ -34,7 +34,7 @@ func fillSetA(storage *dataflow.ValueStorage) {
 	))
 
 	// filling the same register multiple times must not make a difference
-	for i := 0; i < 10; i += 1 {
+	for range 10 {
 		storage.Fill(dataflow.NewNumericRegisterValue(
 			"device-0",
 			getSimpleTestRegister("set-a", "register-b"),
