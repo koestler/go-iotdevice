@@ -296,11 +296,7 @@ func (c *authenticationConfigRead) TransformAndValidate(bypassFileCheck bool) (r
 	ret.enabled = false
 	ret.jwtValidityPeriod = time.Hour
 
-	if randString, e := randomString(64); e == nil {
-		ret.jwtSecret = []byte(randString)
-	} else {
-		err = append(err, fmt.Errorf("Authentication->JwtSecret: error while generating random secret: %s", e))
-	}
+	ret.jwtSecret = []byte(randomString(64))
 
 	if c == nil {
 		return
@@ -1466,9 +1462,7 @@ func TransformAndValidateListUnique[I any, O Nameable](
 	for _, cr := range inp {
 		r, e := transformer(cr)
 
-		if e := uniqueErr(r, ret); e != nil {
-			err = append(err, e...)
-		}
+		err = append(err, uniqueErr(r, ret)...)
 
 		ret = append(ret, r)
 		err = append(err, e...)
