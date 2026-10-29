@@ -1334,6 +1334,10 @@ func (c viewConfigRead) TransformAndValidate(devices []DeviceConfig) (ret ViewCo
 		err = append(err, fmt.Errorf("Views->Name='%s' does not match %s", ret.name, NameRegexp))
 	}
 
+	if ret.name == "login" {
+		err = append(err, fmt.Errorf("Views->Name='login' is reserved"))
+	}
+
 	if len(c.Title) < 1 {
 		err = append(err, fmt.Errorf("Views->%s->Title must not be empty", c.Name))
 	}
