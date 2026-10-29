@@ -651,11 +651,7 @@ go generate docs.go
 The last step of `go generate` builds the HTML documentation using `npx @redocly/cli`, so Node.js must be installed as well.
 
 ### Run tests
-[gomock](https://github.com/uber-go/mock) is used to generate stubs and mocks for the unit tests.
-
 ```bash
-go install go.uber.org/mock/mockgen@latest
-go generate ./...
 go test ./...
 ```
 

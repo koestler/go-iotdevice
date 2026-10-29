@@ -1,7 +1,5 @@
 package dataflow
 
-//go:generate mockgen -source registerFilter.go -destination mock/registerFilter_mock.go
-
 type Filterable interface {
 	Name() string
 	Category() string

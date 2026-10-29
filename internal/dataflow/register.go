@@ -6,8 +6,6 @@ import (
 	"slices"
 )
 
-//go:generate mockgen -source register.go -destination mock/register_mock.go
-
 type Register interface {
 	Category() string
 	Name() string

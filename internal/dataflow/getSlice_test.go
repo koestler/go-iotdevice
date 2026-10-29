@@ -4,14 +4,11 @@ import (
 	"fmt"
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	mock_dataflow "github.com/koestler/go-iotdevice/v3/internal/dataflow/mock"
-	"go.uber.org/mock/gomock"
 	"slices"
 	"testing"
 )
 
 func TestValueStorageGetSlice(t *testing.T) {
-	ctrl := gomock.NewController(t)
-
 	storage := dataflow.NewValueStorage()
 
 	fillSetA(storage)
@@ -64,12 +61,11 @@ func TestValueStorageGetSlice(t *testing.T) {
 			"device-0:register-a=1.000000",
 		}
 
-		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
-		fc.EXPECT().SkipRegisters().Return([]string{"register-b"}).AnyTimes()
-		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
-		fc.EXPECT().SkipCategories().Return([]string{"set-b", "set-c"}).AnyTimes()
-		fc.EXPECT().IncludeCategories().Return([]string{}).AnyTimes()
-		fc.EXPECT().DefaultInclude().Return(true).AnyTimes()
+		fc := &mock_dataflow.MockRegisterFilterConf{
+			SkipRegistersV:  []string{"register-b"},
+			SkipCategoriesV: []string{"set-b", "set-c"},
+			DefaultIncludeV: true,
+		}
 
 		got := getAsStrings(storage.GetStateFiltered(dataflow.RegisterValueFilter(fc)))
 

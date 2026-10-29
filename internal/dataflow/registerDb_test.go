@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	mock_dataflow "github.com/koestler/go-iotdevice/v3/internal/dataflow/mock"
-	"go.uber.org/mock/gomock"
 	"reflect"
 	"slices"
 	"sync"
@@ -33,16 +32,16 @@ func TestRegisterDb(t *testing.T) {
 	slices.Sort(expect)
 
 	// populate storage
-	rdb.Add(mockRegister(t, "A0"), mockRegister(t, "A1"), mockRegister(t, "A2"))
+	rdb.Add(mockRegister("A0"), mockRegister("A1"), mockRegister("A2"))
 	wgPopulate := sync.WaitGroup{}
 	wgPopulate.Add(numbPopulate)
 	for i := 0; i < numbPopulate; i++ {
 		go func() {
 			defer wgPopulate.Done()
 			rdb.Add(
-				mockRegister(t, fmt.Sprintf("B%d", i)),
-				mockRegister(t, fmt.Sprintf("C%d", i)),
-				mockRegister(t, fmt.Sprintf("D%d", i)),
+				mockRegister(fmt.Sprintf("B%d", i)),
+				mockRegister(fmt.Sprintf("C%d", i)),
+				mockRegister(fmt.Sprintf("D%d", i)),
 			)
 		}()
 	}
@@ -116,17 +115,6 @@ func nameSlice(list []dataflow.RegisterStruct) []string {
 	return ret
 }
 
-func mockRegister(t *testing.T, name string) dataflow.Register {
-	ctrl := gomock.NewController(t)
-	m := mock_dataflow.NewMockRegister(ctrl)
-	m.EXPECT().Category().Return("")
-	m.EXPECT().Name().Return(name)
-	m.EXPECT().Description().Return("")
-	m.EXPECT().RegisterType().Return(dataflow.NumberRegister)
-	m.EXPECT().Enum().Return(nil)
-	m.EXPECT().Unit().Return("")
-	m.EXPECT().Sort().Return(0)
-	m.EXPECT().Writable().Return(false)
-
-	return m
+func mockRegister(name string) dataflow.Register {
+	return &mock_dataflow.MockRegister{NameV: name, RegisterTypeV: dataflow.NumberRegister}
 }

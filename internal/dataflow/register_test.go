@@ -3,7 +3,6 @@ package dataflow_test
 import (
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	mock_dataflow "github.com/koestler/go-iotdevice/v3/internal/dataflow/mock"
-	"go.uber.org/mock/gomock"
 	"reflect"
 	"testing"
 )
@@ -146,15 +145,8 @@ func TestFilterRegisters(t *testing.T) {
 		getTestEnumRegister(),
 	}
 
-	ctrl := gomock.NewController(t)
-
 	t.Run("nothing", func(t *testing.T) {
-		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
-		fc.EXPECT().SkipRegisters().Return([]string{}).AnyTimes()
-		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
-		fc.EXPECT().SkipCategories().Return([]string{}).AnyTimes()
-		fc.EXPECT().IncludeCategories().Return([]string{}).AnyTimes()
-		fc.EXPECT().DefaultInclude().Return(true).AnyTimes()
+		fc := &mock_dataflow.MockRegisterFilterConf{DefaultIncludeV: true}
 
 		got := dataflow.FilterRegisters(stimuliRegisters, fc)
 
@@ -171,12 +163,7 @@ func TestFilterRegisters(t *testing.T) {
 	})
 
 	t.Run("onlyIncludeRegisters", func(t *testing.T) {
-		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
-		fc.EXPECT().SkipRegisters().Return([]string{}).AnyTimes()
-		fc.EXPECT().IncludeRegisters().Return([]string{"a", "b"}).AnyTimes()
-		fc.EXPECT().SkipCategories().Return([]string{}).AnyTimes()
-		fc.EXPECT().IncludeCategories().Return([]string{}).AnyTimes()
-		fc.EXPECT().DefaultInclude().Return(false).AnyTimes()
+		fc := &mock_dataflow.MockRegisterFilterConf{IncludeRegistersV: []string{"a", "b"}}
 
 		got := dataflow.FilterRegisters(stimuliRegisters, fc)
 
@@ -191,12 +178,7 @@ func TestFilterRegisters(t *testing.T) {
 	})
 
 	t.Run("onlySkipRegisters", func(t *testing.T) {
-		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
-		fc.EXPECT().SkipRegisters().Return([]string{"a"}).AnyTimes()
-		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
-		fc.EXPECT().SkipCategories().Return([]string{}).AnyTimes()
-		fc.EXPECT().IncludeCategories().Return([]string{}).AnyTimes()
-		fc.EXPECT().DefaultInclude().Return(true).AnyTimes()
+		fc := &mock_dataflow.MockRegisterFilterConf{SkipRegistersV: []string{"a"}, DefaultIncludeV: true}
 
 		got := dataflow.FilterRegisters(stimuliRegisters, fc)
 
@@ -212,13 +194,9 @@ func TestFilterRegisters(t *testing.T) {
 	})
 
 	t.Run("onlyIncludeCategories", func(t *testing.T) {
-
-		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
-		fc.EXPECT().SkipRegisters().Return([]string{}).AnyTimes()
-		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
-		fc.EXPECT().SkipCategories().Return([]string{}).AnyTimes()
-		fc.EXPECT().IncludeCategories().Return([]string{"test-number-register-category"}).AnyTimes()
-		fc.EXPECT().DefaultInclude().Return(false).AnyTimes()
+		fc := &mock_dataflow.MockRegisterFilterConf{
+			IncludeCategoriesV: []string{"test-number-register-category"},
+		}
 
 		got := dataflow.FilterRegisters(stimuliRegisters, fc)
 
@@ -232,13 +210,10 @@ func TestFilterRegisters(t *testing.T) {
 	})
 
 	t.Run("onlySkipCategories", func(t *testing.T) {
-
-		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
-		fc.EXPECT().SkipRegisters().Return([]string{}).AnyTimes()
-		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
-		fc.EXPECT().SkipCategories().Return([]string{"test-number-register-category"}).AnyTimes()
-		fc.EXPECT().IncludeCategories().Return([]string{}).AnyTimes()
-		fc.EXPECT().DefaultInclude().Return(true).AnyTimes()
+		fc := &mock_dataflow.MockRegisterFilterConf{
+			SkipCategoriesV: []string{"test-number-register-category"},
+			DefaultIncludeV: true,
+		}
 
 		got := dataflow.FilterRegisters(stimuliRegisters, fc)
 

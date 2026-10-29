@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	mock_dataflow "github.com/koestler/go-iotdevice/v3/internal/dataflow/mock"
-	"go.uber.org/mock/gomock"
 	"sync"
 	"testing"
 )
@@ -56,8 +55,6 @@ func TestValueStorageSubscribe(t *testing.T) {
 }
 
 func TestValueStorageSubscribeWithFilter(t *testing.T) {
-	ctrl := gomock.NewController(t)
-
 	run := func(filter dataflow.ValueFilterFunc) (values []dataflow.Value) {
 		storage := dataflow.NewValueStorage()
 		ctx, cancel := context.WithCancel(context.Background())
@@ -101,12 +98,11 @@ func TestValueStorageSubscribeWithFilter(t *testing.T) {
 	})
 
 	t.Run("filterSkipRegisterCategories", func(t *testing.T) {
-		fc := mock_dataflow.NewMockRegisterFilterConf(ctrl)
-		fc.EXPECT().SkipRegisters().Return([]string{"register-b"}).AnyTimes()
-		fc.EXPECT().IncludeRegisters().Return([]string{}).AnyTimes()
-		fc.EXPECT().SkipCategories().Return([]string{"set-c"}).AnyTimes()
-		fc.EXPECT().IncludeCategories().Return([]string{}).AnyTimes()
-		fc.EXPECT().DefaultInclude().Return(true).AnyTimes()
+		fc := &mock_dataflow.MockRegisterFilterConf{
+			SkipRegistersV:  []string{"register-b"},
+			SkipCategoriesV: []string{"set-c"},
+			DefaultIncludeV: true,
+		}
 
 		values := run(dataflow.RegisterValueFilter(fc))
 
