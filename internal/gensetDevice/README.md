@@ -15,7 +15,7 @@ There are the following states:
  4) *Priming*: Fuel pump running, engine not yet cranking.
  5) *Cranking*: Starter trying to start the engine
  6) *Stabilizing*: Engine started, waiting for the output to stabilize.
- 7) *Warm-Up*: Engine running but not producing power. Waiting for temperature to rise.
+ 7) *Warm-up*: Engine running but not producing power. Waiting for temperature to rise.
  8) *Producing*: Engine producing power
  9) *Engine cool down*: Engine not producing power, idling to cool down
  10) *Enclosure cool down*: Engine off, but enclosure still ventilated
@@ -39,35 +39,35 @@ There are the following states:
   * *Frequency*: Frequency measurement of the generator.
 
 ## Outputs
- * *Ignition*: Turns on the ignition of the generator or the command input of the generator's own engine management.
- * *Starter*: Turns on the starter motor.
- * *Fan*: Turns on the enclosure fan.
- * *Pump*: Turns on the fuel pump.
- * *Load*: Connects the load to the generator output.
- * *Time in state*, *I/O check*, *Output check*: Diagnostic values, not control outputs.
+* *Ignition*: Turns on the ignition of the generator or the command input of the generator's own engine management.
+* *Starter*: Turns on the starter motor.
+* *Fan*: Turns on the enclosure fan.
+* *Pump*: Turns on the fuel pump.
+* *Load*: Connects the load to the generator output.
+* *Time in state*, *I/O check*, *Output check*: Diagnostic values, not control outputs.
 
- ## Configuration Variables
- * *Priming*
-   * *timeout*: after this time, cranking starts
- * *Cranking*
-   * *timeout*: if the output check is not positive after this time, the controller goes to the error state
- * *Stabilizing*
-   * *timeout*: after this time, the output is considered stable and warm up starts
- * *Warm up*
-   * *timeout*: after this time, the warm up is completed
-   * *min time*: warm up is never completed before this time
-   * *engine block temperature*: when the engine is warmer than this value, warm up is completed
- * *Engine Cool down*
-   * *timeout*: after this time, the engine cool down is completed
-   * *min time*: cool down is never completed before this time
-   * *engine block temperature*: when the engine is colder than this value, cool down is completed
- * *Enclosure cool down*
-   * *timeout*: after this time, the enclosure cool down is completed
-   * *min time*: cool down is never completed before this time
-   * *engine block temperature*: when the engine block temperature is colder than this value, cool down is completed.
- * *I/O checks*: min / max range of the engine, aux 0 and aux 1 temperatures
- * *Output checks*:
-   * UMin / UMax : tolerable voltage range
-   * FMin / FMax : tolerable frequency range
-   * PMax: tolerable power per phase
-   * PTotMax: tolerable total power (the single phase P1 for single phase generators, otherwise P1 + P2 + P3)
+## Configuration Variables
+* *Priming*
+  * *timeout*: after this time, cranking starts
+* *Cranking*
+  * *timeout*: if the output check is not positive after this time, the controller goes to the error state
+* *Stabilizing*
+  * *timeout*: after this time, the output is considered stable and warm-up starts
+* *Warm-up*
+  * *timeout*: after this time, the warm-up is completed
+  * *min time*: warm-up is never completed before this time
+  * *engine block temperature*: when the engine is warmer than this value, warm-up is completed
+* *Engine cool down*
+  * *timeout*: after this time, the engine cool down is completed
+  * *min time*: cool down is never completed before this time
+  * *engine block temperature*: when the engine is colder than this value, cool down is completed
+* *Enclosure cool down*
+  * *timeout*: after this time, the enclosure cool down is completed
+  * *min time*: cool down is never completed before this time
+  * *engine block temperature*: when the engine block temperature is colder than this value, cool down is completed.
+* *I/O checks*: min / max range of the engine, aux 0 and aux 1 temperatures
+* *Output checks*:
+  * UMin / UMax: tolerable voltage range
+  * FMin / FMax : tolerable frequency range
+  * PMax: tolerable power per phase
+  * PTotMax: tolerable total power (the single phase P1 for single phase generators, otherwise P1 + P2 + P3)

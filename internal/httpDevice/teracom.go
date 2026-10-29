@@ -323,7 +323,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 			desc := s.Description
 
 			c.number("Sensors", regName, desc, i.Unit, i.Value)
-			c.alarm("Alarms", regName+"Alarm", desc, i.Alarm)
+			c.alarm("Alarms", regName+"Alarm", desc+" alarm", i.Alarm)
 
 			c.number("Settings", regName+"Min", desc+" Min", i.Unit, i.Min)
 			c.number("Settings", regName+"Max", desc+" Max", i.Unit, i.Max)
@@ -355,7 +355,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 		desc := a.Description
 
 		c.number(valueCat, regName, desc, a.Unit, a.Value)
-		c.alarm("Alarms", regName+"Alarm", desc, a.Alarm)
+		c.alarm("Alarms", regName+"Alarm", desc+" alarm", a.Alarm)
 
 		c.number("Settings", regName+"Min", desc+" Min", a.Unit, a.Min)
 		c.number("Settings", regName+"Max", desc+" Max", a.Unit, a.Max)
@@ -387,7 +387,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 			a.Value,
 			false,
 		)
-		c.alarm("Alarms", regName+"Alarm", desc, a.Alarm)
+		c.alarm("Alarms", regName+"Alarm", desc+" alarm", a.Alarm)
 	}
 	digital(1, m.DI.DI1)
 	digital(2, m.DI.DI2)

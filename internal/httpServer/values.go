@@ -132,7 +132,7 @@ func valuesPatchHandler(env *Environment, view ViewConfig, deviceName string, fi
 				if v, ok := value.(float64); ok {
 					inputs = append(inputs, dataflow.NewEnumRegisterValue(deviceName, register, int(v)))
 				} else {
-					invalidType("float")
+					invalidType("number (enum index)")
 					return
 				}
 			}

@@ -38,7 +38,7 @@ type DeviceStruct struct {
 
 func NewDevice(
 	deviceConfig device.Config,
-	teracomConfig Config,
+	httpConfig Config,
 	stateStorage *dataflow.ValueStorage,
 	commandStorage *dataflow.ValueStorage,
 ) *DeviceStruct {
@@ -47,7 +47,7 @@ func NewDevice(
 			deviceConfig,
 			stateStorage,
 		),
-		httpConfig:     teracomConfig,
+		httpConfig:     httpConfig,
 		registerFilter: dataflow.RegisterFilter(deviceConfig.Filter()),
 		commandStorage: commandStorage,
 

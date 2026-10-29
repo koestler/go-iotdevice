@@ -318,7 +318,7 @@ GensetDevices:                                             # optional, a list of
 Views:                                                     # optional, a list of views (=categories in the frontend / paths in the api URLs)
   - Name: private                                          # mandatory, a technical name used in the URLs
     Title: Private                                         # mandatory, a nice title displayed in the frontend
-    Devices:                                               # mandatory, a list of devices using
+    Devices:                                               # mandatory
       - Name: bmv0                                         # mandatory, the arbitrary names defined above
         Title: Battery Monitor                             # mandatory, a nice title displayed in the frontend
         Filter:
@@ -404,7 +404,7 @@ GensetDevices:                                             # optional, a list of
 Views:                                                     # optional, a list of views (=categories in the frontend / paths in the api URLs)
   - Name: private                                          # mandatory, a technical name used in the URLs
     Title: Private                                         # mandatory, a nice title displayed in the frontend
-    Devices:                                               # mandatory, a list of devices using
+    Devices:                                               # mandatory
       - Name: bmv0                                         # mandatory, the arbitrary names defined above
         Title: Battery Monitor                             # mandatory, a nice title displayed in the frontend
 `
@@ -1422,7 +1422,7 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Error("expect MqttDevices->bmv1->General->LogComDebug to be true")
 		}
 
-		if expect, got := types.MqttDeviceGoIotdeviceV3Kind, vd.Kind(); expect != got {
+		if expect, got := types.MqttGoIotdeviceV3Kind, vd.Kind(); expect != got {
 			t.Errorf("expect MqttDevices->bmv1->Kind to be %v but got %v", expect, got)
 		}
 	}
@@ -2474,7 +2474,7 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Error("expect MqttDevices->bmv1->General->LogComDebug to be false")
 		}
 
-		if expect, got := types.MqttDeviceGoIotdeviceV3Kind, vd.Kind(); expect != got {
+		if expect, got := types.MqttGoIotdeviceV3Kind, vd.Kind(); expect != got {
 			t.Errorf("expect MqttDevices->bmv1->Kind to be %v but got %v", expect, got)
 		}
 	}

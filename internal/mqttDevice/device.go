@@ -62,7 +62,7 @@ func (c *DeviceStruct) Model() string {
 func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
 	mCfg := c.mqttConfig
 
-	if mCfg.Kind() != types.MqttDeviceGoIotdeviceV3Kind {
+	if mCfg.Kind() != types.MqttGoIotdeviceV3Kind {
 		log.Printf("mqttDevice[%s]: unsupported type: %s", c.Name(), mCfg.Kind().String())
 		return
 	}

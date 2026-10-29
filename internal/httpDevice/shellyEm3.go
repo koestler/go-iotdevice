@@ -162,8 +162,8 @@ func (c *ShellyEm3Device) extractRegistersAndValues(s ShellyEm3StatusStruct) {
 
 		e := s.EmeterN
 		c.number(cat, "NCurrent", "Neutral Current", "A", e.Current)
-		c.boolean(cat, "Mismatch", "Mismatch", e.Mismatch)
-		c.boolean(cat, "NIsValid", "Is Valid", e.IsValid)
+		c.boolean(cat, "Mismatch", "Neutral line mismatch", e.Mismatch)
+		c.boolean(cat, "NIsValid", "Neutral line valid", e.IsValid)
 	}
 
 	{
@@ -174,8 +174,8 @@ func (c *ShellyEm3Device) extractRegistersAndValues(s ShellyEm3StatusStruct) {
 			c.boolean("Essential", regName+"IsOn", desc+" is on", r.Ison)
 			c.boolean(cat, regName+"HasTimer", desc+" has timer", r.HasTimer)
 			c.number(cat, regName+"TimerStarted", desc+" timer started", "", float64(r.TimerStarted))
-			c.number(cat, regName+"TimerDuration", desc+" timer duration", "", float64(r.TimerDuration))
-			c.number(cat, regName+"TimerRemaining", desc+" timer remaining", "", float64(r.TimerRemaining))
+			c.number(cat, regName+"TimerDuration", desc+" timer duration", "s", float64(r.TimerDuration))
+			c.number(cat, regName+"TimerRemaining", desc+" timer remaining", "s", float64(r.TimerRemaining))
 			c.boolean(cat, regName+"Overpower", desc+" overpower", r.Overpower)
 			c.boolean(cat, regName+"IsValid", desc+" is valid", r.IsValid)
 			c.text(cat, regName+"Source", desc+" source", r.Source)
@@ -195,7 +195,7 @@ func (c *ShellyEm3Device) extractRegistersAndValues(s ShellyEm3StatusStruct) {
 		w := s.WifiSta
 		c.text(cat, "WifiSsid", "SSID", w.Ssid)
 		c.text(cat, "WifiIp", "IP", w.Ip)
-		c.number(cat, "WifiRssi", "RSSI", "", float64(w.Rssi))
+		c.number(cat, "WifiRssi", "RSSI", "dBm", float64(w.Rssi))
 	}
 
 	{

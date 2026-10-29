@@ -1104,7 +1104,7 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string) (ret MqttDeviceC
 		kind: types.MqttDeviceKindFromString(c.Kind),
 	}
 
-	if ret.kind == types.MqttDeviceUndefinedKind {
+	if ret.kind == types.MqttUndefinedKind {
 		err = append(err, fmt.Errorf("MqttDevices->%s->Kind='%s' is invalid", name, c.Kind))
 	}
 

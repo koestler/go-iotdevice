@@ -208,7 +208,7 @@ var U3Register = NewNumberRegister(
 var P1Register = NewNumberRegister(
 	"Inputs",
 	"P1",
-	"Load P1",
+	"Phase Power P1",
 	"W",
 	24,
 )
@@ -285,7 +285,7 @@ var StateChangedRegister = dataflow.NewRegisterStruct(
 	false,
 )
 
-var StateErrorTrigger = dataflow.NewRegisterStruct(
+var StateErrorTriggerRegister = dataflow.NewRegisterStruct(
 	"State",
 	"StateErrorTrigger",
 	"Error trigger",
@@ -299,7 +299,7 @@ var StateErrorTrigger = dataflow.NewRegisterStruct(
 var StateRegisters = []dataflow.RegisterStruct{
 	StateRegister,
 	StateChangedRegister,
-	StateErrorTrigger,
+	StateErrorTriggerRegister,
 }
 
 var IgnitionRegister = NewOnOffRegister(
