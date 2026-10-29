@@ -170,13 +170,13 @@ func (c *ShellyEm3Device) extractRegistersAndValues(s ShellyEm3StatusStruct) {
 		cat := "Relays"
 		for idx, r := range s.Relays {
 			regName := fmt.Sprintf("Relay%d", idx+1)
-			desc := fmt.Sprintf("Relay%d", idx+1)
+			desc := fmt.Sprintf("Relay %d", idx+1)
 			c.boolean("Essential", regName+"IsOn", desc+" is on", r.Ison)
 			c.boolean(cat, regName+"HasTimer", desc+" has timer", r.HasTimer)
 			c.number(cat, regName+"TimerStarted", desc+" timer started", "", float64(r.TimerStarted))
 			c.number(cat, regName+"TimerDuration", desc+" timer duration", "", float64(r.TimerDuration))
 			c.number(cat, regName+"TimerRemaining", desc+" timer remaining", "", float64(r.TimerRemaining))
-			c.boolean(cat, regName+"Overpower", desc+" over power", r.Overpower)
+			c.boolean(cat, regName+"Overpower", desc+" overpower", r.Overpower)
 			c.boolean(cat, regName+"IsValid", desc+" is valid", r.IsValid)
 			c.text(cat, regName+"Source", desc+" source", r.Source)
 		}
@@ -184,10 +184,10 @@ func (c *ShellyEm3Device) extractRegistersAndValues(s ShellyEm3StatusStruct) {
 
 	{
 		cat := "Network Status"
-		c.boolean(cat, "WifiConnected", "Wifi Connected", s.WifiSta.Connected)
+		c.boolean(cat, "WifiConnected", "Wifi connected", s.WifiSta.Connected)
 		c.boolean(cat, "CloudEnabled", "Cloud enabled", s.Cloud.Enabled)
 		c.boolean(cat, "CloudConnected", "Cloud connected", s.Cloud.Connected)
-		c.boolean(cat, "MqttConnected", "Mqtt Connected", s.Mqtt.Connected)
+		c.boolean(cat, "MqttConnected", "MQTT connected", s.Mqtt.Connected)
 	}
 
 	{

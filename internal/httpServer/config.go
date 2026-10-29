@@ -27,10 +27,10 @@ type deviceViewResponse struct {
 
 // setupConfig godoc
 // @Summary Frontend configuration
-// @Description Return the configuration needed to render a frontend.
+// @Description Returns the configuration needed to render a frontend.
 // @Description Includes a project title,
 // @Description a list of possible views (collection of devices / authentication)
-// @Description and for every view names of the devices.
+// @Description and for every view the names of the devices.
 // @Produce json
 // @Success 200 {object} configResponse
 // @Failure 500 {object} ErrorResponse

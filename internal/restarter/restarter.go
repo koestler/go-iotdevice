@@ -1,4 +1,4 @@
-// Package restarter implements a watchdog for long-running go routines. Whenever the routine stops and returns an error,
+// Package restarter implements a watchdog for long-running goroutines. Whenever the routine stops and returns an error,
 // it is restarted periodically.
 package restarter
 

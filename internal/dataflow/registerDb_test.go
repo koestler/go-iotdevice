@@ -12,9 +12,9 @@ import (
 )
 
 func TestRegisterDb(t *testing.T) {
-	const numbPopulate = 21
-	const numbGet = 18
-	const numbSubscriptions = 32
+	const numPopulate = 21
+	const numGet = 18
+	const numSubscriptions = 32
 
 	rdb := dataflow.NewRegisterDb()
 
@@ -22,7 +22,7 @@ func TestRegisterDb(t *testing.T) {
 
 	// compute expected output
 	expect := []string{"A0", "A1", "A2"}
-	for i := 0; i < numbPopulate; i++ {
+	for i := 0; i < numPopulate; i++ {
 		expect = append(expect, []string{
 			fmt.Sprintf("B%d", i),
 			fmt.Sprintf("C%d", i),
@@ -34,8 +34,8 @@ func TestRegisterDb(t *testing.T) {
 	// populate storage
 	rdb.Add(mockRegister("A0"), mockRegister("A1"), mockRegister("A2"))
 	wgPopulate := sync.WaitGroup{}
-	wgPopulate.Add(numbPopulate)
-	for i := 0; i < numbPopulate; i++ {
+	wgPopulate.Add(numPopulate)
+	for i := 0; i < numPopulate; i++ {
 		go func() {
 			defer wgPopulate.Done()
 			rdb.Add(
@@ -46,9 +46,8 @@ func TestRegisterDb(t *testing.T) {
 		}()
 	}
 
-	// call getAll at the same time as populating
-	for i := 0; i < numbGet; i++ {
-		// call GetAll during populate
+	for i := 0; i < numGet; i++ {
+		// call GetAll at the same time as populating
 		go func() {
 			for {
 				select {
@@ -64,8 +63,8 @@ func TestRegisterDb(t *testing.T) {
 	// create subscriptions and check output
 	subscribeCtx, subscribeCancel := context.WithCancel(context.Background())
 	wgSubscribe := sync.WaitGroup{}
-	wgSubscribe.Add(numbSubscriptions)
-	for i := 0; i < numbSubscriptions; i++ {
+	wgSubscribe.Add(numSubscriptions)
+	for i := 0; i < numSubscriptions; i++ {
 		s := rdb.Subscribe(subscribeCtx, func(dataflow.Filterable) bool { return true })
 		go func() {
 			defer wgSubscribe.Done()
@@ -79,7 +78,9 @@ func TestRegisterDb(t *testing.T) {
 			}
 		}()
 
-	} // wait for storage to be fully populated
+	}
+
+	// wait for storage to be fully populated
 	wgPopulate.Wait()
 
 	// check output of getAll

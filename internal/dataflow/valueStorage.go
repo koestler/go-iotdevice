@@ -57,7 +57,7 @@ func NewValueStorage() (valueStorage *ValueStorage) {
 		inputChannel:  make(chan Value, 32),
 	}
 
-	// start main go routine
+	// start main goroutine
 	go valueStorage.mainStorageRoutine()
 
 	return

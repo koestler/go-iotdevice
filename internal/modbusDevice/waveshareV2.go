@@ -71,7 +71,7 @@ func WaveshareReadSoftwareRevision(writeRead WriteReadBusFunc, deviceAddress byt
 	}
 
 	// extract version
-	// Convert it to DEC and multiply by 0.01 is the value of software revision.
+	// Convert it to DEC and multiply by 0.01 to get the software revision.
 	version = fmt.Sprintf("V%d.%02d", response[1]/100, response[1]%100)
 
 	return

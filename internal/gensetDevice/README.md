@@ -8,7 +8,7 @@ The diagnostic outputs (*Time in state*, *I/O check*, *Output check*) are comput
 
 There are the following states:
 
- 0) *Error*: An error occurred (e.g. I/O unavailable, fire or temperature alarm, cranking or output check failed), engine shut off immediately. Re-start only after manual reset.
+ 0) *Error*: An error occurred (e.g. I/O unavailable, fire or temperature alarm, cranking or output check failed), engine shut off immediately. Restart only after manual reset.
  1) *Reset*: Reset button pressed
  2) *Off*: Generator not running, sensors might be offline.
  3) *Ready*: Generator not running, all sensors are online.

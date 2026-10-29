@@ -296,7 +296,7 @@ func (c *TeracomDevice) extractRegistersAndValues(s teracomStatusStruct) {
 	cat := "Device Info"
 	c.text(cat, "DeviceName", "Device Name", m.DeviceInfo.DeviceName)
 	c.text(cat, "HostName", "Host Name", m.DeviceInfo.HostName)
-	c.text(cat, "Id", "Id", m.DeviceInfo.ID)
+	c.text(cat, "Id", "ID", m.DeviceInfo.ID)
 	c.text(cat, "FWVer", "Firmware Version", m.DeviceInfo.FwVer)
 	c.text(cat, "SysContact", "System Contact", m.DeviceInfo.SysContact)
 	c.text(cat, "SysName", "System Name", m.DeviceInfo.SysName)

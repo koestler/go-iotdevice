@@ -1,6 +1,7 @@
 package mqttClient
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -9,7 +10,7 @@ type logger struct {
 }
 
 func (l logger) Println(v ...interface{}) {
-	log.Println(append([]interface{}{l.prefix}, v...)...)
+	log.Print(l.prefix + fmt.Sprintln(v...))
 }
 
 func (l logger) Printf(format string, v ...interface{}) {

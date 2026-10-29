@@ -24,7 +24,7 @@ func runRealtimeForwarder(
 	storage *dataflow.ValueStorage,
 	filterConf dataflow.RegisterFilterConf,
 ) {
-	// start mqtt forwarder for realtime messages (send data as soon as it arrives) output
+	// start mqtt forwarder for realtime messages (send data as soon as it arrives)
 	mCfg := cfg.Realtime()
 
 	filter := createDeviceAndRegisterValueFilter(dev, filterConf)

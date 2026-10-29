@@ -971,12 +971,12 @@ func (c gpioDeviceConfigRead) TransformAndValidate(deviceName string) (ret GpioD
 	if len(c.InputDebounce) < 1 {
 		// use default 100ms
 		ret.inputDebounce = 100 * time.Millisecond
-	} else if pollInterval, e := time.ParseDuration(c.InputDebounce); e != nil {
+	} else if inputDebounce, e := time.ParseDuration(c.InputDebounce); e != nil {
 		err = append(err, fmt.Errorf("GpioDevices->%s->InputDebounce='%s' parse error: %s",
 			deviceName, c.InputDebounce, e,
 		))
 	} else {
-		ret.inputDebounce = pollInterval
+		ret.inputDebounce = inputDebounce
 	}
 
 	ret.inputOptions = make([]string, 0)

@@ -120,7 +120,7 @@ func (c HttpServerConfig) LogDebug() bool {
 	return c.logDebug
 }
 
-// Getters for Authentication struct
+// Getters for AuthenticationConfig struct
 
 func (c AuthenticationConfig) Enabled() bool {
 	return c.enabled
@@ -278,7 +278,7 @@ func (c MqttClientConfig) LogMessages() bool {
 	return c.logMessages
 }
 
-// Getters for MqttClientDeviceConfig
+// Getters for MqttClientDeviceConfig struct
 
 func (c MqttClientDeviceConfig) Name() string {
 	return c.name
@@ -288,7 +288,7 @@ func (c MqttClientDeviceConfig) MqttTopics() []string {
 	return c.mqttTopics
 }
 
-// Getters for MqttSection struct
+// Getters for MqttSectionConfig struct
 
 func (c MqttSectionConfig) Enabled() bool {
 	return c.enabled
@@ -504,7 +504,7 @@ func (c MqttDeviceConfig) Kind() types.MqttDeviceKind {
 	return c.kind
 }
 
-// Getter for GensetDeviceConfig struct
+// Getters for GensetDeviceConfig struct
 
 func (c GensetDeviceConfig) InputBindings() []GensetDeviceBindingConfig {
 	return c.inputBindings
@@ -622,7 +622,7 @@ func (c GensetDeviceConfig) PTotMax() float64 {
 	return c.pTotMax
 }
 
-// Getter for GensetDeviceBindingConfig struct
+// Getters for GensetDeviceBindingConfig struct
 
 func (c GensetDeviceBindingConfig) Name() string {
 	return c.name

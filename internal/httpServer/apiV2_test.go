@@ -508,7 +508,7 @@ func TestRegistersEndpoint(t *testing.T) {
 		assert.Len(t, response, 2)
 	})
 
-	t.Run("UnauthorizedPrivate", func(t *testing.T) {
+	t.Run("ForbiddenPrivateWithoutToken", func(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/api/v2/views/private/devices/dev2/registers", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -523,7 +523,7 @@ func TestRegistersEndpoint(t *testing.T) {
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden for private view without token")
+		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden for forbidden view with a token")
 	})
 
 	t.Run("NonexistentDevice", func(t *testing.T) {
@@ -585,7 +585,7 @@ func TestValuesGetEndpoint(t *testing.T) {
 		assert.Equal(t, http.StatusUnauthorized, w.Code, "Expected status 401 Unauthorized for an invalid token")
 	})
 
-	t.Run("UnauthorizedPrivate", func(t *testing.T) {
+	t.Run("ForbiddenPrivateWithoutToken", func(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/api/v2/views/private/devices/dev2/values", nil)
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
@@ -599,7 +599,7 @@ func TestValuesGetEndpoint(t *testing.T) {
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden for private view without token")
+		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden for forbidden view with a token")
 	})
 }
 
@@ -647,7 +647,7 @@ func TestValuesPatchEndpoint(t *testing.T) {
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden without authentication")
+		assert.Equal(t, http.StatusForbidden, w.Code, "Expected status 403 Forbidden for a non-writable register")
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {

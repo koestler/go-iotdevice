@@ -9,7 +9,7 @@ homepage: https://github.com/koestler/go-iotdevice
 license: MIT
 description: |
   Reads parameters from Victron Energy devices, Modbus, GPIO, HTTP and MQTT
-  devices and exposes them via a web interface, a REST api and MQTT.
+  devices and exposes them via a web interface, a REST API and MQTT.
 recommends:
   - pwgen
   - apache2-utils

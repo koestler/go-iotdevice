@@ -20,7 +20,7 @@ const FinderFunctionReadInputRegisters FunctionCode = 0x04
 const InputRegisterAddressOffset = 30000
 
 func runFinder7M38(ctx context.Context, c *DeviceStruct) (err error, immediateError bool) {
-	log.Printf("device[%s]: start Finder 7M.38 source", c.Name())
+	log.Printf("finder7M38Device[%s]: start Finder 7M.38 source", c.Name())
 
 	// assign registers
 	registers := RegisterList7M38()
@@ -115,7 +115,7 @@ var RegisterList7M38FloatRegisters = []struct {
 	{32480, 620, "Device Info", "RunTime", "Run time", "s"},
 	{32484, 0, "Essential", "UAvgPN", "Uavg (phase to neutral)", "V"},
 	{32486, 1, "Essential", "UAvgPP", "Uavg (phase to phase)", "V"},
-	{32488, 100, "Current", "SI", "S I", "A"},
+	{32488, 100, "Current", "SI", "ΣI", "A"},
 	{32490, 25, "Essential", "Pt", "Active Power Total", "W"},
 	{32496, 26, "Essential", "PFt", "Power Factor Total", ""},
 	{32498, 5, "Essential", "F", "Frequency", "Hz"},
@@ -136,9 +136,9 @@ var RegisterList7M38FloatRegisters = []struct {
 	{32540, 203, "Power", "Q2", "Reactive Power Phase L2", "var"},
 	{32542, 204, "Power", "Q3", "Reactive Power Phase L3", "var"},
 	{32544, 205, "Power", "Qt", "Reactive Power Total", "var"},
-	{32546, 206, "Power", "S1", "Apparent Power Phase L1 ", "VA"},
-	{32548, 207, "Power", "S2", "Apparent Power Phase L2 ", "VA"},
-	{32550, 208, "Power", "S3", "Apparent Power Phase L3 ", "VA"},
+	{32546, 206, "Power", "S1", "Apparent Power Phase L1", "VA"},
+	{32548, 207, "Power", "S2", "Apparent Power Phase L2", "VA"},
+	{32550, 208, "Power", "S3", "Apparent Power Phase L3", "VA"},
 	{32552, 209, "Power", "St", "Apparent Power Total", "VA"},
 	{32554, 210, "Power", "PF1", "Power Factor Phase 1", ""},
 	{32556, 211, "Power", "PF2", "Power Factor Phase 2", ""},
@@ -147,13 +147,13 @@ var RegisterList7M38FloatRegisters = []struct {
 	{32564, 215, "Power", "CIPF2", "CAP/IND P. F. Phase 2", ""},
 	{32566, 216, "Power", "CIPF3", "CAP/IND P. F. Phase 3", ""},
 	{32568, 217, "Power", "CIPFt", "CAP/IND P. F. Total", ""},
-	{32570, 310, "Phase Geometry", "J1", "j1 (angle between U1 and I1)", "°"},
-	{32572, 311, "Phase Geometry", "J2", "j2 (angle between U2 and I2)", "°"},
-	{32574, 312, "Phase Geometry", "J3", "j3 (angle between U3 and I3) ", "°"},
+	{32570, 310, "Phase Geometry", "J1", "φ1 (angle between U1 and I1)", "°"},
+	{32572, 311, "Phase Geometry", "J2", "φ2 (angle between U2 and I2)", "°"},
+	{32574, 312, "Phase Geometry", "J3", "φ3 (angle between U3 and I3)", "°"},
 	{32576, 313, "Phase Geometry", "Jt", "Power Angle Total (atan2(Pt,Qt))", "°"},
-	{32578, 314, "Phase Geometry", "J12", "j12 (angle between U1 and U2)", "°"},
-	{32580, 315, "Phase Geometry", "J23", "j23 (angle between U2 and U3)", "°"},
-	{32582, 316, "Phase Geometry", "J31", "j31 (angle between U3 and U1)", "°"},
+	{32578, 314, "Phase Geometry", "J12", "φ12 (angle between U1 and U2)", "°"},
+	{32580, 315, "Phase Geometry", "J23", "φ23 (angle between U2 and U3)", "°"},
+	{32582, 316, "Phase Geometry", "J31", "φ31 (angle between U3 and U1)", "°"},
 	{32588, 400, "Distortion", "I1Thd", "I1 THD", "%"},
 	{32590, 401, "Distortion", "I2Thd", "I2 THD", "%"},
 	{32592, 402, "Distortion", "I3Thd", "I3 THD", "%"},
@@ -182,12 +182,12 @@ var RegisterList7M38FloatRegisters = []struct {
 	{32786, 533, "Energy Counter", "Ec14", "Energy Counter 14", ""},
 	{32788, 534, "Energy Counter", "Ec15", "Energy Counter 15", ""},
 	{32790, 535, "Energy Counter", "Ec16", "Energy Counter 16", ""},
-	{32985, 610, "Device Info", "Unom", "nominal phase voltage", "V"},
-	{32987, 611, "Device Info", "Inom", "nominal phase current", "A"},
-	{32989, 612, "Device Info", "Pnom", "nominal phase power", "W"},
-	{32991, 613, "Device Info", "Ptot", "nominal total power", "W"},
-	{32993, 614, "Device Info", "Itot", "nominal total current", "A"},
-	{32995, 615, "Device Info", "Fnom", "nominal frequency", "Hz"},
+	{32985, 610, "Device Info", "Unom", "Nominal phase voltage", "V"},
+	{32987, 611, "Device Info", "Inom", "Nominal phase current", "A"},
+	{32989, 612, "Device Info", "Pnom", "Nominal phase power", "W"},
+	{32991, 613, "Device Info", "Ptot", "Nominal total power", "W"},
+	{32993, 614, "Device Info", "Itot", "Nominal total current", "A"},
+	{32995, 615, "Device Info", "Fnom", "Nominal frequency", "Hz"},
 }
 
 var invalidEnum = map[int]string{
@@ -332,7 +332,7 @@ func FinderReadFloatRegister(c *DeviceStruct, register FinderRegister) (v datafl
 	}
 
 	if c.Config().LogDebug() {
-		log.Printf("FinderReadFloatRegister: registerName=%s, floatValue=%f", register.Name(), floatValue)
+		log.Printf("finder7M38Device[%s]: FinderReadFloatRegister: registerName=%s, floatValue=%f", c.Name(), register.Name(), floatValue)
 	}
 
 	v = dataflow.NewNumericRegisterValue(
@@ -357,7 +357,7 @@ func FinderReadUInt16Register(c *DeviceStruct, register FinderRegister) (v dataf
 	}
 
 	if c.Config().LogDebug() {
-		log.Printf("FinderReadUInt16Register: registerName=%s, uint16Value=%d", register.Name(), uint16Value)
+		log.Printf("finder7M38Device[%s]: FinderReadUInt16Register: registerName=%s, uint16Value=%d", c.Name(), register.Name(), uint16Value)
 	}
 
 	v = dataflow.NewNumericRegisterValue(
@@ -382,7 +382,7 @@ func FinderReadEnumRegister(c *DeviceStruct, register FinderRegister) (v dataflo
 	}
 
 	if c.Config().LogDebug() {
-		log.Printf("FinderReadEnumRegister: registerName=%s, uint16Value=%d", register.Name(), uint16Value)
+		log.Printf("finder7M38Device[%s]: FinderReadEnumRegister: registerName=%s, uint16Value=%d", c.Name(), register.Name(), uint16Value)
 	}
 
 	enumIdx := int(uint16Value)
@@ -411,7 +411,7 @@ func FinderReadStringRegister(c *DeviceStruct, register FinderRegister) (v dataf
 	}
 
 	if c.Config().LogDebug() {
-		log.Printf("FinderReadStringRegister: registerName=%s, stringValue=%s", register.Name(), response)
+		log.Printf("finder7M38Device[%s]: FinderReadStringRegister: registerName=%s, stringValue=%s", c.Name(), register.Name(), response)
 	}
 
 	v = dataflow.NewTextRegisterValue(
@@ -469,7 +469,7 @@ func FinderReadInputRegistersRaw(c *DeviceStruct, register FinderRegister) (resp
 	byteCount := response[0]
 
 	if int(byteCount) != responsePayloadLength {
-		err = fmt.Errorf("FinderReadInputRegisters: expected byte count to be %d but got %d", responsePayloadLength, byteCount)
+		err = fmt.Errorf("FinderReadInputRegistersRaw: expected byte count to be %d but got %d", responsePayloadLength, byteCount)
 		return
 	}
 

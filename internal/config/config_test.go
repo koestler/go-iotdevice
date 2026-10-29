@@ -24,8 +24,8 @@ Version: 2                                                 # configuration file 
 ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice: is shown in the http frontend
 LogConfig: true                                            # optional, default false, outputs the used configuration including defaults on startup
 LogWorkerStart: true                                       # optional, default false, outputs what devices and mqtt clients are started
-LogStateStorageDebug: true                                 # optional, default false, outputs all write to the internal value storage
-LogCommandStorageDebug: true                               # optional, default false, outputs all write to the internal value storage
+LogStateStorageDebug: true                                 # optional, default false, outputs all writes to the internal value storage
+LogCommandStorageDebug: true                               # optional, default false, outputs all writes to the internal value storage
 
 HttpServer:                                                # optional, when missing: http server is not started
   Bind: "[::1]"                                            # optional, default ::1 (ipv6 loopback), what address to bind to, use "0:0:0:0" when started within docker
@@ -54,7 +54,7 @@ MqttClients:                                               # optional, when empt
     ClientId: server42                                     # optional, default go-iotdevice-UUID, mqtt client id, make sure it is unique per mqtt-server
 
     KeepAlive: 2m                                          # optional, default 60s, how often a ping is sent to keep the connection alive
-    ConnectRetryDelay: 20s                                 # optional, default 10s, when disconnected: after what delay shall a connection attempt is made
+    ConnectRetryDelay: 20s                                 # optional, default 10s, when disconnected: after what delay shall a connection attempt be made
     ConnectTimeout: 10s                                    # optional, default 5s, how long to wait for the SYN+ACK packet, increase on slow networks
     TopicPrefix: my-prefix/                                # optional, default empty, %Prefix% is replaced with this string
     ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overriding MaxBacklogSize, AvailabilityEnabled, StructureEnabled, TelemetryEnabled, RealtimeEnabled)
@@ -87,7 +87,7 @@ MqttClients:                                               # optional, when empt
       Qos: 2                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
       Devices:
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
-          Filter:                                  # optional, default include all, defines which registers are show in the view,
+          Filter:                                  # optional, default include all, defines which registers are shown in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
               - reg-inc-a
@@ -107,19 +107,19 @@ MqttClients:                                               # optional, when empt
     Telemetry:
       Enabled: false                                # optional, default true, whether to send telemetry messages (one per device)
       TopicTemplate: '%Prefix%tele-X/go-iotdevice/%DeviceName%/state' # optional, what topic to use for telemetry messages
-      Interval: 30s                                 # optional, default 10s, how often to sent telemetry mqtt messages
+      Interval: 30s                                 # optional, default 10s, how often to send telemetry mqtt messages
       Retain: true                                  # optional, default false, the mqtt retain flag for telemetry messages
       Qos: 2                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
       Devices:
         modbus-rtu0:
-          Filter:                                  # optional, default include all, defines which registers are show in the view,
+          Filter:                                  # optional, default include all, defines which registers are shown in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
-              - BatteryVoltage                             # the BatteryVoltage register is sent no matter if it's category is listed unter categories
+              - BatteryVoltage                             # the BatteryVoltage register is sent no matter if its category is listed under categories
               - Power            
             SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
             IncludeCategories:                             # optional, default empty, all registers of the given category that are not explicitly skipped are returned
-              - Essential                                  # all registers of the category essential are sent; no matter if thy are listed in registers       
+              - Essential                                  # all registers of the category essential are sent; no matter if they are listed in registers       
             SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
             DefaultInclude: False                          # optional, default true,  whether to return the registers that do not match any include/skip rule
         tcw241:
@@ -133,7 +133,7 @@ MqttClients:                                               # optional, when empt
     HomeassistantDiscovery:
       Enabled: true                                          # optional, default false, whether to enable sending realtime messages
       TopicTemplate: 'my-hass/%Component%/%NodeId%/%ObjectId%/config'                                 # optional, topic to use for homeassistant discovery messages
-      Interval: 0s                                           # optional, default 0, 0 means disabled only send initially, otherwise the disovery messages are repeated after this interval (useful when retain is false)
+      Interval: 0s                                           # optional, default 0, 0 means disabled only send initially, otherwise the discovery messages are repeated after this interval (useful when retain is false)
       Retain: true                                           # optional, default false, the mqtt retain flag for homeassistant discovery messages
       Qos: 2                                                 # optional, default 1, what quality-of-service level shall be used for published messages and subscriptions
       Devices:                                               # optional, default all, a list of devices to match
@@ -163,7 +163,7 @@ VictronDevices:                                            # optional, a list of
   bmv0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Filter:
       SkipRegisters:                                          # optional, default empty, a list of field names that shall be ignored for this device
-        - Temperature                                      # for BMV devices without a temperature sensor connect
+        - Temperature                                      # for BMV devices without a temperature sensor connected
         - AuxVoltage                                       # for BMV devices without a mid- or starter-voltage reading
       SkipCategories:                                      # optional, default empty, a list of category names that shall be ignored for this device
         - Settings                                         # for solar devices it might make sense to not fetch / output the settings
@@ -172,7 +172,7 @@ VictronDevices:                                            # optional, a list of
     LogDebug: true                                       # optional, default false, enable debug log output
     LogComDebug: true                                    # optional, default false, enable a verbose log of the communication with the device
     Device: /dev/serial/by-id/usb-VictronEnergy_BV_VE_Direct_cable_VEHTVQT-if00-port0 # mandatory except if Kind: Random*, the path to the usb-to-serial converter
-    Kind: Vedirect                                         # mandatory, possibilities: Vedirect, RandomBmv, RandomSolar, always set to Vedirect expect for development
+    Kind: Vedirect                                         # mandatory, possibilities: Vedirect, RandomBmv, RandomSolar, always set to Vedirect except for development
     PollInterval: 700ms                                   # optional, default 0.1s, how often to fetch the registers
     IoLog: /tmp/bmv0.log                                  # optional, default empty, path to a file where the raw io is logged
 
@@ -210,7 +210,7 @@ ModbusDevices:                                             # optional, a list of
 
 GpioDevices:                                               # optional, a list of devices controlled via gpio
   gpio0:                                                   # mandatory, an arbitrary name used for logging and for referencing in other config sections
-    Filter:                                                # optional, default include all, defines which registers are show in the view,
+    Filter:                                                # optional, default include all, defines which registers are shown in the view,
       # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
       IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
       SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
@@ -226,21 +226,21 @@ GpioDevices:                                               # optional, a list of
     OutputOptions: ["AsPushPull"]                          # optional, default unchanged, valid options: AsOpenDrain, AsOpenSource, AsPushPull
     Inputs:                                                # optional, a list of inputs
       Switch0:                                             # mandatory, a technical name used for the register
-        Pin: GPIO2                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO2                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
         Description: Switch 0                              # mandatory, a nice title displayed in the frontend
         LowLabel: Pressed                                  # optional, default "low", a label for the low state
         HighLabel: Released                                # optional, default "high", a label for the high state
       Switch1:                                             # mandatory, a technical name used for the register
-        Pin: GPIO3                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO3                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
         Description: Switch 1                              # mandatory, a nice title displayed in the frontend
     Outputs:
-      Relay0:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
-        Pin: GPIO4                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+      Relay0:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
+        Pin: GPIO4                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
         Description: Relay 0                               # mandatory, a nice title displayed in the frontend
         LowLabel: Off                                      # optional, default "low", a label for the low state
         HighLabel: On                                      # optional, default "high", a label for the high state
-      Relay1:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
-        Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+      Relay1:                                              # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
+        Pin: GPIO5                                         # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
         Description: Relay 1                               # mandatory, a nice title displayed in the frontend
 
 HttpDevices:                                               # optional, a list of devices controlled via http
@@ -263,7 +263,7 @@ MqttDevices:                                               # optional, a list of
     LogComDebug: true                                    # optional, default false, enable a verbose log of the communication with the device
     Kind: GoIotdeviceV3
 
-GensetDevices:                                             # optional, a list generator set control devices
+GensetDevices:                                             # optional, a list of generator set control devices
   genset0:                                                 # mandatory, an arbitrary name used for logging and for referencing in other config sections
     RestartInterval: 60ms                                  # optional, default 200ms, how fast to restart the device if it fails / disconnects
     RestartIntervalMaxBackoff: 3m                          # optional, default 1m; when it fails, the restart interval is exponentially increased up to this maximum
@@ -366,7 +366,7 @@ Modbus:                                                    # optional, when empt
 
 VictronDevices:                                            # optional, a list of Victron Energy devices to connect to
   bmv0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
-    Kind: RandomBmv                                        # mandatory, possibilities: Vedirect, RandomBmv, RandomSolar, always set to Vedirect expect for development
+    Kind: RandomBmv                                        # mandatory, possibilities: Vedirect, RandomBmv, RandomSolar, always set to Vedirect except for development
 
 ModbusDevices:                                             # optional, a list of devices connected via ModBus
   modbus-rtu0:                                             # mandatory, an arbitrary name used for logging and for referencing in other config sections
@@ -378,7 +378,7 @@ GpioDevices:                                               # optional, a list of
   gpio0:                                                   # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Inputs:
       Switch0:                                               # mandatory, a technical name used for the register
-        Pin: GPIO2                                           # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", it's function name "I2C1_SDA".
+        Pin: GPIO2                                           # mandatory, the gpio as a number "2", the chipset name "GPIO2", the board pin position "P1_3", its function name "I2C1_SDA".
         Description: Switch 0                                # optional, default name, a nice title displayed in the frontend
 
 HttpDevices:                                               # optional, a list of devices controlled via http
@@ -390,7 +390,7 @@ MqttDevices:                                               # optional, a list of
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Kind: GoIotdeviceV3
 
-GensetDevices:                                             # optional, a list generator set control devices
+GensetDevices:                                             # optional, a list of generator set control devices
   genset0:                                                 # mandatory, an arbitrary name used for logging and for referencing in other config sections
 
     InputBindings:                                         # mandatory, a list of input bindings
@@ -454,7 +454,7 @@ func TestReadConfig_Complete(t *testing.T) {
 	}
 
 	if expect, got := "Configurable Title of Project", config.ProjectTitle(); expect != got {
-		t.Errorf("expect ProjectTitle to be '%s but got '%s'", expect, got)
+		t.Errorf("expect ProjectTitle to be '%s' but got '%s'", expect, got)
 	}
 
 	if !config.LogConfig() {
@@ -488,7 +488,7 @@ func TestReadConfig_Complete(t *testing.T) {
 		}
 
 		if hs.LogRequests() {
-			t.Error("expect HttpServer->LogRequests to be balse")
+			t.Error("expect HttpServer->LogRequests to be false")
 		}
 
 		if expect, gotA := "http://127.0.0.1:3000/", hs.FrontendProxy(); gotA != nil {
@@ -1057,7 +1057,7 @@ func TestReadConfig_Complete(t *testing.T) {
 		mb := config.Modbus()[0]
 
 		if expect, got := "bus0", mb.Name(); expect != got {
-			t.Errorf("expect Name of first Modbus to be '%s' but got %s'", expect, got)
+			t.Errorf("expect Name of first Modbus to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := "/dev/ttyACM0", mb.Device(); expect != got {
@@ -1083,7 +1083,7 @@ func TestReadConfig_Complete(t *testing.T) {
 		vd := config.VictronDevices()[0]
 
 		if expect, got := "bmv0", vd.Name(); expect != got {
-			t.Errorf("expect Name of first VictronDevice to be '%s' but got %s'", expect, got)
+			t.Errorf("expect Name of first VictronDevice to be '%s' but got '%s'", expect, got)
 		}
 
 		{
@@ -1150,11 +1150,11 @@ func TestReadConfig_Complete(t *testing.T) {
 		md := config.ModbusDevices()[0]
 
 		if expect, got := "modbus-rtu0", md.Name(); expect != got {
-			t.Errorf("expect Name of first ModebusDevice to be '%s' but got %s'", expect, got)
+			t.Errorf("expect Name of first ModbusDevice to be '%s' but got '%s'", expect, got)
 		}
 
 		{
-			prefix := "ModebusDevices->modbus-rtu0->General->FilterRegister"
+			prefix := "ModbusDevices->modbus-rtu0->General->FilterRegister"
 			rf := md.Filter()
 
 			if expect, got := []string{"a", "b"}, rf.IncludeRegisters(); !reflect.DeepEqual(expect, got) {
@@ -1179,27 +1179,27 @@ func TestReadConfig_Complete(t *testing.T) {
 		}
 
 		if expect, got := 200*time.Millisecond, md.RestartInterval(); expect != got {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->RestartInterval to be %s but got %s", expect, got)
+			t.Errorf("expect ModbusDevices->modbus-rtu0->General->RestartInterval to be %s but got %s", expect, got)
 		}
 
 		if expect, got := time.Minute, md.RestartIntervalMaxBackoff(); expect != got {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
+			t.Errorf("expect ModbusDevices->modbus-rtu0->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
 		}
 
 		if md.LogDebug() {
-			t.Error("expect ModebusDevices->modbus-rtu0->General->LogDebug to be false")
+			t.Error("expect ModbusDevices->modbus-rtu0->General->LogDebug to be false")
 		}
 
 		if md.LogComDebug() {
-			t.Error("expect ModebusDevices->modbus-rtu0->General->LogComDebug to be false")
+			t.Error("expect ModbusDevices->modbus-rtu0->General->LogComDebug to be false")
 		}
 
 		if expect, got := "bus0", md.Bus(); expect != got {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->Bus to be '%s' but got '%s'", expect, got)
+			t.Errorf("expect ModbusDevices->modbus-rtu0->Bus to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := types.ModbusWaveshareRtuRelay8Kind, md.Kind(); expect != got {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->Kind to be %s but got %s", expect, got)
+			t.Errorf("expect ModbusDevices->modbus-rtu0->Kind to be %s but got %s", expect, got)
 		}
 
 		if expect, got := byte(0x01), md.Address(); expect != got {
@@ -1213,7 +1213,7 @@ func TestReadConfig_Complete(t *testing.T) {
 		gd := config.GpioDevices()[0]
 
 		if expect, got := "gpio0", gd.Name(); expect != got {
-			t.Errorf("expect Name of first GpioDevices to be '%s' but got %s'", expect, got)
+			t.Errorf("expect Name of first GpioDevices to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := 400*time.Millisecond, gd.RestartInterval(); expect != got {
@@ -1255,7 +1255,7 @@ func TestReadConfig_Complete(t *testing.T) {
 				in := gd.Inputs()[0]
 
 				if expect, got := "Switch0", in.Name(); expect != got {
-					t.Errorf("expect Name of first GpioDevices->gpio0->Inputs to be '%s' but got %s'", expect, got)
+					t.Errorf("expect Name of first GpioDevices->gpio0->Inputs to be '%s' but got '%s'", expect, got)
 				}
 
 				if expect, got := "GPIO2", in.Pin(); expect != got {
@@ -1278,7 +1278,7 @@ func TestReadConfig_Complete(t *testing.T) {
 				in := gd.Inputs()[1]
 
 				if expect, got := "Switch1", in.Name(); expect != got {
-					t.Errorf("expect Name of first GpioDevices->gpio0->Inputs to be '%s' but got %s'", expect, got)
+					t.Errorf("expect Name of first GpioDevices->gpio0->Inputs to be '%s' but got '%s'", expect, got)
 				}
 
 				if expect, got := "GPIO3", in.Pin(); expect != got {
@@ -1306,7 +1306,7 @@ func TestReadConfig_Complete(t *testing.T) {
 				in := gd.Outputs()[0]
 
 				if expect, got := "Relay0", in.Name(); expect != got {
-					t.Errorf("expect Name of first GpioDevices->gpio0->Outputs to be '%s' but got %s'", expect, got)
+					t.Errorf("expect Name of first GpioDevices->gpio0->Outputs to be '%s' but got '%s'", expect, got)
 				}
 
 				if expect, got := "GPIO4", in.Pin(); expect != got {
@@ -1329,7 +1329,7 @@ func TestReadConfig_Complete(t *testing.T) {
 				in := gd.Outputs()[1]
 
 				if expect, got := "Relay1", in.Name(); expect != got {
-					t.Errorf("expect Name of first GpioDevices->gpio0->Outputs to be '%s' but got %s'", expect, got)
+					t.Errorf("expect Name of first GpioDevices->gpio0->Outputs to be '%s' but got '%s'", expect, got)
 				}
 
 				if expect, got := "GPIO5", in.Pin(); expect != got {
@@ -1357,7 +1357,7 @@ func TestReadConfig_Complete(t *testing.T) {
 		hd := config.HttpDevices()[0]
 
 		if expect, got := "tcw241", hd.Name(); expect != got {
-			t.Errorf("expect Name of first HttpDevice to be '%s' but got %s'", expect, got)
+			t.Errorf("expect Name of first HttpDevice to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := time.Minute, hd.RestartInterval(); expect != got {
@@ -1403,7 +1403,7 @@ func TestReadConfig_Complete(t *testing.T) {
 		vd := config.MqttDevices()[0]
 
 		if expect, got := "bmv1", vd.Name(); expect != got {
-			t.Errorf("expect Name of first MqttDevice to be '%s' but got %s'", expect, got)
+			t.Errorf("expect Name of first MqttDevice to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := 50*time.Millisecond, vd.RestartInterval(); expect != got {
@@ -1433,7 +1433,7 @@ func TestReadConfig_Complete(t *testing.T) {
 		gd := config.GensetDevices()[0]
 
 		if expect, got := "genset0", gd.Name(); expect != got {
-			t.Errorf("expect Name of first GensetDevice to be '%s' but got %s'", expect, got)
+			t.Errorf("expect Name of first GensetDevice to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := 60*time.Millisecond, gd.RestartInterval(); expect != got {
@@ -1636,7 +1636,7 @@ func TestReadConfig_Complete(t *testing.T) {
 			}
 
 			if expect, got := 2, len(v.Devices()); expect != got {
-				t.Errorf("expect lenghth of Views->private->Devices to be %d but got %d", expect, got)
+				t.Errorf("expect length of Views->private->Devices to be %d but got %d", expect, got)
 			}
 
 			{
@@ -1677,7 +1677,7 @@ func TestReadConfig_Complete(t *testing.T) {
 			}
 
 			if expect, got := 1, len(v.Devices()); expect != got {
-				t.Errorf("expect lenghth of Views->private->Devices to be %d but got %d", expect, got)
+				t.Errorf("expect length of Views->private->Devices to be %d but got %d", expect, got)
 			}
 
 			{
@@ -1712,7 +1712,7 @@ func TestReadConfig_Default(t *testing.T) {
 	}
 
 	if expect, got := "go-iotdevice", config.ProjectTitle(); expect != got {
-		t.Errorf("expect ProjectTitle to be '%s but got '%s'", expect, got)
+		t.Errorf("expect ProjectTitle to be '%s' but got '%s'", expect, got)
 	}
 
 	if !config.LogConfig() {
@@ -2235,7 +2235,7 @@ func TestReadConfig_Default(t *testing.T) {
 		mb := config.Modbus()[0]
 
 		if expect, got := "bus0", mb.Name(); expect != got {
-			t.Errorf("expect Name of first Modbus to be '%s' but got %s'", expect, got)
+			t.Errorf("expect Name of first Modbus to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := "/dev/ttyUSB1", mb.Device(); expect != got {
@@ -2261,7 +2261,7 @@ func TestReadConfig_Default(t *testing.T) {
 		vd := config.VictronDevices()[0]
 
 		if expect, got := "bmv0", vd.Name(); expect != got {
-			t.Errorf("expect Name of first VictronDevice to be '%s' but got %s'", expect, got)
+			t.Errorf("expect Name of first VictronDevice to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, vd.RestartInterval(); expect != got {
@@ -2303,31 +2303,31 @@ func TestReadConfig_Default(t *testing.T) {
 		md := config.ModbusDevices()[0]
 
 		if expect, got := "modbus-rtu0", md.Name(); expect != got {
-			t.Errorf("expect Name of first ModebusDevice to be '%s' but got %s'", expect, got)
+			t.Errorf("expect Name of first ModbusDevice to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, md.RestartInterval(); expect != got {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->RestartInterval to be %s but got %s", expect, got)
+			t.Errorf("expect ModbusDevices->modbus-rtu0->General->RestartInterval to be %s but got %s", expect, got)
 		}
 
 		if expect, got := time.Minute, md.RestartIntervalMaxBackoff(); expect != got {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
+			t.Errorf("expect ModbusDevices->modbus-rtu0->General->RestartIntervalMaxBackoff to be %s but got %s", expect, got)
 		}
 
 		if md.LogDebug() {
-			t.Error("expect ModebusDevices->modbus-rtu0->General->LogDebug to be false")
+			t.Error("expect ModbusDevices->modbus-rtu0->General->LogDebug to be false")
 		}
 
 		if md.LogComDebug() {
-			t.Error("expect ModebusDevices->modbus-rtu0->General->LogComDebug to be false")
+			t.Error("expect ModbusDevices->modbus-rtu0->General->LogComDebug to be false")
 		}
 
 		if expect, got := "bus0", md.Bus(); expect != got {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->Bus to be '%s' but got '%s'", expect, got)
+			t.Errorf("expect ModbusDevices->modbus-rtu0->Bus to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := types.ModbusWaveshareRtuRelay8Kind, md.Kind(); expect != got {
-			t.Errorf("expect ModebusDevices->modbus-rtu0->Kind to be %s but got %s", expect, got)
+			t.Errorf("expect ModbusDevices->modbus-rtu0->Kind to be %s but got %s", expect, got)
 		}
 
 		if expect, got := byte(0x02), md.Address(); expect != got {
@@ -2341,7 +2341,7 @@ func TestReadConfig_Default(t *testing.T) {
 		gd := config.GpioDevices()[0]
 
 		if expect, got := "gpio0", gd.Name(); expect != got {
-			t.Errorf("expect Name of first GpioDevices to be '%s' but got %s'", expect, got)
+			t.Errorf("expect Name of first GpioDevices to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, gd.RestartInterval(); expect != got {
@@ -2382,7 +2382,7 @@ func TestReadConfig_Default(t *testing.T) {
 			in := gd.Inputs()[0]
 
 			if expect, got := "Switch0", in.Name(); expect != got {
-				t.Errorf("expect Name of first GpioDevices->gpio0->Inputs to be '%s' but got %s'", expect, got)
+				t.Errorf("expect Name of first GpioDevices->gpio0->Inputs to be '%s' but got '%s'", expect, got)
 			}
 
 			if expect, got := "GPIO2", in.Pin(); expect != got {
@@ -2409,7 +2409,7 @@ func TestReadConfig_Default(t *testing.T) {
 		hd := config.HttpDevices()[0]
 
 		if expect, got := "tcw241", hd.Name(); expect != got {
-			t.Errorf("expect Name of first HttpDevice to be '%s' but got %s'", expect, got)
+			t.Errorf("expect Name of first HttpDevice to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, hd.RestartInterval(); expect != got {
@@ -2455,7 +2455,7 @@ func TestReadConfig_Default(t *testing.T) {
 		vd := config.MqttDevices()[0]
 
 		if expect, got := "bmv1", vd.Name(); expect != got {
-			t.Errorf("expect Name of first MqttDevice to be '%s' but got %s'", expect, got)
+			t.Errorf("expect Name of first MqttDevice to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, vd.RestartInterval(); expect != got {
@@ -2485,7 +2485,7 @@ func TestReadConfig_Default(t *testing.T) {
 		gd := config.GensetDevices()[0]
 
 		if expect, got := "genset0", gd.Name(); expect != got {
-			t.Errorf("expect Name of first GensetDevice to be '%s' but got %s'", expect, got)
+			t.Errorf("expect Name of first GensetDevice to be '%s' but got '%s'", expect, got)
 		}
 
 		if expect, got := 200*time.Millisecond, gd.RestartInterval(); expect != got {
@@ -2627,7 +2627,7 @@ func TestReadConfig_Default(t *testing.T) {
 		}
 
 		if expect, got := 1, len(v.Devices()); expect != got {
-			t.Errorf("expect lenghth of Views->private->Devices to be %d but got %d", expect, got)
+			t.Errorf("expect length of Views->private->Devices to be %d but got %d", expect, got)
 		} else {
 			i := 0
 			d := v.Devices()[i]
@@ -2642,7 +2642,7 @@ func TestReadConfig_Default(t *testing.T) {
 	}
 }
 
-// check that configuration file in the documentation do not contain any errors
+// check that configuration files in the documentation do not contain any errors
 func TestReadConfig_DocumentationFullConfig(t *testing.T) {
 	_, err := ReadConfigFile("", "../../documentation/full-config.yaml", true)
 	if len(err) > 0 {

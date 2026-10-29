@@ -103,7 +103,7 @@ var sem = semaphore.NewWeighted(1)
 var lastAuthReload time.Time
 
 func reloadAuthChecker(file *htpasswd.File, config Config) {
-	// make sure this code runs only once at a time
+	// make sure this code runs only one at a time
 	if !sem.TryAcquire(1) {
 		return
 	}

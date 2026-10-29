@@ -33,7 +33,7 @@ type authMessage struct {
 // @Description Websocket that sends all registers and values initially and sends updates of changed values subsequently.
 // @Param viewName path string true "View name as provided by the config endpoint"
 // @Produce json
-// @success 200 {array} outputMessage
+// @Success 200 {array} outputMessage
 // @Failure 404 {object} ErrorResponse
 // @Router /views/{viewName}/ws [get]
 // @Security ApiKeyAuth
@@ -144,7 +144,7 @@ func startValuesSender(
 		values:    make(map[string]map[string]valueResponse),
 	}
 
-	// subscribe to the storage and update the packet values
+	// subscribe to the storage and update the packed values
 	go func() {
 		subscription := env.StateStorage.SubscribeSendInitial(ctx, viewFilter)
 
@@ -163,7 +163,7 @@ func startValuesSender(
 		}
 	}()
 
-	// send the packet values to the websocket connection
+	// send the packed values to the websocket connection
 	go func() {
 		ticker := time.NewTicker(wsSendInterval)
 		defer ticker.Stop()

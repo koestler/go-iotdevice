@@ -24,7 +24,7 @@ func callFunction(
 	// 1 byte Device Address
 	// 1 byte Function Code
 	// n bytes payload
-	// 2 bytes crc16 computeChecksum
+	// 2 bytes crc16 checksum
 	var request bytes.Buffer
 
 	err = binary.Write(&request, byteOrder, deviceAddress)
@@ -57,11 +57,11 @@ func callFunction(
 		return
 	}
 
-	// check computeChecksum
+	// check checksum
 	received := checksumByteOrder.Uint16(response[len(response)-2:])
 	computed := computeChecksum(response[:len(response)-2])
 	if received != computed {
-		return nil, fmt.Errorf("computeChecksum mismatch received != computed : %x != %x", received, computed)
+		return nil, fmt.Errorf("checksum mismatch received != computed : %x != %x", received, computed)
 	}
 
 	// check slave address

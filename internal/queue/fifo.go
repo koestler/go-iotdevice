@@ -26,7 +26,7 @@ func (q *Fifo[T]) Enqueue(value T) {
 
 	q.list.PushBack(value)
 
-	// when list gets too long; truncate first element
+	// when list gets too long, truncate the first element
 	if q.list.Len() > q.maxLength {
 		if elem := q.list.Front(); elem != nil {
 			q.list.Remove(elem)

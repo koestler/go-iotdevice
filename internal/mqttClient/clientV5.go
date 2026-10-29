@@ -41,7 +41,7 @@ func NewV5(
 		},
 	}
 
-	// setup logging
+	// set up logging
 	if cfg.LogDebug() {
 		prefix := fmt.Sprintf("mqttClientV5[%s]: ", cfg.Name())
 		client.cliCfg.Debug = logger{prefix: prefix + "debug: "}
@@ -55,7 +55,7 @@ func NewV5(
 		client.cliCfg.ConnectPassword = []byte(cfg.Password())
 	}
 
-	// setup client availability topic using will
+	// set up client availability topic using will
 	if mCfg := cfg.AvailabilityClient(); mCfg.Enabled() {
 		client.cliCfg.WillMessage = &paho.WillMessage{
 			Retain:  mCfg.Retain(),
@@ -78,7 +78,7 @@ func (c *ClientStruct) Run() {
 }
 
 func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Connack) {
-	return func(cm *autopaho.ConnectionManager, conack *paho.Connack) {
+	return func(cm *autopaho.ConnectionManager, connack *paho.Connack) {
 		log.Printf("mqttClientV5[%s]: connection is up", c.cfg.Name())
 
 		c.subscriptionsMutex.RLock()

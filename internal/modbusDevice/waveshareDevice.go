@@ -13,7 +13,7 @@ import (
 )
 
 func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, immediateError bool) {
-	log.Printf("device[%s]: start waveshare RTU Relay 8 source", c.Name())
+	log.Printf("waveshareDevice[%s]: start waveshare RTU Relay 8 source", c.Name())
 
 	// get software version
 	if version, err := WaveshareReadSoftwareRevision(c.modbus.WriteRead, c.modbusConfig.Address()); err != nil {

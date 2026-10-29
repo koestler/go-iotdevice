@@ -77,7 +77,7 @@ func convertListToRead[I convertable[O], O any](inp []I) (oup []O) {
 	return
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c HttpServerConfig) convertToRead() httpServerConfigRead {
 	frontendProxy := ""
 	if c.frontendProxy != nil {
@@ -97,7 +97,7 @@ func (c HttpServerConfig) convertToRead() httpServerConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c AuthenticationConfig) convertToRead() authenticationConfigRead {
 	jwtSecret := redact(string(c.jwtSecret))
 	return authenticationConfigRead{
@@ -107,7 +107,7 @@ func (c AuthenticationConfig) convertToRead() authenticationConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 	return mqttClientConfigRead{
 		Broker:          c.broker.String(),
@@ -139,14 +139,14 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c MqttClientDeviceConfig) convertToRead() mqttClientDeviceConfigRead {
 	return mqttClientDeviceConfigRead{
 		MqttTopics: c.mqttTopics,
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c MqttSectionConfig) convertToRead() mqttSectionConfigRead {
 	return mqttSectionConfigRead{
 		Enabled:       &c.enabled,
@@ -158,7 +158,7 @@ func (c MqttSectionConfig) convertToRead() mqttSectionConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c MqttDeviceSectionConfig) convertToRead() mqttDeviceSectionConfigRead {
 	rf := c.filter.convertToRead()
 	return mqttDeviceSectionConfigRead{
@@ -166,7 +166,7 @@ func (c MqttDeviceSectionConfig) convertToRead() mqttDeviceSectionConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c ModbusConfig) convertToRead() modbusConfigRead {
 	return modbusConfigRead{
 		Device:      c.device,
@@ -176,7 +176,7 @@ func (c ModbusConfig) convertToRead() modbusConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c DeviceConfig) convertToRead() deviceConfigRead {
 	return deviceConfigRead{
 		Filter:                    c.filter.convertToRead(),
@@ -187,7 +187,7 @@ func (c DeviceConfig) convertToRead() deviceConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 	return victronDeviceConfigRead{
 		deviceConfigRead: c.DeviceConfig.convertToRead(),
@@ -198,7 +198,7 @@ func (c VictronDeviceConfig) convertToRead() victronDeviceConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c ModbusDeviceConfig) convertToRead() modbusDeviceConfigRead {
 	return modbusDeviceConfigRead{
 		deviceConfigRead: c.DeviceConfig.convertToRead(),
@@ -216,7 +216,7 @@ func (c ModbusDeviceConfig) convertToRead() modbusDeviceConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c RelayConfig) convertToRead() relayConfigRead {
 	return relayConfigRead{
 		Description: &c.description,
@@ -225,7 +225,7 @@ func (c RelayConfig) convertToRead() relayConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c GpioDeviceConfig) convertToRead() gpioDeviceConfigRead {
 	return gpioDeviceConfigRead{
 		deviceConfigRead: c.DeviceConfig.convertToRead(),
@@ -238,7 +238,7 @@ func (c GpioDeviceConfig) convertToRead() gpioDeviceConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c PinConfig) convertToRead() pinConfigRead {
 	return pinConfigRead{
 		Pin:         c.pin,
@@ -248,7 +248,7 @@ func (c PinConfig) convertToRead() pinConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c HttpDeviceConfig) convertToRead() httpDeviceConfigRead {
 	return httpDeviceConfigRead{
 		deviceConfigRead: c.DeviceConfig.convertToRead(),
@@ -260,7 +260,7 @@ func (c HttpDeviceConfig) convertToRead() httpDeviceConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c MqttDeviceConfig) convertToRead() mqttDeviceConfigRead {
 	return mqttDeviceConfigRead{
 		deviceConfigRead: c.DeviceConfig.convertToRead(),
@@ -268,7 +268,7 @@ func (c MqttDeviceConfig) convertToRead() mqttDeviceConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c GensetDeviceConfig) convertToRead() gensetDeviceConfigRead {
 	return gensetDeviceConfigRead{
 		deviceConfigRead:         c.DeviceConfig.convertToRead(),
@@ -317,7 +317,7 @@ func (c GensetDeviceBindingsConfig) convertToRead() map[string]map[string]string
 	return oup
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c ViewConfig) convertToRead() viewConfigRead {
 	return viewConfigRead{
 		Name:         c.name,
@@ -329,7 +329,7 @@ func (c ViewConfig) convertToRead() viewConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c ViewDeviceConfig) convertToRead() viewDeviceConfigRead {
 	return viewDeviceConfigRead{
 		Name:   c.name,
@@ -338,7 +338,7 @@ func (c ViewDeviceConfig) convertToRead() viewDeviceConfigRead {
 	}
 }
 
-//lint:ignore U1000 linter does not catch that this is used generic code
+//lint:ignore U1000 linter does not catch that this is used in generic code
 func (c FilterConfig) convertToRead() filterConfigRead {
 	return filterConfigRead{
 		IncludeRegisters:  c.includeRegisters,

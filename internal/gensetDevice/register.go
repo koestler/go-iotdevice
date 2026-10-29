@@ -260,7 +260,7 @@ var InputRegisters1P = InputRegisters3P[:len(InputRegisters3P)-4]
 var StateRegister = dataflow.NewRegisterStruct(
 	"State",
 	"State",
-	"Controller State",
+	"Controller state",
 	dataflow.EnumRegister,
 	func(m map[genset.StateNode]string) map[int]string {
 		enum := make(map[int]string, len(m))
@@ -277,7 +277,7 @@ var StateRegister = dataflow.NewRegisterStruct(
 var StateChangedRegister = dataflow.NewRegisterStruct(
 	"State",
 	"StateChanged",
-	"Controller State Changed",
+	"Controller state changed",
 	dataflow.TextRegister,
 	nil,
 	"",
@@ -288,7 +288,7 @@ var StateChangedRegister = dataflow.NewRegisterStruct(
 var StateErrorTrigger = dataflow.NewRegisterStruct(
 	"State",
 	"StateErrorTrigger",
-	"Error Trigger",
+	"Error trigger",
 	dataflow.TextRegister,
 	nil,
 	"",

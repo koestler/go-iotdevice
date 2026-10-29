@@ -8,7 +8,7 @@ This tool reads values from various IoT devices like solar chargers directly con
 or relay boards connected by ethernet and publishes those on [MQTT](http://mqtt.org/) servers.
 
 Additionally, a REST- and websocket-API and a [web frontend](https://github.com/koestler/js-iotdevice)
-is made available via an internal http server.
+are made available via an internal http server.
 
 ![Device overview](https://raw.githubusercontent.com/koestler/go-iotdevice-docs/main/external-overview.png)
 
@@ -57,7 +57,7 @@ See [Devices](#devices) section on how to configure each.
 
 This project uses the following terminology:
 
-* **Device** refers to a physical unit like a solar charger, a relay board
+* **Device** refers to a physical unit like a solar charger, or a relay board.
 * A **Register** is a measurement or output that a device can have.
   E.g. "Battery Voltage" or "Relay 0". Each device can have multiple registers. For some devices the list
   of registers is simply defined by the type of device (e.g. Victron Energy MPPT 100 | 50) and for others it is configurable
@@ -99,9 +99,9 @@ sha256sum -c --ignore-missing SHA256SUMS
 sudo apt install ./go-iotdevice_<version>_<arch>.deb
 ```
 
-After the installation the service is enabled and running with a demo configuration (a simulated solar charger),
-the web interface is available at <http://127.0.0.1:8000/>.
-The service runs as the system user `go-iotdevice` which is member of the groups `dialout` (serial devices) and `gpio`.
+After the installation the service is enabled and running with a demo configuration (a simulated solar charger).
+The web interface is available at <http://127.0.0.1:8000/>.
+The service runs as the system user `go-iotdevice` which is a member of the groups `dialout` (serial devices) and `gpio`.
 
 Edit `/etc/go-iotdevice/config.yaml` (see `/usr/share/doc/go-iotdevice/full-config.yaml` for all options),
 validate and apply it:
@@ -167,7 +167,7 @@ cd /srv/dc/go-iotdevice
 curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/docker-compose.yml -o docker-compose.yml
 curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/config.yaml -o config.yaml
 
-# optional download the full and commented configuration file for reference 
+# optional: download the full and commented configuration file for reference 
 curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/full-config.yaml -o full-config.yaml
 # adapt config.yaml and configure devices
 
@@ -195,7 +195,7 @@ Also, the swagger documentation will be missing. See [Local Development](#Local-
 go install github.com/koestler/go-iotdevice/v3@latest
 curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/config.yaml -o config.yaml
 
-# optional download the full and commented configuration file for reference 
+# optional: download the full and commented configuration file for reference 
 curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/full-config.yaml -o full-config.yaml
 # adapt config.yaml and configure devices
 
@@ -235,7 +235,7 @@ VictronDevices:
     Device: /dev/serial/by-id/usb-VictronEnergy_BV_VE_Direct_cable_VEXXXXX-if00-port0
     # Device: Could also be /dev/ttyUSB0, make sure the device is present / accessible
     # connect the interface and use ls -la /dev/serial/by-id/ to see what devices are available
-    # Using directly a /dev/ttyUSB0 device can result in chaos after a reboot when multiple interfaces are connected 
+    # Using a /dev/ttyUSB0 device directly can result in chaos after a reboot when multiple interfaces are connected 
     Filter:
       # The tool does not know if you have an auxiliary battery connected. You might want to skip some unused registers.
       SkipRegisters:
@@ -265,7 +265,7 @@ Configuration:
 Modbus:
   bus0:
     Device: /dev/ttyACM0 # the serial device
-    BaudRate: 9600 # Choose a BaudRate supported by all connected devices, Often the BaudRate can be changed.
+    BaudRate: 9600 # Choose a BaudRate supported by all connected devices. Often the BaudRate can be changed.
 
 ModbusDevices:
   relay-board: # used for reference in the view section
@@ -358,7 +358,7 @@ MqttDevice.
 
 For the `GoIotdeviceV3` kind, you need to give it the Topic of the structure (see [Mqtt Interface Structure](#structure))
 message. This structure is then used to generate the list of registers and subscribe to the
-[Realtime](#realtime) and [Telemetry](#telemetry) messages. They work both at the same time.
+[Realtime](#realtime) and [Telemetry](#telemetry) messages. Both work at the same time.
 Additionally, if the [Command](#command) topic is available, it is used to control outputs.
 
 ```yaml
@@ -411,7 +411,7 @@ htpasswd auth.passwd daniela
 ```
 
 ### Nginx reverse proxy
-I normally run this service behind a [Nginx](https://nginx.org/en/) server configured as a reverse proxy. It can take care of:
+I normally run this service behind an [Nginx](https://nginx.org/en/) server configured as a reverse proxy. It can take care of:
  * Serving multiple different applications on the same address using [SNI](https://en.wikipedia.org/wiki/Server_Name_Indication).
  * Caching on a fast cloud server in front of a device connected via a slow mobile connection.
  * https termination
@@ -468,7 +468,7 @@ go-iotdevice/avail/go-iotdevice offline
 
 ### Availability of a device
 Whenever a device becomes connected/disconnected (serial connection established/lost) an `online`/`offline`
-message per device can be sent. However, MQTT only allows for one last will message. Therefore to reliably check if
+message per device can be sent. However, MQTT only allows for one last will message. Therefore, to reliably check if
 a device is available, both the availability message of the client and the device must be checked.
 
 Examples:
@@ -484,7 +484,7 @@ of registers as well as the topics for the availability, telemetry, real-time, a
 knows where to subscribe to get current values/control the outputs.
 
 Structure messages are sent whenever a register is added or changed by default (Interval=0s, on-update mode) with the retain
-flags set (the broker stores those messages for new clients).
+flag set (the broker stores those messages for new clients).
 Alternatively, it can also be sent repeatedly (Interval>0).
 
 Example:
@@ -568,13 +568,13 @@ mosquitto_pub -h 172.19.0.4 -t dev1/cmnd/dev0/R1 -m "{\"EnumIdx\": 1}"
 ```
 
 ### HomeassistantDiscovery
-These messages are such that Homeassistant automatically shows read-only registers as sensors and writable registers
+These messages are such that Home Assistant automatically shows read-only registers as sensors and writable registers
 as switches. See [Home Assistant MQTT](https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery).
 
 Discovery messages for sensors are only sent for devices/registers for which real-time messages are active because
 they are used to transmit the actual values. Switches are only advertised for registers for which the command topic is active. 
-Use filters in the Realtime and Command configuration section to restrict what devices/registers are shown in Homeassistant.
-Also, consider setting `Realtime->Interval=500ms`. Homeassistant can easily be overloaded by hundreds of registers.
+Use filters in the Realtime and Command configuration section to restrict what devices/registers are shown in Home Assistant.
+Also, consider setting `Realtime->Interval=500ms`. Home Assistant can easily be overloaded by hundreds of registers.
 
 Examples:
 ```
@@ -624,7 +624,7 @@ go build && ./go-iotdevice
 ```
 
 ### Compile and run inside docker
-Alternatively, if you don't have Golang installed locally, you can compile and run 
+Alternatively, if you don't have Golang installed locally, you can compile and run it inside Docker:
 
 ```bash
 # versions are pinned in the env: section of .github/workflows/docker-image.yml
@@ -777,10 +777,10 @@ MqttClients:                                               # optional, when empt
             DefaultInclude: False                          # optional, default true, whether to return the registers that do not match any include/skip rule
 
     HomeassistantDiscovery:
-      Enabled: true                                        # optional, default false, whether to enable sending homeassistant auto-discovery messages
-      TopicTemplate: 'homeassistant/%Component%/%NodeId%/%ObjectId%/config' # optional, default as shown, topic to use for homeassistant discovery messages
+      Enabled: true                                        # optional, default false, whether to enable sending Home Assistant auto-discovery messages
+      TopicTemplate: 'homeassistant/%Component%/%NodeId%/%ObjectId%/config' # optional, default as shown, topic to use for Home Assistant discovery messages
       Interval: 0s                                         # optional, default 0, 0 means on-update mode: sent whenever a register is added or changed, otherwise the discovery messages are repeated after this interval (useful when retain is false)
-      Retain: false                                        # optional, default false, the mqtt retain flag for homeassistant discovery messages
+      Retain: false                                        # optional, default false, the mqtt retain flag for Home Assistant discovery messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices, etc. sections
@@ -815,7 +815,7 @@ MqttClients:                                               # optional, when empt
 Modbus:                                                    # optional, when empty, no modbus handler is started
   bus0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Device: /dev/ttyACM0                                   # mandatory, the RS485 serial device
-    BaudRate: 4800                                         # mandatory, eg. 9600
+    BaudRate: 4800                                         # mandatory, e.g. 9600
     ReadTimeout: 100ms                                     # optional, default 100ms, how long to wait for a response
     LogDebug: false                                        # optional, default false, verbose debug log
 
@@ -840,7 +840,7 @@ VictronDevices:                                            # optional, a list of
     LogDebug: false                                        # optional, default false, enable debug log output
     LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
 
-ModbusDevices:                                             # optional, a list of devices connected via ModBus
+ModbusDevices:                                             # optional, a list of devices connected via Modbus
   modbus-rtu0:                                             # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Bus: bus0                                              # mandatory, the identifier of the modbus to use
     Kind: WaveshareRtuRelay8                               # mandatory, type/model of the device; possibilities: WaveshareRtuRelay8, Finder7M38

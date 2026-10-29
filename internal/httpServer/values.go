@@ -18,7 +18,7 @@ type values1DResponse map[string]valueResponse
 // @Param viewName path string true "View name as provided by the config endpoint"
 // @Param deviceName path string true "Device name as provided in devices array of the config endpoint"
 // @Produce json
-// @success 200 {object} values1DResponse
+// @Success 200 {object} values1DResponse
 // @Failure 404 {object} ErrorResponse
 // @Router /views/{viewName}/devices/{deviceName}/values [get]
 // @Security ApiKeyAuth
@@ -56,7 +56,7 @@ func valuesGetJsonHandler(env *Environment, view ViewConfig, filter dataflow.Val
 // @Param viewName path string true "View name as provided by the config endpoint"
 // @Param deviceName path string true "Device name as provided in devices array of the config endpoint"
 // @Produce json
-// @success 200
+// @Success 200
 // @Failure 404 {object} ErrorResponse
 // @Router /views/{viewName}/devices/{deviceName}/values [patch]
 // @Security ApiKeyAuth
@@ -109,7 +109,7 @@ func valuesPatchHandler(env *Environment, view ViewConfig, deviceName string, fi
 			}
 
 			invalidType := func(t string) {
-				jsonErrorResponse(w, http.StatusUnprocessableEntity, fmt.Errorf("expect type of %s to be a %s", registerName, t))
+				jsonErrorResponse(w, http.StatusUnprocessableEntity, fmt.Errorf("expected type of %s to be a %s", registerName, t))
 			}
 
 			switch register.RegisterType() {

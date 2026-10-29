@@ -1035,7 +1035,7 @@ func TestController1P(t *testing.T) {
 		})
 	})
 
-	t.Run("immediateStatechange", func(t *testing.T) {
+	t.Run("immediateStateChange", func(t *testing.T) {
 		initialState := genset.EngineCoolDown
 		initialInputs := genset.Inputs{
 			Time:            t0,

@@ -26,14 +26,14 @@ const RegistersExpires = 10 * time.Second
 // setupRegisters godoc
 // @Summary List registers
 // @Description Outputs information about all the available registers (not the current values) of the given device.
-// @Description Depending on the device model (bmv, bluesolar) a different set of registers are available.
+// @Description Depending on the device model (bmv, bluesolar) a different set of registers is available.
 // @Description On some devices (e.g. TCW241), the registers are even dynamic and configurable on the device.
 // @Description This endpoint outputs a list of fields including a name, a unit and a datatype.
 // @ID registers
 // @Param viewName path string true "View name as provided by the config endpoint"
 // @Param deviceName path string true "Device name as provided in devices array of the config endpoint"
 // @Produce json
-// @success 200 {array} registerResponse
+// @Success 200 {array} registerResponse
 // @Failure 404 {object} ErrorResponse
 // @Router /views/{viewName}/devices/{deviceName}/registers [get]
 // @Security ApiKeyAuth

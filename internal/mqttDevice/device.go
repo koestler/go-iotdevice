@@ -90,7 +90,7 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 					log.Printf("mqttDevice[%s]->mqttClient[%s]: new struct received: %v", c.Name(), mc.Name(), structMessage)
 				}
 
-				// do not block the current go routine of the router and continue in a separate go routine
+				// do not block the current goroutine of the router and continue in a separate goroutine
 				go func() {
 					if !c.subscriptionSetup.Load() {
 						c.subscriptionSetup.Store(true)
@@ -145,7 +145,7 @@ func (c *DeviceStruct) updateRegisters(registers []mqttForwarders.StructRegister
 }
 
 func (c *DeviceStruct) setupAvailabilitySubscription(mc mqttClient.Client, availabilityTopics []string) {
-	numbAvail := len(availabilityTopics)
+	numAvail := len(availabilityTopics)
 
 	for _, topic := range availabilityTopics {
 		if c.Config().LogDebug() {
@@ -166,7 +166,7 @@ func (c *DeviceStruct) setupAvailabilitySubscription(mc mqttClient.Client, avail
 				return s == "online"
 			}(string(m.Payload()))
 
-			c.SetAvailable(countTrue(c.avail) == numbAvail)
+			c.SetAvailable(countTrue(c.avail) == numAvail)
 		})
 	}
 }

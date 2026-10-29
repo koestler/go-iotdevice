@@ -2,13 +2,13 @@
 
 ## 4.0.0
 * update install docs
-* fixed various spelling and grammer issues in docs and code
+* fixed various spelling and grammar issues in docs and code
 * restructure go code in the repository, be explicit which packages are internal
 * drop mem / cpu profile to disk options (should be served via an http metric endpoint instead)
 * initial logging of config: redact secrets
 * bugfixes:
   * httpServer: honor LogRequests config variable
-  * fix two race two dead-lock conditions in the command and value storage, that happen when devices are closed
+  * fix two race and two deadlock conditions in the command and value storage that happen when devices are closed
   * fix various error messages and logging
   * config: do not panic when an MQTT device is referenced that does not exist
   * genset: fix bug that caused too many registers to be controllable
@@ -25,7 +25,7 @@
 * Finder 7M38: update and slightly fix register definitions using the newest datasheet
 * remove jsoniter and use stdlib (prefer smaller binary over slightly less cpu time)
 
-## 3.13.0 
+## 3.13.0
 * config: make docs path configurable via `HttpServer->DocsPath`
 * add debian packaging
 
@@ -57,7 +57,7 @@
 ## 3.8.0
 * genset: add stabilizing state between cranking and warm up.
   This allows the frequency / voltage to go out of the defined tolerance for a short time after cranking.
-* Genset: add ErrTrigger state variable
+* genset: add ErrTrigger state variable
 
 ## 3.7.2
 * bump go-victron to v0.2.1:
@@ -74,7 +74,7 @@
 * upgrade from golang-jwt/jwt to golang-jwt/jwt/v5
 * refactor websocket server
   * remove unused "op" in output Message
-  * simplify send timer and send messages (if available) in fixed intervals for 250ms
+  * simplify send timer and send messages (if available) at fixed intervals of 250 ms
   * add a send timeout of 5s for websocket messages
   * really make sure that the ws sender never stalls the state storage
 * tests: remove dependency on google/go-cmp
@@ -94,8 +94,8 @@
 ## 3.5.0
 * Add gpio device
 
-## v3.4.0
+## 3.4.0
 * Add prototype of new generator set device.
 * Fix a bug with VE.Direct solar chargers with Panel current 10A/15A/20A. Now they are working with default configuration.
-  Before, they run into an error because the Panel current register does not exist.
+  Before, they ran into an error because the Panel current register does not exist.
 * Bump various dependencies.
