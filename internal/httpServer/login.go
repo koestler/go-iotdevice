@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"errors"
 	"github.com/tg123/go-htpasswd"
-	"golang.org/x/sync/semaphore"
 )
 
 type loginRequest struct {
@@ -55,6 +55,7 @@ func setupLogin(mux *http.ServeMux, env *Environment) {
 }
 
 func loginHandler(env *Environment, authChecker *htpasswd.File) http.HandlerFunc {
+	reloader := &authReloader{file: authChecker, config: env.Config}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req loginRequest
 		if err := decodeJsonBody(w, r, &req); err != nil {
@@ -62,7 +63,7 @@ func loginHandler(env *Environment, authChecker *htpasswd.File) http.HandlerFunc
 			return
 		}
 
-		reloadAuthChecker(authChecker, env.Config)
+		reloader.reload()
 		if !authChecker.Match(req.User, req.Password) {
 			jsonErrorResponse(w, http.StatusUnauthorized, errors.New("invalid credentials"))
 			return
@@ -99,32 +100,37 @@ func disableLogin(mux *http.ServeMux, config Config) {
 	}
 }
 
-var sem = semaphore.NewWeighted(1)
-var lastAuthReload time.Time
+type authReloader struct {
+	file   *htpasswd.File
+	config Config
 
-func reloadAuthChecker(file *htpasswd.File, config Config) {
+	mu         sync.Mutex
+	lastReload time.Time
+}
+
+func (r *authReloader) reload() {
 	// make sure this code runs only one at a time
-	if !sem.TryAcquire(1) {
+	if !r.mu.TryLock() {
 		return
 	}
-	defer sem.Release(1)
+	defer r.mu.Unlock()
 
 	// make sure reload happens no more than once a second
 	now := time.Now()
-	if lastAuthReload.Add(time.Second).After(now) {
+	if r.lastReload.Add(time.Second).After(now) {
 		return
 	}
-	lastAuthReload = now
+	r.lastReload = now
 
 	// reload the file
-	err := file.Reload(func(err error) {
+	err := r.file.Reload(func(err error) {
 		log.Printf("httpServer: login: error while reading htaccess file line: %s", err)
 	})
 	if err != nil {
 		log.Printf("httpServer: login: error while reading htaccess file: %s", err)
 	}
 
-	if config.LogDebug() {
+	if r.config.LogDebug() {
 		log.Printf("httpServer: login: authentication file reloaded")
 	}
 }
