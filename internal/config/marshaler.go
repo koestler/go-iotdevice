@@ -17,7 +17,7 @@ func redact(secret string) string {
 	return redactedValue
 }
 
-func (c Config) MarshalYAML() (interface{}, error) {
+func (c Config) MarshalYAML() (any, error) {
 	return configRead{
 		Version:                &c.version,
 		ProjectTitle:           c.projectTitle,

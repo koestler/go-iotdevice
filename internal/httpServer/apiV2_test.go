@@ -610,7 +610,7 @@ func TestValuesPatchEndpoint(t *testing.T) {
 	token := setupToken(t, env)
 
 	t.Run("okPublic", func(t *testing.T) {
-		patchData := map[string]interface{}{
+		patchData := map[string]any{
 			"Setpoint": 22.0,
 		}
 		body, _ := json.Marshal(patchData)
@@ -624,7 +624,7 @@ func TestValuesPatchEndpoint(t *testing.T) {
 	})
 
 	t.Run("ForbiddenWithoutAuth", func(t *testing.T) {
-		patchData := map[string]interface{}{
+		patchData := map[string]any{
 			"Setpoint": 22.0,
 		}
 		body, _ := json.Marshal(patchData)
@@ -637,7 +637,7 @@ func TestValuesPatchEndpoint(t *testing.T) {
 	})
 
 	t.Run("nonWritableRegister", func(t *testing.T) {
-		patchData := map[string]interface{}{
+		patchData := map[string]any{
 			"Temperature": 22.0,
 		}
 		body, _ := json.Marshal(patchData)
@@ -660,7 +660,7 @@ func TestValuesPatchEndpoint(t *testing.T) {
 	})
 
 	t.Run("InvalidRegister", func(t *testing.T) {
-		patchData := map[string]interface{}{
+		patchData := map[string]any{
 			"NonexistentRegister": 42.0,
 		}
 		body, _ := json.Marshal(patchData)
@@ -674,7 +674,7 @@ func TestValuesPatchEndpoint(t *testing.T) {
 	})
 
 	t.Run("NonexistentDevice", func(t *testing.T) {
-		patchData := map[string]interface{}{
+		patchData := map[string]any{
 			"Setpoint": 22.0,
 		}
 		body, _ := json.Marshal(patchData)

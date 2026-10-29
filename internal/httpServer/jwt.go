@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"errors"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -15,11 +16,12 @@ type jwtClaims struct {
 }
 
 func createJwtToken(config AuthenticationConfig, user string) (tokenStr string, err error) {
+	n := time.Now()
 	claims := &jwtClaims{
 		User: user,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(config.JwtValidityPeriod())),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(n.Add(config.JwtValidityPeriod())),
+			IssuedAt:  jwt.NewNumericDate(n),
 		},
 	}
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -47,7 +49,7 @@ func authJwtMiddleware(env *Environment, next http.HandlerFunc) http.HandlerFunc
 func checkToken(tokenStr string, jwtSecret []byte) (user string, err error) {
 	// decode jwt token
 	claims := &jwtClaims{}
-	tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+	tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (any, error) {
 		return jwtSecret, nil
 	})
 	if err != nil {

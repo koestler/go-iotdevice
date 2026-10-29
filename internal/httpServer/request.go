@@ -9,7 +9,7 @@ import (
 const maxRequestBodyBytes = 1 << 16 // 64 KiB
 
 // decodeJsonBody decodes the request body into v and rejects bodies larger than maxRequestBodyBytes.
-func decodeJsonBody(w http.ResponseWriter, r *http.Request, v interface{}) error {
+func decodeJsonBody(w http.ResponseWriter, r *http.Request, v any) error {
 	return json.NewDecoder(http.MaxBytesReader(w, r.Body, maxRequestBodyBytes)).Decode(v)
 }
 

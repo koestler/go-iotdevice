@@ -170,7 +170,7 @@ func publishHomeassistantDiscoveryMessage(
 	mCfg := cfg.HomeassistantDiscovery()
 
 	var topic string
-	var msg interface{}
+	var msg any
 
 	switch register.RegisterType() {
 	case dataflow.NumberRegister:

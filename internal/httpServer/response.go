@@ -47,7 +47,7 @@ func sendNotModified(w http.ResponseWriter, r *http.Request, etag string) (sent 
 	return false
 }
 
-func jsonGetResponse(w http.ResponseWriter, r *http.Request, obj interface{}) {
+func jsonGetResponse(w http.ResponseWriter, r *http.Request, obj any) {
 	jsonBytes, err := json.Marshal(obj)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func (md *ModbusStruct) debugPrintf(format string, v ...interface{}) {
+func (md *ModbusStruct) debugPrintf(format string, v ...any) {
 	// check if debug output is enabled
 	if !md.cfg.LogDebug() {
 		return

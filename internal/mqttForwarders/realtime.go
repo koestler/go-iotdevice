@@ -138,7 +138,7 @@ func publishRealtimeMessage(cfg Config, mc mqttClient.Client, devName string, va
 	}
 }
 
-func convertValueToRealtimeMessage(value dataflow.Value) interface{} {
+func convertValueToRealtimeMessage(value dataflow.Value) any {
 	ret := RealtimeMessage{}
 
 	if numeric, ok := value.(dataflow.NumericRegisterValue); ok {

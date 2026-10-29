@@ -9,7 +9,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
-type valueResponse interface{}
+type valueResponse any
 type values1DResponse map[string]valueResponse
 
 // setupValuesGetJson godoc
@@ -88,7 +88,7 @@ func valuesPatchHandler(env *Environment, view ViewConfig, deviceName string, fi
 			return
 		}
 
-		var req map[string]interface{}
+		var req map[string]any
 		if err := decodeJsonBody(w, r, &req); err != nil {
 			respondInvalidBody(w, err)
 			return

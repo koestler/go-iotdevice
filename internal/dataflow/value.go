@@ -6,7 +6,7 @@ type Value interface {
 	DeviceName() string
 	Register() Register
 	String() string
-	GenericValue() interface{}
+	GenericValue() any
 	Equals(comp Value) bool
 }
 
@@ -36,7 +36,7 @@ func (v NumericRegisterValue) Value() float64 {
 	return v.value
 }
 
-func (v NumericRegisterValue) GenericValue() interface{} {
+func (v NumericRegisterValue) GenericValue() any {
 	return v.value
 }
 
@@ -71,7 +71,7 @@ func (v TextRegisterValue) Value() string {
 	return v.value
 }
 
-func (v TextRegisterValue) GenericValue() interface{} {
+func (v TextRegisterValue) GenericValue() any {
 	return v.value
 }
 
@@ -116,7 +116,7 @@ func (v EnumRegisterValue) EnumIdx() int {
 	return v.value
 }
 
-func (v EnumRegisterValue) GenericValue() interface{} {
+func (v EnumRegisterValue) GenericValue() any {
 	return v.value
 }
 
@@ -146,7 +146,7 @@ func (v NullRegisterValue) String() string {
 	return "NULL"
 }
 
-func (v NullRegisterValue) GenericValue() interface{} {
+func (v NullRegisterValue) GenericValue() any {
 	return nil
 }
 
