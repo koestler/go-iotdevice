@@ -32,7 +32,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" GOARM="$GOARM" go build -trimpath \
     -o "dist/$ARCH/go-iotdevice"
 
 # frontend
-rm -rf dist/frontend-build dist/frontend-*.stamp
+rm -rf dist/frontend-build
 mkdir -p dist/frontend-build dist/frontend-download
 base="https://github.com/koestler/js-iotdevice/releases/download/$FRONTEND_VERSION"
 tarball="js-iotdevice-$FRONTEND_VERSION.tar.gz"

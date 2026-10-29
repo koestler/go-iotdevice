@@ -4,10 +4,12 @@ ARG SWAG_VERSION=v1.16.6
 ARG FRONTEND_VERSION=v2.4.1
 
 # build backend
-FROM golang:${GO_VERSION}-alpine AS go-builder
+FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine AS go-builder
 ARG SWAG_VERSION
+ARG TARGETARCH
+ARG TARGETVARIANT
 
-RUN apk add build-base git npm
+RUN apk add git npm
 
 WORKDIR /app
 COPY . /app
@@ -17,11 +19,10 @@ ENV GOOS=linux
 
 RUN go install github.com/swaggo/swag/cmd/swag@${SWAG_VERSION}
 RUN go generate docs.go
-RUN  ./build.sh
+RUN GOARCH=$TARGETARCH GOARM=${TARGETVARIANT#v} ./build.sh
 
 # used to generate /etc/passwd /etc/group
 RUN addgroup -S app && adduser -S app -G app
-RUN chown app:app /app/go-iotdevice
 
 # add gpio group
 RUN addgroup -g 993 gpio
