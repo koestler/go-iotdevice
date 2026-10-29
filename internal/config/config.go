@@ -249,7 +249,7 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 		if parseError == nil {
 			ret.frontendProxy = u
 		} else {
-			err = append(err, fmt.Errorf("HttpServer->FrontendProxy must not be empty (=disabled) or a valid URL, err: %s", parseError))
+			err = append(err, fmt.Errorf("HttpServer->FrontendProxy must be empty (=disabled) or a valid URL, err: %s", parseError))
 		}
 	}
 
@@ -271,7 +271,7 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 	} else if frontendExpires, e := time.ParseDuration(c.FrontendExpires); e != nil {
 		err = append(err, fmt.Errorf("HttpServer->FrontendExpires='%s' parse error: %s", c.FrontendExpires, e))
 	} else if frontendExpires < 0 {
-		err = append(err, fmt.Errorf("HttpServer->FrontendExpires='%s' must be positive", c.FrontendExpires))
+		err = append(err, fmt.Errorf("HttpServer->FrontendExpires='%s' must not be negative", c.FrontendExpires))
 	} else {
 		ret.frontendExpires = frontendExpires
 	}
@@ -282,7 +282,7 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 	} else if configExpires, e := time.ParseDuration(c.ConfigExpires); e != nil {
 		err = append(err, fmt.Errorf("HttpServer->ConfigExpires='%s' parse error: %s", c.ConfigExpires, e))
 	} else if configExpires < 0 {
-		err = append(err, fmt.Errorf("HttpServer->ConfigExpires='%s' must be positive", c.ConfigExpires))
+		err = append(err, fmt.Errorf("HttpServer->ConfigExpires='%s' must not be negative", c.ConfigExpires))
 	} else {
 		ret.configExpires = configExpires
 	}
@@ -312,7 +312,7 @@ func (c *authenticationConfigRead) TransformAndValidate(bypassFileCheck bool) (r
 
 	if c.JwtSecret != nil {
 		if len(*c.JwtSecret) < 32 {
-			err = append(err, fmt.Errorf("Authentication->JwtSecret must be empty or >= 32 chars"))
+			err = append(err, fmt.Errorf("Authentication->JwtSecret must be omitted or >= 32 chars"))
 		} else {
 			ret.jwtSecret = []byte(*c.JwtSecret)
 		}
@@ -325,7 +325,7 @@ func (c *authenticationConfigRead) TransformAndValidate(bypassFileCheck bool) (r
 			c.JwtValidityPeriod, e,
 		))
 	} else if authJwtValidityPeriod < 0 {
-		err = append(err, fmt.Errorf("Authentication->JwtValidityPeriod='%s' must be positive",
+		err = append(err, fmt.Errorf("Authentication->JwtValidityPeriod='%s' must not be negative",
 			c.JwtValidityPeriod,
 		))
 	} else {
@@ -385,7 +385,7 @@ func (c mqttClientConfigRead) TransformAndValidate(
 	} else if *c.ProtocolVersion == 5 {
 		ret.protocolVersion = *c.ProtocolVersion
 	} else {
-		err = append(err, fmt.Errorf("%s->Protocol=%d but must be 5 (3 is not supported anymore)", errPrefix, *c.ProtocolVersion))
+		err = append(err, fmt.Errorf("%s->ProtocolVersion=%d but must be 5 (3 is not supported anymore)", errPrefix, *c.ProtocolVersion))
 	}
 
 	if c.ClientId == nil {
@@ -760,22 +760,22 @@ func (c modbusConfigRead) TransformAndValidate(name string) (ret ModbusConfig, e
 	}
 
 	if len(c.Device) < 1 {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->Device must not be empty", name))
+		err = append(err, fmt.Errorf("Modbus->%s->Device must not be empty", name))
 	}
 
 	if c.BaudRate < 1 {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->BaudRate must be positive", name))
+		err = append(err, fmt.Errorf("Modbus->%s->BaudRate must be positive", name))
 	}
 
 	if len(c.ReadTimeout) < 1 {
 		// use default 100ms
 		ret.readTimeout = 100 * time.Millisecond
 	} else if readTimeout, e := time.ParseDuration(c.ReadTimeout); e != nil {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->ReadTimeout='%s' parse error: %s",
+		err = append(err, fmt.Errorf("Modbus->%s->ReadTimeout='%s' parse error: %s",
 			name, c.ReadTimeout, e,
 		))
 	} else if readTimeout < time.Millisecond {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->ReadTimeout='%s' must be >=1ms",
+		err = append(err, fmt.Errorf("Modbus->%s->ReadTimeout='%s' must be >=1ms",
 			name, c.ReadTimeout,
 		))
 	} else {
@@ -925,11 +925,11 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 		// use default 1s
 		ret.pollInterval = time.Second
 	} else if pollInterval, e := time.ParseDuration(c.PollInterval); e != nil {
-		err = append(err, fmt.Errorf("HttpDevices->%s->PollInterval='%s' parse error: %s",
+		err = append(err, fmt.Errorf("ModbusDevices->%s->PollInterval='%s' parse error: %s",
 			name, c.PollInterval, e,
 		))
 	} else if pollInterval < time.Millisecond {
-		err = append(err, fmt.Errorf("HttpDevices->%s->PollInterval='%s' must be >=1ms",
+		err = append(err, fmt.Errorf("ModbusDevices->%s->PollInterval='%s' must be >=1ms",
 			name, c.PollInterval,
 		))
 	} else {
@@ -1143,7 +1143,7 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 
 	if ret.warmUpMinTime > ret.warmUpTimeout {
 		err = append(err, fmt.Errorf("GensetDevices->%s->WarmUpMinTime='%s' must be less than or equal to WarmUpTimeout='%s'",
-			name, c.WarmUpMinTime, c.WarmUpTimeout,
+			name, ret.warmUpMinTime, ret.warmUpTimeout,
 		))
 	}
 
@@ -1161,7 +1161,7 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 
 	if ret.engineCoolDownMinTime > ret.engineCoolDownTimeout {
 		err = append(err, fmt.Errorf("GensetDevices->%s->EngineCoolDownMinTime='%s' must be less than or equal to EngineCoolDownTimeout='%s'",
-			name, c.EngineCoolDownMinTime, c.EngineCoolDownTimeout,
+			name, ret.engineCoolDownMinTime, ret.engineCoolDownTimeout,
 		))
 	}
 
@@ -1179,7 +1179,7 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 
 	if ret.enclosureCoolDownMinTime > ret.enclosureCoolDownTimeout {
 		err = append(err, fmt.Errorf("GensetDevices->%s->EnclosureCoolDownMinTime='%s' must be less than or equal to EnclosureCoolDownTimeout='%s'",
-			name, c.EnclosureCoolDownMinTime, c.EnclosureCoolDownTimeout,
+			name, ret.enclosureCoolDownMinTime, ret.enclosureCoolDownTimeout,
 		))
 	}
 
