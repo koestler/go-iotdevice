@@ -5,6 +5,7 @@
 * fixed various spelling and grammer issues in docs and code
 * restructure go code in the repository, be explicit which packages are internal
 * drop mem / cpu profile to disk options (should be served via an http metric endpoint instead)
+* initial logging of config: redact secrets
 * bugfixes:
   * fix two race two dead-lock conditions in the command and value storage, that happen when devices are closed
   * fix various error messages and logging

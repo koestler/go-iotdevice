@@ -7,6 +7,16 @@ import (
 	"slices"
 )
 
+const redactedValue = "<REDACTED>"
+
+// redact hides non-empty secrets in the printed config.
+func redact(secret string) string {
+	if secret == "" {
+		return ""
+	}
+	return redactedValue
+}
+
 func (c Config) MarshalYAML() (interface{}, error) {
 	return configRead{
 		Version:                &c.version,
@@ -89,7 +99,7 @@ func (c HttpServerConfig) convertToRead() httpServerConfigRead {
 
 //lint:ignore U1000 linter does not catch that this is used generic code
 func (c AuthenticationConfig) convertToRead() authenticationConfigRead {
-	jwtSecret := string(c.jwtSecret)
+	jwtSecret := redact(string(c.jwtSecret))
 	return authenticationConfigRead{
 		JwtSecret:         &jwtSecret,
 		JwtValidityPeriod: c.jwtValidityPeriod.String(),
@@ -104,7 +114,7 @@ func (c MqttClientConfig) convertToRead() mqttClientConfigRead {
 		ProtocolVersion: &c.protocolVersion,
 
 		User:     c.user,
-		Password: c.password,
+		Password: redact(c.password),
 		ClientId: &c.clientId,
 
 		KeepAlive:         c.keepAlive.String(),
@@ -245,7 +255,7 @@ func (c HttpDeviceConfig) convertToRead() httpDeviceConfigRead {
 		Url:              c.url.String(),
 		Kind:             c.kind.String(),
 		Username:         c.username,
-		Password:         c.password,
+		Password:         redact(c.password),
 		PollInterval:     c.pollInterval.String(),
 	}
 }
