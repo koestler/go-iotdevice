@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"errors"
+
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
@@ -129,12 +130,17 @@ func valuesPatchHandler(env *Environment, view ViewConfig, deviceName string, fi
 				}
 
 			case dataflow.EnumRegister:
-				if v, ok := value.(float64); ok {
-					inputs = append(inputs, dataflow.NewEnumRegisterValue(deviceName, register, int(v)))
-				} else {
+				v, ok := value.(float64)
+				if !ok {
 					invalidType("number (enum index)")
 					return
 				}
+				idx := int(v)
+				if _, ok := register.Enum()[idx]; !ok {
+					jsonErrorResponse(w, http.StatusUnprocessableEntity, fmt.Errorf("invalid enum index %d for %s", idx, registerName))
+					return
+				}
+				inputs = append(inputs, dataflow.NewEnumRegisterValue(deviceName, register, idx))
 			}
 		}
 

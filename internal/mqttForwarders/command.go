@@ -91,6 +91,10 @@ func setupCommandSubscription(
 			}
 		case dataflow.EnumRegister:
 			if v := msg.EnumIdx; v != nil {
+				if _, ok := register.Enum()[*v]; !ok {
+					log.Printf("mqttDevice[%s]->mqttClient[%s]->command: invalid enum index %d for register %s", mc.Name(), dev.Name(), *v, register.Name())
+					return
+				}
 				rv := dataflow.NewEnumRegisterValue(deviceName, register, *v)
 				commandStorage.Fill(rv)
 				if logDebug {
