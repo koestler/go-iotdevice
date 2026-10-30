@@ -32,11 +32,16 @@ docker run --platform="$PLATFORM" -d --name "$NAME" --privileged --cgroupns=host
 run() { docker exec "$NAME" bash -euxc "$1"; }
 
 # wait for systemd
+ready=0
 for _ in $(seq 1 30); do
     state=$(docker exec "$NAME" systemctl is-system-running 2>/dev/null || true)
-    case "$state" in running|degraded) break ;; esac
+    case "$state" in running|degraded) ready=1; break ;; esac
     sleep 1
 done
+if [ "$ready" != 1 ]; then
+    echo "systemd did not become ready within 30s (state: ${state:-unknown})" >&2
+    exit 1
+fi
 
 run 'apt-get update -qq && apt-get install -y -qq curl ca-certificates >/dev/null'
 
