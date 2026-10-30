@@ -9,7 +9,6 @@ Type=simple
 WorkingDirectory=/usr/share/go-iotdevice
 User=go-iotdevice
 Group=go-iotdevice
-ExecStartPre=/usr/bin/go-iotdevice --dry-run -c /etc/go-iotdevice/config.yaml
 ExecStart=/usr/bin/go-iotdevice -c /etc/go-iotdevice/config.yaml
 Restart=on-failure
 # exit code 2 = invalid config (ExitDueToConfig); restarting cannot fix it
