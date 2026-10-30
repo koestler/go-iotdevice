@@ -14,13 +14,14 @@ func CreateMatcherSingleVariable(topicTemplate, variablePlaceholder string) (mat
 	// create regexp to match against
 	regNameExpr := "([^\\/]+)"
 
-	if !strings.Contains(topicTemplate, variablePlaceholder) {
+	before, after, found := strings.Cut(topicTemplate, variablePlaceholder)
+	if !found || variablePlaceholder == "" {
 		err = fmt.Errorf("cannot find variablePlaceholder='%s' in topic='%s'", variablePlaceholder, topicTemplate)
 		return
 	}
 
 	// must not have anything before / after
-	expr := "^" + strings.Replace(regexp.QuoteMeta(topicTemplate), variablePlaceholder, regNameExpr, 1) + "$"
+	expr := "^" + regexp.QuoteMeta(before) + regNameExpr + regexp.QuoteMeta(after) + "$"
 
 	if m, e := regexp.Compile(expr); e != nil {
 		err = fmt.Errorf("cannot compile regexp: %s", e)
