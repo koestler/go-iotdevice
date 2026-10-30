@@ -1,6 +1,6 @@
 go-iotdevice
 *.passwd
-config.yaml
+/config.yaml
 docs/
 frontend-build/
 dist/
