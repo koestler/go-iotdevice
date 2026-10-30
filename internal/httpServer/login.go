@@ -128,6 +128,7 @@ func (r *authReloader) reload() {
 	})
 	if err != nil {
 		log.Printf("httpServer: login: error while reading htaccess file: %s", err)
+		return
 	}
 
 	if r.config.LogDebug() {
