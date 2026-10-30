@@ -1122,6 +1122,11 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 
 	ret.inputBindings, e = c.InputBindings.TransformAndValidate(devices)
 	err = append(err, e...)
+	for _, b := range ret.inputBindings {
+		if !isValidGensetInputName(b.name) {
+			err = append(err, fmt.Errorf("GensetDevices->%s->InputBindings: unknown input name '%s'", name, b.name))
+		}
+	}
 
 	ret.outputBindings, e = c.OutputBindings.TransformAndValidate(devices)
 	err = append(err, e...)
@@ -1294,6 +1299,19 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 	}
 
 	return
+}
+
+// isValidGensetInputName reports whether name is accepted by gensetDevice inpSetter; keep both in sync.
+func isValidGensetInputName(name string) bool {
+	switch name {
+	case "ArmSwitch", "ArmSwitchRO", "CommandSwitch", "CommandSwitchRO",
+		"ResetSwitch", "ResetSwitchRO", "IOAvailable", "FireDetected",
+		"EngineTemp", "AuxTemp0", "AuxTemp1", "OutputAvailable",
+		"U1", "U2", "U3", "P1", "P2", "P3", "F":
+		return true
+	default:
+		return false
+	}
 }
 
 func (c gensetDeviceBindingConfigRead) TransformAndValidate(devices []DeviceConfig) (ret []GensetDeviceBindingConfig, err []error) {

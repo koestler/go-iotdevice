@@ -6,6 +6,7 @@
 * restructure go code in the repository, be explicit which packages are internal
 * drop mem / cpu profile to disk options (should be served via an http metric endpoint instead)
 * initial logging of config: redact secrets
+* genset: report invalid input bindings during the config check
 * bugfixes:
   * httpServer: honor LogRequests config variable
   * fix two race and two deadlock conditions in the command and value storage that happen when devices are closed

@@ -147,17 +147,32 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	}()
 
 	// bind inputs
-	for _, b := range d.gensetConfig.InputBindings() {
-		deviceName := b.DeviceName()
-		registerName := b.RegisterName()
-		sub := d.StateStorage().SubscribeSendInitial(runCtx, func(v dataflow.Value) bool {
-			return v.DeviceName() == deviceName && v.Register().Name() == registerName
-		})
-
+	// resolve all setters first so that an error cannot leave running subscriptions behind
+	inputBindings := d.gensetConfig.InputBindings()
+	inputSetters := make([]func(*genset.Controller, dataflow.Value), len(inputBindings))
+	for i, b := range inputBindings {
 		setter, err := d.inpSetter(b.Name())
 		if err != nil {
 			return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", dName, err), true
 		}
+		inputSetters[i] = setter
+	}
+	commandSetters := make([]func(*genset.Controller, dataflow.Value), len(commandRegisters))
+	for i, r := range commandRegisters {
+		setter, err := d.inpSetter(r.Name())
+		if err != nil {
+			return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", dName, err), true
+		}
+		commandSetters[i] = setter
+	}
+
+	for i, b := range inputBindings {
+		deviceName := b.DeviceName()
+		registerName := b.RegisterName()
+		setter := inputSetters[i]
+		sub := d.StateStorage().SubscribeSendInitial(runCtx, func(v dataflow.Value) bool {
+			return v.DeviceName() == deviceName && v.Register().Name() == registerName
+		})
 
 		shutdownWg.Go(func() {
 			// routine will return when ctx of the subscription is cancelled
@@ -169,16 +184,12 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 
 	// setup command subscription
 	{
-		for _, r := range commandRegisters {
+		for i, r := range commandRegisters {
 			registerName := r.Name()
+			setter := commandSetters[i]
 			_, sub := d.commandStorage.SubscribeReturnInitial(runCtx, func(v dataflow.Value) bool {
 				return v.DeviceName() == dName && v.Register().Name() == registerName
 			})
-
-			setter, err := d.inpSetter(registerName)
-			if err != nil {
-				return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", d.Name(), err), true
-			}
 
 			shutdownWg.Go(func() {
 				// routine will return when ctx of the subscription is cancelled
