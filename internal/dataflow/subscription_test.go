@@ -10,14 +10,14 @@ import (
 
 func TestValueStorageSubscribe(t *testing.T) {
 	storage := dataflow.NewValueStorage()
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 
 	numberOfSubscriptions := 42
 
 	counts := make(chan int, numberOfSubscriptions)
 	wg := sync.WaitGroup{}
 	wg.Add(numberOfSubscriptions)
-	for i := 0; i < numberOfSubscriptions; i += 1 {
+	for range numberOfSubscriptions {
 		subscription := storage.SubscribeSendInitial(ctx, dataflow.AllValueFilter)
 		go func() {
 			counter := 0
@@ -57,7 +57,7 @@ func TestValueStorageSubscribe(t *testing.T) {
 func TestValueStorageSubscribeWithFilter(t *testing.T) {
 	run := func(filter dataflow.ValueFilterFunc) (values []dataflow.Value) {
 		storage := dataflow.NewValueStorage()
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(t.Context())
 		subscription := storage.SubscribeSendInitial(ctx, filter)
 
 		wg := sync.WaitGroup{}
