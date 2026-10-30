@@ -23,6 +23,13 @@ PrivateTmp=yes
 ProtectKernelTunables=yes
 ProtectControlGroups=yes
 RestrictSUIDSGID=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+SystemCallArchitectures=native
 # DevicePolicy is intentionally not set: serial / gpio / USB devices must stay reachable
 
 [Install]
