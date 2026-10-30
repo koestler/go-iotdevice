@@ -206,14 +206,12 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 			},
 			func(needle ViewConfig, haystack []ViewConfig) (err []error) {
 				if existsByName(needle.Name(), haystack) {
-					err = append(err, fmt.Errorf("duplicate name='%s'", needle.Name()))
+					err = append(err, fmt.Errorf("Views: duplicate name='%s'", needle.Name()))
 				}
 				return err
 			},
 		)
-		for _, ve := range viewsErr {
-			err = append(err, fmt.Errorf("section Views: %s", ve))
-		}
+		err = append(err, viewsErr...)
 	}
 
 	return
@@ -615,7 +613,7 @@ func (c mqttClientDeviceConfigRead) TransformAndValidate(
 	}
 
 	if !existsByName(name, mqttDevices) {
-		err = append(err, fmt.Errorf("%s: MqttDevice='%s' is not defined", logPrefix, name))
+		err = append(err, fmt.Errorf("%s%s: MqttDevice is not defined", logPrefix, name))
 	}
 
 	if len(ret.mqttTopics) < 1 {
@@ -709,7 +707,7 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 				return inp.TransformAndValidate(
 					name,
 					devices,
-					fmt.Sprintf("%s%s->", logPrefix, name),
+					fmt.Sprintf("%sDevices->%s->", logPrefix, name),
 					allowFilter,
 				)
 			},
@@ -731,7 +729,7 @@ func (c mqttDeviceSectionConfigRead) TransformAndValidate(
 	}
 
 	if !existsByName(name, devices) {
-		err = append(err, fmt.Errorf("%sDevices: device='%s' is not defined or is an MqttDevice", logPrefix, name))
+		err = append(err, fmt.Errorf("%sdevice is not defined or is an MqttDevice", logPrefix))
 	}
 
 	if !allowFilter && c.Filter != nil {
@@ -789,13 +787,13 @@ func (c modbusConfigRead) TransformAndValidate(name string) (ret ModbusConfig, e
 	return
 }
 
-func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, err []error) {
+func (c deviceConfigRead) TransformAndValidate(section, name string) (ret DeviceConfig, err []error) {
 	ret = DeviceConfig{
 		name: name,
 	}
 
 	if !nameMatcher.MatchString(ret.name) {
-		err = append(err, fmt.Errorf("Devices->Name='%s' does not match %s", ret.name, NameRegexp))
+		err = append(err, fmt.Errorf("%s->Name='%s' does not match %s", section, ret.name, NameRegexp))
 	}
 
 	var e []error
@@ -806,12 +804,12 @@ func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, e
 		// use default 200ms
 		ret.restartInterval = 200 * time.Millisecond
 	} else if restartInterval, e := time.ParseDuration(c.RestartInterval); e != nil {
-		err = append(err, fmt.Errorf("Devices->%s->RestartInterval='%s' parse error: %s",
-			name, c.RestartInterval, e,
+		err = append(err, fmt.Errorf("%s->%s->RestartInterval='%s' parse error: %s",
+			section, name, c.RestartInterval, e,
 		))
 	} else if restartInterval < 10*time.Millisecond {
-		err = append(err, fmt.Errorf("Devices->%s->RestartInterval='%s' must be >=10ms",
-			name, c.RestartInterval,
+		err = append(err, fmt.Errorf("%s->%s->RestartInterval='%s' must be >=10ms",
+			section, name, c.RestartInterval,
 		))
 	} else {
 		ret.restartInterval = restartInterval
@@ -821,12 +819,12 @@ func (c deviceConfigRead) TransformAndValidate(name string) (ret DeviceConfig, e
 		// use default 1min
 		ret.restartIntervalMaxBackoff = time.Minute
 	} else if restartIntervalMaxBackoff, e := time.ParseDuration(c.RestartIntervalMaxBackoff); e != nil {
-		err = append(err, fmt.Errorf("Devices->%s->RestartIntervalMaxBackoff='%s' parse error: %s",
-			name, c.RestartIntervalMaxBackoff, e,
+		err = append(err, fmt.Errorf("%s->%s->RestartIntervalMaxBackoff='%s' parse error: %s",
+			section, name, c.RestartIntervalMaxBackoff, e,
 		))
 	} else if restartIntervalMaxBackoff < 10*time.Millisecond {
-		err = append(err, fmt.Errorf("Devices->%s->RestartIntervalMaxBackoff='%s' must be >=10ms",
-			name, c.RestartIntervalMaxBackoff,
+		err = append(err, fmt.Errorf("%s->%s->RestartIntervalMaxBackoff='%s' must be >=10ms",
+			section, name, c.RestartIntervalMaxBackoff,
 		))
 	} else {
 		ret.restartIntervalMaxBackoff = restartIntervalMaxBackoff
@@ -850,7 +848,7 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string) (ret VictronD
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate("VictronDevices", name)
 	err = append(err, e...)
 
 	if ret.kind == types.VictronUndefinedKind {
@@ -892,7 +890,7 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate("ModbusDevices", name)
 	err = append(err, e...)
 
 	if ret.kind == types.ModbusUndefinedKind {
@@ -957,7 +955,7 @@ func (c relayConfigRead) TransformAndValidate() (ret RelayConfig, err []error) {
 
 func (c gpioDeviceConfigRead) TransformAndValidate(deviceName string) (ret GpioDeviceConfig, err []error) {
 	var e []error
-	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(deviceName)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate("GpioDevices", deviceName)
 	err = append(err, e...)
 
 	if c.Chip == nil {
@@ -1064,7 +1062,7 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string) (ret HttpDeviceC
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate("HttpDevices", name)
 	err = append(err, e...)
 
 	if len(c.Url) < 1 {
@@ -1109,7 +1107,7 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string) (ret MqttDeviceC
 	}
 
 	var e []error
-	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate("MqttDevices", name)
 	err = append(err, e...)
 
 	return
@@ -1117,10 +1115,10 @@ func (c mqttDeviceConfigRead) TransformAndValidate(name string) (ret MqttDeviceC
 
 func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []DeviceConfig) (ret GensetDeviceConfig, err []error) {
 	var e []error
-	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate(name)
+	ret.DeviceConfig, e = c.deviceConfigRead.TransformAndValidate("GensetDevices", name)
 	err = append(err, e...)
 
-	ret.inputBindings, e = c.InputBindings.TransformAndValidate(devices)
+	ret.inputBindings, e = c.InputBindings.TransformAndValidate(devices, fmt.Sprintf("GensetDevices->%s->InputBindings", name))
 	err = append(err, e...)
 	for _, b := range ret.inputBindings {
 		if !isValidGensetInputName(b.name) {
@@ -1128,7 +1126,7 @@ func (c gensetDeviceConfigRead) TransformAndValidate(name string, devices []Devi
 		}
 	}
 
-	ret.outputBindings, e = c.OutputBindings.TransformAndValidate(devices)
+	ret.outputBindings, e = c.OutputBindings.TransformAndValidate(devices, fmt.Sprintf("GensetDevices->%s->OutputBindings", name))
 	err = append(err, e...)
 
 	ret.primingTimeout, e = parseGensetDuration(name, "PrimingTimeout", c.PrimingTimeout, 10*time.Second)
@@ -1314,10 +1312,10 @@ func isValidGensetInputName(name string) bool {
 	}
 }
 
-func (c gensetDeviceBindingConfigRead) TransformAndValidate(devices []DeviceConfig) (ret []GensetDeviceBindingConfig, err []error) {
+func (c gensetDeviceBindingConfigRead) TransformAndValidate(devices []DeviceConfig, errPrefix string) (ret []GensetDeviceBindingConfig, err []error) {
 	for deviceName, m := range c {
 		if !existsByName(deviceName, devices) {
-			err = append(err, fmt.Errorf("device='%s' is not defined", deviceName))
+			err = append(err, fmt.Errorf("%s: device='%s' is not defined", errPrefix, deviceName))
 		}
 
 		for name, registerName := range m {
@@ -1376,7 +1374,7 @@ func (c viewConfigRead) TransformAndValidate(devices []DeviceConfig) (ret ViewCo
 		)
 
 		for _, ce := range devicesErr {
-			err = append(err, fmt.Errorf("section Views->%s: %s", c.Name, ce))
+			err = append(err, fmt.Errorf("Views->%s->Devices: %s", c.Name, ce))
 		}
 	}
 
