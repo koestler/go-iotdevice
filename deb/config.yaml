@@ -14,7 +14,7 @@ HttpServer:
 # Uncomment to enable login. Create the file with: sudo htpasswd -c /etc/go-iotdevice/auth.passwd <user>
 # and make it readable by the service: sudo chown root:go-iotdevice /etc/go-iotdevice/auth.passwd; sudo chmod 640 /etc/go-iotdevice/auth.passwd
 # Authentication:
-#   JwtSecret: 'change-me'  # generate with `pwgen -s 64 1`; a fixed value keeps users logged in across restarts
+#   #JwtSecret: 'change-me'  # optional (min. 32 chars, e.g. `pwgen -s 64 1`); a fixed value keeps users logged in across restarts, default is a random one per start
 #   JwtValidityPeriod: 1h
 #   HtaccessFile: /etc/go-iotdevice/auth.passwd
 
