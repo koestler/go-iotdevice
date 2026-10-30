@@ -9,7 +9,7 @@ ARG SWAG_VERSION
 ARG TARGETARCH
 ARG TARGETVARIANT
 
-RUN apk add git npm
+RUN apk add git npm ca-certificates
 
 WORKDIR /app
 COPY . /app
@@ -33,9 +33,10 @@ FROM ghcr.io/koestler/js-iotdevice:${FRONTEND_VERSION} AS js-builder
 # build final image
 FROM scratch
 USER app
-COPY --from=go-builder /app/go-iotdevice     /go-iotdevice
-COPY --from=go-builder /app/docs             /docs
-COPY --from=go-builder /etc/group            /etc/group
-COPY --from=go-builder /etc/passwd           /etc/passwd
-COPY --from=js-builder /usr/share/nginx/html /frontend-build
+COPY --from=go-builder /app/go-iotdevice                  /go-iotdevice
+COPY --from=go-builder /app/docs                          /docs
+COPY --from=go-builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=go-builder /etc/group                         /etc/group
+COPY --from=go-builder /etc/passwd                        /etc/passwd
+COPY --from=js-builder /usr/share/nginx/html              /frontend-build
 CMD ["/go-iotdevice", "-c", "/config.yaml"]
