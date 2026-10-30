@@ -311,7 +311,7 @@ func (c GensetDeviceBindingsConfig) convertToRead() map[string]map[string]string
 		if _, ok := oup[b.deviceName]; !ok {
 			oup[b.deviceName] = make(map[string]string)
 		}
-		oup[b.deviceName][b.registerName] = b.name
+		oup[b.deviceName][b.name] = b.registerName
 	}
 
 	return oup
