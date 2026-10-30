@@ -22,18 +22,18 @@ Version: 42
 	ValidCompleteConfig = `
 Version: 2                                                 # configuration file format; must be set to 1 for >v2 of this tool.
 ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice: is shown in the http frontend
-LogConfig: true                                            # optional, default false, outputs the used configuration including defaults on startup
-LogWorkerStart: true                                       # optional, default false, outputs what devices and mqtt clients are started
+LogConfig: false                                           # optional, default false, outputs the used configuration including defaults on startup
+LogWorkerStart: false                                      # optional, default false, outputs what devices and mqtt clients are started
 LogStateStorageDebug: true                                 # optional, default false, outputs all writes to the internal value storage
 LogCommandStorageDebug: true                               # optional, default false, outputs all writes to the internal value storage
 
 HttpServer:                                                # optional, when missing: http server is not started
   Bind: "[::1]"                                            # optional, default ::1 (ipv6 loopback), what address to bind to, use "0:0:0:0" when started within docker
-  Port: 8000                                               # optional, default 8000
+  Port: 8001                                               # optional, default 8000
   LogRequests: false                                       # optional, default true, enables the http access log to stdout
   # configure FrontendProxy xor FrontendPath
   FrontendProxy: "http://127.0.0.1:3000/"                  # optional, default deactivated; proxies the frontend to another server; useful for development
-  FrontendPath: ./frontend-build/                          # optional, default "frontend-build": path to a static frontend build
+  FrontendPath: ./my-frontend/                             # optional, default "frontend-build": path to a static frontend build
   DocsPath: /tmp/mydocs/                                   # optional, default "./docs/", path to the swagger documentation files
   FrontendExpires: 1m                                      # optional, default 5min, what cache-control header to send for static frontend files
   ConfigExpires: 2m                                        # optional, default 1min, what cache-control header to send for configuration endpoints
@@ -422,7 +422,10 @@ func containsError(needle string, err []error) bool {
 func TestReadConfig_InvalidSyntax(t *testing.T) {
 	_, err := ReadConfig([]byte(InvalidSyntaxConfig), true)
 	if len(err) != 1 {
-		t.Error("expect one error for invalid file")
+		t.Fatalf("expect one error for invalid file, got: %v", err)
+	}
+	if !strings.Contains(err[0].Error(), "cannot unmarshal") {
+		t.Errorf("expect a yaml unmarshal error but got: %v", err[0])
 	}
 }
 
@@ -457,12 +460,12 @@ func TestReadConfig_Complete(t *testing.T) {
 		t.Errorf("expect ProjectTitle to be '%s' but got '%s'", expect, got)
 	}
 
-	if !config.LogConfig() {
-		t.Errorf("expect LogConfig to be true")
+	if config.LogConfig() {
+		t.Errorf("expect LogConfig to be false")
 	}
 
-	if !config.LogWorkerStart() {
-		t.Errorf("expect LogWorkerStart to be true")
+	if config.LogWorkerStart() {
+		t.Errorf("expect LogWorkerStart to be false")
 	}
 
 	if !config.LogStateStorageDebug() {
@@ -483,7 +486,7 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect HttpServer->Bind to be '%s' but got '%s'", expect, got)
 		}
 
-		if expect, got := 8000, hs.Port(); expect != got {
+		if expect, got := 8001, hs.Port(); expect != got {
 			t.Errorf("expect HttpServer->Port to be %d but got %d", expect, got)
 		}
 
@@ -499,7 +502,7 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Error("expect HttpServer->FrontendProxy not to be nil")
 		}
 
-		if expect, got := "./frontend-build/", hs.FrontendPath(); expect != got {
+		if expect, got := "./my-frontend/", hs.FrontendPath(); expect != got {
 			t.Errorf("expect HttpServer->FrontendPath to be '%s' but got '%s'", expect, got)
 		}
 
@@ -872,7 +875,7 @@ func TestReadConfig_Complete(t *testing.T) {
 				sPrefix := prefix + "->HomeassistantDiscovery"
 
 				if expect, got := "my-hass/a/b/c/config", mc.HomeassistantDiscoveryTopic("a", "b", "c"); expect != got {
-					t.Errorf("expect %s->AvailabilityDeviceTopic to be '%s' but got '%s'", prefix, expect, got)
+					t.Errorf("expect %s->HomeassistantDiscoveryTopic to be '%s' but got '%s'", prefix, expect, got)
 				}
 
 				if got := mcSect.Enabled(); !got {
@@ -1012,7 +1015,7 @@ func TestReadConfig_Complete(t *testing.T) {
 			mc := config.MqttClients()[2]
 
 			if expect, got := "2-readonly", mc.Name(); expect != got {
-				t.Errorf("expect Name of first MqttClient to be '%s' but got '%s'", expect, got)
+				t.Errorf("expect Name of third MqttClient to be '%s' but got '%s'", expect, got)
 			}
 
 			if got := mc.ReadOnly(); !got {
@@ -1205,6 +1208,18 @@ func TestReadConfig_Complete(t *testing.T) {
 		if expect, got := byte(0x01), md.Address(); expect != got {
 			t.Errorf("expect ModbusDevices->modbus-rtu0->Address to be 0x%x but got 0x%x", expect, got)
 		}
+
+		if expect, got := "Lamp", md.RelayDescription("CH1"); expect != got {
+			t.Errorf("expect ModbusDevices->modbus-rtu0->Relays->CH1->Description to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := "Off", md.RelayOpenLabel("CH1"); expect != got {
+			t.Errorf("expect ModbusDevices->modbus-rtu0->Relays->CH1->OpenLabel to be '%s' but got '%s'", expect, got)
+		}
+
+		if expect, got := "On", md.RelayClosedLabel("CH1"); expect != got {
+			t.Errorf("expect ModbusDevices->modbus-rtu0->Relays->CH1->ClosedLabel to be '%s' but got '%s'", expect, got)
+		}
 	}
 
 	if expect, got := 1, len(config.GpioDevices()); expect != got {
@@ -1237,7 +1252,7 @@ func TestReadConfig_Complete(t *testing.T) {
 		}
 
 		if expect, got := 10*time.Millisecond, gd.InputDebounce(); expect != got {
-			t.Errorf("expect GpioDevices->gpio0->Chip to be '%s' but got '%s'", expect, got)
+			t.Errorf("expect GpioDevices->gpio0->InputDebounce to be %s but got %s", expect, got)
 		}
 
 		if expect, got := []string{"WithPullUp"}, gd.InputOptions(); !reflect.DeepEqual(expect, got) {
@@ -1278,7 +1293,7 @@ func TestReadConfig_Complete(t *testing.T) {
 				in := gd.Inputs()[1]
 
 				if expect, got := "Switch1", in.Name(); expect != got {
-					t.Errorf("expect Name of first GpioDevices->gpio0->Inputs to be '%s' but got '%s'", expect, got)
+					t.Errorf("expect Name of second GpioDevices->gpio0->Inputs to be '%s' but got '%s'", expect, got)
 				}
 
 				if expect, got := "GPIO3", in.Pin(); expect != got {
@@ -1329,7 +1344,7 @@ func TestReadConfig_Complete(t *testing.T) {
 				in := gd.Outputs()[1]
 
 				if expect, got := "Relay1", in.Name(); expect != got {
-					t.Errorf("expect Name of first GpioDevices->gpio0->Outputs to be '%s' but got '%s'", expect, got)
+					t.Errorf("expect Name of second GpioDevices->gpio0->Outputs to be '%s' but got '%s'", expect, got)
 				}
 
 				if expect, got := "GPIO5", in.Pin(); expect != got {
@@ -1481,6 +1496,30 @@ func TestReadConfig_Complete(t *testing.T) {
 						t.Errorf("expect GensetDevice->genset0->InputBindings->1->Name to be '%s' but got '%s'", expect, got)
 					}
 				}
+				{
+					b := ib[2]
+					if expect, got := "tcw241", b.DeviceName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->InputBindings->2->DeviceName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "DI1", b.RegisterName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->InputBindings->2->RegisterName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "ResetSwitch", b.Name(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->InputBindings->2->Name to be '%s' but got '%s'", expect, got)
+					}
+				}
+				{
+					b := ib[3]
+					if expect, got := "tcw241", b.DeviceName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->InputBindings->3->DeviceName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "DI2", b.RegisterName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->InputBindings->3->RegisterName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "FireDetected", b.Name(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->InputBindings->3->Name to be '%s' but got '%s'", expect, got)
+					}
+				}
 			}
 		}
 
@@ -1511,6 +1550,42 @@ func TestReadConfig_Complete(t *testing.T) {
 					}
 					if expect, got := "Starter", b.Name(); expect != got {
 						t.Errorf("expect GensetDevice->genset0->OutputBindings->1->Name to be '%s' but got '%s'", expect, got)
+					}
+				}
+				{
+					b := ob[2]
+					if expect, got := "modbus-rtu0", b.DeviceName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->2->DeviceName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "CH2", b.RegisterName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->2->RegisterName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "Fan", b.Name(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->2->Name to be '%s' but got '%s'", expect, got)
+					}
+				}
+				{
+					b := ob[3]
+					if expect, got := "modbus-rtu0", b.DeviceName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->3->DeviceName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "CH3", b.RegisterName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->3->RegisterName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "Pump", b.Name(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->3->Name to be '%s' but got '%s'", expect, got)
+					}
+				}
+				{
+					b := ob[4]
+					if expect, got := "modbus-rtu0", b.DeviceName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->4->DeviceName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "CH4", b.RegisterName(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->4->RegisterName to be '%s' but got '%s'", expect, got)
+					}
+					if expect, got := "Load", b.Name(); expect != got {
+						t.Errorf("expect GensetDevice->genset0->OutputBindings->4->Name to be '%s' but got '%s'", expect, got)
 					}
 				}
 			}
@@ -1600,6 +1675,10 @@ func TestReadConfig_Complete(t *testing.T) {
 			t.Errorf("expect GensetDevice->genset0->UMax to be %f but got %f", expect, got)
 		}
 
+		if expect, got := 2, gd.UAvgWindow(); expect != got {
+			t.Errorf("expect GensetDevice->genset0->UAvgWindow to be %d but got %d", expect, got)
+		}
+
 		if expect, got := 220.0, gd.FMin(); expect != got {
 			t.Errorf("expect GensetDevice->genset0->FMin to be %f but got %f", expect, got)
 		}
@@ -1635,8 +1714,20 @@ func TestReadConfig_Complete(t *testing.T) {
 				t.Errorf("expect Views->private->Title to be '%s' but got '%s'", expect, got)
 			}
 
+			if v.Autoplay() {
+				t.Error("expect Views->private->Autoplay to be false")
+			}
+
+			if !v.Hidden() {
+				t.Error("expect Views->private->Hidden to be true")
+			}
+
+			if !v.IsAllowed("test0") || v.IsAllowed("other") {
+				t.Error("expect Views->private->IsAllowed to be true only for test0")
+			}
+
 			if expect, got := 2, len(v.Devices()); expect != got {
-				t.Errorf("expect length of Views->private->Devices to be %d but got %d", expect, got)
+				t.Fatalf("expect length of Views->private->Devices to be %d but got %d", expect, got)
 			}
 
 			{
@@ -1648,6 +1739,14 @@ func TestReadConfig_Complete(t *testing.T) {
 
 				if expect, got := "Battery Monitor", d.Title(); expect != got {
 					t.Errorf("expect Views->%s->Devices->%d->Title to be '%s' but got '%s'", v.Name(), i, expect, got)
+				}
+
+				if expect, got := []string{"field-a", "field-b"}, d.Filter().SkipRegisters(); !reflect.DeepEqual(expect, got) {
+					t.Errorf("expect Views->%s->Devices->%d->Filter->SkipRegisters to be %v but got %v", v.Name(), i, expect, got)
+				}
+
+				if expect, got := []string{"cat-a", "cat-b", "cat-c"}, d.Filter().SkipCategories(); !reflect.DeepEqual(expect, got) {
+					t.Errorf("expect Views->%s->Devices->%d->Filter->SkipCategories to be %v but got %v", v.Name(), i, expect, got)
 				}
 			}
 
@@ -1673,11 +1772,11 @@ func TestReadConfig_Complete(t *testing.T) {
 			}
 
 			if expect, got := "Public", v.Title(); expect != got {
-				t.Errorf("expect Views->private->Title to be '%s' but got '%s'", expect, got)
+				t.Errorf("expect Views->public->Title to be '%s' but got '%s'", expect, got)
 			}
 
 			if expect, got := 1, len(v.Devices()); expect != got {
-				t.Errorf("expect length of Views->private->Devices to be %d but got %d", expect, got)
+				t.Fatalf("expect length of Views->public->Devices to be %d but got %d", expect, got)
 			}
 
 			{
@@ -2113,7 +2212,7 @@ func TestReadConfig_Default(t *testing.T) {
 			prefix := "MqttClients->0-local->HomeassistantDiscovery"
 
 			if expect, got := "homeassistant/a/b/c/config", mc.HomeassistantDiscoveryTopic("a", "b", "c"); expect != got {
-				t.Errorf("expect %s->AvailabilityDeviceTopic to be '%s' but got '%s'", prefix, expect, got)
+				t.Errorf("expect %s->HomeassistantDiscoveryTopic to be '%s' but got '%s'", prefix, expect, got)
 			}
 
 			if got := mcSect.Enabled(); got {
@@ -2169,7 +2268,7 @@ func TestReadConfig_Default(t *testing.T) {
 			prefix := "MqttClients->0-local->Command"
 
 			if expect, got := "go-iotdevice/cmnd/my-dev/reg-name", mc.CommandTopic("my-dev", "reg-name"); expect != got {
-				t.Errorf("expect %s->RealtimeTopic to be '%s' but got '%s'", prefix, expect, got)
+				t.Errorf("expect %s->CommandTopic to be '%s' but got '%s'", prefix, expect, got)
 			}
 
 			if got := mcSect.Enabled(); got {
