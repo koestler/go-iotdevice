@@ -265,19 +265,23 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		sub := d.StateStorage().SubscribeSendInitial(runCtx, func(v dataflow.Value) bool {
 			return v.DeviceName() == dName && v.Register().Name() == bindingName
 		})
-		getRegister := func() (reg dataflow.RegisterStruct, ok bool) {
+		getRegister := func() (reg dataflow.RegisterStruct, err error) {
 			rdb, ok := d.registerDbOfDevice(deviceName)
 			if !ok {
-				return reg, false
+				return reg, fmt.Errorf("device %s not found", deviceName)
 			}
-			return rdb.GetByName(registerName)
+			reg, ok = rdb.GetByName(registerName)
+			if !ok {
+				return reg, fmt.Errorf("output register %s not found", registerName)
+			}
+			return reg, nil
 		}
 
 		shutdownWg.Go(func() {
 			for v := range sub.Drain() {
-				r, ok := getRegister()
-				if !ok {
-					log.Printf("gensetDevice[%s]: output register %s not found", dName, registerName)
+				r, err := getRegister()
+				if err != nil {
+					log.Printf("gensetDevice[%s]: output binding %s: %s", dName, bindingName, err)
 					continue
 				}
 				newValue := dataflow.NewRegisterValue(deviceName, r, v)
