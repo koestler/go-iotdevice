@@ -10,6 +10,8 @@ import (
 // gzipMiddleware provides gzip compression for responses
 func gzipMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Vary", "Accept-Encoding")
+
 		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 			next.ServeHTTP(w, r)
 			return
@@ -47,7 +49,10 @@ func (gzw *gzipResponseWriter) Initialize() {
 }
 
 func (gzw *gzipResponseWriter) WriteHeader(code int) {
-	gzw.Initialize()
+	// responses without a body must not claim to be gzip encoded
+	if code != http.StatusNotModified && code != http.StatusNoContent {
+		gzw.Initialize()
+	}
 	gzw.ResponseWriter.WriteHeader(code)
 }
 

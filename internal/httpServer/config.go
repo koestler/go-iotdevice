@@ -70,7 +70,7 @@ func configHandler(env *Environment) http.HandlerFunc {
 			})
 		}
 
-		setCacheControlPublic(w, env.Config.ConfigExpires())
+		setCacheControl(w, env.Config.ConfigExpires(), true)
 		jsonGetResponse(w, r, response)
 	}
 }

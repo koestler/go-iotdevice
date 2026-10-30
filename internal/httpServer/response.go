@@ -66,12 +66,16 @@ func jsonGetResponse(w http.ResponseWriter, r *http.Request, obj any) {
 	writeLogError(w, jsonBytes)
 }
 
-func setCacheControlPublic(w http.ResponseWriter, maxAge time.Duration) {
+func setCacheControl(w http.ResponseWriter, maxAge time.Duration, public bool) {
 	if maxAge < 0 {
 		maxAge = 0
 	}
+	scope := "private"
+	if public {
+		scope = "public"
+	}
 	maxAgeSeconds := int(maxAge.Seconds()) // floor given duration to next lower second
-	w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", maxAgeSeconds))
+	w.Header().Set("Cache-Control", fmt.Sprintf("%s, max-age=%d", scope, maxAgeSeconds))
 }
 
 func writeLogError(w http.ResponseWriter, data []byte) {

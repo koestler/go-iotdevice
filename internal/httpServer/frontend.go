@@ -24,7 +24,7 @@ func setupFrontend(mux *http.ServeMux, config Config, views []ViewConfig) {
 		log.Printf("httpServer: failed to serve from local folder: %s", err)
 	}
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		setCacheControlPublic(w, config.FrontendExpires())
+		setCacheControl(w, config.FrontendExpires(), true)
 		jsonErrorResponse(w, http.StatusNotFound, errors.New("route not found"))
 	})
 }
@@ -71,7 +71,7 @@ func serveStatic(mux *http.ServeMux, config Config, fSys fs.FS, fileName, route 
 		log.Printf("httpServer: %s -> serve static %s", pattern, fileName)
 	}
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		setCacheControlPublic(w, config.FrontendExpires())
+		setCacheControl(w, config.FrontendExpires(), true)
 		http.ServeFileFS(w, r, fSys, fileName)
 	}
 	mux.HandleFunc(pattern, gzipMiddleware(handler))

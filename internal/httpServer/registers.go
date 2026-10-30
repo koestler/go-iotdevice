@@ -69,7 +69,7 @@ func registersHandler(env *Environment, view ViewConfig, deviceName string, filt
 		registers = dataflow.FilterRegisters(registers, filter)
 		dataflow.SortRegisterStructs(registers)
 
-		setCacheControlPublic(w, RegistersExpires)
+		setCacheControl(w, RegistersExpires, view.IsPublic())
 		jsonGetResponse(w, r, compile1DRegisterResponse(registers))
 	}
 }

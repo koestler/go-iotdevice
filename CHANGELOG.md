@@ -9,6 +9,8 @@
 * genset: report invalid input bindings during the config check
 * bugfixes:
   * httpServer: honor LogRequests config variable
+  * httpServer: do not set cache control public for authenticated register lists
+  * httpServer: set Vary: Accept-Encoding for gzip responses
   * fix two race and two deadlock conditions in the command and value storage that happen when devices are closed
   * fix various error messages and logging
   * config: do not panic when an MQTT device is referenced that does not exist
