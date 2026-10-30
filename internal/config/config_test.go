@@ -1043,7 +1043,7 @@ func TestReadConfig_Complete(t *testing.T) {
 				t.Error("expect MqttClients->2-readonly->HomeassistantDiscovery->Enabled to be false")
 			}
 
-			if got := mc.HomeassistantDiscovery().Enabled(); got {
+			if got := mc.Command().Enabled(); got {
 				t.Error("expect MqttClients->2-readonly->Command->Enabled to be false")
 			}
 
