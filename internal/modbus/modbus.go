@@ -29,7 +29,7 @@ func New(cfg Config) (*ModbusStruct, error) {
 
 	ioHandle, err := serial.OpenPort(&options)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open device: %v", cfg.Device())
+		return nil, fmt.Errorf("cannot open device %s: %w", cfg.Device(), err)
 	}
 
 	if cfg.LogDebug() {
