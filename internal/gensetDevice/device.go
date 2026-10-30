@@ -151,7 +151,13 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	inputBindings := d.gensetConfig.InputBindings()
 	inputSetters := make([]func(*genset.Controller, dataflow.Value), len(inputBindings))
 	for i, b := range inputBindings {
-		setter, err := d.inpSetter(b.Name())
+		name := b.Name()
+		switch name {
+		case "ArmSwitch", "CommandSwitch", "ResetSwitch":
+			// bound switches are registered read-only in the register DB
+			name += "RO"
+		}
+		setter, err := d.inpSetter(name)
 		if err != nil {
 			return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", dName, err), true
 		}
