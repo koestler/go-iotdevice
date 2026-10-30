@@ -85,6 +85,9 @@ func NewDevice(
 }
 
 func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
+	runCtx, runCtxCancel := context.WithCancel(ctx)
+	defer runCtxCancel()
+
 	dName := d.Config().Name()
 	ss := d.StateStorage()
 
@@ -147,7 +150,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	for _, b := range d.gensetConfig.InputBindings() {
 		deviceName := b.DeviceName()
 		registerName := b.RegisterName()
-		sub := d.StateStorage().SubscribeSendInitial(ctx, func(v dataflow.Value) bool {
+		sub := d.StateStorage().SubscribeSendInitial(runCtx, func(v dataflow.Value) bool {
 			return v.DeviceName() == deviceName && v.Register().Name() == registerName
 		})
 
@@ -168,7 +171,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	{
 		for _, r := range commandRegisters {
 			registerName := r.Name()
-			_, sub := d.commandStorage.SubscribeReturnInitial(ctx, func(v dataflow.Value) bool {
+			_, sub := d.commandStorage.SubscribeReturnInitial(runCtx, func(v dataflow.Value) bool {
 				return v.DeviceName() == dName && v.Register().Name() == registerName
 			})
 
@@ -242,7 +245,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		bindingName := b.Name()
 		deviceName := b.DeviceName()
 		registerName := b.RegisterName()
-		sub := d.StateStorage().SubscribeSendInitial(ctx, func(v dataflow.Value) bool {
+		sub := d.StateStorage().SubscribeSendInitial(runCtx, func(v dataflow.Value) bool {
 			return v.DeviceName() == dName && v.Register().Name() == bindingName
 		})
 		getRegister := func() (reg dataflow.RegisterStruct, ok bool) {

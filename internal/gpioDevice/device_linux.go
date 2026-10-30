@@ -6,10 +6,11 @@ import (
 	"log"
 	"slices"
 
+	"maps"
+
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/device"
 	"github.com/warthog618/go-gpiocdev"
-	"maps"
 )
 
 type DeviceStruct struct {
@@ -46,6 +47,9 @@ func NewDevice(
 }
 
 func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool) {
+	runCtx, runCtxCancel := context.WithCancel(ctx)
+	defer runCtxCancel()
+
 	dName := d.Config().Name()
 
 	// initialize chip
@@ -110,7 +114,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 
 	if len(oupRegisters) > 0 {
 		// setup subscription to listen for updates of writable registers
-		_, commandSubscription := d.commandStorage.SubscribeReturnInitial(ctx, dataflow.DeviceNonNullValueFilter(dName))
+		_, commandSubscription := d.commandStorage.SubscribeReturnInitial(runCtx, dataflow.DeviceNonNullValueFilter(dName))
 
 		for value := range commandSubscription.Drain() {
 			d.execCommand(oupLines, oupRegisters, value)

@@ -13,6 +13,9 @@ import (
 )
 
 func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, immediateError bool) {
+	runCtx, runCtxCancel := context.WithCancel(ctx)
+	defer runCtxCancel()
+
 	log.Printf("waveshareDevice[%s]: start waveshare RTU Relay 8 source", c.Name())
 
 	// get software version
@@ -38,9 +41,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	}()
 
 	// setup subscription to listen for updates of writable registers
-	commandCtx, commandCancel := context.WithCancel(ctx)
-	defer commandCancel()
-	_, commandSubscription := c.commandStorage.SubscribeReturnInitial(commandCtx, dataflow.DeviceNonNullValueFilter(c.Config().Name()))
+	_, commandSubscription := c.commandStorage.SubscribeReturnInitial(runCtx, dataflow.DeviceNonNullValueFilter(c.Config().Name()))
 
 	ticker := time.NewTicker(c.modbusConfig.PollInterval())
 	defer ticker.Stop()
