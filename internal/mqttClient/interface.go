@@ -36,7 +36,6 @@ type MqttSectionConfig interface {
 type Client interface {
 	Name() string
 	GetCtx() context.Context
-	Run()
 	Shutdown()
 	Publish(topic string, payload []byte, qos byte, retain bool)
 	AddRoute(subscribeTopic string, messageHandler MessageHandler)

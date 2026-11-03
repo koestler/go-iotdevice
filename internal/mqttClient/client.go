@@ -39,24 +39,21 @@ func (c *ClientStruct) GetCtx() context.Context {
 }
 
 func (c *ClientStruct) AddRoute(subscribeTopic string, messageHandler MessageHandler) {
-	s := subscription{subscribeTopic: subscribeTopic}
+	s := subscription{subscribeTopic: subscribeTopic, messageHandler: messageHandler}
 
 	if c.cfg.LogMessages() {
 		s.messageHandler = func(message Message) {
 			// only log first 80 chars of payload
-			pl := make([]byte, 0, 80)
-			if len(message.Payload()) > 80 {
-				pl = append(pl, message.Payload()[:80]...)
-				pl = append(pl, []byte("...")...)
+			const maxLen = 80
+			pl := make([]byte, 0, maxLen+3)
+			if len(message.Payload()) > maxLen {
+				pl = append(pl, message.Payload()[:maxLen]...)
+				pl = append(pl, "..."...)
 			} else {
 				pl = append(pl, message.Payload()...)
 			}
 
 			log.Printf("mqttClient[%s]: received: %s %s", c.cfg.Name(), message.Topic(), pl)
-			messageHandler(message)
-		}
-	} else {
-		s.messageHandler = func(message Message) {
 			messageHandler(message)
 		}
 	}
@@ -75,11 +72,7 @@ func (c *ClientStruct) AddRoute(subscribeTopic string, messageHandler MessageHan
 
 	// send subscribe
 	_, _ = c.cm.Subscribe(c.ctx, &paho.Subscribe{
-		Subscriptions: func() (ret []paho.SubscribeOptions) {
-			return []paho.SubscribeOptions{
-				s.pahoOptions(),
-			}
-		}(),
+		Subscriptions: []paho.SubscribeOptions{s.pahoOptions()},
 	})
 }
 
