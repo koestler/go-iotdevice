@@ -163,9 +163,7 @@ func (c *DeviceStruct) setupAvailabilitySubscription(mc mqttClient.Client, avail
 			c.availLock.Lock()
 			defer c.availLock.Unlock()
 
-			c.avail[m.Topic()] = func(s string) bool {
-				return s == "online"
-			}(string(m.Payload()))
+			c.avail[m.Topic()] = string(m.Payload()) == device.AvailabilityOnlineValue
 
 			c.SetAvailable(countTrue(c.avail) == numAvail)
 		})
@@ -176,7 +174,7 @@ func countTrue(m map[string]bool) int {
 	ret := 0
 	for _, b := range m {
 		if b {
-			ret += 1
+			ret++
 		}
 	}
 	return ret
