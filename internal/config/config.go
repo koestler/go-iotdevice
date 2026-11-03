@@ -479,15 +479,17 @@ func (c mqttClientConfigRead) TransformAndValidate(
 		fmt.Sprintf("%s->AvailabilityClient->", errPrefix),
 		nonLoopMqttDevices,
 		ret.readOnly,
-		true,
-		"%Prefix%avail/%ClientId%",
-		0,
-		false,
-		true,
-		true,
-		true,
-		false,
-		false,
+		mqttSectionOptions{
+			DefaultEnabled:       true,
+			DefaultTopicTemplate: "%Prefix%avail/%ClientId%",
+			DefaultInterval:      0,
+			AllowInterval:        false,
+			AllowZeroInterval:    true,
+			AllowRetain:          true,
+			DefaultRetain:        true,
+			AllowDevices:         false,
+			AllowFilter:          false,
+		},
 	)
 	err = append(err, e...)
 
@@ -495,15 +497,17 @@ func (c mqttClientConfigRead) TransformAndValidate(
 		fmt.Sprintf("%s->AvailabilityDevice->", errPrefix),
 		nonLoopMqttDevices,
 		ret.readOnly,
-		true,
-		"%Prefix%avail/%DeviceName%",
-		0,
-		false,
-		true,
-		true,
-		true,
-		true,
-		false,
+		mqttSectionOptions{
+			DefaultEnabled:       true,
+			DefaultTopicTemplate: "%Prefix%avail/%DeviceName%",
+			DefaultInterval:      0,
+			AllowInterval:        false,
+			AllowZeroInterval:    true,
+			AllowRetain:          true,
+			DefaultRetain:        true,
+			AllowDevices:         true,
+			AllowFilter:          false,
+		},
 	)
 	err = append(err, e...)
 
@@ -511,15 +515,17 @@ func (c mqttClientConfigRead) TransformAndValidate(
 		fmt.Sprintf("%s->Structure->", errPrefix),
 		nonLoopMqttDevices,
 		ret.readOnly,
-		false,
-		"%Prefix%struct/%DeviceName%",
-		0,
-		true,
-		true,
-		true,
-		true,
-		true,
-		true,
+		mqttSectionOptions{
+			DefaultEnabled:       false,
+			DefaultTopicTemplate: "%Prefix%struct/%DeviceName%",
+			DefaultInterval:      0,
+			AllowInterval:        true,
+			AllowZeroInterval:    true,
+			AllowRetain:          true,
+			DefaultRetain:        true,
+			AllowDevices:         true,
+			AllowFilter:          true,
+		},
 	)
 	err = append(err, e...)
 
@@ -527,15 +533,17 @@ func (c mqttClientConfigRead) TransformAndValidate(
 		fmt.Sprintf("%s->Telemetry->", errPrefix),
 		nonLoopMqttDevices,
 		ret.readOnly,
-		false,
-		"%Prefix%tele/%DeviceName%",
-		time.Second,
-		true,
-		false,
-		true,
-		false,
-		true,
-		true,
+		mqttSectionOptions{
+			DefaultEnabled:       false,
+			DefaultTopicTemplate: "%Prefix%tele/%DeviceName%",
+			DefaultInterval:      time.Second,
+			AllowInterval:        true,
+			AllowZeroInterval:    false,
+			AllowRetain:          true,
+			DefaultRetain:        false,
+			AllowDevices:         true,
+			AllowFilter:          true,
+		},
 	)
 	err = append(err, e...)
 
@@ -543,15 +551,17 @@ func (c mqttClientConfigRead) TransformAndValidate(
 		fmt.Sprintf("%s->Realtime->", errPrefix),
 		nonLoopMqttDevices,
 		ret.readOnly,
-		false,
-		"%Prefix%real/%DeviceName%/%RegisterName%",
-		0,
-		true,
-		true,
-		true,
-		false,
-		true,
-		true,
+		mqttSectionOptions{
+			DefaultEnabled:       false,
+			DefaultTopicTemplate: "%Prefix%real/%DeviceName%/%RegisterName%",
+			DefaultInterval:      0,
+			AllowInterval:        true,
+			AllowZeroInterval:    true,
+			AllowRetain:          true,
+			DefaultRetain:        false,
+			AllowDevices:         true,
+			AllowFilter:          true,
+		},
 	)
 	err = append(err, e...)
 
@@ -559,15 +569,17 @@ func (c mqttClientConfigRead) TransformAndValidate(
 		fmt.Sprintf("%s->HomeassistantDiscovery->", errPrefix),
 		nonLoopMqttDevices,
 		ret.readOnly,
-		false,
-		"homeassistant/%Component%/%NodeId%/%ObjectId%/config",
-		0,
-		true,
-		true,
-		true,
-		false,
-		true,
-		true,
+		mqttSectionOptions{
+			DefaultEnabled:       false,
+			DefaultTopicTemplate: "homeassistant/%Component%/%NodeId%/%ObjectId%/config",
+			DefaultInterval:      0,
+			AllowInterval:        true,
+			AllowZeroInterval:    true,
+			AllowRetain:          true,
+			DefaultRetain:        false,
+			AllowDevices:         true,
+			AllowFilter:          true,
+		},
 	)
 	err = append(err, e...)
 
@@ -575,15 +587,17 @@ func (c mqttClientConfigRead) TransformAndValidate(
 		fmt.Sprintf("%s->Command->", errPrefix),
 		nonLoopMqttDevices,
 		false, // command is not affected by read only
-		false,
-		"%Prefix%cmnd/%DeviceName%/%RegisterName%",
-		0,
-		false,
-		true,
-		false,
-		false,
-		true,
-		true,
+		mqttSectionOptions{
+			DefaultEnabled:       false,
+			DefaultTopicTemplate: "%Prefix%cmnd/%DeviceName%/%RegisterName%",
+			DefaultInterval:      0,
+			AllowInterval:        false,
+			AllowZeroInterval:    true,
+			AllowRetain:          false,
+			DefaultRetain:        false,
+			AllowDevices:         true,
+			AllowFilter:          true,
+		},
 	)
 	err = append(err, e...)
 
@@ -619,58 +633,63 @@ func (c mqttClientDeviceConfigRead) TransformAndValidate(
 	return
 }
 
+// mqttSectionOptions defines the defaults and the allowed fields of an mqtt section.
+type mqttSectionOptions struct {
+	DefaultEnabled       bool
+	DefaultTopicTemplate string
+	DefaultInterval      time.Duration
+	AllowInterval        bool
+	AllowZeroInterval    bool
+	AllowRetain          bool
+	DefaultRetain        bool
+	AllowDevices         bool
+	AllowFilter          bool
+}
+
 func (c mqttSectionConfigRead) TransformAndValidate(
 	logPrefix string,
 	devices []DeviceConfig,
 	readOnly bool,
-	defaultEnabled bool,
-	defaultTopicTemplate string,
-	defaultInterval time.Duration,
-	allowInterval bool,
-	allowZeroInterval bool,
-	allowRetain bool,
-	defaultRetain bool,
-	allowDevices bool,
-	allowFilter bool,
+	opts mqttSectionOptions,
 ) (ret MqttSectionConfig, err []error) {
 	if readOnly {
 		ret.enabled = false
 	} else if c.Enabled == nil {
-		ret.enabled = defaultEnabled
+		ret.enabled = opts.DefaultEnabled
 	} else {
 		ret.enabled = *c.Enabled
 	}
 
 	if c.TopicTemplate == nil {
-		ret.topicTemplate = defaultTopicTemplate
+		ret.topicTemplate = opts.DefaultTopicTemplate
 	} else if len(*c.TopicTemplate) < 1 {
 		err = append(err, fmt.Errorf("%sTopicTemplate must not be empty", logPrefix))
 	} else {
 		ret.topicTemplate = *c.TopicTemplate
 	}
 
-	if !allowInterval {
+	if !opts.AllowInterval {
 		if len(c.Interval) > 0 {
 			err = append(err, fmt.Errorf("%sInterval not supported", logPrefix))
 		}
 	} else if len(c.Interval) < 1 {
-		ret.interval = defaultInterval
+		ret.interval = opts.DefaultInterval
 	} else if interval, e := time.ParseDuration(c.Interval); e != nil {
 		err = append(err, fmt.Errorf("%sInterval='%s' parse error: %w", logPrefix, c.Interval, e))
-	} else if allowZeroInterval && interval < 0 {
+	} else if opts.AllowZeroInterval && interval < 0 {
 		err = append(err, fmt.Errorf("%sInterval='%s' must be >= 0", logPrefix, c.Interval))
-	} else if !allowZeroInterval && interval <= 0 {
+	} else if !opts.AllowZeroInterval && interval <= 0 {
 		err = append(err, fmt.Errorf("%sInterval='%s' must be > 0", logPrefix, c.Interval))
 	} else {
 		ret.interval = interval
 	}
 
-	if !allowRetain {
+	if !opts.AllowRetain {
 		if c.Retain != nil {
 			err = append(err, fmt.Errorf("%sRetain not supported", logPrefix))
 		}
 	} else if c.Retain == nil {
-		ret.retain = defaultRetain
+		ret.retain = opts.DefaultRetain
 	} else {
 		ret.retain = *c.Retain
 	}
@@ -683,7 +702,7 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 		err = append(err, fmt.Errorf("%sQos=%d but must be 0, 1 or 2", logPrefix, *c.Qos))
 	}
 
-	if !allowDevices {
+	if !opts.AllowDevices {
 		if len(c.Devices) > 0 {
 			err = append(err, fmt.Errorf("%sDevices must not be set", logPrefix))
 		}
@@ -704,7 +723,7 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 					name,
 					devices,
 					fmt.Sprintf("%sDevices->%s->", logPrefix, name),
-					allowFilter,
+					opts.AllowFilter,
 				)
 			},
 		)
