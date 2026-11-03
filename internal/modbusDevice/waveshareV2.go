@@ -1,6 +1,6 @@
 package modbusDevice
 
-// protocol documentation https://www.waveshare.com/wiki/Protocol_Manual_of_Modbus_RTU_Relay
+// protocol documentation https://www.waveshare.com/wiki/Modbus_RTU_Relay
 
 import (
 	"bytes"
@@ -61,7 +61,7 @@ func WaveshareReadSoftwareRevision(writeRead WriteReadBusFunc, deviceAddress byt
 		WaveshareFunctionReadAddressAndVersion,
 		[]byte{
 			0x20, 0x00, // 0x2000 read software revision
-			0x00, 0x01, // number of bytes, Fixed 0x0001
+			0x00, 0x01, // number of registers, fixed 0x0001
 		},
 		2, // number, revision of software
 	)

@@ -28,7 +28,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// responseWriter is a wrapper around http.ResponseWriter to capture the status code
+// responseWriter is a wrapper around http.ResponseWriter to capture the status code and the number of bytes written
 type responseWriter struct {
 	http.ResponseWriter
 	statusCode int

@@ -488,7 +488,7 @@ func TestController3P(t *testing.T) {
 				return i
 			})
 
-			// go to enclosure cool down and directly to ready due to low temperature
+			// go to enclosure cool down and to ready after EnclosureCoolDownMinTime due to low temperature
 
 			stateTracker.Assert(t, []genset.State{
 				{Node: genset.WarmUp, Changed: t0},

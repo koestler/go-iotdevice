@@ -34,6 +34,8 @@ const RegistersExpires = 10 * time.Second
 // @Param deviceName path string true "Device name as provided in devices array of the config endpoint"
 // @Produce json
 // @Success 200 {array} registerResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Router /views/{viewName}/devices/{deviceName}/registers [get]
 // @Security ApiKeyAuth

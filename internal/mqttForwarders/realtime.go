@@ -33,7 +33,7 @@ func runRealtimeForwarder(
 	// immediate mode: Interval is set to zero
 	// -> send values immediately when they change
 	// delayed update mode: Interval > 0
-	// -> have a timer, whenever it ticks, send the newest version of the changed values
+	// -> have a timer, whenever it ticks, send the newest version of the changed numeric values (other values are still sent immediately)
 	if mCfg.Interval() <= 0 {
 		go realtimeImmediateModeRoutine(ctx, cfg, dev, mc, storage, filter)
 	} else {

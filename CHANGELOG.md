@@ -31,6 +31,10 @@
 * remove jsoniter and use stdlib (prefer smaller binary over slightly less cpu time)
 * internal refactoring: value storage does not deduplicate values anymore, instead it is done as a filter of the subscription
 
+### Todo
+* bump go.mod to v4
+* can we change the websocket auth to use a header instead of a message?
+
 ## 3.13.0
 * config: make docs path configurable via `HttpServer->DocsPath`
 * add debian packaging

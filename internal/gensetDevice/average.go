@@ -3,7 +3,7 @@ package gensetDevice
 // Average computes a moving average over a fixed-size window.
 type Average struct {
 	window int
-	idx    int //  current index in the circular buffer
+	idx    int // index in the circular buffer where the next value is written
 	arr    []float64
 }
 

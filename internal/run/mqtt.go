@@ -13,8 +13,8 @@ import (
 func MqttClient(
 	cfg *config.Config,
 ) (mqttClientPool *pool.Pool[mqttClient.Client]) {
-	// run pool
-	mqttClientPool = pool.RunPool[mqttClient.Client]()
+	// create pool
+	mqttClientPool = pool.New[mqttClient.Client]()
 
 	for _, c := range cfg.MqttClients() {
 		if cfg.LogWorkerStart() {

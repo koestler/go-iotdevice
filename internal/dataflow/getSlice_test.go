@@ -8,7 +8,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
-func TestValueStorageGetSlice(t *testing.T) {
+func TestValueStorageGetState(t *testing.T) {
 	storage := dataflow.NewValueStorage()
 
 	fillSetA(storage)

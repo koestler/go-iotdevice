@@ -11,8 +11,8 @@ import (
 func Modbus(
 	cfg *config.Config,
 ) (modbusPool *pool.Pool[*modbus.ModbusStruct]) {
-	// run pool
-	modbusPool = pool.RunPool[*modbus.ModbusStruct]()
+	// create pool
+	modbusPool = pool.New[*modbus.ModbusStruct]()
 
 	for _, mbCfg := range cfg.Modbus() {
 		if cfg.LogWorkerStart() {

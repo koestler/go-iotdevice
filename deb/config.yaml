@@ -19,12 +19,12 @@ HttpServer:
 #   HtaccessFile: /etc/go-iotdevice/auth.passwd
 
 VictronDevices:
-  bmv0:
+  solar0:
     Kind: RandomSolar
 
 Views:
-  - Name: Overview
+  - Name: overview
     Title: Overview
     Devices:
-      - Name: bmv0
+      - Name: solar0
         Title: Demo Solar Charger

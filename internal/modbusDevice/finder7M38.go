@@ -73,7 +73,7 @@ func execPoll(ctx context.Context, c *DeviceStruct, registers []FinderRegister, 
 	// fetch registers
 	for _, register := range registers {
 		if reducedSet {
-			// skip registers that are static
+			// skip registers that change rarely (device info, energy counters); those are only read every 60th poll
 			if c := register.Category(); c == "Device Info" || c == "Energy Counter" {
 				continue
 			}

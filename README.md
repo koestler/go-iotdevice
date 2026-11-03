@@ -19,7 +19,7 @@ can be used to easily create custom dashboards showing the data.
 
 The tool was written with the following two scenarios in mind:
 * An off-grid holiday home installation running two batteries with
-  Victron Energy [SmartSolar](https://www.victronenergy.com/solar-charge-controllers/bluesolar-mppt-150-35) / 
+  Victron Energy [SmartSolar](https://www.victronenergy.com/solar-charge-controllers/smartsolar-150-35) / 
   [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt) for solar and battery monitoring, 
  and a [Shelly 3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) for generator power monitoring.
  The tool runs on a single [Raspberry Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/).
@@ -35,20 +35,21 @@ However, it is made to be extended. Feel free to send pull requests or
 
 | Configuration section              | Kind=              | Name                                                                                                                                                                                                                                               | State                              | 
 |------------------------------------|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------|
-| [VictronDevices](#Victron-devices) | Vedirect           | Victron Energy [BlueSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/mppt7510) (different versions)                                                                                                                              | production ready                   |
-| [VictronDevices](#Victron-devices) | Vedirect           | Victron Energy [SmartSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/smartsolar-150-35) (different versions)                                                                                                                    | production ready                   |
-| [VictronDevices](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 700](https://www.victronenergy.com/battery-monitors/bmv-700)                                                                                                                                                   | production ready                   |
-| [VictronDevices](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 702](https://www.victronenergy.com/battery-monitors/bmv-702)                                                                                                                                                   | production ready                   |
-| [VictronDevices](#Victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV-712 Smart](https://www.victronenergy.com/battery-monitors/bmv-712-smart)                                                                                                                                       | production ready                   |
-| [VictronDevices](#Victron-devices) | Vedirect           | Victron Energy [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt)                                                                                                                                                    | production ready                   |
-| [VictronDevices](#Victron-devices) | Vedirect           | Victron Energy [Phoenix Inverter](https://www.victronenergy.com/inverters)                                                                                                                                                                         | production ready                   |
-| [VictronDevices](#Victron-devices) | Vebus              | Victron Energy [Multiplus](https://www.victronenergy.com/inverters-chargers/multiplus-12v-24v-48v-800va-3kva)                                                                                                                                      | in development, see v3vebus branch |
-| [ModbusDevices](#Modbus-devices)   | WaveshareRtuRelay8 | [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay.htm)                                                                                                                                                | production ready                   |
-| [ModbusDevices](#Modbus-devices)   | Finder7M38         | [Finder TYPE 7M.38 - bi-directional multi-functional energy meters](https://www.findernet.com/en/uk/series/7m-series-smart-energy-meters/type/type-7m-38-three-phase-multi-function-bi-directional-energy-meters-with-backlit-matrix-lcd-display/) | production ready                   |
+| [VictronDevices](#victron-devices) | Vedirect           | Victron Energy [BlueSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/mppt7510) (different versions)                                                                                                                              | production ready                   |
+| [VictronDevices](#victron-devices) | Vedirect           | Victron Energy [SmartSolar MPPT](https://www.victronenergy.com/solar-charge-controllers/smartsolar-150-35) (different versions)                                                                                                                    | production ready                   |
+| [VictronDevices](#victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 700](https://www.victronenergy.com/battery-monitors/bmv-700)                                                                                                                                                   | production ready                   |
+| [VictronDevices](#victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV 702](https://www.victronenergy.com/battery-monitors/bmv-702)                                                                                                                                                   | production ready                   |
+| [VictronDevices](#victron-devices) | Vedirect           | Victron Energy Battery Monitor [BMV-712 Smart](https://www.victronenergy.com/battery-monitors/bmv-712-smart)                                                                                                                                       | production ready                   |
+| [VictronDevices](#victron-devices) | Vedirect           | Victron Energy [SmartShunt](https://www.victronenergy.com/battery-monitors/smart-battery-shunt)                                                                                                                                                    | production ready                   |
+| [VictronDevices](#victron-devices) | Vedirect           | Victron Energy [Phoenix Inverter](https://www.victronenergy.com/inverters)                                                                                                                                                                         | production ready                   |
+| [VictronDevices](#victron-devices) | Vebus              | Victron Energy [Multiplus](https://www.victronenergy.com/inverters-chargers/multiplus-12v-24v-48v-800va-3kva)                                                                                                                                      | in development, see v3vebus branch |
+| [ModbusDevices](#modbus-devices)   | WaveshareRtuRelay8 | [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay.htm)                                                                                                                                                | production ready                   |
+| [ModbusDevices](#modbus-devices)   | Finder7M38         | [Finder TYPE 7M.38 - bi-directional multi-functional energy meters](https://www.findernet.com/en/uk/series/7m-series-smart-energy-meters/type/type-7m-38-three-phase-multi-function-bi-directional-energy-meters-with-backlit-matrix-lcd-display/) | production ready                   |
 | [GpioDevices](#gpio-devices)       |                    | Raspberry Pi General Purpose IO Pins. E.g. used for [Waveshare Industrial 6-ch Relay Module for Raspberry Pi Zero](https://www.waveshare.com/rpi-zero-relay.htm)                                                                                   | beta testing                       |
 | [HttpDevices](#http-devices)       | Teracom            | Teracom [TCW241](https://www.teracomsystems.com/ethernet/ethernet-io-module-tcw241/) industrial relay/sensor board                                                                                                                                 | production ready                   | 
 | [HttpDevices](#http-devices)       | ShellyEm3          | Shelly [3EM](https://www.shelly.cloud/en-ch/products/product-overview/shelly-3-em) 3-phase energy power monitor                                                                                                                                    | production ready                   |
 | [MqttDevices](#mqtt-devices)       | GoIotdeviceV3      | Another go-iotdevice instance connected to the same MQTT server                                                                                                                                                                                    | production ready                   |
+| [GensetDevices](#genset-devices)   |                    | Generator set controller (start/stop sequence, I/O and output checks) built on top of other devices                                                                                                                                                | production ready                   |
 
 
 See [Devices](#devices) section on how to configure each.
@@ -63,7 +64,7 @@ This project uses the following terminology:
   of registers is simply defined by the type of device (e.g. Victron Energy MPPT 100 | 50) and for others it is configurable
   on the device (e.g. the TCW241).
   A Register has a technical name (alphanumeric, no spaces, used as the key in various JSON objects, e.g. "BatteryVoltage"),
-  a description (shown in the frontend, e.g. "Battery Voltage"), a Unit (e.g. "mV"), and a type (number, string, enum).
+  a description (shown in the frontend, e.g. "Battery Voltage"), a Unit (e.g. "V"), and a type (number, string, enum).
 * A **value** is a reference to a register plus a number/string/enum-index depending on the type of register.
   E.g.: A value can be 13.80 and references the register "BatteryVoltage".
 * A **view** is used in the HTTP server and the front-end.
@@ -101,7 +102,7 @@ sudo apt install ./go-iotdevice_<version>_<arch>.deb
 
 After the installation the service is enabled and running with a demo configuration (a simulated solar charger).
 The web interface is available at <http://127.0.0.1:8000/>.
-The service runs as the system user `go-iotdevice` which is a member of the groups `dialout` (serial devices) and `gpio`.
+The service runs as the system user `go-iotdevice` which is a member of the group `dialout` (serial devices) and, when the group exists on the system, `gpio`.
 
 Edit `/etc/go-iotdevice/config.yaml` (see `/usr/share/doc/go-iotdevice/full-config.yaml` for all options),
 validate and apply it:
@@ -147,6 +148,8 @@ services:
   go-iotdevice:
     restart: always
     image: ghcr.io/koestler/go-iotdevice:v3
+    ports:
+      - 127.0.0.1:8000:8000
     volumes:
       - ${PWD}/config.yaml:/config.yaml:ro
       #- ${PWD}/auth.passwd:/auth.passwd:ro
@@ -189,7 +192,7 @@ docker compose up -d
 
 You can use `go install` to build the binary locally.
 If you need the [frontend](https://github.com/koestler/js-iotdevice), you have to manually `npm run build` it and copy the files to the correct location.
-Also, the swagger documentation will be missing. See [Local Development](#Local-development) for more details.
+Also, the swagger documentation will be missing. See [Local Development](#local-development) for more details.
 
 ```bash
 go install github.com/koestler/go-iotdevice/v3@latest
@@ -208,6 +211,10 @@ The configuration is stored in a single yaml file. By default, it is read from `
 This can be changed using the `--config=another-config.yaml` command line option.
 
 There are mandatory fields and there are optional fields which have reasonable default values.
+
+Environment variables are expanded in the whole file before it is parsed (`$VAR` and `${VAR}`).
+A literal `$` in a value (e.g. in a password or the `JwtSecret`) is therefore replaced and there is no escape sequence.
+Put such values into an environment variable instead and reference it (e.g. `Password: ${MQTT_PASSWORD}`).
 
 See [Explained Full Configuration](#explained-full-configuration) for a complete list of all available configuration options.
 
@@ -251,7 +258,7 @@ VictronDevices:
 [Modbus](https://en.wikipedia.org/wiki/Modbus) [RS485](https://en.wikipedia.org/wiki/RS-485) is an old industry bus
 used in various devices like power meters. It has the advantage of connecting multiple devices via one serial device.
 There are some relatively cheap relay boards
-(e.g. [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay-b.htm))
+(e.g. [Waveshare Industrial Modbus RTU 8-ch Relay Module](https://www.waveshare.com/modbus-rtu-relay.htm))
 available, which have a much lower power consumption when compared to ethernet-connected devices.
 
 First, you need to configure the serial device connected to the bus.
@@ -339,7 +346,7 @@ HttpDevices:
     Filter:
       # Some devices have quite an extensive list of registers
       SkipCategories:
-        # use this list to skip certain unused sections (all digital inputs)
+        # use this list to skip certain unused sections
         - Analog Inputs
         - Virtual Inputs
         - Digital Inputs
@@ -353,8 +360,7 @@ MQTT devices receive values from an MQTT broker. E.g. if you have multiple compu
 and you want to have all the devices in the same front-end.
 
 For this to work, you need to define an MqttDevice and then configure an MqttClient to connect to a broker and send data
-to this MQTT device. To allow for redundant setups, you can have multiple MqttClients sending data to the same
-MqttDevice.
+to this MQTT device.
 
 For the `GoIotdeviceV3` kind, you need to give it the Topic of the structure (see [Mqtt Interface Structure](#structure))
 message. This structure is then used to generate the list of registers and subscribe to the
@@ -378,15 +384,25 @@ MqttDevices:
     Kind: GoIotdeviceV3
 ```
 
+### Genset devices
+A genset device is a controller for a generator set. It does not talk to hardware directly. Instead, its inputs
+(switches, temperatures, output measurements) are bound to registers of other devices and its outputs
+(ignition, starter, fan, pump, load) are bound to writable registers of other devices using `InputBindings` and `OutputBindings`.
+See [internal/gensetDevice/README.md](internal/gensetDevice/README.md) for a description of the states, inputs, outputs
+and configuration variables and the [Explained Full Configuration](#explained-full-configuration) for an example.
+
 ## Http Interface
 There is a stable REST-API to fetch the views, devices, registers, and values.
 Additionally, patch requests are implemented to set a controllable register (e.g. an output of a relay board).
+Patch requests always require a logged-in user (see [Authentication](#authentication)), even for public views.
+Without an `Authentication` section, registers cannot be written via HTTP.
 This API is used by the built-in front-end and can also be used for custom integrations.
 See /api/v2/docs/swagger.html and /api/v2/docs/swagger.json (also available as /api/v2/docs/swagger.yaml) for built-in swagger documentation.
 
 ## Authentication
 The tool can use [JWT](https://jwt.io/) to make certain views only available after a login. The user database
-is stored in an htpasswd file which can be changed without restarting the server. 
+is stored in an htpasswd file which can be changed without restarting the server.
+Already issued tokens stay valid until they expire (`JwtValidityPeriod`), also when the user is changed or removed in the file.
 
 ### Configuration
 
@@ -395,10 +411,11 @@ There are two relevant sections in the configuration file:
 1. Adding the `Authentication:` section enables the login/authentication mechanism.
 The `JwtSecret` is used to sign the tokens. When left unconfigured, a new random secret is generated on each
 startup of the backend. This results in all users being logged out after each restart of the server.
-It's therefore best to hardcode a random secret.
+It's therefore best to hardcode a random secret. When set, it must be at least 32 characters long.
 
 2. Per `View`, you can define a list of `AllowedUsers`. When the list is present and has at least one entry, only
 usernames on that list can access this view. If the list is empty, the view is public and can be accessed anonymously, without logging in.
+Anonymous users can only read; writing a register (PATCH) always requires a logged-in user.
 
 ### User database
 The only supported authentication backend at the moment is a simple htpasswd file. Set it up as follows:
@@ -420,26 +437,40 @@ I normally run this service behind an [Nginx](https://nginx.org/en/) server conf
 It's assumed that you understand each of the following steps in detail. It's just to make the setup steps as quick as possible. 
 
 ```bash
-# install nginx / curl
-apt update && apt install -y nginx curl
+# install nginx / curl / certbot
+apt update && apt install -y nginx curl certbot
 
 # define on what URL the tool shall be reachable
 SITE=foo.example.com
 CONFFILE=$SITE".conf"
 
-# create nginx configuration
+# create a temporary nginx configuration that only serves the Let's Encrypt challenge
+# (the final configuration references certificates that do not exist yet)
+mkdir -p /srv/www-acme-challenge/$SITE
+cat > /etc/nginx/sites-available/$CONFFILE <<EOF
+server {
+    listen 80;
+    listen [::]:80;
+    server_name $SITE;
+    location /.well-known/acme-challenge {
+        root /srv/www-acme-challenge/$SITE/;
+    }
+}
+EOF
+cd /etc/nginx/sites-enabled
+ln -s "../sites-available/"$CONFFILE
+service nginx reload
+
+# request the certificate
+certbot certonly --authenticator webroot --webroot-path /srv/www-acme-challenge/$SITE -d $SITE
+
+# replace the temporary configuration with the real one
 cd /etc/nginx/sites-available/
 curl https://raw.githubusercontent.com/koestler/go-iotdevice/main/documentation/nginx-example.conf -o $CONFFILE
 sed -i "s/example.com/$SITE/g" $CONFFILE
-cd ../sites-enabled
-ln -s "../sites-available/"$CONFFILE
 
 # edit the proxy_pass directive to the correct address for the service
 emacs $CONFFILE 
-
-# setup certbot. use something like this:
-mkdir -p /srv/www-acme-challenge/$SITE
-certbot certonly --authenticator webroot --webroot-path /srv/www-acme-challenge/$SITE -d $SITE
 
 # reload the nginx config
 service nginx reload 
@@ -459,6 +490,9 @@ and what devices/registers shall be transmitted. Incoming command messages have 
 go-iotdevice sends the message `online` whenever it connects to an MQTT broker and sends `offline` when it properly shuts down.
 Additionally, the `offline` message is registered as the last will message and the broker will distribute it automatically
 when the connection breaks.
+
+The topic contains the `ClientId` of the MQTT client. By default, it is `go-iotdevice-<random UUID>` and changes on each start.
+The examples in this document assume `ClientId: go-iotdevice` is configured.
 
 Examples:
 ```
@@ -484,8 +518,9 @@ of registers as well as the topics for the availability, telemetry, real-time, a
 knows where to subscribe to get current values/control the outputs.
 
 Structure messages are sent whenever a register is added or changed by default (Interval=0s, on-update mode) with the retain
-flag set (the broker stores those messages for new clients).
-Alternatively, it can also be sent repeatedly (Interval>0).
+flag set (the broker stores those messages for new clients). In this mode, a message only contains the registers
+that were added or changed within the last 100 ms, not the full list of registers.
+Alternatively, the full structure can also be sent repeatedly (Interval>0, the first message is sent after one interval).
 
 Example:
 ```
@@ -510,11 +545,11 @@ Avail=AvailabilityTopics, Tele=TelemetryTopic, Real=RealtimeTopic, Cmnd=CommandT
 
 ### Telemetry
 There are two ways to receive values. Telemetry messages are sent periodically (1s by default) per device and contain
-all the current values.
+all the current values. No telemetry message is sent while a device is unavailable.
 
 Example:
 ```
-dev0/tele/teracom {
+go-iotdevice/tele/teracom {
   "Time":"2023-11-15T16:55:42+01:00",
   "NextTelemetry":"2023-11-15T16:55:52+01:00",
   "Model":"Teracom",
@@ -564,7 +599,7 @@ go-iotdevice/cmnd/my-device/R1 {"EnumIdx": 1}
 Example of how to switch Relay 1 of a device called dev0 into the on position via mosquitto:
 
 ```bash
-mosquitto_pub -h 172.19.0.4 -t dev1/cmnd/dev0/R1 -m "{\"EnumIdx\": 1}"
+mosquitto_pub -h 172.19.0.4 -t go-iotdevice/cmnd/dev0/R1 -m "{\"EnumIdx\": 1}"
 ```
 
 ### HomeassistantDiscovery
@@ -572,7 +607,8 @@ These messages are such that Home Assistant automatically shows read-only regist
 as switches. See [Home Assistant MQTT](https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery).
 
 Discovery messages for sensors are only sent for devices/registers for which real-time messages are active because
-they are used to transmit the actual values. Switches are only advertised for registers for which the command topic is active. 
+they are used to transmit the actual values. Without `Realtime` enabled for a device (and passing its filter), no discovery message
+is sent at all. Switches are only advertised for writable enum registers with at least two entries for which the command topic is active. 
 Use filters in the Realtime and Command configuration section to restrict what devices/registers are shown in Home Assistant.
 Also, consider setting `Realtime->Interval=500ms`. Home Assistant can easily be overloaded by hundreds of registers.
 
@@ -617,6 +653,8 @@ HttpServer:                                                # optional, when miss
   FrontendProxy: "http://127.0.0.1:3000/"
  ```  
  
+Alternatively, put a frontend build into the directory configured by `FrontendPath` (default `./frontend-build/`).
+
 Build and run: 
   
 ```bash
@@ -638,6 +676,7 @@ docker run --rm --name go-iotdevice -p 127.0.0.1:8000:8000 \
 ### Build the Debian package locally
 ```bash
 go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+# the script also needs Node.js (npx) and curl
 # versions are pinned in the env: section of .github/workflows/deb-package.yml
 SWAG_VERSION=v1.16.6 FRONTEND_VERSION=v2.4.1 \
 deb/build-deb.sh amd64   # or arm64 / armhf; result is in dist/
@@ -668,23 +707,23 @@ Version: 2                                                 # mandatory, configur
 ProjectTitle: Configurable Title of Project                # optional, default go-iotdevice, title is shown in the http frontend
 LogConfig: true                                            # optional, default true, outputs the full configuration structure including used defaults on startup
 LogWorkerStart: true                                       # optional, default true, outputs what devices and mqtt clients are started
-LogStateStorageDebug: false                                # optional, default false, logs all writes to the internal state value storage
-LogCommandStorageDebug: false                              # optional, default false, logs all writes to the internal command value storage
+LogStateStorageDebug: false                                # optional, default false, logs all changed values that are forwarded to the internal state value storage
+LogCommandStorageDebug: false                              # optional, default false, logs all changed values that are forwarded to the internal command value storage
 
 HttpServer:                                                # optional, when missing: http server is not started
   Bind: "[::]"                                             # mandatory, use [::1] to only enable the loopback and [::] to bind all interfaces (both IPv4 and IPv6)
   Port: 8000                                               # optional, default 8000, what tcp port to listen on, low-ports like 80 only work when started as root
-  LogRequests: true                                        # optional, default true, enable the http access log to stdout
-  # configure FrontendProxy xor FrontendPath
+  LogRequests: true                                        # optional, default true, enable the http access log to stderr
+  # configure either FrontendProxy or FrontendPath; this is not enforced, when both are set FrontendProxy wins
   #FrontendProxy: "http://127.0.0.1:3000/"                 # optional, default deactivated; proxies the frontend to another server; useful for development
   FrontendPath: ./frontend-build/                          # optional, default "./frontend-build/", path to a static frontend build
   DocsPath: ./docs/                                        # optional, default "./docs/", path to the swagger documentation files (swagger.html, swagger.json, swagger.yaml)
-  FrontendExpires: 5m                                      # optional, default 5min, what cache-control header to send for static frontend files
+  FrontendExpires: 5m                                      # optional, default 5min, what cache-control header to send for static files
   ConfigExpires: 1m                                        # optional, default 1min, what cache-control header to send for configuration endpoints
   LogDebug: false                                          # optional, default false, output debug messages related to the http server
 
 Authentication:                                            # optional, when missing: login is disabled
-  #JwtSecret: 'change-me'  # optional, default new random string on startup, used to sign the JWT tokens
+  #JwtSecret: 'change-me'  # optional, default new random string on startup, used to sign the JWT tokens; when set, it must be at least 32 characters long
                                                            # use a fixed, secure, random value (e.g. `pwgen -s 64 1`) to allow users to stay logged in on restart
   JwtValidityPeriod: 1h                                    # optional, default 1h, users are logged out after this time
   HtaccessFile: ./auth.passwd                              # mandatory, where the file generated by htpasswd can be found
@@ -727,7 +766,7 @@ MqttClients:                                               # optional, when empt
     Structure:
       Enabled: true                                        # optional, default false, whether to send messages containing the list of registers/types
       TopicTemplate: '%Prefix%struct/%DeviceName%'         # optional, default as shown, what topic to use for structure messages
-      Interval: 0s                                         # optional, default 0, 0 means on-update mode: sent whenever a register is added or changed, otherwise the full structure is repeated after this interval (useful when retain is false)
+      Interval: 0s                                         # optional, default 0, 0 means on-update mode: sent whenever a register is added or changed, otherwise the full structure is repeated after each interval (the first repetition is sent one interval after startup) (useful when retain is false)
       Retain: true                                         # optional, default true, the mqtt retain flag for structure messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
@@ -779,7 +818,7 @@ MqttClients:                                               # optional, when empt
     HomeassistantDiscovery:
       Enabled: true                                        # optional, default false, whether to enable sending homeassistant auto-discovery messages
       TopicTemplate: 'homeassistant/%Component%/%NodeId%/%ObjectId%/config' # optional, default as shown, topic to use for homeassistant discovery messages
-      Interval: 0s                                         # optional, default 0, 0 means on-update mode: sent whenever a register is added or changed, otherwise the discovery messages are repeated after this interval (useful when retain is false)
+      Interval: 0s                                         # optional, default 0, 0 means on-update mode: sent whenever a register is added or changed, otherwise the discovery messages are repeated after each interval (the first repetition is sent one interval after startup) (useful when retain is false)
       Retain: false                                        # optional, default false, the mqtt retain flag for homeassistant discovery messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
@@ -797,26 +836,26 @@ MqttClients:                                               # optional, when empt
       TopicTemplate: '%Prefix%cmnd/%DeviceName%/%RegisterName%' # optional, default as shown, what topic to use for command messages
       Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
       Devices:                                             # optional, default all, a list of devices to match
-        bmv0:                                              # messages are only sent for this device
+        bmv0:                                              # commands are only received for this device
           Filter:                                          # optional, default include all, defines which registers are included,
             # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
             IncludeRegisters:                              # optional, default empty, if a register is on this list, it is returned
-              - BatteryVoltage                             # the BatteryVoltage register is sent no matter if its category is listed under categories
+              - BatteryVoltage                             # the BatteryVoltage register can be controlled no matter if its category is listed under categories
               - Power
             SkipRegisters:                                 # optional, default empty, if a register is on this list, it is not returned
             IncludeCategories:                             # optional, default empty, all registers of the given category that are not explicitly skipped are returned
-              - Essential                                  # all registers of the category essential are sent, unless they are listed under SkipRegisters
+              - Essential                                  # all registers of the category essential can be controlled, unless they are listed under SkipRegisters
             SkipCategories:                                # optional, default empty, all registers of the given category that are not explicitly included are not returned
             DefaultInclude: False                          # optional, default true, whether to return the registers that do not match any include/skip rule
 
     LogDebug: false                                        # optional, default false, very verbose debug log of the mqtt connection
-    LogMessages: false                                     # optional, default false, log all incoming mqtt messages
+    LogMessages: false                                     # optional, default false, log all incoming mqtt messages (payloads are truncated to 80 bytes)
 
 Modbus:                                                    # optional, when empty, no modbus handler is started
   bus0:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Device: /dev/ttyACM0                                   # mandatory, the RS485 serial device
     BaudRate: 4800                                         # mandatory, eg. 9600
-    ReadTimeout: 100ms                                     # optional, default 100ms, how long to wait for a response
+    ReadTimeout: 100ms                                     # optional, default 100ms, timeout of a single serial read; the serial driver rounds it to steps of 100ms (minimum 100ms, maximum 25.5s)
     LogDebug: false                                        # optional, default false, verbose debug log
 
 VictronDevices:                                            # optional, a list of Victron Energy devices to connect to
@@ -862,7 +901,7 @@ ModbusDevices:                                             # optional, a list of
     RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
     RestartIntervalMaxBackoff: 1m                          # optional, default 1m, when it fails, the restart interval is exponentially increased up to this maximum
     LogDebug: false                                        # optional, default false, enable debug log output
-    LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
+    LogComDebug: false                                     # optional, default false, currently has no effect for this kind of device
 
   modbus-finder:                                           # mandatory, an arbitrary name used for logging and for referencing in other config sections
     Bus: bus0                                              # mandatory, the identifier of the modbus to use
@@ -881,11 +920,11 @@ GpioDevices:                                               # optional, a list of
     RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
     RestartIntervalMaxBackoff: 1m                          # optional, default 1m, when it fails, the restart interval is exponentially increased up to this maximum
     LogDebug: false                                        # optional, default false, enable debug log output
-    LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
+    LogComDebug: false                                     # optional, default false, currently has no effect for this kind of device
     Chip: gpiochip0                                        # optional, default gpiochip0, the gpiochip to use. See output of gpioinfo
     InputDebounce: 100ms                                   # optional, default 100ms, debounce the input signal, 0 to disable
-    InputOptions: []                                       # optional, default unchanged, valid options: WithBiasDisabled, WithPullDown, WithPullUp
-    OutputOptions: []                                      # optional, default unchanged, valid options: AsOpenDrain, AsOpenSource, AsPushPull
+    InputOptions: []                                       # optional, default unchanged, at most one entry, valid options: WithBiasDisabled, WithPullDown, WithPullUp
+    OutputOptions: []                                      # optional, default unchanged, at most one entry, valid options: AsOpenDrain, AsOpenSource, AsPushPull
     Inputs:                                                # optional, a list of inputs
       Switch0:                                             # mandatory, a technical name used for the register
         Pin: GPIO2                                         # mandatory, the kernel line name of the gpio as shown by `gpioinfo`, e.g. "GPIO2".
@@ -922,7 +961,7 @@ HttpDevices:                                               # optional, a list of
     RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
     RestartIntervalMaxBackoff: 1m                          # optional, default 1m, when it fails, the restart interval is exponentially increased up to this maximum
     LogDebug: false                                        # optional, default false, enable debug log output
-    LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
+    LogComDebug: false                                     # optional, default false, currently has no effect for this kind of device
 
 MqttDevices:                                               # optional, a list of devices receiving their values via an MQTT server from another instance
   bmv1:                                                    # mandatory, an arbitrary name used for logging and for referencing in other config sections
@@ -934,26 +973,20 @@ MqttDevices:                                               # optional, a list of
       IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
       SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
       DefaultInclude: True                                 # optional, default true, whether to return the registers that do not match any include/skip rule
-    RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
-    RestartIntervalMaxBackoff: 1m                          # optional, default 1m, when it fails, the restart interval is exponentially increased up to this maximum
+    RestartInterval: 200ms                                 # optional, default 200ms, currently has no effect, an MqttDevice never fails
+    RestartIntervalMaxBackoff: 1m                          # optional, default 1m, currently has no effect, an MqttDevice never fails
     LogDebug: false                                        # optional, default false, enable debug log output
-    LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
+    LogComDebug: false                                     # optional, default false, currently has no effect for this kind of device
 
 GensetDevices:                                             # optional, a list of generator set control devices
   genset0:                                                 # mandatory, an arbitrary name used for logging and for referencing in other config sections
-    Filter:                                                # optional, default include all, defines which registers are included,
-      # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
-      IncludeRegisters:                                    # optional, default empty, if a register is on this list, it is returned
-      SkipRegisters:                                       # optional, default empty, if a register is on this list, it is not returned
-      IncludeCategories:                                   # optional, default empty, all registers of the given category that are not explicitly skipped are returned
-      SkipCategories:                                      # optional, default empty, all registers of the given category that are not explicitly included are not returned
-      DefaultInclude: True                                 # optional, default true, whether to return the registers that do not match any include/skip rule
+    Filter:                                                # currently ignored, all registers of a genset device are always created
     RestartInterval: 200ms                                 # optional, default 200ms, how fast to restart the device if it fails / disconnects
     RestartIntervalMaxBackoff: 1m                          # optional, default 1m, when it fails, the restart interval is exponentially increased up to this maximum
-    LogDebug: false                                        # optional, default false, enable debug log output
-    LogComDebug: false                                     # optional, default false, enable a verbose log of the communication with the device
+    LogDebug: false                                        # optional, default false, currently ignored
+    LogComDebug: false                                     # optional, default false, currently ignored
 
-    InputBindings:                                         # mandatory, a list of input bindings
+    InputBindings:                                         # optional, a list of input bindings
       tcw241:                                              # the device name of the input device
         IOAvailable: Available                             # key: the target value of the genset controller; value: register name of input device
         ArmSwitch: DI1
@@ -970,7 +1003,7 @@ GensetDevices:                                             # optional, a list of
         P3: P3
         F: F
 
-    OutputBindings:                                        # mandatory, a list of output bindings
+    OutputBindings:                                        # optional, a list of output bindings
       modbus-rtu0:                                         # the device name of the output device
         Ignition: CH1                                      # key: the source value of the genset controller; value: register name of output device
         Starter: CH2
@@ -1001,19 +1034,19 @@ GensetDevices:                                             # optional, a list of
     SinglePhase: false                                     # optional, default false, whether the generator is single phase or a three-phase system
     UMin: 220                                              # optional, default 220, minimum voltage the generator must have to not trigger the error state
     UMax: 240                                              # optional, default 240, maximum voltage the generator must have to not trigger the error state
-    UAvgWindow: 3                                          # optional, default 3, a sliding window over which the average voltage is calculated for error detection
+    UAvgWindow: 3                                          # optional, default 3, a sliding window over which the average voltage is calculated for error detection and for the cranking to stabilizing transition
     FMin: 45                                               # optional, default 45, minimum frequency the generator must have to not trigger the error state
     FMax: 55                                               # optional, default 55, maximum frequency the generator must have to not trigger the error state
-    FAvgWindow: 3                                          # optional, default 3, a sliding window over which the average frequency is calculated for error detection
-    PMax: 1E6                                              # optional, default 1E6, maximum power the generator must have to not trigger the error state
+    FAvgWindow: 3                                          # optional, default 3, a sliding window over which the average frequency is calculated for error detection and for the cranking to stabilizing transition
+    PMax: 1E6                                              # optional, default 1E6, maximum power per phase the generator must have to not trigger the error state
     PTotMax: 1E6                                           # optional, default 1E6, maximum total power the generator must have to not trigger the error state
 
 Views:                                                     # optional, a list of views (=categories in the frontend / paths in the api URLs)
   - Name: victron                                          # mandatory, a technical name used in the URLs
     Title: Victron                                         # mandatory, a nice title displayed in the frontend
-    Devices:                                               # mandatory, a list of devices to show
+    Devices:                                               # optional, a list of devices to show
       - Name: bmv0                                         # mandatory, the arbitrary names defined above
-        Title: Battery Monitor                             # mandatory, a nice title displayed in the frontend
+        Title: Battery Monitor                             # optional, a nice title displayed in the frontend
         Filter:                                            # optional, default include all, defines which registers are shown in the view,
                                                            # The rules are applied in order beginning with IncludeRegisters (highest priority) and ending with DefaultInclude (lowest priority).
           IncludeRegisters:                                # optional, default empty, if a register is on this list, it is returned
@@ -1027,4 +1060,5 @@ Views:                                                     # optional, a list of
     AllowedUsers:                                          # optional, if empty, the view is public (accessible anonymously), otherwise only the users listed here can access it
       - test0                                              # username which is allowed to access this view
     Hidden: false                                          # optional, default false, if true, this view is not shown in the menu unless the user is logged in
+
 ```

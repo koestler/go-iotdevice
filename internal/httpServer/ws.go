@@ -31,12 +31,14 @@ type authMessage struct {
 // setupValuesWs godoc
 // @Summary Realtime values websocket
 // @Description Websocket that sends all registers and values initially and sends updates of changed values subsequently.
+// @Description Every text message sent by the server is one JSON object of type outputMessage.
+// @Description The websocket is not authenticated by a header. For views that are not public, the client must send
+// @Description the text message {"authToken":"<jwt>"} (a token as returned by the login endpoint) after connecting.
+// @Description The server only starts sending values after a valid token of an allowed user was received.
 // @Param viewName path string true "View name as provided by the config endpoint"
 // @Produce json
-// @Success 200 {array} outputMessage
-// @Failure 404 {object} ErrorResponse
+// @Success 101 {object} outputMessage "Switching protocols; afterwards the server sends a stream of outputMessage objects"
 // @Router /views/{viewName}/ws [get]
-// @Security ApiKeyAuth
 func setupValuesWs(mux *http.ServeMux, env *Environment) {
 	// add dynamic routes
 	for _, view := range env.Views {

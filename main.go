@@ -12,7 +12,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/internal/run"
 )
 
-// is set through linker by build.sh
+// is set through the linker by the build scripts
 var buildVersion string
 var buildTime string
 
@@ -109,14 +109,14 @@ func main() {
 		devicePool := run.DevicePool()
 		defer devicePool.Shutdown()
 
-		// start non mqtt devices
+		// start all devices except thei mqtt devices
 		run.NonMqttGensetDevices(cfg, devicePool, modbusPool, stateStorage, commandStorage)
 
 		// start mqtt client pool
 		mqttClientPool := run.MqttClient(cfg)
 		defer mqttClientPool.Shutdown()
 
-		// start mqtt clients
+		// start mqtt devices
 		run.MqttDevices(cfg, devicePool, mqttClientPool, stateStorage, commandStorage)
 
 		// start genset devices

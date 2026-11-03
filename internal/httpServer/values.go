@@ -20,6 +20,8 @@ type values1DResponse map[string]valueResponse
 // @Param deviceName path string true "Device name as provided in devices array of the config endpoint"
 // @Produce json
 // @Success 200 {object} values1DResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
 // @Router /views/{viewName}/devices/{deviceName}/values [get]
 // @Security ApiKeyAuth
@@ -53,12 +55,19 @@ func valuesGetJsonHandler(env *Environment, view ViewConfig, filter dataflow.Val
 
 // setupValuesPatch godoc
 // @Summary Set value
-// @Description Sets a writable register to a certain value.
+// @Description Sets one or multiple writable registers to a certain value. Always requires a logged-in user.
+// @Description The body is a JSON object mapping the register names to the new values:
+// @Description a number for number registers, the enum index for enum registers and a string for text registers.
+// @Accept json
 // @Param viewName path string true "View name as provided by the config endpoint"
 // @Param deviceName path string true "Device name as provided in devices array of the config endpoint"
-// @Produce json
-// @Success 200
+// @Param request body object true "map of register name to new value"
+// @Success 200 "Values were accepted; the response has an empty body"
+// @Failure 401 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
 // @Failure 404 {object} ErrorResponse
+// @Failure 413 {object} ErrorResponse
+// @Failure 422 {object} ErrorResponse
 // @Router /views/{viewName}/devices/{deviceName}/values [patch]
 // @Security ApiKeyAuth
 func setupValuesPatch(mux *http.ServeMux, env *Environment) {

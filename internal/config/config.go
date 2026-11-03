@@ -69,7 +69,7 @@ func (c configRead) TransformAndValidate(bypassFileCheck bool) (ret Config, err 
 	var e []error
 
 	if c.Version == nil {
-		err = append(err, fmt.Errorf("Version must be defined. Use Version=2"))
+		err = append(err, fmt.Errorf("Version must be defined. Use Version: 2"))
 	} else {
 		ret.version = *c.Version
 		if ret.version != 2 {
@@ -468,7 +468,7 @@ func (c mqttClientConfigRead) TransformAndValidate(
 
 	nonLoopMqttDevices := make([]DeviceConfig, 0, len(devices))
 	for _, d := range devices {
-		// do not allow to send mqtt messages for any device that is itself an mqtt device (avoids loops)
+		// do not allow to send mqtt messages for any device that is one of the MqttDevices of this client (avoids loops)
 		if existsByName(d.Name(), ret.mqttDevices) {
 			continue
 		}

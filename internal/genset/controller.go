@@ -126,7 +126,7 @@ func (c *Controller) UpdateInputs(f func(Inputs) Inputs) {
 }
 
 // UpdateInputsSync sends a change to the controller inputs and waits for both the state and outputs
-// to be recomputed and the OnUpdate functions to return.
+// to be recomputed and the OnStateUpdate / OnOutputUpdate functions to return.
 // This is useful for testing.
 func (c *Controller) UpdateInputsSync(f func(Inputs) Inputs) {
 	done := make(chan struct{})
@@ -134,7 +134,8 @@ func (c *Controller) UpdateInputsSync(f func(Inputs) Inputs) {
 	<-done
 }
 
-// Run is the main loop of the controller. It will send the initial state and outputs via the OnStateUpdate and OnOutputUpdate callbacks
+// Run starts the main loop of the controller in a goroutine and returns once the initial state has been computed.
+// The initial state and outputs are sent via the OnStateUpdate and OnOutputUpdate callbacks.
 func (c *Controller) Run() {
 	initDone := make(chan struct{})
 

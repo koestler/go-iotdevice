@@ -165,7 +165,7 @@ func NewNullRegisterValue(deviceName string, register Register) NullRegisterValu
 	}
 }
 
-// NewRegisterValue creates a new RegisterValue struct based on a Value interface.
+// NewRegisterValue creates a new Value (numeric, text, enum or null) for the given register based on a Value interface.
 func NewRegisterValue(deviceName string, register Register, v Value) Value {
 	switch tv := v.(type) {
 	case NumericRegisterValue:

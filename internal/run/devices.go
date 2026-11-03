@@ -25,9 +25,10 @@ import (
 const gensetRunDelay = 2 * time.Second
 
 func DevicePool() *pool.Pool[*restarter.Restarter[device.Device]] {
-	return pool.RunPool[*restarter.Restarter[device.Device]]()
+	return pool.New[*restarter.Restarter[device.Device]]()
 }
 
+// NonMqttGensetDevices starts all devices except the MqttDevices.
 func NonMqttGensetDevices(
 	cfg *config.Config,
 	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
@@ -84,7 +85,7 @@ func NonMqttGensetDevices(
 
 	for _, deviceConfig := range cfg.HttpDevices() {
 		if cfg.LogWorkerStart() {
-			log.Printf("device[%s]: start teracom type", deviceConfig.Name())
+			log.Printf("device[%s]: start http type", deviceConfig.Name())
 		}
 
 		deviceConfig := httpDeviceConfig{deviceConfig}
@@ -155,7 +156,7 @@ func registerDbOfDevice(
 	}
 }
 
-// the following structs / methods are used to cast config.FilterConfig into dataflow.RegisterFilterConf
+// The following structs / methods wrap the config structs to adapt them to the interfaces expected by the device packages.
 
 type victronDeviceConfig struct {
 	config.VictronDeviceConfig

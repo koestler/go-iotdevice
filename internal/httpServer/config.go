@@ -31,9 +31,10 @@ type deviceViewResponse struct {
 // @Description Includes a project title,
 // @Description a list of possible views (collection of devices / authentication)
 // @Description and for every view the names of the devices.
+// @Description All views are listed, including views that are not public and views marked as hidden.
+// @Description Hidden is only a hint for the frontend to not show the view in its menu; it is no access control.
 // @Produce json
 // @Success 200 {object} configResponse
-// @Failure 500 {object} ErrorResponse
 // @Router /config/frontend [get]
 func setupConfig(mux *http.ServeMux, env *Environment) {
 	mux.HandleFunc("GET /api/v2/config/frontend", gzipMiddleware(configHandler(env)))

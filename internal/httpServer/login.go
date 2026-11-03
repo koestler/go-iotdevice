@@ -29,6 +29,7 @@ type loginResponse struct {
 // @Produce json
 // @Param request body loginRequest true "user info"
 // @Success 200 {object} loginResponse
+// @Failure 413 {object} ErrorResponse
 // @Failure 422 {object} ErrorResponse
 // @Failure 401 {object} ErrorResponse
 // @Failure 500 {object} ErrorResponse

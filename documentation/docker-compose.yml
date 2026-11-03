@@ -2,6 +2,8 @@ services:
   go-iotdevice:
     restart: always
     image: ghcr.io/koestler/go-iotdevice:v3
+    ports:
+      - 127.0.0.1:8000:8000
     volumes:
       - ${PWD}/config.yaml:/config.yaml:ro
       #- ${PWD}/auth.passwd:/auth.passwd:ro

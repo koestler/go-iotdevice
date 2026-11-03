@@ -192,7 +192,7 @@ func (c *DeviceStruct) setupTelemetrySubscription(mc mqttClient.Client, topic st
 			return
 		}
 
-		// get register
+		// loop over all registers
 		for _, register := range c.RegisterDb().GetAll() {
 			switch register.RegisterType() {
 

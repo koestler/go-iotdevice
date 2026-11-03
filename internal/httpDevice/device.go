@@ -129,7 +129,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 					ds.Name(), err,
 				)
 			} else {
-				// read and discard response body
+				// make sure the response body is closed
 				defer resp.Body.Close() //nolint:errcheck
 
 				if resp.StatusCode != http.StatusOK {

@@ -12,7 +12,7 @@ type Pool[I Poolable] struct {
 	mutex sync.RWMutex
 }
 
-func RunPool[I Poolable]() *Pool[I] {
+func New[I Poolable]() *Pool[I] {
 	return &Pool[I]{
 		items: make(map[string]I),
 	}

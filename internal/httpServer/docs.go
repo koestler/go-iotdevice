@@ -14,7 +14,7 @@ import (
 // @license.url https://github.com/koestler/go-iotdevice/blob/main/LICENSE
 
 // @BasePath /api/v2
-// @schemes http
+// @schemes http https
 
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
