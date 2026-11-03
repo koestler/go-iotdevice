@@ -16,6 +16,7 @@
   * fix various error messages and logging
   * config: do not panic when an MQTT device is referenced that does not exist
   * genset: fix bug that caused too many registers to be controllable
+  * genset: compute average correctly when values do not change
   * genset: improve handling of unavailable devices, NaN values
   * fix nil pointer panics when a referenced device or mqtt client is not available
   * fix race conditions in shutdown mechanism

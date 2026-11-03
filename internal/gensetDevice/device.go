@@ -177,7 +177,8 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		registerName := b.RegisterName()
 		setter := inputSetters[i]
 		sub := d.StateStorage().SubscribeSendInitial(runCtx, func(curr, prev dataflow.Value) bool {
-			return !prev.Equals(curr) && curr.DeviceName() == deviceName && curr.Register().Name() == registerName
+			// do not deduplicate unchanged values, it's needed for Averaging registers
+			return curr.DeviceName() == deviceName && curr.Register().Name() == registerName
 		})
 
 		shutdownWg.Go(func() {
