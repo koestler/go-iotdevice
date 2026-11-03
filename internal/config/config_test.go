@@ -20,19 +20,19 @@ Version: 42
 `
 
 	ValidCompleteConfig = `
-version: 2
+Version: 2
 ProjectTitle: Configurable Title of Project
-LogConfig: true
-LogWorkerStart: true
+LogConfig: false
+LogWorkerStart: false
 LogStateStorageDebug: true
 LogCommandStorageDebug: true
 
 HttpServer:
   Bind: "[::1]"
-  Port: 8000
+  Port: 8001
   LogRequests: false
   FrontendProxy: "http://127.0.0.1:3000/"
-  FrontendPath: ./frontend-build/
+  FrontendPath: ./my-frontend/
   DocsPath: /tmp/mydocs/
   FrontendExpires: 1m
   ConfigExpires: 2m
