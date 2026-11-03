@@ -81,7 +81,7 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 
 	execPoll := func() error {
 		if err := ds.poll(); err != nil {
-			return fmt.Errorf("httpDevice[%s]: error: %s", ds.Name(), err)
+			return fmt.Errorf("httpDevice[%s]: error: %w", ds.Name(), err)
 		} else {
 			if ds.Config().LogDebug() {
 				log.Printf("httpDevice[%s]: poll request successful", ds.Config().Name())
@@ -204,7 +204,7 @@ func (ds *DeviceStruct) poll() error {
 	defer resp.Body.Close() //nolint:errcheck
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("cannot get response body: %s", err)
+		return fmt.Errorf("cannot get response body: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {

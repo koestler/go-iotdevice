@@ -24,7 +24,7 @@ func CreateMatcherSingleVariable(topicTemplate, variablePlaceholder string) (mat
 	expr := "^" + regexp.QuoteMeta(before) + regNameExpr + regexp.QuoteMeta(after) + "$"
 
 	if m, e := regexp.Compile(expr); e != nil {
-		err = fmt.Errorf("cannot compile regexp: %s", e)
+		err = fmt.Errorf("cannot compile regexp: %w", e)
 	} else {
 		matcher.m = m
 	}

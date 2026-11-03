@@ -19,7 +19,7 @@ func (c *ShellyEm3Device) GetPath() string {
 func (c *ShellyEm3Device) HandleResponse(body []byte) error {
 	var status ShellyEm3StatusStruct
 	if err := json.Unmarshal(body, &status); err != nil {
-		return fmt.Errorf("cannot parse json: %s", err)
+		return fmt.Errorf("cannot parse json: %w", err)
 	}
 	c.extractRegistersAndValues(status)
 

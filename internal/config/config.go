@@ -26,7 +26,7 @@ var nameMatcher = regexp.MustCompile(NameRegexp)
 func ReadConfigFile(exe, source string, bypassFileCheck bool) (config Config, err []error) {
 	yamlStr, e := os.ReadFile(source)
 	if e != nil {
-		return config, []error{fmt.Errorf("cannot read configuration: %v; see `%s --help`", e, exe)}
+		return config, []error{fmt.Errorf("cannot read configuration: %w; see `%s --help`", e, exe)}
 	}
 
 	return ReadConfig(yamlStr, bypassFileCheck)
@@ -41,7 +41,7 @@ func ReadConfig(yamlStr []byte, bypassFileCheck bool) (config Config, err []erro
 	d.KnownFields(true)
 
 	if e := d.Decode(&configRead); e != nil {
-		return config, []error{fmt.Errorf("cannot parse yaml: %s", e)}
+		return config, []error{fmt.Errorf("cannot parse yaml: %w", e)}
 	}
 
 	return configRead.TransformAndValidate(bypassFileCheck)
@@ -50,7 +50,7 @@ func ReadConfig(yamlStr []byte, bypassFileCheck bool) (config Config, err []erro
 func (c Config) PrintConfig() (err error) {
 	newYamlStr, err := yaml.Marshal(c)
 	if err != nil {
-		return fmt.Errorf("cannot encode yaml again: %s", err)
+		return fmt.Errorf("cannot encode yaml again: %w", err)
 	}
 
 	log.Print("config: use the following config:")
@@ -247,7 +247,7 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 		if parseError == nil {
 			ret.frontendProxy = u
 		} else {
-			err = append(err, fmt.Errorf("HttpServer->FrontendProxy must be empty (=disabled) or a valid URL, err: %s", parseError))
+			err = append(err, fmt.Errorf("HttpServer->FrontendProxy must be empty (=disabled) or a valid URL, err: %w", parseError))
 		}
 	}
 
@@ -267,7 +267,7 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 		// use default 5min
 		ret.frontendExpires = 5 * time.Minute
 	} else if frontendExpires, e := time.ParseDuration(c.FrontendExpires); e != nil {
-		err = append(err, fmt.Errorf("HttpServer->FrontendExpires='%s' parse error: %s", c.FrontendExpires, e))
+		err = append(err, fmt.Errorf("HttpServer->FrontendExpires='%s' parse error: %w", c.FrontendExpires, e))
 	} else if frontendExpires < 0 {
 		err = append(err, fmt.Errorf("HttpServer->FrontendExpires='%s' must not be negative", c.FrontendExpires))
 	} else {
@@ -278,7 +278,7 @@ func (c *httpServerConfigRead) TransformAndValidate() (ret HttpServerConfig, err
 		// use default 1min
 		ret.configExpires = 1 * time.Minute
 	} else if configExpires, e := time.ParseDuration(c.ConfigExpires); e != nil {
-		err = append(err, fmt.Errorf("HttpServer->ConfigExpires='%s' parse error: %s", c.ConfigExpires, e))
+		err = append(err, fmt.Errorf("HttpServer->ConfigExpires='%s' parse error: %w", c.ConfigExpires, e))
 	} else if configExpires < 0 {
 		err = append(err, fmt.Errorf("HttpServer->ConfigExpires='%s' must not be negative", c.ConfigExpires))
 	} else {
@@ -315,7 +315,7 @@ func (c *authenticationConfigRead) TransformAndValidate(bypassFileCheck bool) (r
 	if len(c.JwtValidityPeriod) < 1 {
 		// use default
 	} else if authJwtValidityPeriod, e := time.ParseDuration(c.JwtValidityPeriod); e != nil {
-		err = append(err, fmt.Errorf("Authentication->JwtValidityPeriod='%s' parse error: %s",
+		err = append(err, fmt.Errorf("Authentication->JwtValidityPeriod='%s' parse error: %w",
 			c.JwtValidityPeriod, e,
 		))
 	} else if authJwtValidityPeriod < 0 {
@@ -329,7 +329,7 @@ func (c *authenticationConfigRead) TransformAndValidate(bypassFileCheck bool) (r
 	if c.HtaccessFile != nil && len(*c.HtaccessFile) > 0 {
 		if !bypassFileCheck {
 			if info, e := os.Stat(*c.HtaccessFile); e != nil {
-				err = append(err, fmt.Errorf("Authentication->HtaccessFile='%s' cannot open file. error: %s",
+				err = append(err, fmt.Errorf("Authentication->HtaccessFile='%s' cannot open file. error: %w",
 					*c.HtaccessFile, e,
 				))
 			} else if info.IsDir() {
@@ -368,7 +368,7 @@ func (c mqttClientConfigRead) TransformAndValidate(
 		err = append(err, fmt.Errorf("%s->Broker must not be empty", errPrefix))
 	} else {
 		if broker, e := url.ParseRequestURI(c.Broker); e != nil {
-			err = append(err, fmt.Errorf("%s->Broker invalid url: %s", errPrefix, e))
+			err = append(err, fmt.Errorf("%s->Broker invalid url: %w", errPrefix, e))
 		} else {
 			ret.broker = broker
 		}
@@ -391,7 +391,7 @@ func (c mqttClientConfigRead) TransformAndValidate(
 	if len(c.KeepAlive) < 1 {
 		ret.keepAlive = time.Minute
 	} else if keepAlive, e := time.ParseDuration(c.KeepAlive); e != nil {
-		err = append(err, fmt.Errorf("%s->KeepAlive='%s' parse error: %s",
+		err = append(err, fmt.Errorf("%s->KeepAlive='%s' parse error: %w",
 			errPrefix, c.KeepAlive, e,
 		))
 	} else if keepAlive < time.Second {
@@ -409,7 +409,7 @@ func (c mqttClientConfigRead) TransformAndValidate(
 	if len(c.ConnectRetryDelay) < 1 {
 		ret.connectRetryDelay = 10 * time.Second
 	} else if connectRetryDelay, e := time.ParseDuration(c.ConnectRetryDelay); e != nil {
-		err = append(err, fmt.Errorf("%s->ConnectRetryDelay='%s' parse error: %s",
+		err = append(err, fmt.Errorf("%s->ConnectRetryDelay='%s' parse error: %w",
 			errPrefix, c.ConnectRetryDelay, e,
 		))
 	} else if connectRetryDelay < 100*time.Millisecond {
@@ -423,7 +423,7 @@ func (c mqttClientConfigRead) TransformAndValidate(
 	if len(c.ConnectTimeout) < 1 {
 		ret.connectTimeout = 5 * time.Second
 	} else if connectTimeout, e := time.ParseDuration(c.ConnectTimeout); e != nil {
-		err = append(err, fmt.Errorf("%s->ConnectTimeout='%s' parse error: %s",
+		err = append(err, fmt.Errorf("%s->ConnectTimeout='%s' parse error: %w",
 			errPrefix, c.ConnectTimeout, e,
 		))
 	} else if connectTimeout < 100*time.Millisecond {
@@ -656,7 +656,7 @@ func (c mqttSectionConfigRead) TransformAndValidate(
 	} else if len(c.Interval) < 1 {
 		ret.interval = defaultInterval
 	} else if interval, e := time.ParseDuration(c.Interval); e != nil {
-		err = append(err, fmt.Errorf("%sInterval='%s' parse error: %s", logPrefix, c.Interval, e))
+		err = append(err, fmt.Errorf("%sInterval='%s' parse error: %w", logPrefix, c.Interval, e))
 	} else if allowZeroInterval && interval < 0 {
 		err = append(err, fmt.Errorf("%sInterval='%s' must be >= 0", logPrefix, c.Interval))
 	} else if !allowZeroInterval && interval <= 0 {
@@ -765,7 +765,7 @@ func (c modbusConfigRead) TransformAndValidate(name string) (ret ModbusConfig, e
 		// use default 100ms
 		ret.readTimeout = 100 * time.Millisecond
 	} else if readTimeout, e := time.ParseDuration(c.ReadTimeout); e != nil {
-		err = append(err, fmt.Errorf("Modbus->%s->ReadTimeout='%s' parse error: %s",
+		err = append(err, fmt.Errorf("Modbus->%s->ReadTimeout='%s' parse error: %w",
 			name, c.ReadTimeout, e,
 		))
 	} else if readTimeout < time.Millisecond {
@@ -800,7 +800,7 @@ func (c deviceConfigRead) TransformAndValidate(section, name string) (ret Device
 		// use default 200ms
 		ret.restartInterval = 200 * time.Millisecond
 	} else if restartInterval, e := time.ParseDuration(c.RestartInterval); e != nil {
-		err = append(err, fmt.Errorf("%s->%s->RestartInterval='%s' parse error: %s",
+		err = append(err, fmt.Errorf("%s->%s->RestartInterval='%s' parse error: %w",
 			section, name, c.RestartInterval, e,
 		))
 	} else if restartInterval < 10*time.Millisecond {
@@ -815,7 +815,7 @@ func (c deviceConfigRead) TransformAndValidate(section, name string) (ret Device
 		// use default 1min
 		ret.restartIntervalMaxBackoff = time.Minute
 	} else if restartIntervalMaxBackoff, e := time.ParseDuration(c.RestartIntervalMaxBackoff); e != nil {
-		err = append(err, fmt.Errorf("%s->%s->RestartIntervalMaxBackoff='%s' parse error: %s",
+		err = append(err, fmt.Errorf("%s->%s->RestartIntervalMaxBackoff='%s' parse error: %w",
 			section, name, c.RestartIntervalMaxBackoff, e,
 		))
 	} else if restartIntervalMaxBackoff < 10*time.Millisecond {
@@ -863,7 +863,7 @@ func (c victronDeviceConfigRead) TransformAndValidate(name string) (ret VictronD
 		// use default 500ms
 		ret.pollInterval = 500 * time.Millisecond
 	} else if pollInterval, e := time.ParseDuration(c.PollInterval); e != nil {
-		err = append(err, fmt.Errorf("VictronDevices->%s->PollInterval='%s' parse error: %s",
+		err = append(err, fmt.Errorf("VictronDevices->%s->PollInterval='%s' parse error: %w",
 			name, c.PollInterval, e,
 		))
 	} else if pollInterval < time.Millisecond {
@@ -899,11 +899,11 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 
 	if strings.Contains(c.Address, "0x") {
 		if n, e := fmt.Sscanf(c.Address, "0x%x", &ret.address); n != 1 || e != nil {
-			err = append(err, fmt.Errorf("ModbusDevices->%s: hex Address=%s is invalid: %s", name, c.Address, e))
+			err = append(err, fmt.Errorf("ModbusDevices->%s: hex Address=%s is invalid: %w", name, c.Address, e))
 		}
 	} else {
 		if n, e := fmt.Sscanf(c.Address, "%d", &ret.address); n != 1 || e != nil {
-			err = append(err, fmt.Errorf("ModbusDevices->%s: decimal Address=%s is invalid: %s", name, c.Address, e))
+			err = append(err, fmt.Errorf("ModbusDevices->%s: decimal Address=%s is invalid: %w", name, c.Address, e))
 		}
 	}
 
@@ -919,7 +919,7 @@ func (c modbusDeviceConfigRead) TransformAndValidate(
 		// use default 1s
 		ret.pollInterval = time.Second
 	} else if pollInterval, e := time.ParseDuration(c.PollInterval); e != nil {
-		err = append(err, fmt.Errorf("ModbusDevices->%s->PollInterval='%s' parse error: %s",
+		err = append(err, fmt.Errorf("ModbusDevices->%s->PollInterval='%s' parse error: %w",
 			name, c.PollInterval, e,
 		))
 	} else if pollInterval < time.Millisecond {
@@ -966,7 +966,7 @@ func (c gpioDeviceConfigRead) TransformAndValidate(deviceName string) (ret GpioD
 		// use default 100ms
 		ret.inputDebounce = 100 * time.Millisecond
 	} else if inputDebounce, e := time.ParseDuration(c.InputDebounce); e != nil {
-		err = append(err, fmt.Errorf("GpioDevices->%s->InputDebounce='%s' parse error: %s",
+		err = append(err, fmt.Errorf("GpioDevices->%s->InputDebounce='%s' parse error: %w",
 			deviceName, c.InputDebounce, e,
 		))
 	} else {
@@ -1065,7 +1065,7 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string) (ret HttpDeviceC
 		err = append(err, fmt.Errorf("HttpDevices->%s->Url must not be empty", name))
 	} else {
 		if u, e := url.ParseRequestURI(c.Url); e != nil {
-			err = append(err, fmt.Errorf("HttpDevices->%s->Url invalid url: %s", name, e))
+			err = append(err, fmt.Errorf("HttpDevices->%s->Url invalid url: %w", name, e))
 		} else {
 			ret.url = u
 		}
@@ -1079,7 +1079,7 @@ func (c httpDeviceConfigRead) TransformAndValidate(name string) (ret HttpDeviceC
 		// use default 1s
 		ret.pollInterval = time.Second
 	} else if pollInterval, e := time.ParseDuration(c.PollInterval); e != nil {
-		err = append(err, fmt.Errorf("HttpDevices->%s->PollInterval='%s' parse error: %s",
+		err = append(err, fmt.Errorf("HttpDevices->%s->PollInterval='%s' parse error: %w",
 			name, c.PollInterval, e,
 		))
 	} else if pollInterval < 100*time.Millisecond {
@@ -1370,7 +1370,7 @@ func (c viewConfigRead) TransformAndValidate(devices []DeviceConfig) (ret ViewCo
 		)
 
 		for _, ce := range devicesErr {
-			err = append(err, fmt.Errorf("Views->%s->Devices: %s", c.Name, ce))
+			err = append(err, fmt.Errorf("Views->%s->Devices: %w", c.Name, ce))
 		}
 	}
 
@@ -1486,7 +1486,7 @@ func parseGensetDuration(name, field, raw string, def time.Duration) (time.Durat
 	}
 	d, e := time.ParseDuration(raw)
 	if e != nil {
-		return 0, []error{fmt.Errorf("GensetDevices->%s->%s='%s' parse error: %s", name, field, raw, e)}
+		return 0, []error{fmt.Errorf("GensetDevices->%s->%s='%s' parse error: %w", name, field, raw, e)}
 	}
 	return d, nil
 }

@@ -328,7 +328,7 @@ func FinderReadFloatRegister(c *DeviceStruct, register FinderRegister) (v datafl
 	var floatValue float32
 	buf := bytes.NewReader(response)
 	if err := binary.Read(buf, binary.BigEndian, &floatValue); err != nil {
-		return nil, fmt.Errorf("conversion to float32 failed: %s", err)
+		return nil, fmt.Errorf("conversion to float32 failed: %w", err)
 	}
 
 	if c.Config().LogDebug() {
@@ -353,7 +353,7 @@ func FinderReadUInt16Register(c *DeviceStruct, register FinderRegister) (v dataf
 	var uint16Value uint16
 	buf := bytes.NewReader(response)
 	if err := binary.Read(buf, binary.BigEndian, &uint16Value); err != nil {
-		return nil, fmt.Errorf("conversion to uint16 failed: %s", err)
+		return nil, fmt.Errorf("conversion to uint16 failed: %w", err)
 	}
 
 	if c.Config().LogDebug() {
@@ -378,7 +378,7 @@ func FinderReadEnumRegister(c *DeviceStruct, register FinderRegister) (v dataflo
 	var uint16Value uint16
 	buf := bytes.NewReader(response)
 	if err := binary.Read(buf, binary.BigEndian, &uint16Value); err != nil {
-		return nil, fmt.Errorf("conversion to uint16 failed: %s", err)
+		return nil, fmt.Errorf("conversion to uint16 failed: %w", err)
 	}
 
 	if c.Config().LogDebug() {

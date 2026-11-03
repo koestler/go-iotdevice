@@ -27,7 +27,7 @@ func (c *TeracomDevice) HandleResponse(body []byte) error {
 	body = bytes.TrimPrefix(body, []byte("\xef\xbb\xbf"))
 
 	if err := json.Unmarshal(body, &status); err != nil {
-		return fmt.Errorf("cannot parse json: %s", err)
+		return fmt.Errorf("cannot parse json: %w", err)
 	}
 	c.extractRegistersAndValues(status)
 

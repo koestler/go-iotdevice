@@ -159,7 +159,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		}
 		setter, err := d.inpSetter(name)
 		if err != nil {
-			return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", dName, err), true
+			return fmt.Errorf("gensetDevice[%s]: input setter failed: %w", dName, err), true
 		}
 		inputSetters[i] = setter
 	}
@@ -167,7 +167,7 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	for i, r := range commandRegisters {
 		setter, err := d.inpSetter(r.Name())
 		if err != nil {
-			return fmt.Errorf("gensetDevice[%s]: input setter failed: %s", dName, err), true
+			return fmt.Errorf("gensetDevice[%s]: input setter failed: %w", dName, err), true
 		}
 		commandSetters[i] = setter
 	}

@@ -67,7 +67,7 @@ func WaveshareReadSoftwareRevision(writeRead WriteReadBusFunc, deviceAddress byt
 	)
 
 	if err != nil {
-		return version, fmt.Errorf("cannot read address and version: %s", err)
+		return version, fmt.Errorf("cannot read address and version: %w", err)
 	}
 
 	// extract version
@@ -90,7 +90,7 @@ func WaveshareReadRelays(writeRead WriteReadBusFunc, deviceAddress byte) (state 
 	)
 
 	if err != nil {
-		return state, fmt.Errorf("cannot read state of relays: %s", err)
+		return state, fmt.Errorf("cannot read state of relays: %w", err)
 	}
 
 	// extract bits of response into boolean state

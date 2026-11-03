@@ -20,7 +20,7 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 
 	// get software version
 	if version, err := WaveshareReadSoftwareRevision(c.modbus.WriteRead, c.modbusConfig.Address()); err != nil {
-		return fmt.Errorf("waveshareDevice[%s]: WaveshareReadSoftwareRevision failed: %s", c.Name(), err), true
+		return fmt.Errorf("waveshareDevice[%s]: WaveshareReadSoftwareRevision failed: %w", c.Name(), err), true
 	} else {
 		log.Printf("waveshareDevice[%s]: source: version=%s", c.Name(), version)
 	}
@@ -71,7 +71,7 @@ func (c *DeviceStruct) execPoll(registers []dataflow.RegisterStruct) error {
 	// fetch registers
 	state, err := WaveshareReadRelays(c.modbus.WriteRead, c.modbusConfig.Address())
 	if err != nil {
-		return fmt.Errorf("waveshareDevice[%s]: read failed: %s", c.Name(), err)
+		return fmt.Errorf("waveshareDevice[%s]: read failed: %w", c.Name(), err)
 	}
 
 	for _, register := range registers {
