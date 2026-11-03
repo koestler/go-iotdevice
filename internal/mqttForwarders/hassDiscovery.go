@@ -81,11 +81,7 @@ func runHomeassistantDiscoveryForwarder(
 
 func getRealtimeCfg(cfg Config, deviceName string) MqttDeviceSectionConfig {
 	if cfg.Realtime().Enabled() {
-		for _, d := range cfg.Realtime().Devices() {
-			if d.Name() == deviceName {
-				return d
-			}
-		}
+		return findSectionDevice(cfg.Realtime(), deviceName)
 	}
 	return nil
 }

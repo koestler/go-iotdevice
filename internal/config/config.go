@@ -1491,12 +1491,9 @@ func TransformAndValidateListUnique[I any, O Nameable](
 }
 
 func existsByName[N Nameable](needle string, haystack []N) bool {
-	for _, t := range haystack {
-		if needle == t.Name() {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(haystack, func(n N) bool {
+		return n.Name() == needle
+	})
 }
 
 func parseGensetDuration(name, field, raw string, def time.Duration) (time.Duration, []error) {

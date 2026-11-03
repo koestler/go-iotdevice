@@ -130,24 +130,11 @@ func getAvailabilityTopics(cfg Config, devName string) (ret []string) {
 	if cfg.AvailabilityClient().Enabled() {
 		ret = append(ret, cfg.AvailabilityClientTopic())
 	}
-	if cfg.AvailabilityDevice().Enabled() && existsByName(devName, cfg.AvailabilityDevice().Devices()) {
+	if cfg.AvailabilityDevice().Enabled() && findSectionDevice(cfg.AvailabilityDevice(), devName) != nil {
 		ret = append(ret, cfg.AvailabilityDeviceTopic(devName))
 	}
 
 	return
-}
-
-type nameable interface {
-	Name() string
-}
-
-func existsByName[N nameable](needle string, haystack []N) bool {
-	for _, t := range haystack {
-		if needle == t.Name() {
-			return true
-		}
-	}
-	return false
 }
 
 func publishStruct(cfg Config, mc mqttClient.Client, devName string, topic string, registers []dataflow.RegisterStruct) {

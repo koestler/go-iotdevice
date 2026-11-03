@@ -1,33 +1,34 @@
 package mqttForwarders
 
-import "github.com/koestler/go-iotdevice/v3/internal/dataflow"
+import (
+	"slices"
+
+	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
+)
 
 func getCommandFilter(cfg Config, devName string) dataflow.RegisterFilterFunc {
+	// when command is enabled, use filter of given device
+	if cfg.Command().Enabled() {
+		if dev := findSectionDevice(cfg.Command(), devName); dev != nil {
+			return createWritableAndRegisterValueFilter(dev.Filter())
+		}
+	}
+
 	// by default, nothing is writable
-	filter := func(filterable dataflow.Filterable) bool {
+	return func(dataflow.Filterable) bool {
 		return false
 	}
-
-	// when command is enabled, use filter of given device
-	var dev MqttDeviceSectionConfig
-	if cfg.Command().Enabled() {
-		dev = getCommandDevice(cfg, devName)
-	}
-	if dev != nil {
-		commandEnabledFilter := dataflow.RegisterFilter(dev.Filter())
-		filter = func(r dataflow.Filterable) bool {
-			return r.Writable() && commandEnabledFilter(r)
-		}
-	}
-
-	return filter
 }
 
-func getCommandDevice(cfg Config, deviceName string) (r MqttDeviceSectionConfig) {
-	for _, c := range cfg.Command().Devices() {
-		if c.Name() == deviceName {
-			return c
-		}
+// findSectionDevice returns the device config of the given name or nil when the section does not contain it.
+func findSectionDevice(section interface {
+	Devices() []MqttDeviceSectionConfig
+}, deviceName string) MqttDeviceSectionConfig {
+	i := slices.IndexFunc(section.Devices(), func(d MqttDeviceSectionConfig) bool {
+		return d.Name() == deviceName
+	})
+	if i < 0 {
+		return nil
 	}
-	return nil
+	return section.Devices()[i]
 }
