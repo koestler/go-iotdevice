@@ -27,7 +27,7 @@ func NewV5(
 
 	// configure mqtt library
 	client.cliCfg = autopaho.ClientConfig{
-		BrokerUrls:       []*url.URL{cfg.Broker()},
+		ServerUrls:       []*url.URL{cfg.Broker()},
 		KeepAlive:        uint16(cfg.KeepAlive().Seconds()),
 		ReconnectBackoff: autopaho.NewConstantBackoff(cfg.ConnectRetryDelay()),
 		ConnectTimeout:   cfg.ConnectTimeout(),
