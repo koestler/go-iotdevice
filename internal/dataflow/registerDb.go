@@ -3,6 +3,8 @@ package dataflow
 import (
 	"context"
 	"github.com/koestler/go-list"
+	"maps"
+	"slices"
 	"sync"
 )
 
@@ -63,19 +65,14 @@ func (rdb *RegisterDb) GetAll() []RegisterStruct {
 	rdb.lock.RLock()
 	defer rdb.lock.RUnlock()
 
-	ret := make([]RegisterStruct, 0, len(rdb.registers))
-	for _, r := range rdb.registers {
-		ret = append(ret, r)
-	}
-	return ret
+	return slices.Collect(maps.Values(rdb.registers))
 }
 
 func (rdb *RegisterDb) GetFiltered(filter RegisterFilterFunc) []RegisterStruct {
 	rdb.lock.RLock()
 	defer rdb.lock.RUnlock()
 
-	ret := rdb.getFilteredUnlocked(filter)
-	return ret
+	return rdb.getFilteredUnlocked(filter)
 }
 
 func (rdb *RegisterDb) getFilteredUnlocked(filter RegisterFilterFunc) (ret []RegisterStruct) {

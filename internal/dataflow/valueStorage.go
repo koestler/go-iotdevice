@@ -2,6 +2,8 @@ package dataflow
 
 import (
 	"context"
+	"maps"
+	"slices"
 	"sync"
 
 	"github.com/koestler/go-list"
@@ -126,16 +128,11 @@ func forwardToSubscriptions(subscriptions []ValueSubscription, currValue, prevVa
 	}
 }
 
-func (vs *ValueStorage) GetState() (result []Value) {
+func (vs *ValueStorage) GetState() []Value {
 	vs.mutex.RLock()
 	defer vs.mutex.RUnlock()
 
-	result = make([]Value, 0, len(vs.state))
-	for _, value := range vs.state {
-		result = append(result, value)
-	}
-
-	return
+	return slices.Collect(maps.Values(vs.state))
 }
 
 func (vs *ValueStorage) GetStateFiltered(filter ValueFilterFunc) (result []Value) {
@@ -190,7 +187,7 @@ func (vs *ValueStorage) newSubscription(ctx context.Context, filter ValueFilterF
 
 func (vs *ValueStorage) SubscribeReturnInitial(ctx context.Context, filter ValueFilterFunc) (initial []Value, subscription ValueSubscription) {
 	initial, subscription, elem := vs.newSubscription(ctx, filter)
-	go vs.sendInitialAndCleanupValueSubscription([]Value{}, subscription, elem)
+	go vs.sendInitialAndCleanupValueSubscription(nil, subscription, elem)
 	return
 }
 

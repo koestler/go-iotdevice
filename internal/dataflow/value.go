@@ -108,8 +108,8 @@ func (v EnumRegisterValue) String() string {
 }
 
 func (v EnumRegisterValue) Value() string {
-	if v, ok := v.register.Enum()[v.value]; ok {
-		return v
+	if text, ok := v.register.Enum()[v.value]; ok {
+		return text
 	}
 	return ""
 }
@@ -167,15 +167,16 @@ func NewNullRegisterValue(deviceName string, register Register) NullRegisterValu
 
 // NewRegisterValue creates a new RegisterValue struct based on a Value interface.
 func NewRegisterValue(deviceName string, register Register, v Value) Value {
-	if nv, ok := v.(NumericRegisterValue); ok {
-		return NewNumericRegisterValue(deviceName, register, nv.Value())
-	} else if tv, ok := v.(TextRegisterValue); ok {
+	switch tv := v.(type) {
+	case NumericRegisterValue:
+		return NewNumericRegisterValue(deviceName, register, tv.Value())
+	case TextRegisterValue:
 		return NewTextRegisterValue(deviceName, register, tv.Value())
-	} else if ev, ok := v.(EnumRegisterValue); ok {
-		return NewEnumRegisterValue(deviceName, register, ev.EnumIdx())
+	case EnumRegisterValue:
+		return NewEnumRegisterValue(deviceName, register, tv.EnumIdx())
+	default:
+		return NewNullRegisterValue(deviceName, register)
 	}
-
-	return NewNullRegisterValue(deviceName, register)
 }
 
 func IsNullRegisterValue(v Value) bool {

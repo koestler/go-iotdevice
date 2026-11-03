@@ -33,7 +33,7 @@ type State struct {
 
 func NewState(deviceConfig Config, stateStorage *dataflow.ValueStorage) State {
 	registerDb := dataflow.NewRegisterDb()
-	registerDb.Add(availabilityRegister)
+	registerDb.AddStruct(availabilityRegister)
 	return State{
 		deviceConfig: deviceConfig,
 		stateStorage: stateStorage,
@@ -78,7 +78,7 @@ func (c *State) SubscribeAvailableSendInitial(ctx context.Context) <-chan bool {
 			reg.Name() == AvailabilityRegisterName
 	})
 
-	avail, initialOk := c.GetAvailableByState(initialState)
+	avail, initialOk := c.getAvailableByState(initialState)
 	availChan := make(chan bool)
 	go func() {
 		defer close(availChan)
@@ -86,7 +86,8 @@ func (c *State) SubscribeAvailableSendInitial(ctx context.Context) <-chan bool {
 			availChan <- avail
 		}
 		for v := range subscription.Drain() {
-			avail, updated := c.UpdateAvailable(avail, v)
+			var updated bool
+			avail, updated = c.updateAvailable(avail, v)
 			if updated {
 				availChan <- avail
 			}
@@ -96,7 +97,7 @@ func (c *State) SubscribeAvailableSendInitial(ctx context.Context) <-chan bool {
 	return availChan
 }
 
-func (c *State) GetAvailableByState(state []dataflow.Value) (avail, ok bool) {
+func (c *State) getAvailableByState(state []dataflow.Value) (avail, ok bool) {
 	devName := c.Name()
 	for _, v := range state {
 		if v.DeviceName() != devName {
@@ -112,7 +113,7 @@ func (c *State) GetAvailableByState(state []dataflow.Value) (avail, ok bool) {
 	return false, false
 }
 
-func (c *State) UpdateAvailable(oldAvail bool, newValue dataflow.Value) (avail, updated bool) {
+func (c *State) updateAvailable(oldAvail bool, newValue dataflow.Value) (avail, updated bool) {
 	if newValue.DeviceName() == c.Name() {
 		if newValue.Equals(c.availableValue) {
 			return true, true
