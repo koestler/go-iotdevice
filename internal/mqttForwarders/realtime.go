@@ -3,11 +3,12 @@ package mqttForwarders
 import (
 	"context"
 	"encoding/json"
+	"log"
+	"time"
+
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/device"
 	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"
-	"log"
-	"time"
 )
 
 type RealtimeMessage struct {
@@ -46,7 +47,7 @@ func realtimeImmediateModeRoutine(
 	dev device.Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
-	filter func(v dataflow.Value) bool,
+	filter func(curr, prev dataflow.Value) bool,
 ) {
 	if cfg.LogDebug() {
 		log.Printf(
@@ -68,7 +69,7 @@ func realtimeDelayedUpdateModeRoutine(
 	dev device.Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
-	filter func(v dataflow.Value) bool,
+	filter func(curr, prev dataflow.Value) bool,
 ) {
 	realtimeInterval := cfg.Realtime().Interval()
 

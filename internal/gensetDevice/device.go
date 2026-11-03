@@ -176,8 +176,8 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		deviceName := b.DeviceName()
 		registerName := b.RegisterName()
 		setter := inputSetters[i]
-		sub := d.StateStorage().SubscribeSendInitial(runCtx, func(v dataflow.Value) bool {
-			return v.DeviceName() == deviceName && v.Register().Name() == registerName
+		sub := d.StateStorage().SubscribeSendInitial(runCtx, func(curr, prev dataflow.Value) bool {
+			return !prev.Equals(curr) && curr.DeviceName() == deviceName && curr.Register().Name() == registerName
 		})
 
 		shutdownWg.Go(func() {
@@ -193,8 +193,8 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		for i, r := range commandRegisters {
 			registerName := r.Name()
 			setter := commandSetters[i]
-			_, sub := d.commandStorage.SubscribeReturnInitial(runCtx, func(v dataflow.Value) bool {
-				return v.DeviceName() == dName && v.Register().Name() == registerName
+			_, sub := d.commandStorage.SubscribeReturnInitial(runCtx, func(curr, prev dataflow.Value) bool {
+				return !prev.Equals(curr) && curr.DeviceName() == dName && curr.Register().Name() == registerName
 			})
 
 			shutdownWg.Go(func() {
@@ -262,8 +262,8 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 		bindingName := b.Name()
 		deviceName := b.DeviceName()
 		registerName := b.RegisterName()
-		sub := d.StateStorage().SubscribeSendInitial(runCtx, func(v dataflow.Value) bool {
-			return v.DeviceName() == dName && v.Register().Name() == bindingName
+		sub := d.StateStorage().SubscribeSendInitial(runCtx, func(curr, prev dataflow.Value) bool {
+			return !prev.Equals(curr) && curr.DeviceName() == dName && curr.Register().Name() == bindingName
 		})
 		getRegister := func() (reg dataflow.RegisterStruct, err error) {
 			rdb, ok := d.registerDbOfDevice(deviceName)

@@ -100,7 +100,10 @@ func (ds *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool
 	}()
 
 	// setup subscription to listen for updates of writable registers
-	_, commandSubscription := ds.commandStorage.SubscribeReturnInitial(runCtx, dataflow.DeviceNonNullValueFilter(ds.Config().Name()))
+	deviceName := ds.Config().Name()
+	_, commandSubscription := ds.commandStorage.SubscribeReturnInitial(runCtx, func(curr, prev dataflow.Value) bool {
+		return !prev.Equals(curr) && curr.DeviceName() == deviceName && !dataflow.IsNullRegisterValue(curr)
+	})
 
 	execCommand := func(value dataflow.Value) {
 		// reset the command (also on failure); this allows the same command (e.g. toggle) to be sent again

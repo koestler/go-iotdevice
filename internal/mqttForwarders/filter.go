@@ -19,10 +19,10 @@ func createRegisterValueFilter(registerFilter dataflow.RegisterFilterConf) dataf
 }
 
 func createDeviceAndRegisterValueFilter(dev device.Device, registerFilter dataflow.RegisterFilterConf) dataflow.ValueFilterFunc {
-	f0 := dataflow.DeviceNameValueFilter(dev.Name())
-	f1 := createRegisterValueFilter(registerFilter)
-	return func(v dataflow.Value) bool {
-		return f0(v) && f1(v.Register())
+	deviceName := dev.Name()
+	f := createRegisterValueFilter(registerFilter)
+	return func(curr, prev dataflow.Value) bool {
+		return !prev.Equals(curr) && curr.DeviceName() == deviceName && f(curr.Register())
 	}
 }
 

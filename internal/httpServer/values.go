@@ -173,17 +173,20 @@ func append2DValueResponse(response map[string]map[string]valueResponse, value d
 }
 
 func getViewValueFilter(viewDevices []ViewDeviceConfig) dataflow.ValueFilterFunc {
-	filters := make(map[string]dataflow.ValueFilterFunc)
+	filters := make(map[string]dataflow.ValueFilterFunc, len(viewDevices))
 	for _, vd := range viewDevices {
-		filters[vd.Name()] = dataflow.RegisterValueFilter(vd.Filter())
+		rf := dataflow.RegisterFilter(vd.Filter())
+		filters[vd.Name()] = func(curr, prev dataflow.Value) bool {
+			return !prev.Equals(curr) && rf(curr.Register())
+		}
 	}
 
-	return func(value dataflow.Value) bool {
-		deviceName := value.DeviceName()
+	return func(curr, prev dataflow.Value) bool {
+		deviceName := curr.DeviceName()
 		if f, ok := filters[deviceName]; !ok {
 			return false // device not included
 		} else {
-			return f(value)
+			return f(curr, prev)
 		}
 	}
 }

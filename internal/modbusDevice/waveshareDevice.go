@@ -41,7 +41,10 @@ func runWaveshareRtuRelay8(ctx context.Context, c *DeviceStruct) (err error, imm
 	}()
 
 	// setup subscription to listen for updates of writable registers
-	_, commandSubscription := c.commandStorage.SubscribeReturnInitial(runCtx, dataflow.DeviceNonNullValueFilter(c.Config().Name()))
+	deviceName := c.Config().Name()
+	_, commandSubscription := c.commandStorage.SubscribeReturnInitial(runCtx, func(curr, prev dataflow.Value) bool {
+		return !prev.Equals(curr) && curr.DeviceName() == deviceName && !dataflow.IsNullRegisterValue(curr)
+	})
 
 	ticker := time.NewTicker(c.modbusConfig.PollInterval())
 	defer ticker.Stop()

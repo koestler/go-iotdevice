@@ -18,7 +18,9 @@ func TestValueStorageSubscribe(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(numberOfSubscriptions)
 	for range numberOfSubscriptions {
-		subscription := storage.SubscribeSendInitial(ctx, dataflow.AllValueFilter)
+		subscription := storage.SubscribeSendInitial(ctx, func(curr, prev dataflow.Value) bool {
+			return !prev.Equals(curr)
+		})
 		go func() {
 			counter := 0
 			defer wg.Done()
@@ -82,7 +84,9 @@ func TestValueStorageSubscribeWithFilter(t *testing.T) {
 	}
 
 	t.Run("filterDevice", func(t *testing.T) {
-		values := run(dataflow.DeviceNameValueFilter("device-0"))
+		values := run(func(curr, prev dataflow.Value) bool {
+			return !prev.Equals(curr) && curr.DeviceName() == "device-0"
+		})
 
 		// check values
 		expect := []string{
@@ -104,7 +108,10 @@ func TestValueStorageSubscribeWithFilter(t *testing.T) {
 			DefaultIncludeV: true,
 		}
 
-		values := run(dataflow.RegisterValueFilter(fc))
+		rf := dataflow.RegisterFilter(fc)
+		values := run(func(curr, prev dataflow.Value) bool {
+			return !prev.Equals(curr) && rf(curr.Register())
+		})
 
 		// check values
 		expect := []string{

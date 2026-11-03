@@ -2,8 +2,9 @@ package dataflow
 
 import (
 	"context"
-	"github.com/koestler/go-list"
 	"sync"
+
+	"github.com/koestler/go-list"
 )
 
 type StateKey struct {
@@ -72,31 +73,28 @@ func (vs *ValueStorage) mainStorageRoutine() {
 		select {
 		case <-vs.ctx.Done():
 			return
-		case newValue := <-vs.inputChannel:
+		case currValue := <-vs.inputChannel:
 			vs.mutex.Lock()
-			var subscriptions []ValueSubscription
-			if vs.updateState(newValue) {
-				subscriptions = vs.snapshotSubscriptions()
-			}
+			prevValue := vs.updateState(currValue)
+			subscriptions := vs.snapshotSubscriptions()
 			vs.mutex.Unlock()
 
 			// send outside the lock so a slow subscriber cannot block subscription cleanup
-			forwardToSubscriptions(subscriptions, newValue)
+			forwardToSubscriptions(subscriptions, currValue, prevValue)
 			vs.inputWaitGroup.Done()
 		}
 	}
 }
 
-func (vs *ValueStorage) updateState(newValue Value) (updated bool) {
+func (vs *ValueStorage) updateState(newValue Value) (prevValue Value) {
 	k := StateKey{
 		deviceName:   newValue.DeviceName(),
 		registerName: newValue.Register().Name(),
 	}
 
-	currentValue, ok := vs.state[k]
-
-	if ok && currentValue.Equals(newValue) {
-		return false
+	prevValue, ok := vs.state[k]
+	if !ok {
+		prevValue = NewNullRegisterValue(newValue.DeviceName(), newValue.Register())
 	}
 
 	if _, ok := newValue.(NullRegisterValue); ok {
@@ -107,7 +105,7 @@ func (vs *ValueStorage) updateState(newValue Value) (updated bool) {
 		vs.state[k] = newValue
 	}
 
-	return true
+	return prevValue
 }
 
 // must be called with vs.mutex held
@@ -120,10 +118,10 @@ func (vs *ValueStorage) snapshotSubscriptions() (result []ValueSubscription) {
 }
 
 // copy the input value to all subscribed output channels
-func forwardToSubscriptions(subscriptions []ValueSubscription, newValue Value) {
+func forwardToSubscriptions(subscriptions []ValueSubscription, currValue, prevValue Value) {
 	for _, s := range subscriptions {
-		if s.filter(newValue) {
-			s.send(newValue)
+		if s.filter(currValue, prevValue) {
+			s.send(currValue)
 		}
 	}
 }
@@ -151,7 +149,7 @@ func (vs *ValueStorage) GetStateFiltered(filter ValueFilterFunc) (result []Value
 func (vs *ValueStorage) getStateFilteredUnlocked(filter ValueFilterFunc) (result []Value) {
 	result = make([]Value, 0)
 	for _, value := range vs.state {
-		if filter(value) {
+		if filter(value, NewNullRegisterValue(value.DeviceName(), value.Register())) {
 			result = append(result, value)
 		}
 	}

@@ -28,6 +28,7 @@
   * gpio device: hold output lines until Run returns, otherwise the kernel releases the outputs
 * Finder 7M38: update and slightly fix register definitions using the newest datasheet
 * remove jsoniter and use stdlib (prefer smaller binary over slightly less cpu time)
+* internal refactoring: value storage does not deduplicate values anymore, instead it is done as a filter of the subscription
 
 ## 3.13.0
 * config: make docs path configurable via `HttpServer->DocsPath`

@@ -10,6 +10,8 @@ type Value interface {
 	Equals(comp Value) bool
 }
 
+type ValueFilterFunc func(curr, prev Value) bool
+
 type RegisterValue struct {
 	deviceName string
 	register   Register
@@ -151,8 +153,7 @@ func (v NullRegisterValue) GenericValue() any {
 }
 
 func (v NullRegisterValue) Equals(comp Value) bool {
-	_, ok := comp.(NullRegisterValue)
-	return ok
+	return IsNullRegisterValue(comp)
 }
 
 func NewNullRegisterValue(deviceName string, register Register) NullRegisterValue {
@@ -175,4 +176,9 @@ func NewRegisterValue(deviceName string, register Register, v Value) Value {
 	}
 
 	return NewNullRegisterValue(deviceName, register)
+}
+
+func IsNullRegisterValue(v Value) bool {
+	_, ok := v.(NullRegisterValue)
+	return ok
 }

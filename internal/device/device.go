@@ -2,6 +2,7 @@ package device
 
 import (
 	"context"
+
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 )
 
@@ -69,12 +70,12 @@ func (c *State) SetAvailable(v bool) {
 
 func (c *State) SubscribeAvailableSendInitial(ctx context.Context) <-chan bool {
 	devName := c.Name()
-	initialState, subscription := c.stateStorage.SubscribeReturnInitial(ctx, func(value dataflow.Value) bool {
-		if value.DeviceName() != devName {
-			return false
-		}
-		reg := value.Register()
-		return reg.RegisterType() == dataflow.EnumRegister && reg.Name() == AvailabilityRegisterName
+	initialState, subscription := c.stateStorage.SubscribeReturnInitial(ctx, func(curr, prev dataflow.Value) bool {
+		reg := curr.Register()
+		return !prev.Equals(curr) &&
+			curr.DeviceName() == devName &&
+			reg.RegisterType() == dataflow.EnumRegister &&
+			reg.Name() == AvailabilityRegisterName
 	})
 
 	avail, initialOk := c.GetAvailableByState(initialState)

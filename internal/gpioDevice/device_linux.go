@@ -114,7 +114,9 @@ func (d *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 
 	if len(oupRegisters) > 0 {
 		// setup subscription to listen for updates of writable registers
-		_, commandSubscription := d.commandStorage.SubscribeReturnInitial(runCtx, dataflow.DeviceNonNullValueFilter(dName))
+		_, commandSubscription := d.commandStorage.SubscribeReturnInitial(runCtx, func(curr, prev dataflow.Value) bool {
+			return !prev.Equals(curr) && curr.DeviceName() == dName && !dataflow.IsNullRegisterValue(curr)
+		})
 
 		for value := range commandSubscription.Drain() {
 			d.execCommand(oupLines, oupRegisters, value)

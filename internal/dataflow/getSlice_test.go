@@ -50,7 +50,10 @@ func TestValueStorageGetSlice(t *testing.T) {
 			"device-0:register-a=1.000000",
 			"device-0:register-b=10.000000",
 		}
-		got := getAsStrings(storage.GetStateFiltered(dataflow.DeviceNameValueFilter("device-0")))
+		got := getAsStrings(storage.GetStateFiltered(func(curr, prev dataflow.Value) bool {
+			return curr.DeviceName() == "device-0"
+		}))
+
 		if !equalIgnoreOrder(expect, got) {
 			t.Errorf("expect %#v but got %#v", expect, got)
 		}
@@ -67,7 +70,11 @@ func TestValueStorageGetSlice(t *testing.T) {
 			DefaultIncludeV: true,
 		}
 
-		got := getAsStrings(storage.GetStateFiltered(dataflow.RegisterValueFilter(fc)))
+		rf := dataflow.RegisterFilter(fc)
+		got := getAsStrings(storage.GetStateFiltered(func(curr, prev dataflow.Value) bool {
+			return !prev.Equals(curr) && rf(curr.Register())
+
+		}))
 
 		if !equalIgnoreOrder(expect, got) {
 			t.Errorf("expect %#v but got %#v", expect, got)
@@ -106,8 +113,8 @@ func BenchmarkValueStorageGetStateFiltered(b *testing.B) {
 	fillSetC(storage)
 	storage.Wait()
 
-	deviceFilter := func(value dataflow.Value) bool {
-		return value.DeviceName() == "device-0"
+	deviceFilter := func(curr, _ dataflow.Value) bool {
+		return curr.DeviceName() == "device-0"
 	}
 
 	for b.Loop() {

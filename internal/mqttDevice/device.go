@@ -3,6 +3,11 @@ package mqttDevice
 import (
 	"context"
 	"encoding/json"
+	"log"
+	"strings"
+	"sync"
+	"sync/atomic"
+
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/device"
 	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"
@@ -10,10 +15,6 @@ import (
 	"github.com/koestler/go-iotdevice/v3/internal/pool"
 	"github.com/koestler/go-iotdevice/v3/internal/topicMatcher"
 	"github.com/koestler/go-iotdevice/v3/internal/types"
-	"log"
-	"strings"
-	"sync"
-	"sync/atomic"
 )
 
 type Config interface {
@@ -291,16 +292,14 @@ func (c *DeviceStruct) runCommandForwarder(
 	deviceName := c.Config().Name()
 
 	commandRegister := filterCommandRegisters(registers)
-	filter := func(v dataflow.Value) bool {
-		if v.DeviceName() != deviceName {
+	subscription := c.commandStorage.SubscribeSendInitial(ctx, func(curr, prev dataflow.Value) bool {
+		if prev.Equals(curr) || curr.DeviceName() != deviceName {
 			return false
 		}
 
-		_, ok := commandRegister[v.Register().Name()]
+		_, ok := commandRegister[curr.Register().Name()]
 		return ok
-	}
-
-	subscription := c.commandStorage.SubscribeSendInitial(ctx, filter)
+	})
 	for command := range subscription.Drain() {
 		topic := strings.Replace(topicTemplate, "%RegisterName%", command.Register().Name(), 1)
 
