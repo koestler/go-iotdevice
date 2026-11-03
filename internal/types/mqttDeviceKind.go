@@ -17,9 +17,10 @@ func (dk MqttDeviceKind) String() string {
 }
 
 func MqttDeviceKindFromString(s string) MqttDeviceKind {
-	if s == "GoIotdeviceV3" {
+	switch s {
+	case "GoIotdeviceV3":
 		return MqttGoIotdeviceV3Kind
+	default:
+		return MqttUndefinedKind
 	}
-
-	return MqttUndefinedKind
 }

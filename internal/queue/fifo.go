@@ -11,8 +11,8 @@ type Fifo[T any] struct {
 	lock      sync.Mutex
 }
 
-func NewFifo[T any](maxLength int) Fifo[T] {
-	return Fifo[T]{maxLength: maxLength}
+func NewFifo[T any](maxLength int) *Fifo[T] {
+	return &Fifo[T]{maxLength: maxLength}
 }
 
 func (q *Fifo[T]) Enqueue(value T) {
@@ -28,9 +28,7 @@ func (q *Fifo[T]) Enqueue(value T) {
 
 	// when list gets too long, truncate the first element
 	if q.list.Len() > q.maxLength {
-		if elem := q.list.Front(); elem != nil {
-			q.list.Remove(elem)
-		}
+		q.list.Remove(q.list.Front())
 	}
 }
 
@@ -40,8 +38,7 @@ func (q *Fifo[T]) Dequeue() (value T, ok bool) {
 
 	elem := q.list.Front()
 	if elem == nil {
-		var empty T
-		return empty, false
+		return value, false
 	}
 
 	v := q.list.Remove(elem)

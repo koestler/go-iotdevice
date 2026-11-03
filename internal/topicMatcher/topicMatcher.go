@@ -1,6 +1,7 @@
 package topicMatcher
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -12,7 +13,7 @@ type TopicMatcher struct {
 
 func CreateMatcherSingleVariable(topicTemplate, variablePlaceholder string) (matcher TopicMatcher, err error) {
 	// create regexp to match against
-	regNameExpr := "([^\\/]+)"
+	regNameExpr := `([^/]+)`
 
 	before, after, found := strings.Cut(topicTemplate, variablePlaceholder)
 	if !found || variablePlaceholder == "" {
@@ -23,18 +24,15 @@ func CreateMatcherSingleVariable(topicTemplate, variablePlaceholder string) (mat
 	// must not have anything before / after
 	expr := "^" + regexp.QuoteMeta(before) + regNameExpr + regexp.QuoteMeta(after) + "$"
 
-	if m, e := regexp.Compile(expr); e != nil {
-		err = fmt.Errorf("cannot compile regexp: %w", e)
-	} else {
-		matcher.m = m
-	}
+	// all user input is quoted, so the expression always compiles
+	matcher.m = regexp.MustCompile(expr)
 
 	return
 }
 
 func (tm TopicMatcher) ParseTopic(topic string) (variable string, err error) {
 	if tm.m == nil {
-		return "", fmt.Errorf("invalid matcher")
+		return "", errors.New("invalid matcher")
 	}
 
 	matches := tm.m.FindStringSubmatch(topic)

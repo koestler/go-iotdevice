@@ -20,12 +20,12 @@ func (dk HttpDeviceKind) String() string {
 }
 
 func HttpDeviceKindFromString(s string) HttpDeviceKind {
-	if s == "Teracom" {
+	switch s {
+	case "Teracom":
 		return HttpTeracomKind
-	}
-	if s == "ShellyEm3" {
+	case "ShellyEm3":
 		return HttpShellyEm3Kind
+	default:
+		return HttpUndefinedKind
 	}
-
-	return HttpUndefinedKind
 }

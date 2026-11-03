@@ -61,25 +61,25 @@ func (w *Restarter[S]) Run() {
 			if err == nil {
 				// shutdown
 				return
+			}
+
+			log.Printf("restarter[%s]: terminated with error: %s", w.service.Name(), err)
+			runningFor := time.Since(start)
+
+			if immediateError {
+				immediateErrorsInARow += 1
 			} else {
-				log.Printf("restarter[%s]: terminated with error: %s", w.service.Name(), err)
-				runningFor := time.Since(start)
+				immediateErrorsInARow = 0
+			}
 
-				if immediateError {
-					immediateErrorsInARow += 1
-				} else {
-					immediateErrorsInARow = 0
-				}
+			retryIn := w.getRestartInterval(immediateErrorsInARow)
 
-				retryIn := w.getRestartInterval(immediateErrorsInARow)
+			log.Printf("restarter[%s]: error after %s, exponential backoff, retry in %s", w.service.Name(), runningFor, retryIn)
 
-				log.Printf("restarter[%s]: error after %s, exponential backoff, retry in %s", w.service.Name(), runningFor, retryIn)
-
-				select {
-				case <-w.ctx.Done():
-					return
-				case <-time.After(retryIn):
-				}
+			select {
+			case <-w.ctx.Done():
+				return
+			case <-time.After(retryIn):
 			}
 		}
 	})
@@ -99,10 +99,7 @@ func (w *Restarter[S]) Service() S {
 }
 
 func (w *Restarter[S]) getRestartInterval(errorsInARow int) time.Duration {
-	if errorsInARow > 16 {
-		errorsInARow = 16
-	}
-	var backoffFactor uint64 = 1 << errorsInARow // 2^errorsInARow
+	var backoffFactor uint64 = 1 << min(errorsInARow, 16) // 2^errorsInARow
 	interval := w.config.RestartInterval() * time.Duration(backoffFactor)
 	return min(interval, w.config.RestartIntervalMaxBackoff())
 }
