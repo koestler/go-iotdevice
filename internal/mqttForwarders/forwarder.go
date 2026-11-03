@@ -58,7 +58,7 @@ func RunMqttForwarders(
 	commandStorage *dataflow.ValueStorage,
 ) {
 	if sCfg := cfg.HomeassistantDiscovery(); sCfg.Enabled() {
-		for _, deviceConfig := range cfg.HomeassistantDiscovery().Devices() {
+		for _, deviceConfig := range sCfg.Devices() {
 			if dev, ok := devicePool.GetByName(deviceConfig.Name()); ok {
 				runHomeassistantDiscoveryForwarder(mc.GetCtx(), cfg, dev.Service(), mc, deviceConfig.Filter())
 			} else {
@@ -112,7 +112,7 @@ func RunMqttForwarders(
 	}
 
 	if sCfg := cfg.Command(); sCfg.Enabled() {
-		for _, deviceConfig := range cfg.Command().Devices() {
+		for _, deviceConfig := range sCfg.Devices() {
 			if dev, ok := devicePool.GetByName(deviceConfig.Name()); ok {
 				runCommandForwarder(mc.GetCtx(), cfg, dev.Service(), mc, commandStorage, deviceConfig.Filter())
 			} else {

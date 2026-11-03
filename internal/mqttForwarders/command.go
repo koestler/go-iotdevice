@@ -76,7 +76,7 @@ func setupCommandSubscription(
 				rv := dataflow.NewNumericRegisterValue(deviceName, register, *v)
 				commandStorage.Fill(rv)
 				if logDebug {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]->command: send NumericValue deviceName=%s: %s", mc.Name(), dev.Name(), deviceName, rv.String())
+					log.Printf("mqttDevice[%s]->mqttClient[%s]->command: send NumericValue: %s", mc.Name(), dev.Name(), rv.String())
 				}
 				return
 			}
@@ -85,7 +85,7 @@ func setupCommandSubscription(
 				rv := dataflow.NewTextRegisterValue(deviceName, register, *v)
 				commandStorage.Fill(rv)
 				if logDebug {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]->command: send TextValue deviceName=%s: %s", mc.Name(), dev.Name(), deviceName, rv.String())
+					log.Printf("mqttDevice[%s]->mqttClient[%s]->command: send TextValue: %s", mc.Name(), dev.Name(), rv.String())
 				}
 				return
 			}
@@ -98,7 +98,7 @@ func setupCommandSubscription(
 				rv := dataflow.NewEnumRegisterValue(deviceName, register, *v)
 				commandStorage.Fill(rv)
 				if logDebug {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]->command: send EnumValue deviceName=%s: %s", mc.Name(), dev.Name(), deviceName, rv.String())
+					log.Printf("mqttDevice[%s]->mqttClient[%s]->command: send EnumValue: %s", mc.Name(), dev.Name(), rv.String())
 				}
 				return
 			}

@@ -83,13 +83,7 @@ func structureOnUpdateModeRoutine(
 			if len(registers) < 1 {
 				ticker.Reset(100 * time.Millisecond)
 			}
-			regName := reg.Name()
-			if regName == device.AvailabilityRegisterName {
-				// do not use Availability as a register in mqtt; availability is handled separately
-				continue
-			}
-
-			registers[regName] = reg
+			registers[reg.Name()] = reg
 		case <-ticker.C:
 			ticker.Stop()
 
@@ -143,11 +137,11 @@ func getAvailabilityTopics(cfg Config, devName string) (ret []string) {
 	return
 }
 
-type Nameable interface {
+type nameable interface {
 	Name() string
 }
 
-func existsByName[N Nameable](needle string, haystack []N) bool {
+func existsByName[N nameable](needle string, haystack []N) bool {
 	for _, t := range haystack {
 		if needle == t.Name() {
 			return true
@@ -214,7 +208,7 @@ func applyWritableFiltersToRegisters(cfg Config, devName string, inp []dataflow.
 	filter := getCommandFilter(cfg, devName)
 
 	for i, r := range inp {
-		sr := NewStructRegister(r)
+		sr := newStructRegister(r)
 		sr.Writable = filter(r)
 		if sr.Writable {
 			countWritable++
@@ -225,7 +219,7 @@ func applyWritableFiltersToRegisters(cfg Config, devName string, inp []dataflow.
 	return
 }
 
-func NewStructRegister(reg dataflow.Register) StructRegister {
+func newStructRegister(reg dataflow.Register) StructRegister {
 	return StructRegister{
 		Category:    reg.Category(),
 		Name:        reg.Name(),
@@ -234,6 +228,5 @@ func NewStructRegister(reg dataflow.Register) StructRegister {
 		Enum:        reg.Enum(),
 		Unit:        reg.Unit(),
 		Sort:        reg.Sort(),
-		Writable:    reg.Writable(),
 	}
 }

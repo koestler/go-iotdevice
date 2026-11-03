@@ -58,7 +58,7 @@ func runTelemetryForwarder(
 		if cfg.LogDebug() {
 			log.Printf(
 				"mqttClient[%s]->device[%s]->telemetry: start sending messages every %s",
-				mc.Name(), dev.Name(), telemetryInterval.String(),
+				mc.Name(), dev.Name(), telemetryInterval,
 			)
 		}
 

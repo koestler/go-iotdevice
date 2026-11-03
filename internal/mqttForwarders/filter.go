@@ -5,7 +5,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/internal/device"
 )
 
-var availabilityRegisterFilter = func(r dataflow.Filterable) bool {
+func availabilityRegisterFilter(r dataflow.Filterable) bool {
 	// do not use Availability as a register in mqtt; availability is handled separately
 	return r.Name() != device.AvailabilityRegisterName
 }

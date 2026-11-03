@@ -90,17 +90,6 @@ func getRealtimeCfg(cfg Config, deviceName string) MqttDeviceSectionConfig {
 	return nil
 }
 
-func getAvailabilityDeviceCfg(cfg Config, deviceName string) MqttDeviceSectionConfig {
-	if cfg.AvailabilityDevice().Enabled() {
-		for _, d := range cfg.AvailabilityDevice().Devices() {
-			if d.Name() == deviceName {
-				return d
-			}
-		}
-	}
-	return nil
-}
-
 func homeassistantDiscoveryOnUpdateModeRoutine(
 	ctx context.Context,
 	cfg Config,
@@ -296,7 +285,7 @@ func getHomeassistantDiscoveryBaseMessage(
 	deviceName string,
 	register dataflow.Register,
 ) (uniqueId string, base homeassistantDiscoveryBaseMessage) {
-	uniqueId = fmt.Sprintf("%s-%s", deviceName, CamelToSnakeCase(register.Name()))
+	uniqueId = fmt.Sprintf("%s-%s", deviceName, camelToSnakeCase(register.Name()))
 	name := fmt.Sprintf("%s %s", deviceName, register.Description())
 
 	base = homeassistantDiscoveryBaseMessage{
@@ -310,28 +299,20 @@ func getHomeassistantDiscoveryBaseMessage(
 }
 
 func getHomeassistantDiscoveryAvailabilityTopics(cfg Config, deviceName string) (ret []homeassistantDiscoveryAvailabilityStruct) {
-	if cfg.AvailabilityClient().Enabled() {
-		ret = append(ret, homeassistantDiscoveryAvailabilityStruct{cfg.AvailabilityClientTopic()})
+	for _, topic := range getAvailabilityTopics(cfg, deviceName) {
+		ret = append(ret, homeassistantDiscoveryAvailabilityStruct{topic})
 	}
-
-	if cfg.AvailabilityDevice().Enabled() {
-		availCfg := getAvailabilityDeviceCfg(cfg, deviceName)
-		if availCfg != nil {
-			ret = append(ret, homeassistantDiscoveryAvailabilityStruct{cfg.AvailabilityDeviceTopic(deviceName)})
-		}
-	}
-
 	return
 }
 
-func getCommandPayload(msg CommandMessage, mcName, deviceName string) (payload string) {
-	if payload, err := json.Marshal(msg); err != nil {
+func getCommandPayload(msg CommandMessage, mcName, deviceName string) string {
+	payload, err := json.Marshal(msg)
+	if err != nil {
 		log.Printf(
 			"mqttClient[%s]->device[%s]->homeassistantDiscovery: cannot generate command message: %s",
 			mcName, deviceName, err,
 		)
 		return "{}"
-	} else {
-		return string(payload)
 	}
+	return string(payload)
 }

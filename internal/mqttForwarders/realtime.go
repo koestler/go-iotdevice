@@ -47,7 +47,7 @@ func realtimeImmediateModeRoutine(
 	dev device.Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
-	filter func(curr, prev dataflow.Value) bool,
+	filter dataflow.ValueFilterFunc,
 ) {
 	if cfg.LogDebug() {
 		log.Printf(
@@ -69,7 +69,7 @@ func realtimeDelayedUpdateModeRoutine(
 	dev device.Device,
 	mc mqttClient.Client,
 	storage *dataflow.ValueStorage,
-	filter func(curr, prev dataflow.Value) bool,
+	filter dataflow.ValueFilterFunc,
 ) {
 	realtimeInterval := cfg.Realtime().Interval()
 
