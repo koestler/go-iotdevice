@@ -9,7 +9,7 @@ import (
 func Storage(logPrefix string) *dataflow.ValueStorage {
 	valueStorage := dataflow.NewValueStorage()
 
-	if len(logPrefix) > 0 {
+	if logPrefix != "" {
 		subscription := valueStorage.SubscribeSendInitial(context.Background(), func(curr, prev dataflow.Value) bool {
 			return !prev.Equals(curr)
 		})

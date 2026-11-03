@@ -30,7 +30,7 @@ func HttpServer(
 	return httpServer.Run(
 		&httpServer.Environment{
 			Config: httpServerConfig{
-				cfg.HttpServer(),
+				httpServerCfg,
 				cfg.LogConfig(),
 				buildVersion,
 			},
@@ -42,16 +42,10 @@ func HttpServer(
 				}
 				return oup
 			}(cfg.Views()),
-			Authentication: cfg.Authentication(),
-			RegisterDbOfDevice: func(deviceName string) (*dataflow.RegisterDb, bool) {
-				dev, ok := devicePool.GetByName(deviceName)
-				if !ok {
-					return nil, false
-				}
-				return dev.Service().RegisterDb(), true
-			},
-			StateStorage:   stateStorage,
-			CommandStorage: commandStorage,
+			Authentication:     cfg.Authentication(),
+			RegisterDbOfDevice: registerDbOfDevice(devicePool),
+			StateStorage:       stateStorage,
+			CommandStorage:     commandStorage,
 		},
 	)
 }

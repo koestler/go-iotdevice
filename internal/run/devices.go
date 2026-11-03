@@ -132,13 +132,7 @@ func GensetDevices(
 			deviceConfig,
 			stateStorage,
 			commandStorage,
-			func(deviceName string) (*dataflow.RegisterDb, bool) {
-				dev, ok := devicePool.GetByName(deviceName)
-				if !ok {
-					return nil, false
-				}
-				return dev.Service().RegisterDb(), true
-			},
+			registerDbOfDevice(devicePool),
 		)
 		watchedDev := restarter.CreateRestarter[device.Device](deviceConfig, dev)
 		go func() {
@@ -146,6 +140,18 @@ func GensetDevices(
 			watchedDev.Run()
 		}()
 		devicePool.Add(watchedDev)
+	}
+}
+
+func registerDbOfDevice(
+	devicePool *pool.Pool[*restarter.Restarter[device.Device]],
+) func(deviceName string) (*dataflow.RegisterDb, bool) {
+	return func(deviceName string) (*dataflow.RegisterDb, bool) {
+		dev, ok := devicePool.GetByName(deviceName)
+		if !ok {
+			return nil, false
+		}
+		return dev.Service().RegisterDb(), true
 	}
 }
 
