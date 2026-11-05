@@ -39,8 +39,14 @@ func (c *ClientStruct) GetCtx() context.Context {
 // AddRoute registers a handler for subscribeTopic and subscribes on the broker if needed.
 // The returned function removes the handler again; the topic is unsubscribed once its last handler is removed.
 func (c *ClientStruct) AddRoute(subscribeTopic string, handler MessageHandler) (remove func()) {
+	logDebug := c.cfg.LogDebug()
+	clientName := c.cfg.Name()
+	if logDebug {
+		log.Printf("mqttClient[%s]: adding route for topic: %s", clientName, subscribeTopic)
+	}
+
 	if c.cfg.LogMessages() {
-		handler = logWrapper(c.cfg.Name(), handler)
+		handler = logWrapper(clientName, handler)
 	}
 
 	c.subscriptionsMutex.Lock()
@@ -52,6 +58,9 @@ func (c *ClientStruct) AddRoute(subscribeTopic string, handler MessageHandler) (
 		c.subscriptions[subscribeTopic] = handlers
 
 		// the router has one dispatcher per topic; it forwards to all handlers currently registered
+		if logDebug {
+			log.Printf("mqttClient[%s]: registering router for topic: %s", clientName, subscribeTopic)
+		}
 		c.router.RegisterHandler(subscribeTopic, func(p *paho.Publish) {
 			c.dispatch(subscribeTopic, Message{topic: p.Topic, payload: p.Payload})
 		})
@@ -62,6 +71,9 @@ func (c *ClientStruct) AddRoute(subscribeTopic string, handler MessageHandler) (
 	handlers[routeId] = handler
 
 	if !exists && c.cm != nil {
+		if logDebug {
+			log.Printf("mqttClient[%s]: subscribing to topic: %s", clientName, subscribeTopic)
+		}
 		_, _ = c.cm.Subscribe(c.ctx, &paho.Subscribe{
 			Subscriptions: []paho.SubscribeOptions{subscribeOptions(subscribeTopic)},
 		})
@@ -70,6 +82,10 @@ func (c *ClientStruct) AddRoute(subscribeTopic string, handler MessageHandler) (
 	return func() {
 		c.subscriptionsMutex.Lock()
 		defer c.subscriptionsMutex.Unlock()
+
+		if logDebug {
+			log.Printf("mqttClient[%s]: removing route for topic: %s", clientName, subscribeTopic)
+		}
 
 		handlers, ok := c.subscriptions[subscribeTopic]
 		if !ok {
@@ -84,6 +100,9 @@ func (c *ClientStruct) AddRoute(subscribeTopic string, handler MessageHandler) (
 		delete(c.subscriptions, subscribeTopic)
 		c.router.UnregisterHandler(subscribeTopic)
 		if c.cm != nil {
+			if logDebug {
+				log.Printf("mqttClient[%s]: unsubscribing from topic: %s", clientName, subscribeTopic)
+			}
 			_, _ = c.cm.Unsubscribe(c.ctx, &paho.Unsubscribe{Topics: []string{subscribeTopic}})
 		}
 	}
