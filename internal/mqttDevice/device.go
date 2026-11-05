@@ -32,7 +32,7 @@ type DeviceStruct struct {
 	registerFilter    dataflow.RegisterFilterFunc
 	subscriptionSetup atomic.Bool
 
-	avail     map[string]bool
+	avail     map[string]bool // topic -> availability
 	availLock sync.Mutex
 }
 

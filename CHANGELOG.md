@@ -30,6 +30,7 @@
 * Finder 7M38: update and slightly fix register definitions using the newest datasheet
 * remove jsoniter and use stdlib (prefer smaller binary over slightly less cpu time)
 * internal refactoring: value storage does not deduplicate values anymore, instead it is done as a filter of the subscription
+* mqtt device: handle case where struct messages change, resubscribe to new topics
 
 ### Todo
 * bump go.mod to v4
