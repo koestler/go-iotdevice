@@ -3,12 +3,13 @@ package mqttClient
 import (
 	"context"
 	"fmt"
-	"github.com/eclipse/paho.golang/autopaho"
-	"github.com/eclipse/paho.golang/paho"
-	"github.com/koestler/go-iotdevice/v3/internal/queue"
 	"log"
 	"net/url"
 	"time"
+
+	"github.com/eclipse/paho.golang/autopaho"
+	"github.com/eclipse/paho.golang/paho"
+	"github.com/koestler/go-iotdevice/v3/internal/queue"
 )
 
 func NewV5(
@@ -20,6 +21,8 @@ func NewV5(
 
 		router:         paho.NewStandardRouter(),
 		publishBacklog: queue.NewFifo[*paho.Publish](cfg.MaxBacklogSize()),
+
+		subscriptions: make(map[string]map[uint64]MessageHandler),
 
 		ctx:    ctx,
 		cancel: cancel,
@@ -89,8 +92,8 @@ func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.
 			if _, err := cm.Subscribe(c.ctx, &paho.Subscribe{
 				Subscriptions: func() (ret []paho.SubscribeOptions) {
 					ret = make([]paho.SubscribeOptions, 0, len(c.subscriptions))
-					for _, s := range c.subscriptions {
-						ret = append(ret, s.pahoOptions())
+					for topic := range c.subscriptions {
+						ret = append(ret, subscribeOptions(topic))
 					}
 					return
 				}(),
@@ -128,7 +131,6 @@ func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.
 }
 
 func (c *ClientStruct) Shutdown() {
-
 	// publish availability offline
 	if c.cfg.AvailabilityClient().Enabled() {
 		ctx, cancel := context.WithTimeout(c.ctx, time.Second)

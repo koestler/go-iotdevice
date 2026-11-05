@@ -38,7 +38,7 @@ type Client interface {
 	GetCtx() context.Context
 	Shutdown()
 	Publish(topic string, payload []byte, qos byte, retain bool)
-	AddRoute(subscribeTopic string, messageHandler MessageHandler)
+	AddRoute(subscribeTopic string, messageHandler MessageHandler) (remove func())
 }
 
 type MessageHandler func(Message)
