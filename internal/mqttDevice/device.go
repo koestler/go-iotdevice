@@ -2,18 +2,13 @@ package mqttDevice
 
 import (
 	"context"
-	"encoding/json"
 	"log"
-	"strings"
-	"sync"
-	"sync/atomic"
 
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/device"
 	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"
 	"github.com/koestler/go-iotdevice/v3/internal/mqttForwarders"
 	"github.com/koestler/go-iotdevice/v3/internal/pool"
-	"github.com/koestler/go-iotdevice/v3/internal/topicMatcher"
 	"github.com/koestler/go-iotdevice/v3/internal/types"
 )
 
@@ -29,11 +24,7 @@ type DeviceStruct struct {
 	mqttClientPool *pool.Pool[mqttClient.Client]
 	commandStorage *dataflow.ValueStorage
 
-	registerFilter    dataflow.RegisterFilterFunc
-	subscriptionSetup atomic.Bool
-
-	avail     map[string]bool // topic -> availability
-	availLock sync.Mutex
+	registerFilter dataflow.RegisterFilterFunc
 }
 
 func NewDevice(
@@ -52,7 +43,6 @@ func NewDevice(
 		mqttClientPool: mqttClientPool,
 		commandStorage: commandStorage,
 		registerFilter: dataflow.RegisterFilter(deviceConfig.Filter()),
-		avail:          make(map[string]bool),
 	}
 }
 
@@ -74,64 +64,113 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 			continue
 		}
 
-		for _, topic := range topics {
-			if c.Config().LogDebug() {
-				log.Printf("mqttDevice[%s]->mqttClient[%s]: subscribe to topic=%s", c.Name(), mc.Name(), topic)
-			}
-
-			mc.AddRoute(topic, func(m mqttClient.Message) {
-				// parse struct message
-				structMessage, err := parseStructPayload(m.Payload())
-				if err != nil {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse structure payload: %s", c.Name(), mc.Name(), err)
-					return
-				}
-
-				if c.Config().LogDebug() {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]: new struct received: %v", c.Name(), mc.Name(), structMessage)
-				}
-
-				// do not block the current goroutine of the router and continue in a separate goroutine
-				go func() {
-					if !c.subscriptionSetup.Load() {
-						c.subscriptionSetup.Store(true)
-
-						c.setupAvailabilitySubscription(mc, structMessage.AvailabilityTopics)
-						if topic := structMessage.TelemetryTopic; len(topic) > 0 {
-							c.setupTelemetrySubscription(mc, topic)
-						}
-						if topicTemplate := structMessage.RealtimeTopic; len(topicTemplate) > 0 {
-							c.setupRealtimeSubscription(mc, topicTemplate)
-						}
-
-						if topicTemplate := structMessage.CommandTopic; len(topicTemplate) > 0 {
-							go c.runCommandForwarder(ctx, mc, topicTemplate, structMessage.Registers)
-						}
-					}
-
-					c.updateRegisters(structMessage.Registers)
-				}()
-			})
-		}
+		runForwarder(ctx, c, c.Config().LogDebug(), mc, topics)
 	}
 
 	<-ctx.Done()
 	return nil, false
 }
 
-func parseStructPayload(payload []byte) (msg mqttForwarders.StructureMessage, err error) {
-	err = json.Unmarshal(payload, &msg)
-	return
+type forwarder struct {
+	Device *DeviceStruct
+
+	LogDebug bool
+
+	Client       mqttClient.Client
+	StructTopics []string
+
+	structMessage chan mqttForwarders.StructureMessage
+	availMessage  chan availabilityMessage
 }
 
-func parseTelemetryPayload(payload []byte) (msg mqttForwarders.TelemetryMessage, err error) {
-	err = json.Unmarshal(payload, &msg)
-	return
+func runForwarder(
+	ctx context.Context,
+	c *DeviceStruct,
+	logDebug bool,
+	client mqttClient.Client,
+	structTopics []string,
+) {
+	f := &forwarder{
+		Device: c,
+
+		LogDebug:     logDebug,
+		Client:       client,
+		StructTopics: structTopics,
+
+		structMessage: make(chan mqttForwarders.StructureMessage),
+		availMessage:  make(chan availabilityMessage),
+	}
+
+	// subscribe to structure updates
+	for _, topic := range f.StructTopics {
+		if f.LogDebug {
+			log.Printf("mqttDevice[%s]->mqttClient[%s]: subscribe to topic=%s", f.Device.Name(), f.Client.Name(), topic)
+		}
+
+		// subscribe to the struct topics
+		sc := f.structMessage
+		f.Client.AddRoute(topic, func(m mqttClient.Message) {
+			s, err := parseStructPayload(m.Payload())
+			if err != nil {
+				if logDebug {
+					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse structure payload: %s", f.Device.Name(), f.Client.Name(), err)
+				}
+				return
+			}
+			sc <- s
+		})
+	}
+
+	go f.run(ctx)
 }
 
-func parseRealtimePayload(payload []byte) (msg mqttForwarders.RealtimeMessage, err error) {
-	err = json.Unmarshal(payload, &msg)
-	return
+type forwarderState struct {
+	sm mqttForwarders.StructureMessage
+
+	avail map[string]bool // topic -> availability
+
+	remove func()
+}
+
+func (f *forwarder) run(ctx context.Context) {
+	s := forwarderState{
+		avail:  make(map[string]bool),
+		remove: func() {},
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.remove()
+			return
+		case m := <-f.structMessage:
+			if equalStructure(s.sm, m) {
+				continue
+			}
+
+			if f.LogDebug {
+				log.Printf("mqttDevice[%s]->mqttClient[%s]: new struct received: %v", f.Device.Name(), f.Client.Name(), m)
+			}
+			s.sm = m
+
+			removeAvail := f.setupAvailabilitySubscription(m.AvailabilityTopics)
+			removeTelemetry := f.setupTelemetrySubscription(m.TelemetryTopic)
+			removeRealtime := f.setupRealtimeSubscription(m.RealtimeTopic)
+			removeCommand := f.setupCommandForwarder(m.CommandTopic, m.Registers)
+			f.Device.updateRegisters(m.Registers)
+
+			s.remove() // remove old subscriptions
+			s.remove = func() {
+				removeAvail()
+				removeTelemetry()
+				removeRealtime()
+				removeCommand()
+			}
+		case m := <-f.availMessage:
+			s.avail[m.Topic] = m.Available
+			f.Device.SetAvailable(countTrue(s.avail) == len(s.sm.AvailabilityTopics))
+		}
+	}
 }
 
 func (c *DeviceStruct) updateRegisters(registers []mqttForwarders.StructRegister) {
@@ -144,32 +183,6 @@ func (c *DeviceStruct) updateRegisters(registers []mqttForwarders.StructRegister
 	}
 	c.RegisterDb().Add(structRegs...)
 }
-
-func (c *DeviceStruct) setupAvailabilitySubscription(mc mqttClient.Client, availabilityTopics []string) {
-	numAvail := len(availabilityTopics)
-
-	for _, topic := range availabilityTopics {
-		if c.Config().LogDebug() {
-			log.Printf("mqttDevice[%s]->mqttClient[%s]: subscribe to topic=%s", c.Name(), mc.Name(), topic)
-		}
-
-		mc.AddRoute(topic, func(m mqttClient.Message) {
-			if c.Config().LogDebug() {
-				log.Printf("mqttDevice[%s]->mqttClient[%s]: received availability topic=%s, msg=%s",
-					c.Name(), mc.Name(), m.Topic(), m.Payload(),
-				)
-			}
-
-			c.availLock.Lock()
-			defer c.availLock.Unlock()
-
-			c.avail[m.Topic()] = string(m.Payload()) == device.AvailabilityOnlineValue
-
-			c.SetAvailable(countTrue(c.avail) == numAvail)
-		})
-	}
-}
-
 func countTrue(m map[string]bool) int {
 	ret := 0
 	for _, b := range m {
@@ -178,163 +191,4 @@ func countTrue(m map[string]bool) int {
 		}
 	}
 	return ret
-}
-
-func (c *DeviceStruct) setupTelemetrySubscription(mc mqttClient.Client, topic string) {
-	if c.Config().LogDebug() {
-		log.Printf("mqttDevice[%s]->mqttClient[%s]: subscribe to topic=%s", c.Name(), mc.Name(), topic)
-	}
-
-	mc.AddRoute(topic, func(m mqttClient.Message) {
-		telemetryMessage, err := parseTelemetryPayload(m.Payload())
-		if err != nil {
-			log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse telemetry payload: %s", c.Name(), mc.Name(), err)
-			return
-		}
-
-		// loop over all registers
-		for _, register := range c.RegisterDb().GetAll() {
-			switch register.RegisterType() {
-
-			case dataflow.NumberRegister:
-				if v, ok := telemetryMessage.NumericValues[register.Name()]; ok {
-					c.StateStorage().Fill(dataflow.NewNumericRegisterValue(c.Name(), register, v.Value))
-				}
-			case dataflow.TextRegister:
-				if v, ok := telemetryMessage.TextValues[register.Name()]; ok {
-					c.StateStorage().Fill(dataflow.NewTextRegisterValue(c.Name(), register, v.Value))
-				}
-			case dataflow.EnumRegister:
-				if v, ok := telemetryMessage.EnumValues[register.Name()]; ok {
-					c.StateStorage().Fill(dataflow.NewEnumRegisterValue(c.Name(), register, v.EnumIdx))
-				}
-			default:
-				if c.Config().LogDebug() {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]: unsupported register type in telemetry message registerName=%v",
-						c.Name(), mc.Name(), register.Name(),
-					)
-				}
-			}
-		}
-	})
-}
-
-func (c *DeviceStruct) setupRealtimeSubscription(mc mqttClient.Client, topicTemplate string) {
-	topic := strings.Replace(topicTemplate, "%RegisterName%", "+", 1)
-
-	if c.Config().LogDebug() {
-		log.Printf("mqttDevice[%s]->mqttClient[%s]: subscribe to topic=%s", c.Name(), mc.Name(), topic)
-	}
-
-	tm, err := topicMatcher.CreateMatcherSingleVariable(topicTemplate, "%RegisterName%")
-
-	if err != nil {
-		log.Printf("mqttDevice[%s]->mqttClient[%s]: invalid realtime topic: %s", c.Name(), mc.Name(), err)
-		return
-	}
-
-	mc.AddRoute(topic, func(m mqttClient.Message) {
-		if len(m.Payload()) < 1 {
-			// ignore empty messages; those are used to remove retained messages
-			return
-		}
-
-		registerName, err := tm.ParseTopic(m.Topic())
-		if err != nil {
-			log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse realtime topic: %s", c.Name(), mc.Name(), err)
-			return
-		}
-
-		realtimeMessage, err := parseRealtimePayload(m.Payload())
-		if err != nil {
-			log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse realtime payload: %s", c.Name(), mc.Name(), err)
-			return
-		}
-
-		// get register
-		register, ok := c.RegisterDb().GetByName(registerName)
-
-		if !ok {
-			if c.Config().LogDebug() {
-				log.Printf("mqttDevice[%s]->mqttClient[%s]: unknown register, registerName=%v, ignore",
-					c.Name(), mc.Name(), registerName,
-				)
-
-			}
-			return
-		}
-
-		switch register.RegisterType() {
-		case dataflow.NumberRegister:
-			if v := realtimeMessage.NumericValue; v != nil {
-				c.StateStorage().Fill(dataflow.NewNumericRegisterValue(c.Name(), register, *v))
-			}
-		case dataflow.TextRegister:
-			if v := realtimeMessage.TextValue; v != nil {
-				c.StateStorage().Fill(dataflow.NewTextRegisterValue(c.Name(), register, *v))
-			}
-		case dataflow.EnumRegister:
-			if v := realtimeMessage.EnumIdx; v != nil {
-				c.StateStorage().Fill(dataflow.NewEnumRegisterValue(c.Name(), register, *v))
-			}
-		}
-	})
-}
-
-func (c *DeviceStruct) runCommandForwarder(
-	ctx context.Context,
-	mc mqttClient.Client,
-	topicTemplate string,
-	registers []mqttForwarders.StructRegister,
-) {
-	deviceName := c.Config().Name()
-
-	commandRegister := filterCommandRegisters(registers)
-	subscription := c.commandStorage.SubscribeSendInitial(ctx, func(curr, prev dataflow.Value) bool {
-		if prev.Equals(curr) || curr.DeviceName() != deviceName {
-			return false
-		}
-
-		_, ok := commandRegister[curr.Register().Name()]
-		return ok
-	})
-	for command := range subscription.Drain() {
-		topic := strings.Replace(topicTemplate, "%RegisterName%", command.Register().Name(), 1)
-
-		var msg mqttForwarders.CommandMessage
-
-		if numeric, ok := command.(dataflow.NumericRegisterValue); ok {
-			v := numeric.Value()
-			msg.NumericValue = &v
-		} else if text, ok := command.(dataflow.TextRegisterValue); ok {
-			v := text.Value()
-			msg.TextValue = &v
-		} else if enum, ok := command.(dataflow.EnumRegisterValue); ok {
-			v := enum.EnumIdx()
-			msg.EnumIdx = &v
-		} else {
-			continue
-		}
-
-		if payload, err := json.Marshal(msg); err != nil {
-			log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot generate command message: %s",
-				c.Name(), mc.Name(), err,
-			)
-		} else {
-			mc.Publish(topic, payload, 1, false)
-		}
-
-		// reset the command; this allows the same command (e.g. toggle) to be sent again
-		c.commandStorage.Fill(dataflow.NewNullRegisterValue(deviceName, command.Register()))
-	}
-}
-
-func filterCommandRegisters(inp []mqttForwarders.StructRegister) (oup map[string]struct{}) {
-	oup = make(map[string]struct{})
-	for _, r := range inp {
-		if r.Writable {
-			oup[r.Name] = struct{}{}
-		}
-	}
-	return
 }
