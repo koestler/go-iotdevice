@@ -29,9 +29,8 @@ func (f *forwarder) setupCommandForwarder(
 		return ok
 	})
 
-
 	go commandForwarder(
-		f.LogDebug,
+		f.Device.Config().LogDebug(),
 		deviceName, f.Client.Name(),
 		subscription,
 		topicTemplate,
@@ -47,9 +46,9 @@ func commandForwarder(
 	deviceName, clientName string,
 	subscription dataflow.ValueSubscription,
 	topicTemplate string,
-	publish func (topic string, payload []byte, qos byte, retain bool),
+	publish func(topic string, payload []byte, qos byte, retain bool),
 	commandStorage dataflow.Fillable,
-	) {
+) {
 	for command := range subscription.Drain() {
 		topic := strings.Replace(topicTemplate, "%RegisterName%", command.Register().Name(), 1)
 
@@ -68,20 +67,20 @@ func commandForwarder(
 			continue
 		}
 
-		 payload, err := json.Marshal(msg)
-		 if err != nil {
-			 log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot generate command message: %s",
-				 deviceName, clientName, err,
-			 )
-			 continue
-		 }
+		payload, err := json.Marshal(msg)
+		if err != nil {
+			log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot generate command message: %s",
+				deviceName, clientName, err,
+			)
+			continue
+		}
 
-			publish(topic, payload, 1, false)
-		 if logDebug {
-			 log.Printf("mqttDevice[%s]->mqttClient[%s]: sent command message to topic=%s payload=%s",
-				 deviceName, clientName, topic, string(payload),
-			 )
-		 }
+		publish(topic, payload, 1, false)
+		if logDebug {
+			log.Printf("mqttDevice[%s]->mqttClient[%s]: sent command message to topic=%s payload=%s",
+				deviceName, clientName, topic, string(payload),
+			)
+		}
 
 		// reset the command; this allows the same command (e.g. toggle) to be sent again
 		commandStorage.Fill(dataflow.NewNullRegisterValue(deviceName, command.Register()))

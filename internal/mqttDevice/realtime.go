@@ -23,7 +23,7 @@ func (f *forwarder) setupRealtimeSubscription(topicTemplate string) (remove func
 	return f.Client.AddRoute(
 		topic,
 		realtimeHandler(
-			f.LogDebug,
+			f.Device.Config().LogDebug(),
 			f.Device.Name(), f.Client.Name(),
 			tm,
 			f.Device.RegisterDb().GetByName,

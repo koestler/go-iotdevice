@@ -74,8 +74,6 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 type forwarder struct {
 	Device *DeviceStruct
 
-	LogDebug bool
-
 	Client       mqttClient.Client
 	StructTopics []string
 
@@ -93,7 +91,6 @@ func runForwarder(
 	f := &forwarder{
 		Device: c,
 
-		LogDebug:     logDebug,
 		Client:       client,
 		StructTopics: structTopics,
 
@@ -103,7 +100,7 @@ func runForwarder(
 
 	// subscribe to structure updates
 	for _, topic := range f.StructTopics {
-		if f.LogDebug {
+		if f.Device.Config().LogDebug() {
 			log.Printf("mqttDevice[%s]->mqttClient[%s]: subscribe to topic=%s", f.Device.Name(), f.Client.Name(), topic)
 		}
 
@@ -148,7 +145,7 @@ func (f *forwarder) run(ctx context.Context) {
 				continue
 			}
 
-			if f.LogDebug {
+			if f.Device.Config().LogDebug() {
 				log.Printf("mqttDevice[%s]->mqttClient[%s]: new struct received: %v", f.Device.Name(), f.Client.Name(), m)
 			}
 			s.sm = m
@@ -183,6 +180,7 @@ func (c *DeviceStruct) updateRegisters(registers []mqttForwarders.StructRegister
 	}
 	c.RegisterDb().Add(structRegs...)
 }
+
 func countTrue(m map[string]bool) int {
 	ret := 0
 	for _, b := range m {

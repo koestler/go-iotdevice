@@ -18,7 +18,7 @@ func (f *forwarder) setupTelemetrySubscription(topic string) (remove func()) {
 	return f.Client.AddRoute(
 		topic,
 		telemetryHandler(
-			f.LogDebug,
+			f.Device.Config().LogDebug(),
 			f.Device.Name(), f.Client.Name(),
 			f.Device.RegisterDb().GetAll,
 			f.Device.StateStorage(),
@@ -54,12 +54,6 @@ func telemetryHandler(
 			case dataflow.EnumRegister:
 				if v, ok := telemetryMessage.EnumValues[register.Name()]; ok {
 					fillable.Fill(dataflow.NewEnumRegisterValue(deviceName, register, v.EnumIdx))
-				}
-			default:
-				if logDebug {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]: unsupported register type in telemetry message registerName=%v",
-						deviceName, clientName, register.Name(),
-					)
 				}
 			}
 		}
