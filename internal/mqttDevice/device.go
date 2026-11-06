@@ -64,7 +64,7 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 			continue
 		}
 
-		runForwarder(ctx, c, c.Config().LogDebug(), mc, topics)
+		runForwarder(ctx, c, mc, topics)
 	}
 
 	<-ctx.Done()
@@ -84,7 +84,6 @@ type forwarder struct {
 func runForwarder(
 	ctx context.Context,
 	c *DeviceStruct,
-	logDebug bool,
 	client mqttClient.Client,
 	structTopics []string,
 ) {
@@ -98,23 +97,31 @@ func runForwarder(
 		availMessage:  make(chan availabilityMessage),
 	}
 
+	logDebug := c.Config().LogDebug()
+
 	// subscribe to structure updates
-	for _, topic := range f.StructTopics {
-		if f.Device.Config().LogDebug() {
-			log.Printf("mqttDevice[%s]->mqttClient[%s]: subscribe to topic=%s", f.Device.Name(), f.Client.Name(), topic)
+	for _, structTopic := range f.StructTopics {
+		if logDebug {
+			log.Printf("mqttDevice[%s]->mqttClient[%s]: subscribe to topic=%s", f.Device.Name(), f.Client.Name(), structTopic)
 		}
 
 		// subscribe to the struct topics
 		sc := f.structMessage
-		f.Client.AddRoute(topic, func(m mqttClient.Message) {
+		f.Client.AddRoute(structTopic, func(m mqttClient.Message) {
 			s, err := parseStructPayload(m.Payload())
 			if err != nil {
-				if logDebug {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse structure payload: %s", f.Device.Name(), f.Client.Name(), err)
-				}
+				log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse structure payload: %s", f.Device.Name(), f.Client.Name(), err)
 				return
 			}
-			sc <- s
+
+			if logDebug {
+				log.Printf("mqttDevice[%s]->mqttClient[%s]: new struct received: %v", f.Device.Name(), f.Client.Name(), s)
+			}
+
+			// do not block the current goroutine of the router and continue in a separate goroutine
+			go func() {
+				sc <- s
+			}()
 		})
 	}
 
@@ -122,11 +129,9 @@ func runForwarder(
 }
 
 type forwarderState struct {
-	sm mqttForwarders.StructureMessage
-
-	avail map[string]bool // topic -> availability
-
-	remove func()
+	structure mqttForwarders.StructureMessage
+	avail     map[string]bool // topic -> availability
+	remove    func()
 }
 
 func (f *forwarder) run(ctx context.Context) {
@@ -141,22 +146,27 @@ func (f *forwarder) run(ctx context.Context) {
 			s.remove()
 			return
 		case m := <-f.structMessage:
-			if equalStructure(s.sm, m) {
+			if equalStructure(s.structure, m) {
+				if f.Device.Config().LogDebug() {
+					log.Printf("mqttDevice[%s]->mqttClient[%s]: new struct ignored (no change): %v", f.Device.Name(), f.Client.Name(), m)
+				}
 				continue
 			}
 
 			if f.Device.Config().LogDebug() {
 				log.Printf("mqttDevice[%s]->mqttClient[%s]: new struct received: %v", f.Device.Name(), f.Client.Name(), m)
 			}
-			s.sm = m
+			s.structure = m
 
+			// setup new subscriptions based on the new structure
 			removeAvail := f.setupAvailabilitySubscription(m.AvailabilityTopics)
 			removeTelemetry := f.setupTelemetrySubscription(m.TelemetryTopic)
 			removeRealtime := f.setupRealtimeSubscription(m.RealtimeTopic)
 			removeCommand := f.setupCommandForwarder(m.CommandTopic, m.Registers)
 			f.Device.updateRegisters(m.Registers)
 
-			s.remove() // remove old subscriptions
+			// remove old routes (without unsubscribing / subscribing in case the topic did not change)
+			s.remove()
 			s.remove = func() {
 				removeAvail()
 				removeTelemetry()
@@ -165,7 +175,7 @@ func (f *forwarder) run(ctx context.Context) {
 			}
 		case m := <-f.availMessage:
 			s.avail[m.Topic] = m.Available
-			f.Device.SetAvailable(countTrue(s.avail) == len(s.sm.AvailabilityTopics))
+			f.Device.SetAvailable(countTrue(s.avail) == len(s.structure.AvailabilityTopics))
 		}
 	}
 }

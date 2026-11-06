@@ -12,6 +12,10 @@ import (
 )
 
 func (f *forwarder) setupRealtimeSubscription(topicTemplate string) (remove func()) {
+	if topicTemplate == "" {
+		return func() {}
+	}
+
 	topic := strings.Replace(topicTemplate, "%RegisterName%", "+", 1)
 
 	tm, err := topicMatcher.CreateMatcherSingleVariable(topicTemplate, "%RegisterName%")
@@ -57,9 +61,7 @@ func realtimeHandler(
 			return
 		}
 
-		// get register
 		register, ok := getRegisterByName(registerName)
-
 		if !ok {
 			if logDebug {
 				log.Printf("mqttDevice[%s]->mqttClient[%s]: unknown register, registerName=%v, ignore",

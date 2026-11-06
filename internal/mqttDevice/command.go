@@ -14,6 +14,10 @@ func (f *forwarder) setupCommandForwarder(
 	topicTemplate string,
 	registers []mqttForwarders.StructRegister,
 ) (remove func()) {
+	if topicTemplate == "" {
+		return func() {}
+	}
+
 	deviceName := f.Device.Name()
 	commandStorage := f.Device.commandStorage
 	commandRegister := filterCommandRegisters(registers)
@@ -53,7 +57,6 @@ func commandForwarder(
 		topic := strings.Replace(topicTemplate, "%RegisterName%", command.Register().Name(), 1)
 
 		var msg mqttForwarders.CommandMessage
-
 		if numeric, ok := command.(dataflow.NumericRegisterValue); ok {
 			v := numeric.Value()
 			msg.NumericValue = &v
