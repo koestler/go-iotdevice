@@ -35,6 +35,7 @@
 ### Todo
 * bump go.mod to v4
 * can we change the websocket auth to use a header instead of a message?
+* switch to json/v2?
 
 ## 3.13.0
 * config: make docs path configurable via `HttpServer->DocsPath`
