@@ -45,6 +45,7 @@ func availabilityHandler(logDebug bool, deviceName, clientName string, c chan<- 
 			)
 		}
 
+		// go routine of paho router is not blocked because c is buffered
 		c <- parseAvailabilityPayload(m)
 	}
 }

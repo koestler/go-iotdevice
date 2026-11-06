@@ -21,7 +21,7 @@ func (f *forwarder) setupRealtimeSubscription(topicTemplate string) (remove func
 	tm, err := topicMatcher.CreateMatcherSingleVariable(topicTemplate, "%RegisterName%")
 	if err != nil {
 		log.Printf("mqttDevice[%s]->mqttClient[%s]: invalid realtime topic: %s", f.Device.Name(), f.Client.Name(), err)
-		return
+		return func() {}
 	}
 
 	return f.Client.AddRoute(

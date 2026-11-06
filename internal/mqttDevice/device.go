@@ -1,8 +1,11 @@
 package mqttDevice
 
 import (
+	"cmp"
 	"context"
+	"encoding/json"
 	"log"
+	"slices"
 
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/device"
@@ -93,8 +96,9 @@ func runForwarder(
 		Client:       client,
 		StructTopics: structTopics,
 
-		structMessage: make(chan mqttForwarders.StructureMessage),
-		availMessage:  make(chan availabilityMessage),
+		// must be buffered to avoid blocking the paho router go routine
+		structMessage: make(chan mqttForwarders.StructureMessage, 1),
+		availMessage:  make(chan availabilityMessage, 1),
 	}
 
 	logDebug := c.Config().LogDebug()
@@ -118,14 +122,24 @@ func runForwarder(
 				log.Printf("mqttDevice[%s]->mqttClient[%s]: new struct received: %v", f.Device.Name(), f.Client.Name(), s)
 			}
 
-			// do not block the current goroutine of the router and continue in a separate goroutine
-			go func() {
-				sc <- s
-			}()
+			// go routine of paho router is not blocked because sc is buffered
+			sc <- s
 		})
 	}
 
 	go f.run(ctx)
+}
+
+func parseStructPayload(payload []byte) (msg mqttForwarders.StructureMessage, err error) {
+	err = json.Unmarshal(payload, &msg)
+
+	// we ignore the order received and sort the slices to have a deterministic order for comparison
+	slices.Sort(msg.AvailabilityTopics)
+	slices.SortFunc(msg.Registers, func(a, b mqttForwarders.StructRegister) int {
+		return cmp.Or(cmp.Compare(a.Sort, b.Sort), cmp.Compare(a.Name, b.Name))
+	})
+
+	return
 }
 
 type forwarderState struct {
@@ -146,7 +160,7 @@ func (f *forwarder) run(ctx context.Context) {
 			s.remove()
 			return
 		case m := <-f.structMessage:
-			if equalStructure(s.structure, m) {
+			if s.structure.Equal(m) {
 				if f.Device.Config().LogDebug() {
 					log.Printf("mqttDevice[%s]->mqttClient[%s]: new struct ignored (no change): %v", f.Device.Name(), f.Client.Name(), m)
 				}
@@ -158,26 +172,42 @@ func (f *forwarder) run(ctx context.Context) {
 			}
 			s.structure = m
 
-			// setup new subscriptions based on the new structure
+			// setup new subscriptions based on the new structure before removing the old routes
+			// to avoid unsubscribing / subscribing in case the topic did not change
 			removeAvail := f.setupAvailabilitySubscription(m.AvailabilityTopics)
 			removeTelemetry := f.setupTelemetrySubscription(m.TelemetryTopic)
 			removeRealtime := f.setupRealtimeSubscription(m.RealtimeTopic)
+
+			// remove command subscription before setting up the new command forwarder to avoid sending the commands twice
+			s.remove()
+
 			removeCommand := f.setupCommandForwarder(m.CommandTopic, m.Registers)
 			f.Device.updateRegisters(m.Registers)
 
-			// remove old routes (without unsubscribing / subscribing in case the topic did not change)
-			s.remove()
 			s.remove = func() {
 				removeAvail()
 				removeTelemetry()
 				removeRealtime()
 				removeCommand()
 			}
+
+			// update availability based on the new structure
+			for k := range s.avail {
+				if !slices.Contains(m.AvailabilityTopics, k) {
+					delete(s.avail, k)
+				}
+			}
+			f.setAvailable(s)
+
 		case m := <-f.availMessage:
 			s.avail[m.Topic] = m.Available
-			f.Device.SetAvailable(countTrue(s.avail) == len(s.structure.AvailabilityTopics))
+			f.setAvailable(s)
 		}
 	}
+}
+
+func (f *forwarder) setAvailable(s forwarderState) {
+	f.Device.SetAvailable(countTrue(s.avail) == len(s.structure.AvailabilityTopics))
 }
 
 func (c *DeviceStruct) updateRegisters(registers []mqttForwarders.StructRegister) {

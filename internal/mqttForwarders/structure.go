@@ -217,3 +217,24 @@ func newStructRegister(reg dataflow.Register) StructRegister {
 		Sort:        reg.Sort(),
 	}
 }
+
+func (s StructRegister) Equal(other StructRegister) bool {
+	return s.Category == other.Category &&
+		s.Name == other.Name &&
+		s.Description == other.Description &&
+		s.Type == other.Type &&
+		s.Unit == other.Unit &&
+		s.Sort == other.Sort &&
+		s.Writable == other.Writable &&
+		maps.Equal(s.Enum, other.Enum)
+}
+
+func (sm StructureMessage) Equal(other StructureMessage) bool {
+	return sm.TelemetryTopic == other.TelemetryTopic &&
+		sm.RealtimeTopic == other.RealtimeTopic &&
+		sm.CommandTopic == other.CommandTopic &&
+		slices.Equal(sm.AvailabilityTopics, other.AvailabilityTopics) &&
+		slices.EqualFunc(sm.Registers, other.Registers, func(a, b StructRegister) bool {
+			return a.Equal(b)
+		})
+}
