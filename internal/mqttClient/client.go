@@ -2,30 +2,121 @@ package mqttClient
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"maps"
+	"net/url"
 	"slices"
-	"sync"
+	"time"
 
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/koestler/go-iotdevice/v3/internal/queue"
 )
 
+const availabilityOnline = "online"
+const availabilityOffline = "offline"
+
 type ClientStruct struct {
 	cfg Config
 
 	cliCfg         autopaho.ClientConfig
-	cm             *autopaho.ConnectionManager
 	router         *paho.StandardRouter
 	publishBacklog *queue.Fifo[*paho.Publish]
 
-	subscriptionsMutex sync.RWMutex
-	subscriptions      map[string]map[uint64]MessageHandler // subscribeTopic -> routeId -> handler
-	nextRouteId        uint64
+	subscribeChannel   chan subscribeRequest
+	unsubscribeChannel chan unsubscribeRequest
+	dispatchChannel    chan dispatchRequest
+	connectedChannel   chan *autopaho.ConnectionManager // signals (re)connection, used to resubscribe
+	publishChannel     chan *paho.Publish
+	shutdownChannel    chan chan struct{}
 
 	ctx    context.Context
 	cancel context.CancelFunc
+}
+
+type subscribeRequest struct {
+	topic    string
+	handler  MessageHandler
+	response chan<- subscribeResponse
+}
+
+type subscribeResponse struct {
+	id int
+}
+
+type unsubscribeRequest struct {
+	topic string
+	id    int
+}
+
+type dispatchRequest struct {
+	topic string
+	msg   Message
+}
+
+func NewV5(
+	cfg Config,
+) (client *ClientStruct) {
+	ctx, cancel := context.WithCancel(context.Background())
+	client = &ClientStruct{
+		cfg: cfg,
+
+		router:         paho.NewStandardRouter(),
+		publishBacklog: queue.NewFifo[*paho.Publish](cfg.MaxBacklogSize()),
+
+		subscribeChannel:   make(chan subscribeRequest),
+		unsubscribeChannel: make(chan unsubscribeRequest),
+		dispatchChannel:    make(chan dispatchRequest),
+		connectedChannel:   make(chan *autopaho.ConnectionManager, 1),
+		publishChannel:     make(chan *paho.Publish),
+		shutdownChannel:    make(chan chan struct{}),
+
+		ctx:    ctx,
+		cancel: cancel,
+	}
+
+	// configure MQTT library
+	client.cliCfg = autopaho.ClientConfig{
+		ServerUrls:       []*url.URL{cfg.Broker()},
+		KeepAlive:        uint16(cfg.KeepAlive().Seconds()),
+		ReconnectBackoff: autopaho.NewConstantBackoff(cfg.ConnectRetryDelay()),
+		ConnectTimeout:   cfg.ConnectTimeout(),
+		OnConnectionUp:   client.onConnectionUp(),
+		OnConnectError: func(err error) {
+			log.Printf("mqttClientV5[%s]: connection error: %s", cfg.Name(), err)
+		},
+		ClientConfig: paho.ClientConfig{
+			ClientID: cfg.ClientId(),
+			Router:   client.router,
+		},
+	}
+
+	// set up logging
+	if cfg.LogDebug() {
+		prefix := fmt.Sprintf("mqttClientV5[%s]: ", cfg.Name())
+		client.cliCfg.Debug = logger{prefix: prefix + "debug: "}
+		client.cliCfg.PahoDebug = logger{prefix: prefix + "paho: "}
+		client.router.SetDebugLogger(logger{prefix: prefix + "router: "})
+	}
+
+	// configure login
+	if user := cfg.User(); len(user) > 0 {
+		client.cliCfg.ConnectUsername = user
+		client.cliCfg.ConnectPassword = []byte(cfg.Password())
+	}
+
+	// set up client availability topic using will
+	if mCfg := cfg.AvailabilityClient(); mCfg.Enabled() {
+		client.cliCfg.WillMessage = &paho.WillMessage{
+			Retain:  mCfg.Retain(),
+			QoS:     mCfg.Qos(),
+			Topic:   cfg.AvailabilityClientTopic(),
+			Payload: []byte(availabilityOffline),
+		}
+	}
+
+	return
 }
 
 func (c *ClientStruct) Name() string {
@@ -36,92 +127,268 @@ func (c *ClientStruct) GetCtx() context.Context {
 	return c.ctx
 }
 
+func (c *ClientStruct) Run() {
+	go c.run()
+
+	// start connection manager
+	_, _ = autopaho.NewConnection(c.ctx, c.cliCfg)
+}
+
+// run is the central routine; it is the only one touching the subscriptions.
+func (c *ClientStruct) run() {
+	name := c.cfg.Name()
+	logDebug := c.cfg.LogDebug()
+
+	var cm *autopaho.ConnectionManager
+	subscriptions := make(map[string]map[int]MessageHandler) // topic -> routeId -> handler
+	var nextSubscriptionId int
+
+	for {
+		select {
+		case <-c.ctx.Done():
+			return
+
+		case cm = <-c.connectedChannel:
+			topics := slices.Collect(maps.Keys(subscriptions))
+			c.subscribeBroker(cm, topics...)
+
+		case req := <-c.subscribeChannel:
+			handlers, exists := subscriptions[req.topic]
+			if !exists {
+				handlers = make(map[int]MessageHandler)
+				subscriptions[req.topic] = handlers
+
+				// the router has one dispatcher per topic; it forwards via the dispatch channel
+				topic := req.topic
+				if logDebug {
+					log.Printf("mqttClient[%s]: registering router for topic: %s", name, topic)
+				}
+				c.router.RegisterHandler(topic, func(p *paho.Publish) {
+					select {
+					case <-c.ctx.Done():
+					case c.dispatchChannel <- dispatchRequest{topic: topic, msg: Message{topic: p.Topic, payload: p.Payload}}:
+					}
+				})
+				if logDebug {
+					log.Printf("mqttClient[%s]: subscribing to topic: %s", name, topic)
+				}
+				c.subscribeBroker(cm, topic)
+			}
+
+			subscriptionID := nextSubscriptionId
+			nextSubscriptionId++
+
+			handlers[subscriptionID] = req.handler
+			req.response <- subscribeResponse{id: subscriptionID}
+
+		case req := <-c.unsubscribeChannel:
+			handlers, ok := subscriptions[req.topic]
+			if !ok {
+				continue
+			}
+			delete(handlers, req.id)
+			if len(handlers) > 0 {
+				continue
+			}
+
+			// no handler left, unsubscribe
+			delete(subscriptions, req.topic)
+			c.router.UnregisterHandler(req.topic)
+			if cm != nil {
+				if logDebug {
+					log.Printf("mqttClient[%s]: unsubscribing from topic: %s", name, req.topic)
+				}
+				go func(topic string) {
+					_, _ = cm.Unsubscribe(c.ctx, &paho.Unsubscribe{Topics: []string{topic}})
+				}(req.topic)
+			}
+
+		case req := <-c.dispatchChannel:
+			for _, h := range subscriptions[req.topic] {
+				h(req.msg)
+			}
+
+		case p := <-c.publishChannel:
+			if cm == nil {
+				c.publishBacklog.Enqueue(p)
+				continue
+			}
+			// publishing blocks until acknowledged, never do it inline
+			go func() {
+				if _, err := cm.Publish(c.ctx, p); err != nil {
+					if logDebug {
+						log.Printf("mqttClientV5[%s]: error during publish, add to backlog: %s", name, err)
+					}
+					c.publishBacklog.Enqueue(p)
+				}
+			}()
+
+		case done := <-c.shutdownChannel:
+			go func() {
+				defer close(done)
+				c.shutdown(cm)
+			}()
+			// keep serving until the context is cancelled by shutdown
+		}
+	}
+}
+
+func (c *ClientStruct) subscribeBroker(cm *autopaho.ConnectionManager, topics ...string) {
+	if cm == nil || len(topics) == 0 {
+		return
+	}
+	opts := make([]paho.SubscribeOptions, 0, len(topics))
+	for _, t := range topics {
+		opts = append(opts,
+			paho.SubscribeOptions{
+				Topic: t,
+				QoS:   byte(1),
+			},
+		)
+	}
+
+	// broker calls block until acknowledged, which needs the router to keep delivering; never do them inline
+	go func() {
+		if _, err := cm.Subscribe(c.ctx, &paho.Subscribe{Subscriptions: opts}); err != nil {
+			log.Printf("mqttClientV5[%s]: failed to subscribe: %s", c.cfg.Name(), err)
+		}
+	}()
+}
+
 // AddRoute registers a handler for subscribeTopic and subscribes on the broker if needed.
 // The returned function removes the handler again; the topic is unsubscribed once its last handler is removed.
 func (c *ClientStruct) AddRoute(subscribeTopic string, handler MessageHandler) (remove func()) {
-	logDebug := c.cfg.LogDebug()
-	clientName := c.cfg.Name()
-	if logDebug {
-		log.Printf("mqttClient[%s]: adding route for topic: %s", clientName, subscribeTopic)
+	if c.cfg.LogDebug() {
+		log.Printf("mqttClient[%s]: adding route for topic: %s", c.cfg.Name(), subscribeTopic)
 	}
 
 	if c.cfg.LogMessages() {
-		handler = logWrapper(clientName, handler)
+		handler = logWrapper(c.cfg.Name(), handler)
 	}
 
-	c.subscriptionsMutex.Lock()
-	defer c.subscriptionsMutex.Unlock()
+	response := make(chan subscribeResponse)
 
-	handlers, exists := c.subscriptions[subscribeTopic]
-	if !exists {
-		handlers = make(map[uint64]MessageHandler)
-		c.subscriptions[subscribeTopic] = handlers
-
-		// the router has one dispatcher per topic; it forwards to all handlers currently registered
-		if logDebug {
-			log.Printf("mqttClient[%s]: registering router for topic: %s", clientName, subscribeTopic)
-		}
-		c.router.RegisterHandler(subscribeTopic, func(p *paho.Publish) {
-			c.dispatch(subscribeTopic, Message{topic: p.Topic, payload: p.Payload})
-		})
+	select {
+	case <-c.ctx.Done():
+	case c.subscribeChannel <- subscribeRequest{topic: subscribeTopic, handler: handler, response: response}:
 	}
 
-	routeId := c.nextRouteId
-	c.nextRouteId++
-	handlers[routeId] = handler
-
-	if !exists && c.cm != nil {
-		if logDebug {
-			log.Printf("mqttClient[%s]: subscribing to topic: %s", clientName, subscribeTopic)
-		}
-		_, _ = c.cm.Subscribe(c.ctx, &paho.Subscribe{
-			Subscriptions: []paho.SubscribeOptions{subscribeOptions(subscribeTopic)},
-		})
+	var id int
+	select {
+	case <-c.ctx.Done():
+	case resp := <-response:
+		id = resp.id
 	}
 
 	return func() {
-		c.subscriptionsMutex.Lock()
-		defer c.subscriptionsMutex.Unlock()
+		if c.cfg.LogDebug() {
+			log.Printf("mqttClient[%s]: removing route for topic: %s", c.cfg.Name(), subscribeTopic)
+		}
+		select {
+		case <-c.ctx.Done():
+		case c.unsubscribeChannel <- unsubscribeRequest{topic: subscribeTopic, id: id}:
+		}
+	}
+}
 
-		if logDebug {
-			log.Printf("mqttClient[%s]: removing route for topic: %s", clientName, subscribeTopic)
+func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Connack) {
+	return func(cm *autopaho.ConnectionManager, connack *paho.Connack) {
+		log.Printf("mqttClientV5[%s]: connection is up", c.cfg.Name())
+
+		// hand over to the run routine which (re)subscribes all topics
+		select {
+		case <-c.ctx.Done():
+		case c.connectedChannel <- cm:
 		}
 
-		handlers, ok := c.subscriptions[subscribeTopic]
-		if !ok {
-			return
-		}
-		delete(handlers, routeId)
-		if len(handlers) > 0 {
-			return
-		}
-
-		// no handler left, unsubscribe
-		delete(c.subscriptions, subscribeTopic)
-		c.router.UnregisterHandler(subscribeTopic)
-		if c.cm != nil {
-			if logDebug {
-				log.Printf("mqttClient[%s]: unsubscribing from topic: %s", clientName, subscribeTopic)
+		// publish in separate routine to allow for parallel reception of messages
+		go func() {
+			// publish availability online
+			if c.cfg.AvailabilityClient().Enabled() {
+				_, err := cm.Publish(c.ctx, c.availabilityMsg(availabilityOnline))
+				if err != nil {
+					log.Printf("mqttClientV5[%s]: error during publish: %s", c.cfg.Name(), err)
+				}
 			}
-			_, _ = c.cm.Unsubscribe(c.ctx, &paho.Unsubscribe{Topics: []string{subscribeTopic}})
+
+			// publish messages in the backlog
+			for {
+				p, ok := c.publishBacklog.Dequeue()
+				if !ok {
+					break
+				}
+				if c.cfg.LogDebug() {
+					log.Printf("mqttClientV5[%s]: published backlog message", c.cfg.Name())
+				}
+
+				if _, err := cm.Publish(c.ctx, p); err != nil {
+					log.Printf("mqttClientV5[%s]: cannot publish backlog, truncating: %s", c.cfg.Name(), err)
+				}
+			}
+		}()
+	}
+}
+
+func (c *ClientStruct) Shutdown() {
+	done := make(chan struct{})
+	select {
+	case <-c.ctx.Done():
+		return
+	case c.shutdownChannel <- done:
+	}
+	<-done
+}
+
+func (c *ClientStruct) shutdown(cm *autopaho.ConnectionManager) {
+	if cm != nil {
+		// publish availability offline
+		if c.cfg.AvailabilityClient().Enabled() {
+			ctx, cancel := context.WithTimeout(c.ctx, time.Second)
+			_, err := cm.Publish(ctx, c.availabilityMsg(availabilityOffline))
+			cancel()
+			if err != nil {
+				log.Printf("mqttClientV5[%s]: error during publish: %s", c.cfg.Name(), err)
+			}
 		}
+
+		ctx, cancel := context.WithTimeout(c.ctx, time.Second)
+		if err := cm.Disconnect(ctx); err != nil {
+			log.Printf("mqttClientV5[%s]: error during disconnect: %s", c.cfg.Name(), err)
+		}
+		cancel()
+	}
+
+	// cancel main context
+	c.cancel()
+
+	log.Printf("mqttClientV5[%s]: shutdown completed", c.cfg.Name())
+}
+
+func (c *ClientStruct) Publish(topic string, payload []byte, qos byte, retain bool) {
+	if c.cfg.ReadOnly() {
+		log.Printf("mqttClientV5[%s]: message dropped due to readOnly flag: %s %s", c.cfg.Name(), topic, payload)
+		return
+	}
+
+	select {
+	case <-c.ctx.Done():
+	case c.publishChannel <- &paho.Publish{
+		QoS:     qos,
+		Topic:   topic,
+		Payload: payload,
+		Retain:  retain,
+	}:
 	}
 }
 
-func (c *ClientStruct) dispatch(subscribeTopic string, m Message) {
-	c.subscriptionsMutex.RLock()
-	handlers := slices.Collect(maps.Values(c.subscriptions[subscribeTopic]))
-	c.subscriptionsMutex.RUnlock()
+func (c *ClientStruct) availabilityMsg(payload string) *paho.Publish {
+	mCfg := c.cfg.AvailabilityClient()
 
-	for _, h := range handlers {
-		h(m)
-	}
-}
-
-func subscribeOptions(subscribeTopic string) paho.SubscribeOptions {
-	return paho.SubscribeOptions{
-		Topic: subscribeTopic,
-		QoS:   byte(1),
+	return &paho.Publish{
+		QoS:     mCfg.Qos(),
+		Topic:   c.cfg.AvailabilityClientTopic(),
+		Payload: []byte(payload),
+		Retain:  mCfg.Retain(),
 	}
 }
 
