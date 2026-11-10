@@ -23,16 +23,17 @@ type ClientStruct struct {
 
 	cliCfg         autopaho.ClientConfig
 	router         *paho.StandardRouter
-	publishBacklog *queue.Fifo[*paho.Publish]
 
 	subscribeChannel   chan subscribeRequest
 	unsubscribeChannel chan unsubscribeRequest
 	dispatchChannel    chan dispatchRequest
 	connectedChannel   chan *autopaho.ConnectionManager // signals (re)connection, used to resubscribe
-	publishChannel     chan *paho.Publish
 	shutdownChannel    chan chan struct{}
 
 	nextSubscriptionID atomic.Uint64
+
+	publishBacklog *queue.FIFO[*paho.Publish]
+	publishRunning atomic.Bool // true while a runPublish routine exists
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -62,14 +63,14 @@ func NewV5(
 		cfg: cfg,
 
 		router:         paho.NewStandardRouter(),
-		publishBacklog: queue.NewFifo[*paho.Publish](cfg.MaxBacklogSize()),
 
 		subscribeChannel:   make(chan subscribeRequest),
 		unsubscribeChannel: make(chan unsubscribeRequest),
 		dispatchChannel:    make(chan dispatchRequest),
 		connectedChannel:   make(chan *autopaho.ConnectionManager, 1),
-		publishChannel:     make(chan *paho.Publish),
 		shutdownChannel:    make(chan chan struct{}),
+
+		publishBacklog: queue.NewFIFO[*paho.Publish](cfg.MaxBacklogSize()),
 
 		ctx:    ctx,
 		cancel: cancel,
@@ -145,6 +146,7 @@ func (c *ClientStruct) run() {
 	for {
 		select {
 		case <-c.ctx.Done():
+			c.publishBacklog.Close()
 			return
 
 		case cm = <-c.connectedChannel:
@@ -214,21 +216,6 @@ func (c *ClientStruct) run() {
 			for _, h := range subscriptions[req.topic] {
 				h(req.msg)
 			}
-
-		case p := <-c.publishChannel:
-			if cm == nil {
-				c.publishBacklog.Enqueue(p)
-				continue
-			}
-			// publishing blocks until acknowledged, never do it inline
-			go func() {
-				if _, err := cm.Publish(c.ctx, p); err != nil {
-					if logDebug {
-						log.Printf("mqttClientV5[%s]: error during publish, add to backlog: %s", name, err)
-					}
-					c.publishBacklog.Enqueue(p)
-				}
-			}()
 
 		case done := <-c.shutdownChannel:
 			go func() {
@@ -307,31 +294,35 @@ func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.
 		case c.connectedChannel <- cm:
 		}
 
-		// publish in separate routine to allow for parallel reception of messages
-		go func() {
-			// publish availability online
-			if c.cfg.AvailabilityClient().Enabled() {
-				_, err := cm.Publish(c.ctx, c.availabilityMsg(availabilityOnline))
-				if err != nil {
-					log.Printf("mqttClientV5[%s]: error during publish: %s", c.cfg.Name(), err)
-				}
-			}
+		if c.cfg.AvailabilityClient().Enabled() {
+			c.enqueue(c.availabilityMsg(availabilityOnline))
+		}
 
-			// publish messages in the backlog
-			for {
-				p, ok := c.publishBacklog.Dequeue()
-				if !ok {
-					break
-				}
-				if c.cfg.LogDebug() {
-					log.Printf("mqttClientV5[%s]: published backlog message", c.cfg.Name())
-				}
+		if c.publishRunning.CompareAndSwap(false, true) {
+			go c.runPublish(cm)
+		}
+	}
+}
 
-				if _, err := cm.Publish(c.ctx, p); err != nil {
-					log.Printf("mqttClientV5[%s]: cannot publish backlog, truncating: %s", c.cfg.Name(), err)
-				}
+// runPublish forwards the backlog to the broker until the backlog is closed or a publish fails.
+func (c *ClientStruct) runPublish(cm *autopaho.ConnectionManager) {
+	defer c.publishRunning.Store(false)
+
+	for e := range c.publishBacklog.Dequeue() {
+		if _, err := cm.Publish(c.ctx, e.Value); err != nil {
+			e.Next(false)
+			if c.cfg.LogDebug() {
+				log.Printf("mqttClientV5[%s]: error during publish, keeping in backlog: %s", c.cfg.Name(), err)
 			}
-		}()
+			return
+		}
+		e.Next(true)
+	}
+}
+
+func (c *ClientStruct) enqueue(p *paho.Publish) {
+	if err := c.publishBacklog.Enqueue(p); err != nil {
+		log.Printf("mqttClientV5[%s]: message dropped: %s: %s", c.cfg.Name(), p.Topic, err)
 	}
 }
 
@@ -376,15 +367,12 @@ func (c *ClientStruct) Publish(topic string, payload []byte, qos byte, retain bo
 		return
 	}
 
-	select {
-	case <-c.ctx.Done():
-	case c.publishChannel <- &paho.Publish{
+	c.enqueue(&paho.Publish{
 		QoS:     qos,
 		Topic:   topic,
 		Payload: payload,
 		Retain:  retain,
-	}:
-	}
+	})
 }
 
 func (c *ClientStruct) availabilityMsg(payload string) *paho.Publish {
