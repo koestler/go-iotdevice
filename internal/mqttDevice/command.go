@@ -11,6 +11,7 @@ import (
 )
 
 func (f *forwarder) setupCommandForwarder(
+	ctx context.Context,
 	topicTemplate string,
 	registers []mqttForwarders.StructRegister,
 ) (remove func()) {
@@ -22,7 +23,7 @@ func (f *forwarder) setupCommandForwarder(
 	commandStorage := f.Device.commandStorage
 	commandRegister := filterCommandRegisters(registers)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 
 	subscription := commandStorage.SubscribeSendInitial(ctx, func(curr, prev dataflow.Value) bool {
 		if prev.Equals(curr) || curr.DeviceName() != deviceName {

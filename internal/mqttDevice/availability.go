@@ -1,6 +1,7 @@
 package mqttDevice
 
 import (
+	"context"
 	"log"
 
 	"github.com/koestler/go-iotdevice/v3/internal/device"
@@ -12,7 +13,7 @@ type availabilityMessage struct {
 	Available bool
 }
 
-func (f *forwarder) setupAvailabilitySubscription(availabilityTopics []string) (remove func()) {
+func (f *forwarder) setupAvailabilitySubscription(ctx context.Context, availabilityTopics []string) (remove func()) {
 	removes := make([]func(), 0, len(availabilityTopics))
 	for _, topic := range availabilityTopics {
 		if f.Device.Config().LogDebug() {
@@ -20,8 +21,10 @@ func (f *forwarder) setupAvailabilitySubscription(availabilityTopics []string) (
 		}
 
 		r := f.Client.AddRoute(
+			ctx,
 			topic,
 			availabilityHandler(
+				ctx,
 				f.Device.Config().LogDebug(),
 				f.Device.Name(), f.Client.Name(),
 				f.availMessage,
@@ -37,7 +40,7 @@ func (f *forwarder) setupAvailabilitySubscription(availabilityTopics []string) (
 	}
 }
 
-func availabilityHandler(logDebug bool, deviceName, clientName string, c chan<- availabilityMessage) func(message mqttClient.Message) {
+func availabilityHandler(ctx context.Context, logDebug bool, deviceName, clientName string, c chan<- availabilityMessage) func(message mqttClient.Message) {
 	return func(m mqttClient.Message) {
 		if logDebug {
 			log.Printf("mqttDevice[%s]->mqttClient[%s]: received availability topic=%s, msg=%s",
@@ -45,8 +48,10 @@ func availabilityHandler(logDebug bool, deviceName, clientName string, c chan<- 
 			)
 		}
 
-		// go routine of paho router is not blocked because c is buffered
-		c <- parseAvailabilityPayload(m)
+		select {
+		case <-ctx.Done():
+		case c <- parseAvailabilityPayload(m):
+		}
 	}
 }
 

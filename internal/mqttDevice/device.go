@@ -96,9 +96,8 @@ func runForwarder(
 		Client:       client,
 		StructTopics: structTopics,
 
-		// must be buffered to avoid blocking the paho router go routine
-		structMessage: make(chan mqttForwarders.StructureMessage, 1),
-		availMessage:  make(chan availabilityMessage, 1),
+		structMessage: make(chan mqttForwarders.StructureMessage),
+		availMessage:  make(chan availabilityMessage),
 	}
 
 	logDebug := c.Config().LogDebug()
@@ -111,7 +110,7 @@ func runForwarder(
 
 		// subscribe to the struct topics
 		sc := f.structMessage
-		f.Client.AddRoute(structTopic, func(m mqttClient.Message) {
+		f.Client.AddRoute(ctx, structTopic, func(m mqttClient.Message) {
 			s, err := parseStructPayload(m.Payload())
 			if err != nil {
 				log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse structure payload: %s", f.Device.Name(), f.Client.Name(), err)
@@ -122,8 +121,10 @@ func runForwarder(
 				log.Printf("mqttDevice[%s]->mqttClient[%s]: new struct received: %v", f.Device.Name(), f.Client.Name(), s)
 			}
 
-			// go routine of paho router is not blocked because sc is buffered
-			sc <- s
+			select {
+			case <-ctx.Done():
+			case sc <- s:
+			}
 		})
 	}
 
@@ -174,14 +175,14 @@ func (f *forwarder) run(ctx context.Context) {
 
 			// setup new subscriptions based on the new structure before removing the old routes
 			// to avoid unsubscribing / subscribing in case the topic did not change
-			removeAvail := f.setupAvailabilitySubscription(m.AvailabilityTopics)
-			removeTelemetry := f.setupTelemetrySubscription(m.TelemetryTopic)
-			removeRealtime := f.setupRealtimeSubscription(m.RealtimeTopic)
+			removeAvail := f.setupAvailabilitySubscription(ctx, m.AvailabilityTopics)
+			removeTelemetry := f.setupTelemetrySubscription(ctx, m.TelemetryTopic)
+			removeRealtime := f.setupRealtimeSubscription(ctx, m.RealtimeTopic)
 
 			// remove command subscription before setting up the new command forwarder to avoid sending the commands twice
 			s.remove()
 
-			removeCommand := f.setupCommandForwarder(m.CommandTopic, m.Registers)
+			removeCommand := f.setupCommandForwarder(ctx, m.CommandTopic, m.Registers)
 			f.Device.updateRegisters(m.Registers)
 
 			s.remove = func() {

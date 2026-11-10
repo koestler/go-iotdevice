@@ -1,6 +1,7 @@
 package mqttDevice
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 
@@ -14,11 +15,12 @@ func parseTelemetryPayload(payload []byte) (msg mqttForwarders.TelemetryMessage,
 	return
 }
 
-func (f *forwarder) setupTelemetrySubscription(topic string) (remove func()) {
+func (f *forwarder) setupTelemetrySubscription(ctx context.Context, topic string) (remove func()) {
 	if topic == "" {
 		return func() {}
 	}
 	return f.Client.AddRoute(
+		ctx,
 		topic,
 		telemetryHandler(
 			f.Device.Config().LogDebug(),

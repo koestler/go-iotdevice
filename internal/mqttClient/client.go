@@ -7,6 +7,7 @@ import (
 	"maps"
 	"net/url"
 	"slices"
+	"sync/atomic"
 	"time"
 
 	"github.com/eclipse/paho.golang/autopaho"
@@ -31,23 +32,21 @@ type ClientStruct struct {
 	publishChannel     chan *paho.Publish
 	shutdownChannel    chan chan struct{}
 
+	nextSubscriptionID atomic.Uint64
+
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
 type subscribeRequest struct {
-	topic    string
-	handler  MessageHandler
-	response chan<- subscribeResponse
-}
-
-type subscribeResponse struct {
-	id int
+	id      uint64
+	topic   string
+	handler MessageHandler
 }
 
 type unsubscribeRequest struct {
 	topic string
-	id    int
+	id    uint64
 }
 
 type dispatchRequest struct {
@@ -140,8 +139,7 @@ func (c *ClientStruct) run() {
 	logDebug := c.cfg.LogDebug()
 
 	var cm *autopaho.ConnectionManager
-	subscriptions := make(map[string]map[int]MessageHandler) // topic -> routeId -> handler
-	var nextSubscriptionId int
+	subscriptions := make(map[string]map[uint64]MessageHandler) // topic -> routeId -> handler
 
 	for {
 		select {
@@ -155,7 +153,7 @@ func (c *ClientStruct) run() {
 		case req := <-c.subscribeChannel:
 			handlers, exists := subscriptions[req.topic]
 			if !exists {
-				handlers = make(map[int]MessageHandler)
+				handlers = make(map[uint64]MessageHandler)
 				subscriptions[req.topic] = handlers
 
 				// the router has one dispatcher per topic; it forwards via the dispatch channel
@@ -175,11 +173,7 @@ func (c *ClientStruct) run() {
 				c.subscribeBroker(cm, topic)
 			}
 
-			subscriptionID := nextSubscriptionId
-			nextSubscriptionId++
-
-			handlers[subscriptionID] = req.handler
-			req.response <- subscribeResponse{id: subscriptionID}
+			handlers[req.id] = req.handler
 
 		case req := <-c.unsubscribeChannel:
 			handlers, ok := subscriptions[req.topic]
@@ -256,8 +250,9 @@ func (c *ClientStruct) subscribeBroker(cm *autopaho.ConnectionManager, topics ..
 }
 
 // AddRoute registers a handler for subscribeTopic and subscribes on the broker if needed.
+// The function never blocks and returns immediately.
 // The returned function removes the handler again; the topic is unsubscribed once its last handler is removed.
-func (c *ClientStruct) AddRoute(subscribeTopic string, handler MessageHandler) (remove func()) {
+func (c *ClientStruct) AddRoute(ctx context.Context, subscribeTopic string, handler MessageHandler) (remove func()) {
 	if c.cfg.LogDebug() {
 		log.Printf("mqttClient[%s]: adding route for topic: %s", c.cfg.Name(), subscribeTopic)
 	}
@@ -266,28 +261,26 @@ func (c *ClientStruct) AddRoute(subscribeTopic string, handler MessageHandler) (
 		handler = logWrapper(c.cfg.Name(), handler)
 	}
 
-	response := make(chan subscribeResponse)
+	id := c.nextSubscriptionID.Add(1)
 
-	select {
-	case <-c.ctx.Done():
-	case c.subscribeChannel <- subscribeRequest{topic: subscribeTopic, handler: handler, response: response}:
-	}
-
-	var id int
-	select {
-	case <-c.ctx.Done():
-	case resp := <-response:
-		id = resp.id
-	}
+	go func() {
+		select {
+		case <-ctx.Done(): // drop request in case the cancelled context is already done
+		case <-c.ctx.Done(): // drop request in case the client is already shutting down
+		case c.subscribeChannel <- subscribeRequest{id: id, topic: subscribeTopic, handler: handler}:
+		}
+	}()
 
 	return func() {
 		if c.cfg.LogDebug() {
 			log.Printf("mqttClient[%s]: removing route for topic: %s", c.cfg.Name(), subscribeTopic)
 		}
-		select {
-		case <-c.ctx.Done():
-		case c.unsubscribeChannel <- unsubscribeRequest{topic: subscribeTopic, id: id}:
-		}
+		go func() {
+			select {
+			case <-c.ctx.Done(): // drop request in case the client is already shutting down
+			case c.unsubscribeChannel <- unsubscribeRequest{topic: subscribeTopic, id: id}:
+			}
+		}()
 	}
 }
 

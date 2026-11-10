@@ -1,6 +1,7 @@
 package mqttDevice
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"strings"
@@ -11,7 +12,7 @@ import (
 	"github.com/koestler/go-iotdevice/v3/internal/topicMatcher"
 )
 
-func (f *forwarder) setupRealtimeSubscription(topicTemplate string) (remove func()) {
+func (f *forwarder) setupRealtimeSubscription(ctx context.Context, topicTemplate string) (remove func()) {
 	if topicTemplate == "" {
 		return func() {}
 	}
@@ -25,6 +26,7 @@ func (f *forwarder) setupRealtimeSubscription(topicTemplate string) (remove func
 	}
 
 	return f.Client.AddRoute(
+		ctx,
 		topic,
 		realtimeHandler(
 			f.Device.Config().LogDebug(),

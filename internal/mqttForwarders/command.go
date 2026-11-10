@@ -3,10 +3,11 @@ package mqttForwarders
 import (
 	"context"
 	"encoding/json"
+	"log"
+
 	"github.com/koestler/go-iotdevice/v3/internal/dataflow"
 	"github.com/koestler/go-iotdevice/v3/internal/device"
 	"github.com/koestler/go-iotdevice/v3/internal/mqttClient"
-	"log"
 )
 
 type CommandMessage struct {
@@ -42,12 +43,13 @@ func commandRoutine(
 		case <-ctx.Done():
 			return
 		case reg := <-regSubscription:
-			setupCommandSubscription(cfg, dev, mc, commandStorage, reg)
+			setupCommandSubscription(ctx, cfg, dev, mc, commandStorage, reg)
 		}
 	}
 }
 
 func setupCommandSubscription(
+	ctx context.Context,
 	cfg Config,
 	dev device.Device,
 	mc mqttClient.Client,
@@ -63,7 +65,7 @@ func setupCommandSubscription(
 
 	deviceName := dev.Name()
 
-	mc.AddRoute(topic, func(m mqttClient.Message) {
+	mc.AddRoute(ctx, topic, func(m mqttClient.Message) {
 		msg, err := parseCommandMessagePayload(m.Payload())
 		if err != nil {
 			log.Printf("mqttDevice[%s]->mqttClient[%s]->command: cannot parse message: %s", mc.Name(), dev.Name(), err)
