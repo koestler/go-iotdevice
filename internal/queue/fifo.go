@@ -17,10 +17,9 @@ type FIFO[T any] struct {
 	head int // index of the oldest element
 	size int // number of stored elements
 
-	notify    chan struct{} // signals the routine that a value was added
-	dequeue   chan Element[T]
-	done      chan struct{}
-	closeOnce sync.Once
+	notify  chan struct{} // signals the routine that a value was added
+	dequeue chan Element[T]
+	done    chan struct{}
 }
 
 // Element is a dequeued value. The FIFO delivers nothing else until Next is called.
@@ -43,8 +42,10 @@ func NewFIFO[T any](maxLength int) *FIFO[T] {
 	return q
 }
 
+// Close stops the internal go routine and closes the Dequeue channel.
+// Call Close exactly once. Next will panic if called after Close.
 func (q *FIFO[T]) Close() {
-	q.closeOnce.Do(func() { close(q.done) })
+	close(q.done)
 }
 
 // Enqueue appends value or returns ErrFull. It never blocks.

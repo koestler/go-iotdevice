@@ -109,7 +109,6 @@ func TestFifo(t *testing.T) {
 	t.Run("close", func(t *testing.T) {
 		q := NewFIFO[int](1)
 		q.Close()
-		q.Close() // idempotent
 
 		select {
 		case _, ok := <-q.Dequeue():
