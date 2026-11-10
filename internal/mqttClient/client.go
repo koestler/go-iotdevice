@@ -251,6 +251,7 @@ func (c *ClientStruct) subscribeBroker(cm *autopaho.ConnectionManager, topics ..
 
 // AddRoute registers a handler for subscribeTopic and subscribes on the broker if needed.
 // The function never blocks and returns immediately.
+// The handler is called inside the central run routine and must be fast and never block (see MessageHandler).
 // The returned function removes the handler again; the topic is unsubscribed once its last handler is removed.
 func (c *ClientStruct) AddRoute(ctx context.Context, subscribeTopic string, handler MessageHandler) (remove func()) {
 	if c.cfg.LogDebug() {
