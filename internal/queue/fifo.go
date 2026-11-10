@@ -72,19 +72,16 @@ func (q *FIFO[T]) Dequeue() <-chan Element[T] {
 }
 
 // Next must be called exactly once per element and must never be called twice (it panics).
-// With remove=true the element is deleted from the queue (processing succeeded) and Next returns
-// once the slot is free again. With remove=false the element stays at the front of the queue
-// (processing failed) and is delivered again.
+// With remove=true the element is deleted from the queue (processing succeeded).
+// With remove=false the element stays at the front of the queue (processing failed) and is delivered again.
 func (e Element[T]) Next(remove bool) {
-	defer close(e.result) // a second call panics here or on the send
+	defer close(e.result) // a second call panics here or on send
 	select {
 	case e.result <- remove:
-	case <-e.settled: // fifo was closed, nobody is listening anymore
+	case <-e.settled:
 		return
 	}
-	if remove {
-		<-e.settled
-	}
+	<-e.settled
 }
 
 func (q *FIFO[T]) run() {
@@ -127,10 +124,10 @@ func (q *FIFO[T]) run() {
 				q.head = (q.head + 1) % len(q.buf)
 				q.size--
 				q.lock.Unlock()
-				close(element.settled)
 			}
+			close(element.settled)
 		case <-q.done:
-			close(element.settled) // release a pending Remove
+			close(element.settled) // release a pending Next
 			return
 		}
 	}
