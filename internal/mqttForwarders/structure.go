@@ -74,21 +74,25 @@ func structureOnUpdateModeRoutine(
 	ticker := time.NewTicker(math.MaxInt64)
 	defer ticker.Stop()
 
-	registers := make(map[string]dataflow.RegisterStruct)
+	pending := false
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case reg := <-regSubscription:
-			if len(registers) < 1 {
+		case _, ok := <-regSubscription:
+			if !ok {
+				return
+			}
+			// collect updates for a short time and then always send the full list of registers
+			if !pending {
+				pending = true
 				ticker.Reset(100 * time.Millisecond)
 			}
-			registers[reg.Name()] = reg
 		case <-ticker.C:
 			ticker.Stop()
+			pending = false
 
-			publishStruct(cfg, mc, dev.Name(), structureTopic, slices.Collect(maps.Values(registers)))
-			clear(registers)
+			publishStruct(cfg, mc, dev.Name(), structureTopic, dev.RegisterDb().GetFiltered(filter))
 		}
 	}
 }

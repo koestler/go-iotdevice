@@ -518,8 +518,8 @@ of registers as well as the topics for the availability, telemetry, real-time, a
 knows where to subscribe to get current values/control the outputs.
 
 Structure messages are sent whenever a register is added or changed by default (Interval=0s, on-update mode) with the retain
-flag set (the broker stores those messages for new clients). In this mode, a message only contains the registers
-that were added or changed within the last 100 ms, not the full list of registers.
+flag set (the broker stores those messages for new clients). Changes within 100 ms are combined into one message.
+A structure message always contains the full list of registers (and not only the added or changed ones).
 Alternatively, the full structure can also be sent repeatedly (Interval>0, the first message is sent after one interval).
 
 Example:
