@@ -70,7 +70,6 @@ func runTelemetryForwarder(
 		for {
 			select {
 			case <-ctx.Done():
-
 				return
 			case avail = <-availChan:
 				if cfg.LogDebug() {

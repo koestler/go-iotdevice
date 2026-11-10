@@ -60,7 +60,7 @@ func setupCommandSubscription(
 	logDebug := cfg.LogDebug()
 
 	if logDebug {
-		log.Printf("mqttDevice[%s]->mqttClient[%s]->command: subscribe to topic=%s", mc.Name(), dev.Name(), topic)
+		log.Printf("mqttClient[%s]->device[%s]->command: subscribe to topic=%s", mc.Name(), dev.Name(), topic)
 	}
 
 	deviceName := dev.Name()
@@ -68,7 +68,7 @@ func setupCommandSubscription(
 	mc.AddRoute(ctx, topic, func(m mqttClient.Message) {
 		msg, err := parseCommandMessagePayload(m.Payload())
 		if err != nil {
-			log.Printf("mqttDevice[%s]->mqttClient[%s]->command: cannot parse message: %s", mc.Name(), dev.Name(), err)
+			log.Printf("mqttClient[%s]->device[%s]->command: cannot parse message: %s", mc.Name(), dev.Name(), err)
 			return
 		}
 
@@ -78,7 +78,7 @@ func setupCommandSubscription(
 				rv := dataflow.NewNumericRegisterValue(deviceName, register, *v)
 				commandStorage.Fill(rv)
 				if logDebug {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]->command: send NumericValue: %s", mc.Name(), dev.Name(), rv.String())
+					log.Printf("mqttClient[%s]->device[%s]->command: received NumericValue: %s", mc.Name(), dev.Name(), rv.String())
 				}
 				return
 			}
@@ -87,26 +87,26 @@ func setupCommandSubscription(
 				rv := dataflow.NewTextRegisterValue(deviceName, register, *v)
 				commandStorage.Fill(rv)
 				if logDebug {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]->command: send TextValue: %s", mc.Name(), dev.Name(), rv.String())
+					log.Printf("mqttClient[%s]->device[%s]->command: received TextValue: %s", mc.Name(), dev.Name(), rv.String())
 				}
 				return
 			}
 		case dataflow.EnumRegister:
 			if v := msg.EnumIdx; v != nil {
 				if _, ok := register.Enum()[*v]; !ok {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]->command: invalid enum index %d for register %s", mc.Name(), dev.Name(), *v, register.Name())
+					log.Printf("mqttClient[%s]->device[%s]->command: invalid enum index %d for register %s", mc.Name(), dev.Name(), *v, register.Name())
 					return
 				}
 				rv := dataflow.NewEnumRegisterValue(deviceName, register, *v)
 				commandStorage.Fill(rv)
 				if logDebug {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]->command: send EnumValue: %s", mc.Name(), dev.Name(), rv.String())
+					log.Printf("mqttClient[%s]->device[%s]->command: received EnumIdx: %s", mc.Name(), dev.Name(), rv.String())
 				}
 				return
 			}
 		}
 
-		log.Printf("mqttDevice[%s]->mqttClient[%s]->command: invalid command message: %#v", mc.Name(), dev.Name(), msg)
+		log.Printf("mqttClient[%s]->device[%s]->command: invalid command message: %#v", mc.Name(), dev.Name(), msg)
 	})
 }
 

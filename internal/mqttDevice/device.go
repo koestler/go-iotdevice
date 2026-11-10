@@ -57,7 +57,7 @@ func (c *DeviceStruct) Run(ctx context.Context) (err error, immediateError bool)
 	mCfg := c.mqttConfig
 
 	if mCfg.Kind() != types.MqttGoIotdeviceV3Kind {
-		log.Printf("mqttDevice[%s]: unsupported type: %s", c.Name(), mCfg.Kind().String())
+		log.Printf("mqttDevice[%s]: unsupported kind: %s", c.Name(), mCfg.Kind().String())
 		return
 	}
 
@@ -118,7 +118,7 @@ func runForwarder(
 			}
 
 			if logDebug {
-				log.Printf("mqttDevice[%s]->mqttClient[%s]: new struct received: %v", f.Device.Name(), f.Client.Name(), s)
+				log.Printf("mqttDevice[%s]->mqttClient[%s]: structure message parsed: %v", f.Device.Name(), f.Client.Name(), s)
 			}
 
 			select {
@@ -163,13 +163,13 @@ func (f *forwarder) run(ctx context.Context) {
 		case m := <-f.structMessage:
 			if s.structure.Equal(m) {
 				if f.Device.Config().LogDebug() {
-					log.Printf("mqttDevice[%s]->mqttClient[%s]: new struct ignored (no change): %v", f.Device.Name(), f.Client.Name(), m)
+					log.Printf("mqttDevice[%s]->mqttClient[%s]: new structure ignored (no change): %v", f.Device.Name(), f.Client.Name(), m)
 				}
 				continue
 			}
 
 			if f.Device.Config().LogDebug() {
-				log.Printf("mqttDevice[%s]->mqttClient[%s]: new struct received: %v", f.Device.Name(), f.Client.Name(), m)
+				log.Printf("mqttDevice[%s]->mqttClient[%s]: new structure received: %v", f.Device.Name(), f.Client.Name(), m)
 			}
 			s.structure = m
 

@@ -21,8 +21,8 @@ const availabilityOffline = "offline"
 type ClientStruct struct {
 	cfg Config
 
-	cliCfg         autopaho.ClientConfig
-	router         *paho.StandardRouter
+	cliCfg autopaho.ClientConfig
+	router *paho.StandardRouter
 
 	subscribeChannel   chan subscribeRequest
 	unsubscribeChannel chan unsubscribeRequest
@@ -62,7 +62,7 @@ func NewV5(
 	client = &ClientStruct{
 		cfg: cfg,
 
-		router:         paho.NewStandardRouter(),
+		router: paho.NewStandardRouter(),
 
 		subscribeChannel:   make(chan subscribeRequest),
 		unsubscribeChannel: make(chan unsubscribeRequest),
@@ -84,7 +84,7 @@ func NewV5(
 		ConnectTimeout:   cfg.ConnectTimeout(),
 		OnConnectionUp:   client.onConnectionUp(),
 		OnConnectError: func(err error) {
-			log.Printf("mqttClientV5[%s]: connection error: %s", cfg.Name(), err)
+			log.Printf("mqttClient[%s]: connection error: %s", cfg.Name(), err)
 		},
 		ClientConfig: paho.ClientConfig{
 			ClientID: cfg.ClientId(),
@@ -94,7 +94,7 @@ func NewV5(
 
 	// set up logging
 	if cfg.LogDebug() {
-		prefix := fmt.Sprintf("mqttClientV5[%s]: ", cfg.Name())
+		prefix := fmt.Sprintf("mqttClient[%s]: ", cfg.Name())
 		client.cliCfg.Debug = logger{prefix: prefix + "debug: "}
 		client.cliCfg.PahoDebug = logger{prefix: prefix + "paho: "}
 		client.router.SetDebugLogger(logger{prefix: prefix + "router: "})
@@ -244,7 +244,7 @@ func (c *ClientStruct) subscribeBroker(cm *autopaho.ConnectionManager, topics ..
 	// broker calls block until acknowledged, which needs the router to keep delivering; never do them inline
 	go func() {
 		if _, err := cm.Subscribe(c.ctx, &paho.Subscribe{Subscriptions: opts}); err != nil {
-			log.Printf("mqttClientV5[%s]: failed to subscribe: %s", c.cfg.Name(), err)
+			log.Printf("mqttClient[%s]: failed to subscribe: %s", c.cfg.Name(), err)
 		}
 	}()
 }
@@ -265,7 +265,7 @@ func (c *ClientStruct) AddRoute(ctx context.Context, subscribeTopic string, hand
 
 	go func() {
 		select {
-		case <-ctx.Done(): // drop request in case the cancelled context is already done
+		case <-ctx.Done(): // drop request in case the context is already cancelled
 		case <-c.ctx.Done(): // drop request in case the client is already shutting down
 		case c.subscribeChannel <- subscribeRequest{id: id, topic: subscribeTopic, handler: handler}:
 		}
@@ -286,7 +286,7 @@ func (c *ClientStruct) AddRoute(ctx context.Context, subscribeTopic string, hand
 
 func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.Connack) {
 	return func(cm *autopaho.ConnectionManager, connack *paho.Connack) {
-		log.Printf("mqttClientV5[%s]: connection is up", c.cfg.Name())
+		log.Printf("mqttClient[%s]: connection is up", c.cfg.Name())
 
 		// hand over to the run routine which (re)subscribes all topics
 		select {
@@ -312,7 +312,7 @@ func (c *ClientStruct) runPublish(cm *autopaho.ConnectionManager) {
 		if _, err := cm.Publish(c.ctx, e.Value); err != nil {
 			e.Next(false)
 			if c.cfg.LogDebug() {
-				log.Printf("mqttClientV5[%s]: error during publish, keeping in backlog: %s", c.cfg.Name(), err)
+				log.Printf("mqttClient[%s]: error during publish, keeping in backlog: %s", c.cfg.Name(), err)
 			}
 			return
 		}
@@ -322,7 +322,7 @@ func (c *ClientStruct) runPublish(cm *autopaho.ConnectionManager) {
 
 func (c *ClientStruct) enqueue(p *paho.Publish) {
 	if err := c.publishBacklog.Enqueue(p); err != nil {
-		log.Printf("mqttClientV5[%s]: message dropped: %s: %s", c.cfg.Name(), p.Topic, err)
+		log.Printf("mqttClient[%s]: message dropped: topic=%s: %s", c.cfg.Name(), p.Topic, err)
 	}
 }
 
@@ -344,13 +344,13 @@ func (c *ClientStruct) shutdown(cm *autopaho.ConnectionManager) {
 			_, err := cm.Publish(ctx, c.availabilityMsg(availabilityOffline))
 			cancel()
 			if err != nil {
-				log.Printf("mqttClientV5[%s]: error during publish: %s", c.cfg.Name(), err)
+				log.Printf("mqttClient[%s]: error publishing offline availability: %s", c.cfg.Name(), err)
 			}
 		}
 
 		ctx, cancel := context.WithTimeout(c.ctx, time.Second)
 		if err := cm.Disconnect(ctx); err != nil {
-			log.Printf("mqttClientV5[%s]: error during disconnect: %s", c.cfg.Name(), err)
+			log.Printf("mqttClient[%s]: error during disconnect: %s", c.cfg.Name(), err)
 		}
 		cancel()
 	}
@@ -358,12 +358,12 @@ func (c *ClientStruct) shutdown(cm *autopaho.ConnectionManager) {
 	// cancel main context
 	c.cancel()
 
-	log.Printf("mqttClientV5[%s]: shutdown completed", c.cfg.Name())
+	log.Printf("mqttClient[%s]: shutdown completed", c.cfg.Name())
 }
 
 func (c *ClientStruct) Publish(topic string, payload []byte, qos byte, retain bool) {
 	if c.cfg.ReadOnly() {
-		log.Printf("mqttClientV5[%s]: message dropped due to readOnly flag: %s %s", c.cfg.Name(), topic, payload)
+		log.Printf("mqttClient[%s]: message dropped due to ReadOnly flag: topic=%s payload=%s", c.cfg.Name(), topic, payload)
 		return
 	}
 
