@@ -3,19 +3,17 @@ package queue
 import (
 	"errors"
 	"sync"
-
-	"github.com/koestler/go-list"
 )
 
 var ErrFull = errors.New("fifo is full, value discarded")
 
-// Fifo is a concurrency safe queue backed by a list. Enqueue never blocks.
+// Fifo is a concurrency safe queue backed by a fixed-size ring buffer. Enqueue never blocks.
 // Values are delivered in order via the channel returned by Dequeue.
 type Fifo[T any] struct {
-	maxLength int
-
 	lock sync.Mutex
-	list list.List[T]
+	buf  []T // fixed size ring buffer
+	head int // index of the oldest element
+	size int // number of stored elements
 
 	notify    chan struct{} // signals the routine that a value was added
 	dequeue   chan T
@@ -27,10 +25,10 @@ type Fifo[T any] struct {
 // The Caller must Close it.
 func NewFifo[T any](maxLength int) *Fifo[T] {
 	q := &Fifo[T]{
-		maxLength: maxLength,
-		notify:    make(chan struct{}, 1),
-		dequeue:   make(chan T),
-		done:      make(chan struct{}),
+		buf:     make([]T, maxLength),
+		notify:  make(chan struct{}, 1),
+		dequeue: make(chan T),
+		done:    make(chan struct{}),
 	}
 	go q.run()
 	return q
@@ -43,11 +41,12 @@ func (q *Fifo[T]) Close() {
 // Enqueue appends value or returns ErrFull. It never blocks.
 func (q *Fifo[T]) Enqueue(value T) error {
 	q.lock.Lock()
-	if q.list.Len() >= q.maxLength {
+	if q.size >= len(q.buf) {
 		q.lock.Unlock()
 		return ErrFull
 	}
-	q.list.PushBack(value)
+	q.buf[(q.head+q.size)%len(q.buf)] = value
+	q.size++
 	q.lock.Unlock()
 
 	select {
@@ -67,15 +66,15 @@ func (q *Fifo[T]) run() {
 
 	for {
 		q.lock.Lock()
-		front := q.list.Front()
+		empty := q.size == 0
 		var value T
-		if front != nil {
-			value = front.Value
+		if !empty {
+			value = q.buf[q.head]
 		}
 		q.lock.Unlock()
 
-		if front == nil {
-			// list is empty, wait for notify or done
+		if empty {
+			// queue is empty, wait for notify or done
 			select {
 			case <-q.notify:
 				continue
@@ -88,7 +87,10 @@ func (q *Fifo[T]) run() {
 		select {
 		case q.dequeue <- value:
 			q.lock.Lock()
-			q.list.Remove(front)
+			var zero T
+			q.buf[q.head] = zero // release reference for GC
+			q.head = (q.head + 1) % len(q.buf)
+			q.size--
 			q.lock.Unlock()
 		case <-q.done:
 			return
