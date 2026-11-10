@@ -9,15 +9,15 @@ var ErrFull = errors.New("fifo is full, value discarded")
 
 // FIFO is a concurrency safe queue backed by a fixed-size ring buffer. Enqueue never blocks.
 // Values are delivered in order via the channel returned by Dequeue.
-// A Value is then removed Next(true) or kept in place Next(false).
-// Next must be called exactly once per value and must never be called twice (it panics).
+// A value is then either removed with Next(true) or kept in place with Next(false).
+// Next must be called exactly once per element; a second call panics.
 type FIFO[T any] struct {
 	lock sync.Mutex
 	buf  []T // fixed size ring buffer
 	head int // index of the oldest element
 	size int // number of stored elements
 
-	notify  chan struct{} // signals the routine that a value was added
+	notify  chan struct{} // signals the goroutine that a value was added
 	dequeue chan Element[T]
 	done    chan struct{}
 }
@@ -30,7 +30,8 @@ type Element[T any] struct {
 }
 
 // NewFIFO creates a FIFO and starts its internal go routine.
-// The Caller must Close it.
+// maxLength must not be negative (it panics); 0 makes every Enqueue return ErrFull.
+// The caller must Close it.
 func NewFIFO[T any](maxLength int) *FIFO[T] {
 	q := &FIFO[T]{
 		buf:     make([]T, maxLength),
@@ -43,7 +44,9 @@ func NewFIFO[T any](maxLength int) *FIFO[T] {
 }
 
 // Close stops the internal go routine and closes the Dequeue channel.
-// Call Close exactly once. Next will panic if called after Close.
+// Close must be called exactly once; a second call panics. It does not wait for the goroutine to exit.
+// A pending or later Next call returns without effect. Enqueue is not rejected after Close,
+// but enqueued values are never delivered.
 func (q *FIFO[T]) Close() {
 	close(q.done)
 }
@@ -71,7 +74,7 @@ func (q *FIFO[T]) Dequeue() <-chan Element[T] {
 	return q.dequeue
 }
 
-// Next must be called exactly once per element and must never be called twice (it panics).
+// Next must be called exactly once per element; a second call panics.
 // With remove=true the element is deleted from the queue (processing succeeded).
 // With remove=false the element stays at the front of the queue (processing failed) and is delivered again.
 func (e Element[T]) Next(remove bool) {
