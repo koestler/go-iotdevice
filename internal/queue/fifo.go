@@ -1,46 +1,97 @@
 package queue
 
 import (
-	"github.com/koestler/go-list"
+	"errors"
 	"sync"
+
+	"github.com/koestler/go-list"
 )
 
+var ErrFull = errors.New("fifo is full, value discarded")
+
+// Fifo is a concurrency safe queue backed by a list. Enqueue never blocks.
+// Values are delivered in order via the channel returned by Dequeue.
 type Fifo[T any] struct {
 	maxLength int
-	list      list.List[T]
-	lock      sync.Mutex
+
+	lock sync.Mutex
+	list list.List[T]
+
+	notify    chan struct{} // signals the routine that a value was added
+	dequeue   chan T
+	done      chan struct{}
+	closeOnce sync.Once
 }
 
+// NewFifo creates a Fifo and starts its internal go routine.
+// The Caller must Close it.
 func NewFifo[T any](maxLength int) *Fifo[T] {
-	return &Fifo[T]{maxLength: maxLength}
+	q := &Fifo[T]{
+		maxLength: maxLength,
+		notify:    make(chan struct{}, 1),
+		dequeue:   make(chan T),
+		done:      make(chan struct{}),
+	}
+	go q.run()
+	return q
 }
 
-func (q *Fifo[T]) Enqueue(value T) {
-	if q.maxLength < 1 {
-		// when maxLength is zero or lower, store nothing
-		return
-	}
+func (q *Fifo[T]) Close() {
+	q.closeOnce.Do(func() { close(q.done) })
+}
 
+// Enqueue appends value or returns ErrFull. It never blocks.
+func (q *Fifo[T]) Enqueue(value T) error {
 	q.lock.Lock()
-	defer q.lock.Unlock()
-
+	if q.list.Len() >= q.maxLength {
+		q.lock.Unlock()
+		return ErrFull
+	}
 	q.list.PushBack(value)
+	q.lock.Unlock()
 
-	// when list gets too long, truncate the first element
-	if q.list.Len() > q.maxLength {
-		q.list.Remove(q.list.Front())
+	select {
+	case q.notify <- struct{}{}:
+	default: // a wake-up is already pending
 	}
+	return nil
 }
 
-func (q *Fifo[T]) Dequeue() (value T, ok bool) {
-	q.lock.Lock()
-	defer q.lock.Unlock()
+// Dequeue returns a channel delivering values in order. It is closed by Close.
+func (q *Fifo[T]) Dequeue() <-chan T {
+	return q.dequeue
+}
 
-	elem := q.list.Front()
-	if elem == nil {
-		return value, false
+func (q *Fifo[T]) run() {
+	defer close(q.dequeue)
+
+	for {
+		q.lock.Lock()
+		front := q.list.Front()
+		var value T
+		if front != nil {
+			value = front.Value
+		}
+		q.lock.Unlock()
+
+		if front == nil {
+			// list is empty, wait for notify or done
+			select {
+			case <-q.notify:
+				continue
+			case <-q.done:
+				return
+			}
+		}
+
+		// value can be sent, wait for dequeue or done
+		select {
+		case q.dequeue <- value:
+			q.lock.Lock()
+			q.list.Remove(front)
+			q.lock.Unlock()
+		case <-q.done:
+			return
+		}
 	}
-
-	v := q.list.Remove(elem)
-	return v, true
 }
