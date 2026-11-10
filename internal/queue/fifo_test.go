@@ -7,14 +7,16 @@ import (
 	"time"
 )
 
-func recv[T any](t *testing.T, ch <-chan T) T {
+// recv receives an element and removes it.
+func recv[T any](t *testing.T, ch <-chan Element[T]) T {
 	t.Helper()
 	select {
 	case v, ok := <-ch:
 		if !ok {
 			t.Fatal("channel unexpectedly closed")
 		}
-		return v
+		v.Next(true)
+		return v.Value
 	case <-time.After(time.Second):
 		t.Fatal("timeout waiting for value")
 	}
@@ -23,7 +25,7 @@ func recv[T any](t *testing.T, ch <-chan T) T {
 
 func TestFifo(t *testing.T) {
 	t.Run("order", func(t *testing.T) {
-		q := NewFifo[int](10)
+		q := NewFIFO[int](10)
 		defer q.Close()
 
 		for i := range 5 {
@@ -39,7 +41,7 @@ func TestFifo(t *testing.T) {
 	})
 
 	t.Run("full", func(t *testing.T) {
-		q := NewFifo[int](2)
+		q := NewFIFO[int](2)
 		defer q.Close()
 
 		// no reader: the routine holds the front element until it is received
@@ -60,7 +62,7 @@ func TestFifo(t *testing.T) {
 	})
 
 	t.Run("zero length", func(t *testing.T) {
-		q := NewFifo[int](0)
+		q := NewFIFO[int](0)
 		defer q.Close()
 		if err := q.Enqueue(1); !errors.Is(err, ErrFull) {
 			t.Fatalf("expected ErrFull, got %v", err)
@@ -68,7 +70,7 @@ func TestFifo(t *testing.T) {
 	})
 
 	t.Run("dequeue blocks until value", func(t *testing.T) {
-		q := NewFifo[int](1)
+		q := NewFIFO[int](1)
 		defer q.Close()
 
 		select {
@@ -86,8 +88,26 @@ func TestFifo(t *testing.T) {
 		}
 	})
 
+	t.Run("keep redelivers", func(t *testing.T) {
+		q := NewFIFO[int](2)
+		defer q.Close()
+		_ = q.Enqueue(1)
+		_ = q.Enqueue(2)
+
+		e := <-q.Dequeue()
+		e.Next(false)
+		e = <-q.Dequeue()
+		if e.Value != 1 {
+			t.Fatalf("expected 1 redelivered, got %d", e.Value)
+		}
+		e.Next(true)
+		if got := recv(t, q.Dequeue()); got != 2 {
+			t.Errorf("expected 2, got %d", got)
+		}
+	})
+
 	t.Run("close", func(t *testing.T) {
-		q := NewFifo[int](1)
+		q := NewFIFO[int](1)
 		q.Close()
 		q.Close() // idempotent
 
@@ -102,7 +122,7 @@ func TestFifo(t *testing.T) {
 	})
 
 	t.Run("close with pending value", func(t *testing.T) {
-		q := NewFifo[int](1)
+		q := NewFIFO[int](1)
 		_ = q.Enqueue(1)
 		q.Close()
 
@@ -121,7 +141,7 @@ func TestFifo(t *testing.T) {
 
 	t.Run("concurrent", func(t *testing.T) {
 		const producers, perProducer = 8, 500
-		q := NewFifo[int](producers * perProducer)
+		q := NewFIFO[int](producers * perProducer)
 		defer q.Close()
 
 		var wg sync.WaitGroup
