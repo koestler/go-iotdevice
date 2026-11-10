@@ -140,6 +140,7 @@ func (c *ClientStruct) run() {
 
 	var cm *autopaho.ConnectionManager
 	subscriptions := make(map[string]map[uint64]MessageHandler) // topic -> routeId -> handler
+	unsubscribed := make(map[uint64]struct{})                   // unsubscribe received before subscribe received
 
 	for {
 		select {
@@ -151,6 +152,12 @@ func (c *ClientStruct) run() {
 			c.subscribeBroker(cm, topics...)
 
 		case req := <-c.subscribeChannel:
+			if _, ok := unsubscribed[req.id]; ok {
+				// unsubscribe was received before subscribe, ignore this subscribe
+				delete(unsubscribed, req.id)
+				continue
+			}
+
 			handlers, exists := subscriptions[req.topic]
 			if !exists {
 				handlers = make(map[uint64]MessageHandler)
@@ -178,8 +185,14 @@ func (c *ClientStruct) run() {
 		case req := <-c.unsubscribeChannel:
 			handlers, ok := subscriptions[req.topic]
 			if !ok {
+				unsubscribed[req.id] = struct{}{}
 				continue
 			}
+			if _, ok := handlers[req.id]; !ok {
+				unsubscribed[req.id] = struct{}{}
+				continue
+			}
+
 			delete(handlers, req.id)
 			if len(handlers) > 0 {
 				continue
