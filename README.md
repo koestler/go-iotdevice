@@ -753,13 +753,13 @@ MqttClients:                                               # optional, when empt
       Enabled: true                                        # optional, default true, whether to send online messages and register an offline message as will
       TopicTemplate: '%Prefix%avail/%ClientId%'            # optional, default as shown, what topic to use for online/offline messages of the go-iotdevice instance
       Retain: true                                         # optional, default true, the mqtt retain flag for availability messages
-      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
+      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used for publishing (subscriptions always use QoS 1)
 
     AvailabilityDevice:
       Enabled: true                                        # optional, default true, whether to send online/offline messages (no will message is registered)
       TopicTemplate: '%Prefix%avail/%DeviceName%'          # optional, default as shown, what topic to use for online/offline messages of a specific device
       Retain: true                                         # optional, default true, the mqtt retain flag for availability messages
-      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
+      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used for publishing (subscriptions always use QoS 1)
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
 
@@ -768,7 +768,7 @@ MqttClients:                                               # optional, when empt
       TopicTemplate: '%Prefix%struct/%DeviceName%'         # optional, default as shown, what topic to use for structure messages
       Interval: 0s                                         # optional, default 0, 0 means on-update mode: sent whenever a register is added or changed, otherwise the full structure is repeated after each interval (the first repetition is sent one interval after startup) (useful when retain is false)
       Retain: true                                         # optional, default true, the mqtt retain flag for structure messages
-      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
+      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used for publishing (subscriptions always use QoS 1)
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices etc. sections
           Filter:                                          # optional, default include all, defines which registers are included,
@@ -785,7 +785,7 @@ MqttClients:                                               # optional, when empt
       TopicTemplate: '%Prefix%tele/%DeviceName%'           # optional, default as shown, what topic to use for telemetry messages
       Interval: 1s                                         # optional, default 1s, how often to send telemetry mqtt messages
       Retain: false                                        # optional, default false, the mqtt retain flag for telemetry messages
-      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
+      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used for publishing (subscriptions always use QoS 1)
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices, etc. sections
           Filter:                                          # optional, default include all, defines which registers are included,
@@ -801,7 +801,7 @@ MqttClients:                                               # optional, when empt
       TopicTemplate: '%Prefix%real/%DeviceName%/%RegisterName%' # optional, default as shown, what topic to use for real-time messages
       Interval: 0s                                         # optional, default 0; 0 means send immediately when a value changes, otherwise changed numeric values are batched and sent once per interval (enum and text values are still sent immediately)
       Retain: false                                        # optional, default false, the mqtt retain flag for real-time messages
-      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
+      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used for publishing (subscriptions always use QoS 1)
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # messages are only sent for this device
           Filter:                                          # optional, default include all, defines which registers are included,
@@ -820,7 +820,7 @@ MqttClients:                                               # optional, when empt
       TopicTemplate: 'homeassistant/%Component%/%NodeId%/%ObjectId%/config' # optional, default as shown, topic to use for homeassistant discovery messages
       Interval: 0s                                         # optional, default 0, 0 means on-update mode: sent whenever a register is added or changed, otherwise the discovery messages are repeated after each interval (the first repetition is sent one interval after startup) (useful when retain is false)
       Retain: false                                        # optional, default false, the mqtt retain flag for homeassistant discovery messages
-      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
+      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used for publishing (subscriptions always use QoS 1)
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # use device identifiers of the VictronDevices, ModbusDevices, etc. sections
           Filter:                                          # optional, default include all, defines which registers are included,
@@ -834,7 +834,7 @@ MqttClients:                                               # optional, when empt
     Command:
       Enabled: true                                        # optional, default false, whether to receive and execute command messages
       TopicTemplate: '%Prefix%cmnd/%DeviceName%/%RegisterName%' # optional, default as shown, what topic to use for command messages
-      Qos: 1                                               # optional, default 1, what quality-of-service level shall be used
+      Qos: 1                                               # optional, default 1, currently unused: command topics are always subscribed with QoS 1
       Devices:                                             # optional, default all, a list of devices to match
         bmv0:                                              # commands are only received for this device
           Filter:                                          # optional, default include all, defines which registers are included,
