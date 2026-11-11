@@ -206,6 +206,9 @@ func (f *forwarder) run(ctx context.Context, removeStructs []func()) {
 			f.setAvailable(s)
 
 		case m := <-f.availMessage:
+			if !slices.Contains(s.structure.AvailabilityTopics, m.Topic) {
+				continue
+			}
 			s.avail[m.Topic] = m.Available
 			f.setAvailable(s)
 		}
