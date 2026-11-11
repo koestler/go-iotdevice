@@ -24,11 +24,10 @@ type ClientStruct struct {
 	cliCfg autopaho.ClientConfig
 	router *paho.StandardRouter
 
-	subscribeChannel   chan subscribeRequest
-	unsubscribeChannel chan unsubscribeRequest
-	dispatchChannel    chan dispatchRequest
-	connectedChannel   chan *autopaho.ConnectionManager // signals (re)connection, used to resubscribe
-	shutdownChannel    chan chan struct{}
+	subscriptionChannel chan subscriptionRequest
+	dispatchChannel     chan dispatchRequest
+	connectedChannel    chan *autopaho.ConnectionManager // signals (re)connection, used to resubscribe
+	shutdownChannel     chan chan struct{}
 
 	nextSubscriptionID atomic.Uint64
 
@@ -39,15 +38,10 @@ type ClientStruct struct {
 	cancel context.CancelFunc
 }
 
-type subscribeRequest struct {
+type subscriptionRequest struct {
 	id      uint64
 	topic   string
-	handler MessageHandler
-}
-
-type unsubscribeRequest struct {
-	topic string
-	id    uint64
+	handler MessageHandler // not nil -> subscribe, nil -> unsubscribe
 }
 
 type dispatchRequest struct {
@@ -64,11 +58,10 @@ func NewV5(
 
 		router: paho.NewStandardRouter(),
 
-		subscribeChannel:   make(chan subscribeRequest),
-		unsubscribeChannel: make(chan unsubscribeRequest),
-		dispatchChannel:    make(chan dispatchRequest),
-		connectedChannel:   make(chan *autopaho.ConnectionManager, 1),
-		shutdownChannel:    make(chan chan struct{}),
+		subscriptionChannel: make(chan subscriptionRequest),
+		dispatchChannel:     make(chan dispatchRequest),
+		connectedChannel:    make(chan *autopaho.ConnectionManager, 1),
+		shutdownChannel:     make(chan chan struct{}),
 
 		publishBacklog: queue.NewFIFO[*paho.Publish](cfg.MaxBacklogSize()),
 		publishWake:    make(chan *autopaho.ConnectionManager, 1),
@@ -155,38 +148,40 @@ func (c *ClientStruct) run() {
 			topics := slices.Collect(maps.Keys(subscriptions))
 			c.subscribeBroker(cm, topics...)
 
-		case req := <-c.subscribeChannel:
-			if _, ok := unsubscribed[req.id]; ok {
-				// unsubscribe was received before subscribe, ignore this subscribe
-				delete(unsubscribed, req.id)
+		case req := <-c.subscriptionChannel:
+			if req.handler != nil {
+				if _, ok := unsubscribed[req.id]; ok {
+					// unsubscribe was received before subscribe, ignore this subscribe
+					delete(unsubscribed, req.id)
+					continue
+				}
+
+				handlers, exists := subscriptions[req.topic]
+				if !exists {
+					handlers = make(map[uint64]MessageHandler)
+					subscriptions[req.topic] = handlers
+
+					// the router has one dispatcher per topic; it forwards via the dispatch channel
+					topic := req.topic
+					if logDebug {
+						log.Printf("mqttClient[%s]: registering router for topic: %s", name, topic)
+					}
+					c.router.RegisterHandler(topic, func(p *paho.Publish) {
+						select {
+						case <-c.ctx.Done():
+						case c.dispatchChannel <- dispatchRequest{topic: topic, msg: Message{topic: p.Topic, payload: p.Payload}}:
+						}
+					})
+					if logDebug {
+						log.Printf("mqttClient[%s]: subscribing to topic: %s", name, topic)
+					}
+					c.subscribeBroker(cm, topic)
+				}
+
+				handlers[req.id] = req.handler
 				continue
 			}
 
-			handlers, exists := subscriptions[req.topic]
-			if !exists {
-				handlers = make(map[uint64]MessageHandler)
-				subscriptions[req.topic] = handlers
-
-				// the router has one dispatcher per topic; it forwards via the dispatch channel
-				topic := req.topic
-				if logDebug {
-					log.Printf("mqttClient[%s]: registering router for topic: %s", name, topic)
-				}
-				c.router.RegisterHandler(topic, func(p *paho.Publish) {
-					select {
-					case <-c.ctx.Done():
-					case c.dispatchChannel <- dispatchRequest{topic: topic, msg: Message{topic: p.Topic, payload: p.Payload}}:
-					}
-				})
-				if logDebug {
-					log.Printf("mqttClient[%s]: subscribing to topic: %s", name, topic)
-				}
-				c.subscribeBroker(cm, topic)
-			}
-
-			handlers[req.id] = req.handler
-
-		case req := <-c.unsubscribeChannel:
 			handlers, ok := subscriptions[req.topic]
 			if !ok {
 				unsubscribed[req.id] = struct{}{}
@@ -270,7 +265,7 @@ func (c *ClientStruct) AddRoute(ctx context.Context, subscribeTopic string, hand
 		select {
 		case <-ctx.Done(): // drop request in case the context is already cancelled
 		case <-c.ctx.Done(): // drop request in case the client is already shutting down
-		case c.subscribeChannel <- subscribeRequest{id: id, topic: subscribeTopic, handler: handler}:
+		case c.subscriptionChannel <- subscriptionRequest{id: id, topic: subscribeTopic, handler: handler}:
 		}
 	}()
 
@@ -281,7 +276,7 @@ func (c *ClientStruct) AddRoute(ctx context.Context, subscribeTopic string, hand
 		go func() {
 			select {
 			case <-c.ctx.Done(): // drop request in case the client is already shutting down
-			case c.unsubscribeChannel <- unsubscribeRequest{topic: subscribeTopic, id: id}:
+			case c.subscriptionChannel <- subscriptionRequest{id: id, topic: subscribeTopic}:
 			}
 		}()
 	}
