@@ -310,7 +310,20 @@ func (c *ClientStruct) runPublish(cm *autopaho.ConnectionManager) {
 	defer c.publishRunning.Store(false)
 
 	for e := range c.publishBacklog.Dequeue() {
-		if _, err := cm.Publish(c.ctx, e.Value); err != nil {
+		pr, err := cm.Publish(c.ctx, e.Value)
+
+		// a response with an error reason code means the broker received but rejected the message;
+		// retrying would block the backlog forever, so discard it
+		if pr != nil && pr.ReasonCode >= 0x80 {
+			log.Printf("mqttClient[%s]: message rejected by broker, discarding: topic=%s reason=%d: %v",
+				c.cfg.Name(), e.Value.Topic, pr.ReasonCode, err,
+			)
+			e.Next(true)
+			continue
+		}
+
+		if err != nil {
+			// connection problem: keep the message at the front of the backlog and retry after reconnect
 			e.Next(false)
 			if c.cfg.LogDebug() {
 				log.Printf("mqttClient[%s]: error during publish, keeping in backlog: %s", c.cfg.Name(), err)
