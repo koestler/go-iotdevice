@@ -1938,7 +1938,7 @@ func TestReadConfig_Default(t *testing.T) {
 			t.Errorf("expect MqttClients->0-local->ReadOnly to be false")
 		}
 
-		if expect, got := 256, mc.MaxBacklogSize(); expect != got {
+		if expect, got := 512, mc.MaxBacklogSize(); expect != got {
 			t.Errorf("expect MqttClients->0-local->MaxBacklogSize to be %d but got %d", expect, got)
 		}
 

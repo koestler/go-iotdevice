@@ -446,10 +446,12 @@ func (c mqttClientConfigRead) TransformAndValidate(
 		ret.readOnly = *c.ReadOnly
 	}
 
-	if ret.readOnly {
-		ret.maxBacklogSize = 0
-	} else if c.MaxBacklogSize == nil {
-		ret.maxBacklogSize = 256
+	if c.MaxBacklogSize == nil {
+		ret.maxBacklogSize = 512
+	} else if *c.MaxBacklogSize < 8 {
+		err = append(err, fmt.Errorf("%s->MaxBacklogSize=%d must be >=8",
+			errPrefix, *c.MaxBacklogSize,
+		))
 	} else {
 		ret.maxBacklogSize = *c.MaxBacklogSize
 	}

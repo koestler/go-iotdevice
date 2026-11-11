@@ -741,8 +741,8 @@ MqttClients:                                               # optional, when empt
     ConnectRetryDelay: 10s                                 # optional, default 10s, when disconnected: delay before a connection attempt is made
     ConnectTimeout: 5s                                     # optional, default 5s, timeout for establishing the connection (including the MQTT CONNECT/CONNACK handshake), increase on slow networks
     TopicPrefix: go-iotdevice/                             # optional, default go-iotdevice/, %Prefix% is replaced with this string
-    ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overrides all section Enabled flags except Command, and MaxBacklogSize)
-    MaxBacklogSize: 256                                    # optional, default 256, max number of mqtt messages to store when connection is offline
+    ReadOnly: false                                        # optional, default false, when true, no messages are sent to the server (overrides all section Enabled flags except Command)
+    MaxBacklogSize: 512                                    # optional, default 512, min 8, max number of mqtt messages to store when connection is offline
 
     MqttDevices:                                           # optional, default empty, which mqtt devices shall receive messages from this client
       bmv1:                                                # mandatory, the identifier of the MqttDevice
