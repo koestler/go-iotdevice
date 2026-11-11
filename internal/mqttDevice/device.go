@@ -103,6 +103,7 @@ func runForwarder(
 	logDebug := c.Config().LogDebug()
 
 	// subscribe to structure updates
+	removeStructs := make([]func(), 0, len(f.StructTopics))
 	for _, structTopic := range f.StructTopics {
 		if logDebug {
 			log.Printf("mqttDevice[%s]->mqttClient[%s]: subscribe to topic=%s", f.Device.Name(), f.Client.Name(), structTopic)
@@ -110,7 +111,7 @@ func runForwarder(
 
 		// subscribe to the struct topics
 		sc := f.structMessage
-		f.Client.AddRoute(ctx, structTopic, func(m mqttClient.Message) {
+		rm := f.Client.AddRoute(ctx, structTopic, func(m mqttClient.Message) {
 			s, err := parseStructPayload(m.Payload())
 			if err != nil {
 				log.Printf("mqttDevice[%s]->mqttClient[%s]: cannot parse structure payload: %s", f.Device.Name(), f.Client.Name(), err)
@@ -126,9 +127,10 @@ func runForwarder(
 			case sc <- s:
 			}
 		})
+		removeStructs = append(removeStructs, rm)
 	}
 
-	go f.run(ctx)
+	go f.run(ctx, removeStructs)
 }
 
 func parseStructPayload(payload []byte) (msg mqttForwarders.StructureMessage, err error) {
@@ -149,7 +151,7 @@ type forwarderState struct {
 	remove    func()
 }
 
-func (f *forwarder) run(ctx context.Context) {
+func (f *forwarder) run(ctx context.Context, removeStructs []func()) {
 	s := forwarderState{
 		avail:  make(map[string]bool),
 		remove: func() {},
@@ -158,6 +160,9 @@ func (f *forwarder) run(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			for _, rm := range removeStructs {
+				rm()
+			}
 			s.remove()
 			return
 		case m := <-f.structMessage:
