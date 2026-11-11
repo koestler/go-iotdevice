@@ -33,7 +33,7 @@ type ClientStruct struct {
 	nextSubscriptionID atomic.Uint64
 
 	publishBacklog *queue.FIFO[*paho.Publish]
-	publishRunning atomic.Bool // true while a runPublish routine exists
+	publishWake    chan *autopaho.ConnectionManager // signals (re)connection to the runPublish routine
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -71,6 +71,7 @@ func NewV5(
 		shutdownChannel:    make(chan chan struct{}),
 
 		publishBacklog: queue.NewFIFO[*paho.Publish](cfg.MaxBacklogSize()),
+		publishWake:    make(chan *autopaho.ConnectionManager, 1),
 
 		ctx:    ctx,
 		cancel: cancel,
@@ -129,6 +130,7 @@ func (c *ClientStruct) GetCtx() context.Context {
 
 func (c *ClientStruct) Run() {
 	go c.run()
+	go c.runPublish()
 
 	// start connection manager
 	_, _ = autopaho.NewConnection(c.ctx, c.cliCfg)
@@ -299,16 +301,30 @@ func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.
 			c.enqueue(c.availabilityMsg(availabilityOnline))
 		}
 
-		if c.publishRunning.CompareAndSwap(false, true) {
-			go c.runPublish(cm)
+		// wake the publish routine; a pending wake-up is enough, so never block
+		select {
+		case c.publishWake <- cm:
+		default:
 		}
 	}
 }
 
-// runPublish forwards the backlog to the broker until the backlog is closed or a publish fails.
-func (c *ClientStruct) runPublish(cm *autopaho.ConnectionManager) {
-	defer c.publishRunning.Store(false)
+// runPublish lives as long as the client; after every (re)connection it drains the backlog.
+// A wake-up arriving while a previous drain is still failing stays buffered and is handled right after,
+// so a reconnect can never be missed.
+func (c *ClientStruct) runPublish() {
+	for {
+		select {
+		case <-c.ctx.Done():
+			return
+		case cm := <-c.publishWake:
+			c.drainBacklog(cm)
+		}
+	}
+}
 
+// drainBacklog forwards the backlog to the broker until the backlog is closed or a publish fails.
+func (c *ClientStruct) drainBacklog(cm *autopaho.ConnectionManager) {
 	for e := range c.publishBacklog.Dequeue() {
 		pr, err := cm.Publish(c.ctx, e.Value)
 
