@@ -13,6 +13,7 @@ import (
 	"github.com/eclipse/paho.golang/autopaho"
 	"github.com/eclipse/paho.golang/paho"
 	"github.com/koestler/go-iotdevice/v3/internal/queue"
+	"github.com/koestler/go-list"
 )
 
 const availabilityOnline = "online"
@@ -30,6 +31,9 @@ type ClientStruct struct {
 	shutdownChannel     chan chan struct{}
 
 	nextSubscriptionID atomic.Uint64
+
+	brokerOps  *list.LList[brokerOp] // ordered queue of subscribe / unsubscribe operations
+	brokerWake chan struct{}         // signals the runBroker routine that brokerOps is not empty
 
 	publishBacklog *queue.FIFO[*paho.Publish]
 	publishWake    chan *autopaho.ConnectionManager // signals (re)connection to the runPublish routine
@@ -49,6 +53,12 @@ type dispatchRequest struct {
 	msg   Message
 }
 
+type brokerOp struct {
+	cm        *autopaho.ConnectionManager
+	subscribe bool
+	topics    []string
+}
+
 func NewV5(
 	cfg Config,
 ) (client *ClientStruct) {
@@ -62,6 +72,9 @@ func NewV5(
 		dispatchChannel:     make(chan dispatchRequest),
 		connectedChannel:    make(chan *autopaho.ConnectionManager, 1),
 		shutdownChannel:     make(chan chan struct{}),
+
+		brokerOps:  list.NewL[brokerOp](),
+		brokerWake: make(chan struct{}, 1),
 
 		publishBacklog: queue.NewFIFO[*paho.Publish](cfg.MaxBacklogSize()),
 		publishWake:    make(chan *autopaho.ConnectionManager, 1),
@@ -123,6 +136,7 @@ func (c *ClientStruct) GetCtx() context.Context {
 
 func (c *ClientStruct) Run() {
 	go c.run()
+	go c.runBroker()
 	go c.runPublish()
 
 	// start connection manager
@@ -146,7 +160,7 @@ func (c *ClientStruct) run() {
 
 		case cm = <-c.connectedChannel:
 			topics := slices.Collect(maps.Keys(subscriptions))
-			c.subscribeBroker(cm, topics...)
+			c.enqueueBrokerOp(cm, true, topics...)
 
 		case req := <-c.subscriptionChannel:
 			if req.handler != nil {
@@ -175,7 +189,7 @@ func (c *ClientStruct) run() {
 					if logDebug {
 						log.Printf("mqttClient[%s]: subscribing to topic: %s", name, topic)
 					}
-					c.subscribeBroker(cm, topic)
+					c.enqueueBrokerOp(cm, true, topic)
 				}
 
 				handlers[req.id] = req.handler
@@ -204,9 +218,7 @@ func (c *ClientStruct) run() {
 				if logDebug {
 					log.Printf("mqttClient[%s]: unsubscribing from topic: %s", name, req.topic)
 				}
-				go func(topic string) {
-					_, _ = cm.Unsubscribe(c.ctx, &paho.Unsubscribe{Topics: []string{topic}})
-				}(req.topic)
+				c.enqueueBrokerOp(cm, false, req.topic)
 			}
 
 		case req := <-c.dispatchChannel:
@@ -224,26 +236,58 @@ func (c *ClientStruct) run() {
 	}
 }
 
-func (c *ClientStruct) subscribeBroker(cm *autopaho.ConnectionManager, topics ...string) {
+// enqueueBrokerOp never blocks; the operation is executed later by runBroker in enqueueBacklog order.
+func (c *ClientStruct) enqueueBrokerOp(cm *autopaho.ConnectionManager, subscribe bool, topics ...string) {
 	if cm == nil || len(topics) == 0 {
 		return
 	}
-	opts := make([]paho.SubscribeOptions, 0, len(topics))
-	for _, t := range topics {
-		opts = append(opts,
-			paho.SubscribeOptions{
-				Topic: t,
-				QoS:   byte(1),
-			},
-		)
+	c.brokerOps.PushBack(brokerOp{cm: cm, subscribe: subscribe, topics: topics})
+
+	select {
+	case c.brokerWake <- struct{}{}:
+	default: // a pending wake-up is enough
+	}
+}
+
+// runBroker executes the broker operations one at a time.
+// The calls block until acknowledged, which needs the router to keep delivering, so run must never do them inline.
+func (c *ClientStruct) runBroker() {
+	for {
+		select {
+		case <-c.ctx.Done():
+			return
+		case <-c.brokerWake:
+		}
+
+		for {
+			e := c.brokerOps.Front()
+			if e == nil {
+				break
+			}
+			op := c.brokerOps.Remove(e)
+			if c.ctx.Err() != nil {
+				return
+			}
+			c.execBrokerOp(op)
+		}
+	}
+}
+
+func (c *ClientStruct) execBrokerOp(op brokerOp) {
+	if !op.subscribe {
+		if _, err := op.cm.Unsubscribe(c.ctx, &paho.Unsubscribe{Topics: op.topics}); err != nil {
+			log.Printf("mqttClient[%s]: failed to unsubscribe: %s", c.cfg.Name(), err)
+		}
+		return
 	}
 
-	// broker calls block until acknowledged, which needs the router to keep delivering; never do them inline
-	go func() {
-		if _, err := cm.Subscribe(c.ctx, &paho.Subscribe{Subscriptions: opts}); err != nil {
-			log.Printf("mqttClient[%s]: failed to subscribe: %s", c.cfg.Name(), err)
-		}
-	}()
+	opts := make([]paho.SubscribeOptions, 0, len(op.topics))
+	for _, t := range op.topics {
+		opts = append(opts, paho.SubscribeOptions{Topic: t, QoS: byte(1)})
+	}
+	if _, err := op.cm.Subscribe(c.ctx, &paho.Subscribe{Subscriptions: opts}); err != nil {
+		log.Printf("mqttClient[%s]: failed to subscribe: %s", c.cfg.Name(), err)
+	}
 }
 
 // AddRoute registers a handler for subscribeTopic and subscribes on the broker if needed.
@@ -293,7 +337,7 @@ func (c *ClientStruct) onConnectionUp() func(*autopaho.ConnectionManager, *paho.
 		}
 
 		if c.cfg.AvailabilityClient().Enabled() {
-			c.enqueue(c.availabilityMsg(availabilityOnline))
+			c.enqueueBacklog(c.availabilityMsg(availabilityOnline))
 		}
 
 		// wake the publish routine; a pending wake-up is enough, so never block
@@ -345,7 +389,7 @@ func (c *ClientStruct) drainBacklog(cm *autopaho.ConnectionManager) {
 	}
 }
 
-func (c *ClientStruct) enqueue(p *paho.Publish) {
+func (c *ClientStruct) enqueueBacklog(p *paho.Publish) {
 	if err := c.publishBacklog.Enqueue(p); err != nil {
 		log.Printf("mqttClient[%s]: message dropped: topic=%s: %s", c.cfg.Name(), p.Topic, err)
 	}
@@ -392,7 +436,7 @@ func (c *ClientStruct) Publish(topic string, payload []byte, qos byte, retain bo
 		return
 	}
 
-	c.enqueue(&paho.Publish{
+	c.enqueueBacklog(&paho.Publish{
 		QoS:     qos,
 		Topic:   topic,
 		Payload: payload,
