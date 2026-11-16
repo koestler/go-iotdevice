@@ -1,6 +1,7 @@
 package mqttClient
 
 import (
+	"errors"
 	"log"
 
 	"github.com/eclipse/paho.golang/autopaho"
@@ -32,8 +33,14 @@ func (c *ClientStruct) drainBacklog(cm *autopaho.ConnectionManager) {
 	for e := range c.publishBacklog.Dequeue() {
 		pr, err := cm.Publish(c.ctx, &e.Value)
 
-		// a response with an error reason code means the broker received but rejected the message;
-		// retrying would block the backlog forever, so discard it
+		// message rejected by the client library
+		if errors.Is(err, paho.ErrInvalidArguments) {
+			log.Printf("mqttClient[%s]: invalid message, discarding: topic=%s: %s", c.cfg.Name(), e.Value.Topic, err)
+			e.Next(true)
+			continue
+		}
+
+		// message rejected by the broker
 		if pr != nil && pr.ReasonCode >= 0x80 {
 			log.Printf("mqttClient[%s]: message rejected by broker, discarding: topic=%s reason=%d: %v",
 				c.cfg.Name(), e.Value.Topic, pr.ReasonCode, err,
