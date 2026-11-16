@@ -1,8 +1,8 @@
-// Package mqttClient implements a MQTT v5 client with automatic reconnects, does  and subscription management.
+// Package mqttClient implements a MQTT v5 client with automatic reconnects, subscription management, and routing.
 // It is a wrapper around the Eclipse Paho Go MQTT library which adds the following features:
 // Both Subscribe and Publish are guaranteed to never block, even if the broker is not reachable.
 // For Publishing messages, a FIFO queue with a limited size is used.
-// Subscribing to topics is done automatically after reconnecting, and the library keeps track of the subscriptions,
+// Subscribing to topics is done automatically after reconnecting, the library keeps track of the subscriptions
 // and allows to remove them again.
 //
 // Contract:
@@ -32,24 +32,28 @@ type ClientStruct struct {
 
 	cliCfg autopaho.ClientConfig
 
-	subscriptionChannel chan subscriptionRequest
-	dispatchChannel     chan Message
-	connectedChannel    chan *autopaho.ConnectionManager // signals (re)connection, used to resubscribe
-	shutdownChannel     chan chan struct{}
+	// router loop channels
+	routeChannel     chan routeRequest
+	dispatchChannel  chan Message
+	connectedChannel chan *autopaho.ConnectionManager // signals (re)connection, used to resubscribe
+	shutdownChannel  chan chan struct{}
 
 	nextSubscriptionID atomic.Uint64
 
-	brokerOps  *list.LList[brokerOp] // ordered queue of subscribe / unsubscribe operations
-	brokerWake chan struct{}         // signals the runBrokerOps routine that brokerOps is not empty
+	// subscribe loop channels
+	subscribeBacklog *list.LList[brokerOp] // ordered queue of subscribeBacklog / unsubscribe operations
+	subscribeWake    chan struct{}         // signals the runSubscribe routine that subscribeBacklog is not empty
 
+	// publish loop channels
 	publishBacklog *queue.FIFO[paho.Publish]        // queue of messages to be published with a maximum size
 	publishWake    chan *autopaho.ConnectionManager // signals (re)connection to the runPublish routine
 
+	// shutdown handling
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
-type subscriptionRequest struct {
+type routeRequest struct {
 	id      uint64
 	route   string
 	handler MessageHandler // not nil -> subscribe, nil -> unsubscribe
@@ -68,13 +72,13 @@ func NewV5(
 	client = &ClientStruct{
 		cfg: cfg,
 
-		subscriptionChannel: make(chan subscriptionRequest),
-		dispatchChannel:     make(chan Message),
-		connectedChannel:    make(chan *autopaho.ConnectionManager, 1),
-		shutdownChannel:     make(chan chan struct{}),
+		routeChannel:     make(chan routeRequest),
+		dispatchChannel:  make(chan Message),
+		connectedChannel: make(chan *autopaho.ConnectionManager, 1),
+		shutdownChannel:  make(chan chan struct{}),
 
-		brokerOps:  list.NewL[brokerOp](),
-		brokerWake: make(chan struct{}, 1),
+		subscribeBacklog: list.NewL[brokerOp](),
+		subscribeWake:    make(chan struct{}, 1),
 
 		publishBacklog: queue.NewFIFO[paho.Publish](cfg.MaxBacklogSize()),
 		publishWake:    make(chan *autopaho.ConnectionManager, 1),
@@ -134,8 +138,8 @@ func (c *ClientStruct) GetCtx() context.Context {
 }
 
 func (c *ClientStruct) Run() {
-	go c.run()
-	go c.runBrokerOps()
+	go c.runRouter()
+	go c.runSubscribe()
 	go c.runPublish()
 
 	// start connection manager
@@ -176,7 +180,7 @@ func (c *ClientStruct) AddRoute(ctx context.Context, route string, handler Messa
 		select {
 		case <-ctx.Done(): // drop request in case the context is already cancelled
 		case <-c.ctx.Done(): // drop request in case the client is already shutting down
-		case c.subscriptionChannel <- subscriptionRequest{id: id, route: route, handler: handler}:
+		case c.routeChannel <- routeRequest{id: id, route: route, handler: handler}:
 		}
 	}()
 
@@ -187,7 +191,7 @@ func (c *ClientStruct) AddRoute(ctx context.Context, route string, handler Messa
 		go func() {
 			select {
 			case <-c.ctx.Done(): // drop request in case the client is already shutting down
-			case c.subscriptionChannel <- subscriptionRequest{id: id, route: route}:
+			case c.routeChannel <- routeRequest{id: id, route: route}:
 			}
 		}()
 	}

@@ -10,13 +10,10 @@ import (
 	"github.com/koestler/go-iotdevice/v3/pkg/mqtttopic"
 )
 
-func (c *ClientStruct) run() {
-	name := c.cfg.Name()
-	logDebug := c.cfg.LogDebug()
-
+func (c *ClientStruct) runRouter() {
 	var cm *autopaho.ConnectionManager
-	subscriptions := make(map[string]map[uint64]MessageHandler) // route -> routeId -> handler
-	unsubscribed := make(map[uint64]struct{})                   // unsubscribe received before subscribe received
+	routes := make(map[string]map[uint64]MessageHandler) // route -> routeId -> handler
+	removed := make(map[uint64]struct{})                 // unsubscribe received before subscribe received
 
 	for {
 		select {
@@ -25,39 +22,37 @@ func (c *ClientStruct) run() {
 			return
 
 		case cm = <-c.connectedChannel:
-			topics := slices.Collect(maps.Keys(subscriptions))
-			c.enqueueBrokerOp(cm, true, topics...)
+			topics := slices.Collect(maps.Keys(routes))
+			c.enqueueSubscribe(cm, true, topics...)
 
-		case req := <-c.subscriptionChannel:
+		case req := <-c.routeChannel:
+			// add new route
 			if req.handler != nil {
-				if _, ok := unsubscribed[req.id]; ok {
-					// unsubscribe was received before subscribe, ignore this subscribe
-					delete(unsubscribed, req.id)
+				if _, ok := removed[req.id]; ok {
+					// remove was received before add route, ignore it
+					delete(removed, req.id)
 					continue
 				}
 
-				handlers, exists := subscriptions[req.route]
+				handlers, exists := routes[req.route]
 				if !exists {
 					handlers = make(map[uint64]MessageHandler)
-					subscriptions[req.route] = handlers
-
-					if logDebug {
-						log.Printf("mqttClient[%s]: subscribing to topic: %s", name, req.route)
-					}
-					c.enqueueBrokerOp(cm, true, req.route)
+					routes[req.route] = handlers
+					c.enqueueSubscribe(cm, true, req.route)
 				}
 
 				handlers[req.id] = req.handler
 				continue
 			}
 
-			handlers, ok := subscriptions[req.route]
+			// remove route
+			handlers, ok := routes[req.route]
 			if !ok {
-				unsubscribed[req.id] = struct{}{}
+				removed[req.id] = struct{}{}
 				continue
 			}
 			if _, ok := handlers[req.id]; !ok {
-				unsubscribed[req.id] = struct{}{}
+				removed[req.id] = struct{}{}
 				continue
 			}
 
@@ -67,17 +62,13 @@ func (c *ClientStruct) run() {
 			}
 
 			// no handler left, unsubscribe
-			delete(subscriptions, req.route)
-			// c.router.UnregisterHandler(req.route)
+			delete(routes, req.route)
 			if cm != nil {
-				if logDebug {
-					log.Printf("mqttClient[%s]: unsubscribing from topic: %s", name, req.route)
-				}
-				c.enqueueBrokerOp(cm, false, req.route)
+				c.enqueueSubscribe(cm, false, req.route)
 			}
 
 		case req := <-c.dispatchChannel:
-			for route, handlers := range subscriptions {
+			for route, handlers := range routes {
 				if !mqtttopic.Match(route, req.topic) {
 					continue
 				}
@@ -92,7 +83,6 @@ func (c *ClientStruct) run() {
 				defer close(done)
 				c.shutdown(cm)
 			}()
-			// keep serving until the context is cancelled by shutdown
 		}
 	}
 }

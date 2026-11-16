@@ -10,12 +10,13 @@ func Match(route, topic string) bool {
 	}
 
 	routeElems := routeSplit(route)
-	topicElems := strings.Split(topic, "/")
 
 	// MQTT-4.7.2-1: wildcards at the first level must not match topics starting with $
 	if strings.HasPrefix(topic, "$") && (routeElems[0] == "#" || routeElems[0] == "+") {
 		return false
 	}
+
+	topicElems := strings.Split(topic, "/")
 
 	return matchElements(routeElems, topicElems)
 }
