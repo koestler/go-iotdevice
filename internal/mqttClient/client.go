@@ -14,6 +14,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"net/url"
 	"sync/atomic"
 	"time"
@@ -90,7 +91,7 @@ func NewV5(
 	// configure MQTT library
 	client.cliCfg = autopaho.ClientConfig{
 		ServerUrls:       []*url.URL{cfg.Broker()},
-		KeepAlive:        uint16(cfg.KeepAlive().Seconds()),
+		KeepAlive:        keepAliveSeconds(cfg.KeepAlive()),
 		ReconnectBackoff: autopaho.NewConstantBackoff(cfg.ConnectRetryDelay()),
 		ConnectTimeout:   cfg.ConnectTimeout(),
 		OnConnectionUp:   client.onConnectionUp,
@@ -127,6 +128,11 @@ func NewV5(
 	}
 
 	return
+}
+
+// keepAliveSeconds converts d to the MQTT keep alive field, bounded to 1s..65535s.
+func keepAliveSeconds(d time.Duration) uint16 {
+	return uint16(min(max(d/time.Second, 1), math.MaxUint16))
 }
 
 func (c *ClientStruct) Name() string {
