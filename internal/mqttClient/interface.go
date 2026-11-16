@@ -40,20 +40,3 @@ type Client interface {
 	Publish(topic string, payload []byte, qos byte, retain bool)
 	AddRoute(ctx context.Context, subscribeTopic string, messageHandler MessageHandler) (remove func())
 }
-
-// MessageHandler is called for every received message.
-// Handlers are executed synchronously in the client's single run routine.
-type MessageHandler func(Message)
-
-type Message struct {
-	topic   string
-	payload []byte
-}
-
-func (m Message) Topic() string {
-	return m.topic
-}
-
-func (m Message) Payload() []byte {
-	return m.payload
-}
