@@ -5,7 +5,8 @@ import "sync"
 // FIFO is a concurrency safe queue backed by a fixed-size ring buffer. Enqueue never blocks.
 // Values are delivered in order via the channel returned by Dequeue.
 // A value is then either removed with Next(true) or kept in place with Next(false).
-// Next must be called exactly once per element; a second call panics.
+// An element that is being processed can still be replaced by Enqueue when the buffer is full;
+// in that case Next has no effect on the queue.
 type FIFO[T any] struct {
 	lock sync.Mutex
 	buf  []T    // fixed size ring buffer
@@ -26,7 +27,7 @@ type Element[T any] struct {
 }
 
 // NewFIFO creates a FIFO and starts its internal go routine.
-// maxLength must be >= 1 (it panics otherwise). A full buffer replaces its oldest element on Enqueue..
+// maxLength must be >= 1 (it panics otherwise). A full buffer replaces its oldest element on Enqueue.
 // The caller must Close it.
 func NewFIFO[T any](maxLength int) *FIFO[T] {
 	if maxLength < 1 {
@@ -79,10 +80,12 @@ func (q *FIFO[T]) Dequeue() <-chan Element[T] {
 }
 
 // Next must be called exactly once per element; a second call panics.
+// Until it is called, the FIFO delivers no further element; only Close releases a blocked queue.
 // With remove=true the element is deleted from the queue (processing succeeded).
 // With remove=false the element stays at the front of the queue (processing failed) and is delivered again.
+// If Enqueue replaced the element in the meantime, neither has an effect on the queue.
 func (e Element[T]) Next(remove bool) {
-	defer close(e.result) // a second call panics here or on send
+	defer close(e.result) // a second call panics on close(e.result) or on the send to the closed channel
 	select {
 	case e.result <- remove:
 	case <-e.settled:
@@ -119,6 +122,8 @@ func (q *FIFO[T]) run() {
 		element := Element[T]{Value: value, result: make(chan bool), settled: make(chan struct{})}
 		select {
 		case q.dequeue <- element:
+		case <-q.notify:
+			continue // the front element may have been replaced: reload it
 		case <-q.done:
 			return
 		}
