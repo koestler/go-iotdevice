@@ -40,10 +40,35 @@ func TestFifo(t *testing.T) {
 				t.Fatal("expected replace")
 			}
 
-			for _, want := range []int{2, 3} {
-				if got := receive(t, q.Dequeue()); got != want {
-					t.Fatalf("expected %d, got %d", want, got)
-				}
+			// the run goroutine may already have offered the replaced element 1
+			got := []int{receive(t, q.Dequeue()), receive(t, q.Dequeue())}
+			if got[0] == 1 {
+				got = []int{got[1], receive(t, q.Dequeue())}
+			}
+			if got[0] != 2 || got[1] != 3 {
+				t.Fatalf("expected [2 3], got %v", got)
+			}
+		})
+	})
+
+	t.Run("length 1", func(t *testing.T) {
+		synctest.Test(t, func(t *testing.T) {
+			q := NewFIFO[int](1)
+			defer q.Close()
+
+			if q.Enqueue(1) {
+				t.Fatal("unexpected replace")
+			}
+			if !q.Enqueue(2) {
+				t.Fatal("expected replace")
+			}
+			// the run goroutine may already have offered the replaced element 1
+			got := receive(t, q.Dequeue())
+			if got == 1 {
+				got = receive(t, q.Dequeue())
+			}
+			if got != 2 {
+				t.Fatalf("expected 2, got %d", got)
 			}
 		})
 	})
@@ -131,6 +156,94 @@ func TestFifo(t *testing.T) {
 					}
 				case <-deadline:
 					t.Fatal("dequeue channel not closed")
+				}
+			}
+		})
+	})
+
+	t.Run("next after close", func(t *testing.T) {
+		synctest.Test(t, func(t *testing.T) {
+			q := NewFIFO[int](1)
+			_ = q.Enqueue(1)
+			e := <-q.Dequeue()
+			q.Close()
+			e.Next(true) // must not block
+			if _, ok := <-q.Dequeue(); ok {
+				t.Fatal("expected closed channel")
+			}
+		})
+	})
+
+	t.Run("next twice panics", func(t *testing.T) {
+		synctest.Test(t, func(t *testing.T) {
+			q := NewFIFO[int](1)
+			defer q.Close()
+			_ = q.Enqueue(1)
+			e := <-q.Dequeue()
+			e.Next(false)
+			defer func() {
+				if recover() == nil {
+					t.Fatal("expected panic")
+				}
+			}()
+			e.Next(true)
+		})
+	})
+
+	t.Run("replace in-flight element", func(t *testing.T) {
+		synctest.Test(t, func(t *testing.T) {
+			q := NewFIFO[int](2)
+			defer q.Close()
+			_ = q.Enqueue(1)
+			_ = q.Enqueue(2)
+
+			e := <-q.Dequeue() // 1 is in flight
+			if !q.Enqueue(3) { // replaces 1
+				t.Fatal("expected replace")
+			}
+			e.Next(true) // must not remove 2
+
+			for _, want := range []int{2, 3} {
+				if got := receive(t, q.Dequeue()); got != want {
+					t.Fatalf("expected %d, got %d", want, got)
+				}
+			}
+		})
+	})
+
+	t.Run("keep after replace", func(t *testing.T) {
+		synctest.Test(t, func(t *testing.T) {
+			q := NewFIFO[int](2)
+			defer q.Close()
+			_ = q.Enqueue(1)
+			_ = q.Enqueue(2)
+
+			e := <-q.Dequeue()
+			q.Enqueue(3) // replaces 1
+			e.Next(false)
+
+			for _, want := range []int{2, 3} {
+				if got := receive(t, q.Dequeue()); got != want {
+					t.Fatalf("expected %d, got %d", want, got)
+				}
+			}
+		})
+	})
+
+	t.Run("wraparound", func(t *testing.T) {
+		synctest.Test(t, func(t *testing.T) {
+			q := NewFIFO[int](3)
+			defer q.Close()
+			for _, batch := range [][]int{{1, 2}, {3, 4, 5}, {6, 7}} {
+				for _, v := range batch {
+					if q.Enqueue(v) {
+						t.Fatal("unexpected replace")
+					}
+				}
+				for _, want := range batch {
+					if got := receive(t, q.Dequeue()); got != want {
+						t.Fatalf("expected %d, got %d", want, got)
+					}
 				}
 			}
 		})
