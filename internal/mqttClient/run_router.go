@@ -10,20 +10,20 @@ import (
 	"github.com/koestler/go-iotdevice/v3/pkg/mqtttopic"
 )
 
-func (c *ClientStruct) runRouter() {
-	var cm *autopaho.ConnectionManager
+func (c *ClientStruct) runRouter(cm *autopaho.ConnectionManager) {
 	routes := make(map[string]map[uint64]MessageHandler) // route -> routeId -> handler
 	removed := make(map[uint64]struct{})                 // unsubscribe received before subscribe received
+	var connected bool
 
 	for {
 		select {
 		case <-c.ctx.Done():
-			c.publishBacklog.Close()
 			return
 
 		case cm = <-c.connectedChannel:
 			topics := slices.Collect(maps.Keys(routes))
 			c.enqueueSubscribe(cm, true, topics...)
+			connected = true
 
 		case req := <-c.routeChannel:
 			// add new route
@@ -38,7 +38,9 @@ func (c *ClientStruct) runRouter() {
 				if !exists {
 					handlers = make(map[uint64]MessageHandler)
 					routes[req.route] = handlers
-					c.enqueueSubscribe(cm, true, req.route)
+					if connected {
+						c.enqueueSubscribe(cm, true, req.route)
+					}
 				}
 
 				handlers[req.id] = req.handler
@@ -63,7 +65,7 @@ func (c *ClientStruct) runRouter() {
 
 			// no handler left, unsubscribe
 			delete(routes, req.route)
-			if cm != nil {
+			if connected {
 				c.enqueueSubscribe(cm, false, req.route)
 			}
 
@@ -77,10 +79,6 @@ func (c *ClientStruct) runRouter() {
 					h(req)
 				}
 			}
-
-		case done := <-c.shutdownChannel:
-			c.shutdown(cm)
-			close(done)
 		}
 	}
 }

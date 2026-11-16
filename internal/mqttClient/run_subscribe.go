@@ -7,7 +7,7 @@ import (
 	"github.com/eclipse/paho.golang/paho"
 )
 
-// enqueueSubscribe never blocks; the operation is executed later by runSubscribe in enqueuePublish order.
+// enqueueSubscribe never blocks; the operation is executed later by runSubscribe in the order they were enqueued.
 func (c *ClientStruct) enqueueSubscribe(cm *autopaho.ConnectionManager, subscribe bool, topics ...string) {
 	if cm == nil || len(topics) == 0 {
 		return

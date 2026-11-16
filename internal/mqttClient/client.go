@@ -1,13 +1,22 @@
 // Package mqttClient implements a MQTT v5 client with automatic reconnects, subscription management, and routing.
 // It is a wrapper around the Eclipse Paho Go MQTT library which adds the following features:
-// Both Subscribe and Publish are guaranteed to never block, even if the broker is not reachable.
+// Both AddRoute and Publish are guaranteed to never block, even if the broker is not reachable.
 // For Publishing messages, a FIFO queue with a limited size is used.
 // Subscribing to topics is done automatically after reconnecting, the library keeps track of the subscriptions
 // and allows to remove them again.
 //
 // Contract:
-// - Publish / Subscribe never block (you can run them inside handlers).
+// - Publish / AddRoute never block (you can run them inside handlers).
 // - Handlers are expected to never block (they are called inside the central run routine).
+//
+// Behaviour worth knowing:
+//   - All subscriptions use QoS 1.
+//   - The context passed to AddRoute only cancels a request that is still pending; it does not remove a route
+//     that is already registered. Use the returned remove function for that.
+//   - Messages still in the publish backlog when Shutdown is called are discarded.
+//   - Messages received while shutting down are dropped.
+//   - If a message matches several routes (or several overlapping subscriptions), handlers may be called
+//     once per matching route.
 package mqttClient
 
 import (
@@ -28,8 +37,8 @@ import (
 const availabilityOnline = "online"
 const availabilityOffline = "offline"
 
-const availabilityOfflineTimeout = time.Second
-const shutdownTimeout = time.Second
+// time allowed to send the offline availability message and disconnect from the broker
+const shutdownTimeout = 5 * time.Second
 
 type ClientStruct struct {
 	cfg Config
@@ -40,12 +49,11 @@ type ClientStruct struct {
 	routeChannel     chan routeRequest
 	dispatchChannel  chan Message
 	connectedChannel chan *autopaho.ConnectionManager // signals (re)connection, used to resubscribe
-	shutdownChannel  chan chan struct{}
 
 	nextSubscriptionID atomic.Uint64
 
 	// subscribe loop channels
-	subscribeBacklog *list.LList[brokerOp] // ordered queue of subscribeBacklog / unsubscribe operations
+	subscribeBacklog *list.LList[brokerOp] // ordered queue of subscribe / unsubscribe operations
 	subscribeWake    chan struct{}         // signals the runSubscribe routine that subscribeBacklog is not empty
 
 	// publish loop channels
@@ -53,8 +61,9 @@ type ClientStruct struct {
 	publishWake    chan *autopaho.ConnectionManager // signals (re)connection to the runPublish routine
 
 	// shutdown handling
-	ctx    context.Context
-	cancel context.CancelFunc
+	ctx       context.Context // cancelling this context starts the shutdown process
+	cancelCtx context.CancelFunc
+	done      chan struct{} // closed when the shutdown is complete
 }
 
 type routeRequest struct {
@@ -79,7 +88,6 @@ func NewV5(
 		routeChannel:     make(chan routeRequest),
 		dispatchChannel:  make(chan Message),
 		connectedChannel: make(chan *autopaho.ConnectionManager, 1),
-		shutdownChannel:  make(chan chan struct{}),
 
 		subscribeBacklog: list.NewL[brokerOp](),
 		subscribeWake:    make(chan struct{}, 1),
@@ -87,8 +95,9 @@ func NewV5(
 		publishBacklog: queue.NewFIFO[paho.Publish](cfg.MaxBacklogSize()),
 		publishWake:    make(chan *autopaho.ConnectionManager, 1),
 
-		ctx:    ctx,
-		cancel: cancel,
+		ctx:       ctx,
+		cancelCtx: cancel,
+		done:      make(chan struct{}),
 	}
 
 	// configure MQTT library
@@ -130,13 +139,14 @@ func NewV5(
 		}
 	}
 
-	// start connection manager
-	_, err := autopaho.NewConnection(client.ctx, client.cliCfg)
+	// start connection manager using a background context, its context is cancelled by cm.Disconnect
+	cm, err := autopaho.NewConnection(context.Background(), client.cliCfg)
 	if err != nil {
 		return nil, err
 	}
 
-	go client.runRouter()
+	go client.runShutdown(cm)
+	go client.runRouter(cm)
 	go client.runSubscribe()
 	go client.runPublish()
 
@@ -152,6 +162,7 @@ func (c *ClientStruct) Name() string {
 	return c.cfg.Name()
 }
 
+// GetCtx returns a context that is canceled when the client is shutting down.
 func (c *ClientStruct) GetCtx() context.Context {
 	return c.ctx
 }
@@ -208,39 +219,10 @@ func (c *ClientStruct) AddRoute(ctx context.Context, route string, handler Messa
 }
 
 // Shutdown shuts down the client and disconnects from the broker.
-// It waits for the unavailability message to be sent and the disconnect to complete, but does not wait for the backlog to be drained.
+// If the client availability is enabled and the client is not read-only, it first publishes the offline message.
+// It waits for that message and the disconnect to complete (at most shutdownTimeout), but does not wait for the backlog
+// to be drained. It is safe to call multiple times and from within a message handler.
 func (c *ClientStruct) Shutdown() {
-	done := make(chan struct{})
-	select {
-	case <-c.ctx.Done():
-		return
-	case c.shutdownChannel <- done:
-	}
-	<-done
-}
-
-func (c *ClientStruct) shutdown(cm *autopaho.ConnectionManager) {
-	if cm != nil {
-		// publish availability offline
-		if c.cfg.AvailabilityClient().Enabled() && !c.cfg.ReadOnly() {
-			ctx, cancel := context.WithTimeout(c.ctx, availabilityOfflineTimeout)
-			msg := c.availabilityMsg(availabilityOffline)
-			_, err := cm.Publish(ctx, &msg)
-			cancel()
-			if err != nil {
-				log.Printf("mqttClient[%s]: error publishing offline availability: %s", c.cfg.Name(), err)
-			}
-		}
-
-		ctx, cancel := context.WithTimeout(c.ctx, shutdownTimeout)
-		if err := cm.Disconnect(ctx); err != nil {
-			log.Printf("mqttClient[%s]: error during disconnect: %s", c.cfg.Name(), err)
-		}
-		cancel()
-	}
-
-	// cancel main context
-	c.cancel()
-
-	log.Printf("mqttClient[%s]: shutdown completed", c.cfg.Name())
+	c.cancelCtx()
+	<-c.done
 }
