@@ -25,8 +25,11 @@ func MqttClient(
 		}
 
 		mcCfg := mqttClientConfig{c}
-		client := mqttClient.NewV5(mcCfg)
-		client.Run()
+		client, err := mqttClient.NewV5(mcCfg)
+		if err != nil {
+			log.Printf("mqttClient[%s]: failed to create client: %s", c.Name(), err)
+			continue
+		}
 		mqttClientPool.Add(client)
 	}
 

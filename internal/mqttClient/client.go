@@ -71,9 +71,9 @@ type brokerOp struct {
 
 func NewV5(
 	cfg Config,
-) (client *ClientStruct) {
+) (*ClientStruct, error) {
 	ctx, cancel := context.WithCancel(context.Background())
-	client = &ClientStruct{
+	client := &ClientStruct{
 		cfg: cfg,
 
 		routeChannel:     make(chan routeRequest),
@@ -130,7 +130,17 @@ func NewV5(
 		}
 	}
 
-	return
+	// start connection manager
+	_, err := autopaho.NewConnection(client.ctx, client.cliCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	go client.runRouter()
+	go client.runSubscribe()
+	go client.runPublish()
+
+	return client, nil
 }
 
 // keepAliveSeconds converts d to the MQTT keep alive field, bounded to 1s..65535s.
@@ -144,15 +154,6 @@ func (c *ClientStruct) Name() string {
 
 func (c *ClientStruct) GetCtx() context.Context {
 	return c.ctx
-}
-
-func (c *ClientStruct) Run() {
-	go c.runRouter()
-	go c.runSubscribe()
-	go c.runPublish()
-
-	// start connection manager
-	_, _ = autopaho.NewConnection(c.ctx, c.cliCfg)
 }
 
 // Publish sends a message to the broker. It never blocks, even if the broker is not reachable.
