@@ -42,7 +42,7 @@ type ClientStruct struct {
 	brokerOps  *list.LList[brokerOp] // ordered queue of subscribe / unsubscribe operations
 	brokerWake chan struct{}         // signals the runBrokerOps routine that brokerOps is not empty
 
-	publishBacklog *queue.FIFO[*paho.Publish]       // queue of messages to be published with a maximum size
+	publishBacklog *queue.FIFO[paho.Publish]        // queue of messages to be published with a maximum size
 	publishWake    chan *autopaho.ConnectionManager // signals (re)connection to the runPublish routine
 
 	ctx    context.Context
@@ -76,7 +76,7 @@ func NewV5(
 		brokerOps:  list.NewL[brokerOp](),
 		brokerWake: make(chan struct{}, 1),
 
-		publishBacklog: queue.NewFIFO[*paho.Publish](cfg.MaxBacklogSize()),
+		publishBacklog: queue.NewFIFO[paho.Publish](cfg.MaxBacklogSize()),
 		publishWake:    make(chan *autopaho.ConnectionManager, 1),
 
 		ctx:    ctx,
@@ -149,7 +149,7 @@ func (c *ClientStruct) Publish(topic string, payload []byte, qos byte, retain bo
 		return
 	}
 
-	c.enqueuePublish(&paho.Publish{
+	c.enqueuePublish(paho.Publish{
 		QoS:     qos,
 		Topic:   topic,
 		Payload: payload,
@@ -210,7 +210,8 @@ func (c *ClientStruct) shutdown(cm *autopaho.ConnectionManager) {
 		// publish availability offline
 		if c.cfg.AvailabilityClient().Enabled() {
 			ctx, cancel := context.WithTimeout(c.ctx, time.Second)
-			_, err := cm.Publish(ctx, c.availabilityMsg(availabilityOffline))
+			msg := c.availabilityMsg(availabilityOffline)
+			_, err := cm.Publish(ctx, &msg)
 			cancel()
 			if err != nil {
 				log.Printf("mqttClient[%s]: error publishing offline availability: %s", c.cfg.Name(), err)

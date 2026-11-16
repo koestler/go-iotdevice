@@ -122,10 +122,10 @@ func (c *ClientStruct) onConnectionUp(cm *autopaho.ConnectionManager, connack *p
 	}
 }
 
-func (c *ClientStruct) availabilityMsg(payload string) *paho.Publish {
+func (c *ClientStruct) availabilityMsg(payload string) paho.Publish {
 	mCfg := c.cfg.AvailabilityClient()
 
-	return &paho.Publish{
+	return paho.Publish{
 		QoS:     mCfg.Qos(),
 		Topic:   c.cfg.AvailabilityClientTopic(),
 		Payload: []byte(payload),

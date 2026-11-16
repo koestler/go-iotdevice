@@ -7,7 +7,7 @@ import (
 	"github.com/eclipse/paho.golang/paho"
 )
 
-func (c *ClientStruct) enqueuePublish(p *paho.Publish) {
+func (c *ClientStruct) enqueuePublish(p paho.Publish) {
 	if err := c.publishBacklog.Enqueue(p); err != nil {
 		log.Printf("mqttClient[%s]: message dropped: topic=%s: %s", c.cfg.Name(), p.Topic, err)
 	}
@@ -30,7 +30,7 @@ func (c *ClientStruct) runPublish() {
 // drainBacklog forwards the backlog to the broker until the backlog is closed or a publish fails.
 func (c *ClientStruct) drainBacklog(cm *autopaho.ConnectionManager) {
 	for e := range c.publishBacklog.Dequeue() {
-		pr, err := cm.Publish(c.ctx, e.Value)
+		pr, err := cm.Publish(c.ctx, &e.Value)
 
 		// a response with an error reason code means the broker received but rejected the message;
 		// retrying would block the backlog forever, so discard it
