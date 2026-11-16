@@ -1,11 +1,6 @@
 package queue
 
-import (
-	"errors"
-	"sync"
-)
-
-var ErrFull = errors.New("fifo is full, value discarded")
+import "sync"
 
 // FIFO is a concurrency safe queue backed by a fixed-size ring buffer. Enqueue never blocks.
 // Values are delivered in order via the channel returned by Dequeue.
@@ -13,9 +8,10 @@ var ErrFull = errors.New("fifo is full, value discarded")
 // Next must be called exactly once per element; a second call panics.
 type FIFO[T any] struct {
 	lock sync.Mutex
-	buf  []T // fixed size ring buffer
-	head int // index of the oldest element
-	size int // number of stored elements
+	buf  []T    // fixed size ring buffer
+	head int    // index of the oldest element
+	size int    // number of stored elements
+	pops uint64 // number of elements ever removed from the front
 
 	notify  chan struct{} // signals the goroutine that a value was added
 	dequeue chan Element[T]
@@ -30,9 +26,12 @@ type Element[T any] struct {
 }
 
 // NewFIFO creates a FIFO and starts its internal go routine.
-// maxLength must not be negative (it panics); 0 makes every Enqueue return ErrFull.
+// maxLength must be >= 1 (it panics otherwise). A full buffer replaces its oldest element on Enqueue..
 // The caller must Close it.
 func NewFIFO[T any](maxLength int) *FIFO[T] {
+	if maxLength < 1 {
+		panic("queue: maxLength must be >= 1")
+	}
 	q := &FIFO[T]{
 		buf:     make([]T, maxLength),
 		notify:  make(chan struct{}, 1), // buffered (1) to avoid ever blocking Enqueue
@@ -51,22 +50,27 @@ func (q *FIFO[T]) Close() {
 	close(q.done)
 }
 
-// Enqueue appends value or returns ErrFull. It never blocks.
-func (q *FIFO[T]) Enqueue(value T) error {
+// Enqueue appends value. When the buffer is full, the oldest element is replaced and true is returned.
+// It returns false if there was capacity left. It never blocks.
+func (q *FIFO[T]) Enqueue(value T) (replaced bool) {
 	q.lock.Lock()
-	if q.size >= len(q.buf) {
-		q.lock.Unlock()
-		return ErrFull
+	replaced = q.size >= len(q.buf)
+	if replaced {
+		// the oldest slot is the next free one: overwrite it, even if it is currently being processed
+		q.buf[q.head] = value
+		q.head = (q.head + 1) % len(q.buf)
+		q.pops++
+	} else {
+		q.buf[(q.head+q.size)%len(q.buf)] = value
+		q.size++
 	}
-	q.buf[(q.head+q.size)%len(q.buf)] = value
-	q.size++
 	q.lock.Unlock()
 
 	select {
 	case q.notify <- struct{}{}:
 	default: // a wake-up is already pending
 	}
-	return nil
+	return replaced
 }
 
 // Dequeue returns a channel delivering elements in order. It is closed by Close.
@@ -94,8 +98,10 @@ func (q *FIFO[T]) run() {
 		q.lock.Lock()
 		empty := q.size == 0
 		var value T
+		var pops uint64
 		if !empty {
 			value = q.buf[q.head]
+			pops = q.pops
 		}
 		q.lock.Unlock()
 
@@ -122,10 +128,13 @@ func (q *FIFO[T]) run() {
 		case remove := <-element.result:
 			if remove {
 				q.lock.Lock()
-				var zero T
-				q.buf[q.head] = zero // release reference for GC
-				q.head = (q.head + 1) % len(q.buf)
-				q.size--
+				if q.pops == pops { // otherwise the element was already replaced by Enqueue
+					var zero T
+					q.buf[q.head] = zero // release reference for GC
+					q.head = (q.head + 1) % len(q.buf)
+					q.size--
+					q.pops++
+				}
 				q.lock.Unlock()
 			}
 			close(element.settled)

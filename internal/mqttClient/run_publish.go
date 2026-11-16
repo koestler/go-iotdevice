@@ -9,8 +9,8 @@ import (
 )
 
 func (c *ClientStruct) enqueuePublish(p paho.Publish) {
-	if err := c.publishBacklog.Enqueue(p); err != nil {
-		log.Printf("mqttClient[%s]: message dropped: topic=%s: %s", c.cfg.Name(), p.Topic, err)
+	if c.publishBacklog.Enqueue(p) && c.cfg.LogDebug() {
+		log.Printf("mqttClient[%s]: backlog full, oldest message dropped", c.cfg.Name())
 	}
 }
 

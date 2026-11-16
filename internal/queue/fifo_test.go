@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"errors"
 	"sync"
 	"testing"
 	"testing/synctest"
@@ -15,8 +14,8 @@ func TestFifo(t *testing.T) {
 			defer q.Close()
 
 			for i := range 5 {
-				if err := q.Enqueue(i); err != nil {
-					t.Fatalf("enqueue %d: %v", i, err)
+				if q.Enqueue(i) {
+					t.Fatalf("enqueue %d: unexpected replace", i)
 				}
 			}
 			for i := range 5 {
@@ -33,30 +32,30 @@ func TestFifo(t *testing.T) {
 			defer q.Close()
 
 			// no reader: the routine holds the front element until it is received
-			if err := q.Enqueue(1); err != nil {
-				t.Fatal(err)
+			if q.Enqueue(1) || q.Enqueue(2) {
+				t.Fatal("unexpected replace")
 			}
-			if err := q.Enqueue(2); err != nil {
-				t.Fatal(err)
-			}
-			if err := q.Enqueue(3); !errors.Is(err, ErrFull) {
-				t.Fatalf("expected ErrFull, got %v", err)
+			// full: replaces the oldest element (1)
+			if !q.Enqueue(3) {
+				t.Fatal("expected replace")
 			}
 
-			receive(t, q.Dequeue())
-			if err := q.Enqueue(3); err != nil {
-				t.Fatalf("expected space after dequeue, got %v", err)
+			for _, want := range []int{2, 3} {
+				if got := receive(t, q.Dequeue()); got != want {
+					t.Fatalf("expected %d, got %d", want, got)
+				}
 			}
 		})
 	})
 
 	t.Run("zero length", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
-			q := NewFIFO[int](0)
-			defer q.Close()
-			if err := q.Enqueue(1); !errors.Is(err, ErrFull) {
-				t.Fatalf("expected ErrFull, got %v", err)
-			}
+			defer func() {
+				if recover() == nil {
+					t.Fatal("expected panic")
+				}
+			}()
+			NewFIFO[int](0)
 		})
 	})
 
@@ -147,8 +146,8 @@ func TestFifo(t *testing.T) {
 			for range producers {
 				wg.Go(func() {
 					for i := range perProducer {
-						if err := q.Enqueue(i); err != nil {
-							t.Errorf("enqueue: %v", err)
+						if q.Enqueue(i) {
+							t.Errorf("enqueue: unexpected replace")
 							return
 						}
 					}
