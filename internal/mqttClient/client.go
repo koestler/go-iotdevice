@@ -117,7 +117,7 @@ func NewV5(
 	}
 
 	// set up client availability topic using will
-	if mCfg := cfg.AvailabilityClient(); mCfg.Enabled() {
+	if mCfg := cfg.AvailabilityClient(); mCfg.Enabled() && !cfg.ReadOnly() {
 		client.cliCfg.WillMessage = &paho.WillMessage{
 			Retain:  mCfg.Retain(),
 			QoS:     mCfg.Qos(),
@@ -212,7 +212,7 @@ func (c *ClientStruct) Shutdown() {
 func (c *ClientStruct) shutdown(cm *autopaho.ConnectionManager) {
 	if cm != nil {
 		// publish availability offline
-		if c.cfg.AvailabilityClient().Enabled() {
+		if c.cfg.AvailabilityClient().Enabled() && !c.cfg.ReadOnly() {
 			ctx, cancel := context.WithTimeout(c.ctx, time.Second)
 			msg := c.availabilityMsg(availabilityOffline)
 			_, err := cm.Publish(ctx, &msg)

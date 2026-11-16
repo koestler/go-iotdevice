@@ -101,7 +101,7 @@ func (c *ClientStruct) onConnectionUp(cm *autopaho.ConnectionManager, connack *p
 	case c.connectedChannel <- cm:
 	}
 
-	if c.cfg.AvailabilityClient().Enabled() {
+	if c.cfg.AvailabilityClient().Enabled() && !c.cfg.ReadOnly() {
 		c.enqueuePublish(c.availabilityMsg(availabilityOnline))
 	}
 
