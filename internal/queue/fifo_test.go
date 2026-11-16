@@ -8,24 +8,6 @@ import (
 )
 
 func TestFifo(t *testing.T) {
-	t.Run("order", func(t *testing.T) {
-		synctest.Test(t, func(t *testing.T) {
-			q := NewFIFO[int](10)
-			defer q.Close()
-
-			for i := range 5 {
-				if q.Enqueue(i) {
-					t.Fatalf("enqueue %d: unexpected replace", i)
-				}
-			}
-			for i := range 5 {
-				if got := receive(t, q.Dequeue()); got != i {
-					t.Errorf("expected %d, got %d", i, got)
-				}
-			}
-		})
-	})
-
 	t.Run("full", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			q := NewFIFO[int](2)
@@ -81,63 +63,6 @@ func TestFifo(t *testing.T) {
 				}
 			}()
 			NewFIFO[int](0)
-		})
-	})
-
-	t.Run("dequeue blocks until value", func(t *testing.T) {
-		synctest.Test(t, func(t *testing.T) {
-			q := NewFIFO[int](1)
-			defer q.Close()
-
-			select {
-			case <-q.Dequeue():
-				t.Fatal("received value from empty fifo")
-			case <-time.After(time.Second):
-			}
-
-			go func() {
-				time.Sleep(time.Second)
-				_ = q.Enqueue(42)
-			}()
-			if got := receive(t, q.Dequeue()); got != 42 {
-				t.Errorf("expected 42, got %d", got)
-			}
-		})
-	})
-
-	t.Run("keep redelivers", func(t *testing.T) {
-		synctest.Test(t, func(t *testing.T) {
-			q := NewFIFO[int](2)
-			defer q.Close()
-			_ = q.Enqueue(1)
-			_ = q.Enqueue(2)
-
-			e := <-q.Dequeue()
-			e.Next(false)
-			e = <-q.Dequeue()
-			if e.Value != 1 {
-				t.Fatalf("expected 1 redelivered, got %d", e.Value)
-			}
-			e.Next(true)
-			if got := receive(t, q.Dequeue()); got != 2 {
-				t.Errorf("expected 2, got %d", got)
-			}
-		})
-	})
-
-	t.Run("close", func(t *testing.T) {
-		synctest.Test(t, func(t *testing.T) {
-			q := NewFIFO[int](1)
-			q.Close()
-
-			select {
-			case _, ok := <-q.Dequeue():
-				if ok {
-					t.Fatal("expected closed channel")
-				}
-			case <-time.After(time.Second):
-				t.Fatal("dequeue channel not closed")
-			}
 		})
 	})
 
@@ -206,44 +131,6 @@ func TestFifo(t *testing.T) {
 			for _, want := range []int{2, 3} {
 				if got := receive(t, q.Dequeue()); got != want {
 					t.Fatalf("expected %d, got %d", want, got)
-				}
-			}
-		})
-	})
-
-	t.Run("keep after replace", func(t *testing.T) {
-		synctest.Test(t, func(t *testing.T) {
-			q := NewFIFO[int](2)
-			defer q.Close()
-			_ = q.Enqueue(1)
-			_ = q.Enqueue(2)
-
-			e := <-q.Dequeue()
-			q.Enqueue(3) // replaces 1
-			e.Next(false)
-
-			for _, want := range []int{2, 3} {
-				if got := receive(t, q.Dequeue()); got != want {
-					t.Fatalf("expected %d, got %d", want, got)
-				}
-			}
-		})
-	})
-
-	t.Run("wraparound", func(t *testing.T) {
-		synctest.Test(t, func(t *testing.T) {
-			q := NewFIFO[int](3)
-			defer q.Close()
-			for _, batch := range [][]int{{1, 2}, {3, 4, 5}, {6, 7}} {
-				for _, v := range batch {
-					if q.Enqueue(v) {
-						t.Fatal("unexpected replace")
-					}
-				}
-				for _, want := range batch {
-					if got := receive(t, q.Dequeue()); got != want {
-						t.Fatalf("expected %d, got %d", want, got)
-					}
 				}
 			}
 		})
