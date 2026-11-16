@@ -8,6 +8,48 @@ import (
 )
 
 func TestFifo(t *testing.T) {
+	t.Run("ok", func(t *testing.T) {
+		synctest.Test(t, func(t *testing.T) {
+			q := NewFIFO[int](5)
+			defer q.Close()
+
+			if q.Enqueue(1) || q.Enqueue(2) || q.Enqueue(3) || q.Enqueue(4) {
+				t.Fatal("unexpected replace")
+			}
+
+			g0 := receive(t, q.Dequeue())
+			g1 := receive(t, q.Dequeue())
+			g2 := receive(t, q.Dequeue())
+			g3 := receive(t, q.Dequeue())
+
+			if g0 != 1 || g1 != 2 || g2 != 3 || g3 != 4 {
+				t.Fatalf("expected [1 2 3 4], got [%d %d %d %d]", g0, g1, g2, g3)
+			}
+		})
+	})
+
+	t.Run("ok overflow", func(t *testing.T) {
+		synctest.Test(t, func(t *testing.T) {
+			q := NewFIFO[int](2)
+			defer q.Close()
+
+			if q.Enqueue(1) || q.Enqueue(2) {
+				t.Fatal("unexpected replace")
+			}
+
+			if !q.Enqueue(3) || !q.Enqueue(4) || !q.Enqueue(5) {
+				t.Fatal("expected replace")
+			}
+
+			g0 := receive(t, q.Dequeue())
+			g1 := receive(t, q.Dequeue())
+
+			if g0 != 4 || g1 != 5 {
+				t.Fatalf("expected [4 5], got [%d %d]", g0, g1)
+			}
+		})
+	})
+
 	t.Run("full", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			q := NewFIFO[int](2)
