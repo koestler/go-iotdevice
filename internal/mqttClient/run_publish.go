@@ -23,8 +23,20 @@ func (c *ClientStruct) runPublish() {
 		case <-c.ctx.Done():
 			return
 		case cm := <-c.publishWake:
+			c.publishOnline(cm)
 			c.drainBacklog(cm)
 		}
+	}
+}
+
+// publishOnline bypasses the backlog so the availability is announced first and can never be dropped.
+func (c *ClientStruct) publishOnline(cm *autopaho.ConnectionManager) {
+	if !c.cfg.AvailabilityClient().Enabled() || c.cfg.ReadOnly() {
+		return
+	}
+	msg := c.availabilityMsg(availabilityOnline)
+	if _, err := cm.Publish(c.ctx, &msg); err != nil {
+		log.Printf("mqttClient[%s]: error publishing online availability: %s", c.cfg.Name(), err)
 	}
 }
 
