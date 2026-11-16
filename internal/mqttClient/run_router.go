@@ -88,7 +88,10 @@ func (c *ClientStruct) runRouter() {
 }
 
 func (c *ClientStruct) onPublishReceived(p paho.PublishReceived) (bool, error) {
-	c.dispatchChannel <- Message{topic: p.Packet.Topic, payload: p.Packet.Payload}
+	select {
+	case <-c.ctx.Done(): // the router has stopped, drop the message
+	case c.dispatchChannel <- Message{topic: p.Packet.Topic, payload: p.Packet.Payload}:
+	}
 	return true, nil
 }
 
