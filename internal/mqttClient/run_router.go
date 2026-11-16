@@ -79,10 +79,8 @@ func (c *ClientStruct) runRouter() {
 			}
 
 		case done := <-c.shutdownChannel:
-			go func() {
-				defer close(done)
-				c.shutdown(cm)
-			}()
+			c.shutdown(cm)
+			close(done)
 		}
 	}
 }

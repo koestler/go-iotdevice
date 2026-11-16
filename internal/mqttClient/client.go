@@ -28,6 +28,9 @@ import (
 const availabilityOnline = "online"
 const availabilityOffline = "offline"
 
+const availabilityOfflineTimeout = time.Second
+const shutdownTimeout = time.Second
+
 type ClientStruct struct {
 	cfg Config
 
@@ -204,7 +207,7 @@ func (c *ClientStruct) AddRoute(ctx context.Context, route string, handler Messa
 }
 
 // Shutdown shuts down the client and disconnects from the broker.
-// It blocks until the shutdown is complete.
+// It waits for the unavailability message to be sent and the disconnect to complete, but does not wait for the backlog to be drained.
 func (c *ClientStruct) Shutdown() {
 	done := make(chan struct{})
 	select {
@@ -219,7 +222,7 @@ func (c *ClientStruct) shutdown(cm *autopaho.ConnectionManager) {
 	if cm != nil {
 		// publish availability offline
 		if c.cfg.AvailabilityClient().Enabled() && !c.cfg.ReadOnly() {
-			ctx, cancel := context.WithTimeout(c.ctx, time.Second)
+			ctx, cancel := context.WithTimeout(c.ctx, availabilityOfflineTimeout)
 			msg := c.availabilityMsg(availabilityOffline)
 			_, err := cm.Publish(ctx, &msg)
 			cancel()
@@ -228,7 +231,7 @@ func (c *ClientStruct) shutdown(cm *autopaho.ConnectionManager) {
 			}
 		}
 
-		ctx, cancel := context.WithTimeout(c.ctx, time.Second)
+		ctx, cancel := context.WithTimeout(c.ctx, shutdownTimeout)
 		if err := cm.Disconnect(ctx); err != nil {
 			log.Printf("mqttClient[%s]: error during disconnect: %s", c.cfg.Name(), err)
 		}
