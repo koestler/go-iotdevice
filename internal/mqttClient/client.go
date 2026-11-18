@@ -15,6 +15,7 @@
 //     that is already registered. Use the returned remove function for that.
 //   - Messages still in the publish backlog when Shutdown is called are discarded.
 //   - Messages received while shutting down are dropped.
+//   - Adding a route re-subscribes its topic, so a retained message is delivered again to all handlers of that topic.
 //   - If a message matches several routes (or several overlapping subscriptions), handlers may be called
 //     once per matching route.
 package mqttClient

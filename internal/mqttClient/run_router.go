@@ -38,9 +38,10 @@ func (c *ClientStruct) runRouter(cm *autopaho.ConnectionManager) {
 				if !exists {
 					handlers = make(map[uint64]MessageHandler)
 					routes[req.route] = handlers
-					if connected {
-						c.enqueueSubscribe(cm, true, req.route)
-					}
+				}
+				// also subscribe again for an existing route, so the broker re-sends the retained message to the new handler
+				if connected {
+					c.enqueueSubscribe(cm, true, req.route)
 				}
 
 				handlers[req.id] = req.handler
