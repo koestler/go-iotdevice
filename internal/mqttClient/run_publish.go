@@ -45,14 +45,14 @@ func (c *ClientStruct) drainBacklog(cm *autopaho.ConnectionManager) {
 	for e := range c.publishBacklog.Dequeue() {
 		pr, err := cm.Publish(c.ctx, &e.Value)
 
-		// message rejected by the client library
+		// message rejected by the client library, drop it
 		if errors.Is(err, paho.ErrInvalidArguments) {
 			log.Printf("mqttClient[%s]: invalid message, discarding: topic=%s: %s", c.cfg.Name(), e.Value.Topic, err)
 			e.Next(true)
 			continue
 		}
 
-		// message rejected by the broker
+		// message rejected by the broker, drop it
 		if pr != nil && pr.ReasonCode >= 0x80 {
 			log.Printf("mqttClient[%s]: message rejected by broker, discarding: topic=%s reason=%d: %v",
 				c.cfg.Name(), e.Value.Topic, pr.ReasonCode, err,
@@ -61,14 +61,24 @@ func (c *ClientStruct) drainBacklog(cm *autopaho.ConnectionManager) {
 			continue
 		}
 
+		// client disconnected (or shutting down): stop and wait for the next publishWake after reconnecting
+		if errors.Is(err, autopaho.ConnectionDownError) || c.ctx.Err() != nil {
+			if c.cfg.LogDebug() {
+				log.Printf("mqttClient[%s]: connection down, pausing publish until reconnect", c.cfg.Name())
+			}
+			e.Next(false) // keep the message at the front of the backlog
+			return
+		}
+
 		if err != nil {
-			// connection problem: keep the message at the front of the backlog and retry after reconnect
-			e.Next(false)
 			if c.cfg.LogDebug() {
 				log.Printf("mqttClient[%s]: error during publish, keeping in backlog: %s", c.cfg.Name(), err)
 			}
-			return
+			e.Next(false)
+			continue
 		}
+
+		// successful publish: remove the message from the backlog
 		e.Next(true)
 	}
 }
